@@ -52,6 +52,49 @@
       </table>
     </div>
   </section>
+  <div class="prod-list">
+    <div v-for="p in products" :key="p.id" class="prod-item">
+      <div
+        class="prod-summary"
+        @click="activeId = activeId === p.id ? null : p.id"
+      >
+        <span class="prod-id">{{ p.id }}</span>
+        <span class="prod-name">{{ p.name }}</span>
+        <span class="prod-price">{{ p.price }} ₽</span>
+        <button class="btn btn-danger btn-sm" @click.stop="deleteProduct(p.id)">
+          ✕
+        </button>
+      </div>
+
+      <transition name="slide">
+        <div v-if="activeId === p.id" class="prod-details">
+          <label>Название:</label>
+          <input v-model="p.name" />
+
+          <label>Цена:</label>
+          <input v-model.number="p.price" type="number" />
+
+          <label>Описание:</label>
+          <textarea v-model="p.description" rows="2"></textarea>
+
+          <label>Изображение (URL):</label>
+          <input v-model="p.image" />
+
+          <label>Характеристики (JSON):</label>
+          <textarea v-model="specsText[p.id]" rows="3"></textarea>
+
+          <div class="actions">
+            <button class="btn btn-primary" @click="updateProductWithSpecs(p)">
+              Сохранить
+            </button>
+            <button class="btn btn-secondary" @click="cancelEdit">
+              Отмена
+            </button>
+          </div>
+        </div>
+      </transition>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -63,6 +106,8 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  image?: string;
+  specs?: Record<string, string>;
 }
 
 const config = useRuntimeConfig().public;
@@ -113,6 +158,38 @@ async function updateProduct(p: Product) {
 async function deleteProduct(id: number) {
   await $fetch<Product>(`/api/products/${id}`, { method: "DELETE" });
   products.value = products.value.filter((x) => x.id !== id);
+}
+const activeId = ref<number | null>(null);
+// для редактирования JSON specs
+const specsText = ref<Record<number, string>>({});
+
+onMounted(() => {
+  // после загрузки продуктов заполняем specsText
+  load().then(() => {
+    products.value.forEach((p) => {
+      specsText.value[p.id] = JSON.stringify(p.specs || {}, null, 2);
+    });
+  });
+});
+
+async function updateProductWithSpecs(p: Product) {
+  let specs: Record<string, string> = {};
+  try {
+    specs = JSON.parse(specsText.value[p.id] || "{}");
+  } catch {
+    alert("Некорректный JSON в характеристиках");
+    return;
+  }
+  await $fetch<Product>(`/api/products/${p.id}`, {
+    method: "PUT",
+    body: { ...p, specs },
+  });
+  // закрываем форму
+  activeId.value = null;
+}
+
+function cancelEdit() {
+  activeId.value = null;
 }
 </script>
 
