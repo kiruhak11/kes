@@ -1,0 +1,68 @@
+@use "../collection/functions" as *;
+@use "../collection/fonts";
+@use "../collection/colors";
+
+// Обновляем фон и цвет текста
+html {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-base);
+  scroll-behavior: smooth;
+}
+
+body {
+  line-height: 1.6;
+  min-height: 100%;
+}
+
+a {
+  color: var(--primary);
+  transition: color 0.2s;
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75em 1.5em;
+  border-radius: 1.5rem;
+  background-color: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  &:hover {
+    background-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Glassmorphism для карточек
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  }
+}
+// Корневой контейнер приложения
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; // вся высота экрана
+}
+
+// Область с динамическим контентом
+.app-content {
+  flex: 1; // занимает всё свободное пространство
+  width: 100%;
+}

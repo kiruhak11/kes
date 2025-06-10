@@ -1,0 +1,11 @@
+// Удаляем весь локальный @font-face
+// Подключаем через Google Fonts
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+$font-base: "Inter", sans-serif;
+$font-heading: "Inter", sans-serif;
+
+:root {
+  --font-base: #{$font-base};
+  --font-heading: #{$font-heading};
+}

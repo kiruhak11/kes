@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">BoilerShop Logo</title>
+  <!-- Flame icon -->
+  <path d="M30 50 C20 30, 40 20, 30 10 C50 20, 40 40, 30 50 Z" fill="#1e73be"/>
+  <path d="M30 45 C26 30, 36 25, 30 15 C40 25, 35 40, 30 45 Z" fill="#f5a623"/>
+  <!-- Text -->
+  <text x="60" y="40" font-family="Arial, sans-serif" font-size="24" fill="#1e73be" font-weight="bold">
+    BoilerShop
+  </text>
+</svg>

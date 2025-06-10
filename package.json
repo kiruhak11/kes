@@ -4,14 +4,24 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "start": "node server/server.js",
+    "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "migrate:dev": "npx prisma migrate dev",
+    "migrate:deploy": "npx prisma migrate deploy",
+    "deploy": "scp -r .output/* j53779400@c64869e17b97.hosting.myjino.ru:~/domains/kes.kiruhak11.ru/ && ssh j53779400@c64869e17b97.hosting.myjino.ru \"chmod -R 0777 ~/domains/kes.kiruhak11.ru && mkdir -p ~/domains/kes.kiruhak11.ru/tmp && touch ~/domains/kes.kiruhak11.ru/tmp/restart.txt\""
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
     "nuxt": "^3.13.2",
+    "telegraf": "^4.16.3",
     "vue": "latest",
     "vue-router": "latest"
+  },
+  "devDependencies": {
+    "sass": "^1.89.0"
   }
 }

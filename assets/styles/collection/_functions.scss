@@ -1,0 +1,30 @@
+// контейнер и утилиты
+@mixin container($max-width: 1200px) {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+  max-width: $max-width;
+}
+
+/// media-миксины
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == lg {
+    @media (max-width: 1200px) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (max-width: 992px) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (max-width: 768px) {
+      @content;
+    }
+  } @else if $breakpoint == xs {
+    @media (max-width: 576px) {
+      @content;
+    }
+  }
+}
