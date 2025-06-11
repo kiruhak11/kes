@@ -47,10 +47,16 @@ export default defineEventHandler(async (event) => {
       products = []
     }
 
-    // Filter products by category name (case-insensitive)
-    const categoryProducts = products.filter((p: any) => 
-      p.category && p.category.toLowerCase() === category.name.toLowerCase()
-    )
+    // Filter products by category ID (handle both string and number IDs)
+    const categoryProducts = products.filter((p: any) => {
+      if (!p.category) return false
+      // Convert both to strings for comparison
+      return String(p.category) === String(categoryId)
+    })
+
+    console.log('Category:', category.name)
+    console.log('Category ID:', categoryId)
+    console.log('Found products:', categoryProducts)
 
     // Set proper content type and encoding
     event.node.res.setHeader('Content-Type', 'application/json; charset=utf-8')

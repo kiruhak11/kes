@@ -1,22 +1,22 @@
 [
   {
     "id": 1,
-    "name": "котле",
-    "description": "123",
-    "extendedDescription": "",
-    "price": 123,
-    "image": "",
-    "category": "kotles",
+    "name": "akkaka",
+    "description": "kakakka",
+    "extendedDescription": "kakakk",
+    "price": 12345,
+    "image": "/images/cutouts/kotel1.png",
+    "category": "1",
     "specs": {}
   },
   {
     "id": 2,
-    "name": "312",
-    "description": "3123",
-    "extendedDescription": "1231",
-    "price": 3123,
-    "image": "",
-    "category": "312",
+    "name": "123",
+    "description": "123",
+    "extendedDescription": "123",
+    "price": 123,
+    "image": "/images/cutouts/kotel1.png",
+    "category": "1",
     "specs": {}
   }
 ]

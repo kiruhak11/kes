@@ -43,6 +43,12 @@ interface Product {
   category: string
 }
 
+interface Category {
+  id: number
+  name: string
+  image?: string
+}
+
 const route = useRoute()
 const categoryId = ref(Number(route.params.id))
 const categoryName = ref('')
@@ -55,11 +61,15 @@ async function loadCategory() {
     error.value = null
     loading.value = true
     products.value = null
-    console.log('Loading category:', categoryId.value)
+    console.log('Loading category ID:', categoryId.value)
+
+    // Получаем информацию о категории и товарах
     const response = await $fetch<{ name: string, products: Product[] }>(`/api/categories/${categoryId.value}`)
-    console.log('Received category data:', response)
     categoryName.value = response.name
     products.value = response.products
+    
+    console.log('Category:', response.name)
+    console.log('Found products:', products.value)
   } catch (e: any) {
     console.error('Ошибка загрузки категории:', e)
     error.value = e.statusMessage || 'Произошла ошибка при загрузке категории'
