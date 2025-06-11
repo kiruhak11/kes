@@ -3,9 +3,9 @@
     <h2 class="catalog__title">Категории товаров</h2>
     <div class="catalog__grid">
       <NuxtLink
-        v-for="category in products"
-        :key="category.name"
-        :to="`/catalog/${encodeURIComponent(category.name)}`"
+        v-for="category in categories"
+        :key="category.id"
+        :to="`/catalog/${category.id}`"
         class="catalog__card card"
       >
         <div class="catalog__img-wrapper">
@@ -26,22 +26,26 @@
 import { ref, onMounted } from 'vue'
 
 interface Category {
+  id: number
   name: string
   image?: string
   count: number
 }
 
-const products = ref<Category[]>([])
+const categories = ref<Category[]>([])
 
-async function loadProducts() {
+async function loadCategories() {
   try {
-    products.value = await $fetch<Category[]>('/api/categories')
+    console.log('Loading categories...')
+    const response = await $fetch<Category[]>('/api/categories')
+    console.log('Received categories:', response)
+    categories.value = response
   } catch (e) {
     console.error('Ошибка загрузки каталога:', e)
   }
 }
 
-onMounted(loadProducts)
+onMounted(loadCategories)
 </script>
 
 <style lang="scss" scoped>

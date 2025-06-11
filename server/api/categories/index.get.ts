@@ -4,29 +4,35 @@ import { resolve } from 'path'
 
 export default defineEventHandler(async () => {
   try {
-    const file = resolve(process.cwd(), 'data/products.json')
-    if (!existsSync(file)) {
+    const categoriesFile = resolve(process.cwd(), 'data/categories.json')
+    const productsFile = resolve(process.cwd(), 'data/products.json')
+
+    // Ensure categories file exists
+    if (!existsSync(categoriesFile)) {
       await fs.mkdir(resolve(process.cwd(), 'data'), { recursive: true })
-      await fs.writeFile(file, '[]', 'utf-8')
+      await fs.writeFile(categoriesFile, '[]', 'utf-8')
     }
-    const content = await fs.readFile(file, 'utf-8')
-    const products = JSON.parse(content)
 
-    // Get all unique categories from products
-    const uniqueCategories = [...new Set(products.map((p: any) => p.category))]
+    // Read categories
+    const categoriesContent = await fs.readFile(categoriesFile, 'utf-8')
+    const categories = JSON.parse(categoriesContent)
 
-    // Create category objects with count and image
-    const categories = uniqueCategories.map(category => {
-      const categoryProducts = products.filter((p: any) => p.category === category)
-      const firstProduct = categoryProducts[0]
-      return {
-        name: category,
-        image: firstProduct?.image || '/placeholder.jpg',
-        count: categoryProducts.length
-      }
-    })
+    // Read products to get counts
+    if (existsSync(productsFile)) {
+      const productsContent = await fs.readFile(productsFile, 'utf-8')
+      const products = JSON.parse(productsContent)
 
-    return categories
+      // Add count to each category
+      return categories.map((category: any) => ({
+        ...category,
+        count: products.filter((p: any) => p.category === category.name).length
+      }))
+    }
+
+    return categories.map((category: any) => ({
+      ...category,
+      count: 0
+    }))
   } catch (e: any) {
     console.error('GET /api/categories error:', e)
     throw createError({ statusCode: 500, statusMessage: 'Internal Server Error' })
