@@ -43,15 +43,8 @@ interface Product {
   category: string
 }
 
-interface Category {
-  id: number
-  name: string
-  image?: string
-}
-
 const route = useRoute()
-const categoryId = ref(Number(route.params.id))
-const categoryName = ref('')
+const categoryName = ref(decodeURIComponent(route.params.category as string))
 const products = ref<Product[] | null>(null)
 const error = ref<string | null>(null)
 const loading = ref(true)
@@ -61,14 +54,12 @@ async function loadCategory() {
     error.value = null
     loading.value = true
     products.value = null
-    console.log('Loading category ID:', categoryId.value)
+    console.log('Loading category:', categoryName.value)
 
-    // Получаем информацию о категории и товарах
-    const response = await $fetch<{ name: string, products: Product[] }>(`/api/categories/${categoryId.value}`)
-    categoryName.value = response.name
-    products.value = response.products
+    // Получаем товары категории
+    const response = await $fetch<Product[]>(`/api/products?category=${encodeURIComponent(categoryName.value)}`)
+    products.value = response
     
-    console.log('Category:', response.name)
     console.log('Found products:', products.value)
   } catch (e: any) {
     console.error('Ошибка загрузки категории:', e)
@@ -80,9 +71,9 @@ async function loadCategory() {
 }
 
 // Add watch for route changes
-watch(() => route.params.id, (newId) => {
-  if (newId) {
-    categoryId.value = Number(newId)
+watch(() => route.params.category, (newCategory) => {
+  if (newCategory) {
+    categoryName.value = decodeURIComponent(newCategory as string)
     loadCategory()
   }
 })
@@ -92,12 +83,24 @@ onMounted(loadCategory)
 
 <style lang="scss" scoped>
 .category {
-  padding: 2rem 1rem;
+  padding: 1rem;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
 
   &__title {
-    font-size: 2rem;
-    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 3rem;
     text-align: center;
+    color: var(--text);
+
+    @media (min-width: 768px) {
+      font-size: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 5rem;
+    }
   }
 
   &__error {
@@ -120,57 +123,95 @@ onMounted(loadCategory)
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem 1rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
   }
 
   &__card {
-    display: flex;
-    flex-direction: column;
+    position: relative;
+    padding-top: 80px;
+    overflow: visible;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s, box-shadow .2s;
     background: var(--bg);
     border-radius: 0.5rem;
-    overflow: hidden;
-    transition: transform 0.2s;
-    text-decoration: none;
-    color: var(--text);
+    padding: 1rem;
+    padding-top: 100px;
+
+    @media (min-width: 768px) {
+      padding-top: 100px;
+    }
 
     &:hover {
-      transform: translateY(-5px);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
     }
   }
 
   &__img-wrapper {
-    position: relative;
-    padding-top: 75%;
-    background: var(--bg-secondary);
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 140px;
+    overflow: visible;
+    pointer-events: none;
+
+    @media (min-width: 768px) {
+      top: -70px;
+      width: 180px;
+      height: 180px;
+    }
   }
 
   &__card-img {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 
   &__card-name {
-    font-size: 1.2rem;
-    margin: 1rem;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
     color: var(--text);
+    text-align: center;
+
+    @media (min-width: 768px) {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
   }
 
   &__card-desc {
-    margin: 0 1rem;
-    color: var(--text-secondary);
-    flex-grow: 1;
+    font-size: 0.9rem;
+    color: var(--secondary);
+    margin: 0.5rem 0;
+    text-align: center;
+    line-height: 1.4;
+
+    @media (min-width: 768px) {
+      font-size: 0.95rem;
+      margin: 0.5rem 0;
+    }
   }
 
   &__card-price {
-    margin: 1rem;
-    font-size: 1.2rem;
     font-weight: 600;
     color: var(--accent);
+    text-align: center;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+
+    @media (min-width: 768px) {
+      font-size: 1rem;
+    }
   }
 }
 </style> 

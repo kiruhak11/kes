@@ -363,8 +363,9 @@ async function loadProducts() {
 
 async function loadCategories() {
   try {
-    const cats = await $fetch<{name: string}[]>('/api/categories')
-    categories.value = cats.map(c => c.name)
+    // Получаем все товары и извлекаем уникальные категории
+    const products = await $fetch<Product[]>('/api/products')
+    categories.value = [...new Set(products.map(p => p.category))]
   } catch (e) {
     console.error('Ошибка загрузки категорий:', e)
   }
@@ -385,16 +386,12 @@ async function addProduct() {
   
   let category = newProd.value.category
   if (category === 'new') {
-    try {
-      const response = await $fetch<Category>('/api/categories', {
-        method: 'POST',
-        body: { name: newCategory.value }
-      })
-      category = response.name
-    } catch (e: any) {
-      console.error('Ошибка создания категории:', e)
+    // Проверяем, что категория не существует
+    if (categories.value.includes(newCategory.value)) {
+      console.error('Категория уже существует')
       return
     }
+    category = newCategory.value
   }
 
   const specs: Record<string,string> = {}

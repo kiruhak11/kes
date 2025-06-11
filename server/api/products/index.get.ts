@@ -1,18 +1,25 @@
 import { defineEventHandler, createError } from 'h3'
-import { promises as fs, existsSync } from 'fs'
+import { promises as fs } from 'fs'
 import { resolve } from 'path'
+import { getQuery } from 'h3'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   try {
+    const query = getQuery(event)
+    const category = query.category as string | undefined
+
     const file = resolve(process.cwd(), 'data/products.json')
-    if (!existsSync(file)) {
-      await fs.mkdir(resolve(process.cwd(), 'data'), { recursive: true })
-      await fs.writeFile(file, '[]', 'utf-8')
-    }
     const content = await fs.readFile(file, 'utf-8')
-    return JSON.parse(content)
+    let products = JSON.parse(content)
+
+    // Если указана категория, фильтруем товары
+    if (category) {
+      products = products.filter((p: any) => p.category === category)
+    }
+
+    return products
   } catch (e: any) {
     console.error('GET /api/products error:', e)
-    throw createError({ statusCode: 500, statusMessage: 'Internal Server Error' })
+    throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
   }
 })

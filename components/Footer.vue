@@ -75,7 +75,10 @@ const toggleSection = (index: number) => {
 .site-footer {
   background: var(--primary);
   color: #fff;
-  margin-bottom: 60px;
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  margin-top: auto;
 
   .footer-inner {
     @include container();
