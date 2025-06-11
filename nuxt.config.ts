@@ -25,4 +25,12 @@ export default defineNuxtConfig({
       adminPassword: process.env.ADMIN_PASSWORD,
     },
   },
+  modules: [
+    '@nuxtjs/device',
+    // остальные модули
+  ],
+  device: {
+    // опционально: можно обновлять при ресайзе
+    refreshOnResize: true
+  }
 });

@@ -1,4 +1,5 @@
 <template>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Оборачиваем всё в наш дефолтный лейаут -->
   <NuxtLayout>
     <NuxtPage />
@@ -15,4 +16,9 @@ const { theme, setTheme } = useTheme();
 if (process.client) {
   setTheme(theme.value === "dark" ? "dark" : "light");
 }
+
+
+useSeoMeta({
+  titleTemplate: (title) => "КотлоЭнергоСнаб"
+});
 </script>

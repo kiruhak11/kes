@@ -1,51 +1,77 @@
 <template>
-  <div class="catalog container">
-    <h2 class="catalog__title">Категории товаров</h2>
-    <div class="catalog__grid">
+  <div class="category container">
+    <h2 class="category__title">{{ category }}</h2>
+    <p v-if="error" class="category__error">{{ error }}</p>
+    <div v-else-if="products.length === 0" class="category__empty">
+      В данной категории пока нет товаров
+    </div>
+    <div v-else class="category__grid">
       <NuxtLink
-        v-for="category in products"
-        :key="category.name"
-        :to="`/catalog/${encodeURIComponent(category.name)}`"
-        class="catalog__card card"
+        v-for="product in products"
+        :key="product.id"
+        :to="`/product/${product.id}`"
+        class="category__card card"
       >
-        <div class="catalog__img-wrapper">
+        <div class="category__img-wrapper">
           <img
-            :src="category.image || '/placeholder.jpg'"
-            :alt="category.name"
-            class="catalog__card-img"
+            :src="product.image || '/placeholder.jpg'"
+            :alt="product.name"
+            class="category__card-img"
           />
         </div>
-        <h3 class="catalog__card-name">{{ category.name }}</h3>
-        <p class="catalog__card-desc">{{ category.count }} товаров</p>
+        <h3 class="category__card-name">{{ product.name }}</h3>
+        <p class="category__card-desc">{{ product.description }}</p>
+        <p class="category__card-price">{{ product.price }} ₽</p>
       </NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from '#app'
 
-interface Category {
+interface Product {
+  id: number
   name: string
+  description: string
+  price: number
   image?: string
-  count: number
+  category: string
 }
 
-const products = ref<Category[]>([])
+const route = useRoute()
+const category = ref(decodeURIComponent(route.params.category as string))
+const products = ref<Product[]>([])
+const error = ref<string | null>(null)
 
 async function loadProducts() {
   try {
-    products.value = await $fetch<Category[]>('/api/categories')
-  } catch (e) {
-    console.error('Ошибка загрузки каталога:', e)
+    error.value = null
+    console.log('Loading products for category:', category.value)
+    const response = await $fetch<Product[]>(`/api/categories/${encodeURIComponent(category.value)}`)
+    console.log('Received products:', response)
+    products.value = response
+  } catch (e: any) {
+    console.error('Ошибка загрузки товаров:', e)
+    error.value = e.statusMessage || 'Произошла ошибка при загрузке товаров'
+    products.value = []
   }
 }
+
+// Add watch for route changes
+watch(() => route.params.category, (newCategory) => {
+  if (newCategory) {
+    category.value = decodeURIComponent(newCategory as string)
+    loadProducts()
+  }
+})
 
 onMounted(loadProducts)
 </script>
 
 <style lang="scss" scoped>
-.catalog {
+.category {
   padding: 1rem;
 
   @media (min-width: 768px) {
@@ -157,5 +183,19 @@ onMounted(loadProducts)
       font-size: 1rem;
     }
   }
+
+  &__error {
+    color: #dc3545;
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 1.1rem;
+  }
+
+  &__empty {
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 1.1rem;
+    color: var(--secondary);
+  }
 }
-</style>
+</style> 

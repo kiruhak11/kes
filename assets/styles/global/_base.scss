@@ -25,7 +25,6 @@ a {
 
 .btn {
   display: inline-block;
-  padding: 0.75em 1.5em;
   border-radius: 1.5rem;
   background-color: var(--accent);
   color: var(--bg);
@@ -68,4 +67,24 @@ a {
 }
 .container {
   @include container(1290px);
+}
+@media (max-width: 992px) {
+  h1 { font-size: 2.5rem; }
+  .cta-buttons { flex-direction: column; gap: .5rem; }
+  .container {
+    @include container(1900px);
+  }
+}
+@media (max-width: 576px) {
+  .advantages-section, .offers-section {
+    grid-template-columns: 1fr;
+  }
+  .cta-buttons .btn { width: 100%; }
+  .container {
+    @include container(1900px);
+  }
+}
+html,
+body {
+  overflow-x: hidden;
 }

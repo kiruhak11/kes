@@ -112,10 +112,15 @@
   
   <style lang="scss" scoped>
   .about-page {
-    padding: 4rem 0;
+    padding: 2rem 1rem;
+  
+    @media (min-width: 768px) {
+      padding: 4rem 0;
+    }
   
     .breadcrumbs {
       margin-bottom: 1rem;
+      font-size: 0.9rem;
       a {
         color: var(--primary);
         &:hover {
@@ -125,17 +130,28 @@
     }
   
     &__main-title {
-      font-size: 2.5rem;
+      font-size: 1.75rem;
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       color: var(--text);
+  
+      @media (min-width: 768px) {
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+      }
     }
   
     &__section-title {
-      font-size: 1.75rem;
-      margin-top: 2rem;
-      margin-bottom: 1rem;
+      font-size: 1.4rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
       color: var(--accent);
+  
+      @media (min-width: 768px) {
+        font-size: 1.75rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
     }
   
     &__list {
@@ -146,6 +162,11 @@
         margin-bottom: 0.5rem;
         color: var(--secondary);
         line-height: 1.5;
+        font-size: 0.95rem;
+  
+        @media (min-width: 768px) {
+          font-size: 1rem;
+        }
       }
     }
   
@@ -153,15 +174,25 @@
       margin-bottom: 1.5rem;
       line-height: 1.6;
       color: var(--secondary);
+      font-size: 0.95rem;
+  
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
     }
   
     &__contacts {
-      margin-top: 2.5rem;
+      margin-top: 2rem;
       padding-top: 1rem;
       border-top: 1px solid var(--secondary);
       p {
         margin: 0.5rem 0;
         color: var(--text);
+        font-size: 0.95rem;
+  
+        @media (min-width: 768px) {
+          font-size: 1rem;
+        }
       }
       a {
         color: var(--primary);

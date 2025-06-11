@@ -6,6 +6,9 @@ export interface Product {
   description: string;
   price: number;
   image?: string;
+  category: string;
+  extendedDescription?: string;
+  specs?: Record<string, string>;
 }
 
 // Изначальный каталог (можно пустой)

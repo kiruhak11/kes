@@ -84,23 +84,38 @@ async function submitForm() {
 
 <style lang="scss" scoped>
 .contact-section {
-  padding: 4rem 0;
+  padding: 2rem 1rem;
+
+  @media (min-width: 768px) {
+    padding: 4rem 0;
+  }
 
   .container {
     max-width: 600px;
     margin: 0 auto;
+    width: 100%;
   }
 
   h1 {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
     color: var(--text);
+    font-size: 1.75rem;
+
+    @media (min-width: 768px) {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
+
+    @media (min-width: 768px) {
+      gap: 1.5rem;
+    }
   }
 
   .form-group {
@@ -110,6 +125,11 @@ async function submitForm() {
     label {
       margin-bottom: 0.5rem;
       font-weight: 500;
+      font-size: 0.95rem;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
     }
 
     input,
@@ -120,19 +140,38 @@ async function submitForm() {
       background: var(--bg);
       color: var(--text);
       transition: border-color 0.2s;
+      font-size: 0.95rem;
+      width: 100%;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
 
       &:focus {
         border-color: var(--accent);
         outline: none;
       }
     }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
   }
 
   button.btn {
     align-self: center;
-    width: 180px;
+    width: 100%;
+    max-width: 180px;
     padding: 0.75rem 1.5rem;
     font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+
+    @media (min-width: 768px) {
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
   }
 }
 </style>

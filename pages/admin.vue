@@ -20,6 +20,25 @@
 
       <!-- Форма добавления нового товара -->
       <div class="add-form">
+        <div class="category-select">
+          <label>Категория:</label>
+          <div class="category-input">
+            <select v-model="newProd.category">
+              <option value="">Выберите категорию</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">
+                {{ cat }}
+              </option>
+              <option value="new">+ Добавить новую категорию</option>
+            </select>
+            <input
+              v-if="newProd.category === 'new'"
+              v-model="newCategory"
+              placeholder="Название новой категории"
+              @input="validateNewCategory"
+            />
+          </div>
+        </div>
+
         <input
           v-model="newProd.name"
           placeholder="Название"
@@ -39,17 +58,28 @@
         />
 
         <label>Изображение:</label>
-        <select v-model="newProd.image">
-          <option
-            v-for="img in presetImages"
-            :key="img"
-            :value="img"
-          >
-            {{ img.split('/').pop() }}
-          </option>
-        </select>
+        <div class="image-upload">
+          <select v-model="newProd.image" class="image-select">
+            <option value="">Выберите изображение</option>
+            <option
+              v-for="img in presetImages"
+              :key="img"
+              :value="img"
+            >
+              {{ img.split('/').pop() }}
+            </option>
+            <option value="custom">Загрузить своё изображение</option>
+          </select>
+          <input
+            v-if="newProd.image === 'custom'"
+            type="file"
+            accept="image/*"
+            @change="(e) => handleImageUpload(e, newProd)"
+            class="image-input"
+          />
+        </div>
         <img
-          v-if="newProd.image"
+          v-if="newProd.image && newProd.image !== 'custom'"
           :src="newProd.image"
           class="img-preview"
         />
@@ -106,6 +136,7 @@
         <button
           class="btn btn-secondary"
           @click="addProduct"
+          :disabled="!isFormValid"
         >
           Добавить товар
         </button>
@@ -124,6 +155,7 @@
             @click="toggle(p.id)"
           >
             <span class="prod-summary__id">{{ p.id }}</span>
+            <span class="prod-summary__category">{{ p.category }}</span>
             <span class="prod-summary__name">{{ p.name }}</span>
             <span class="prod-summary__price">{{ p.price }} ₽</span>
             <button
@@ -138,6 +170,14 @@
               v-if="activeId === p.id"
               class="prod-details"
             >
+              <label>
+                Категория:
+                <select v-model="p.category">
+                  <option v-for="cat in categories" :key="cat" :value="cat">
+                    {{ cat }}
+                  </option>
+                </select>
+              </label>
               <label>
                 Название:
                 <input v-model="p.name" />
@@ -156,17 +196,28 @@
               </label>
 
               <label>Изображение:</label>
-              <select v-model="p.image">
-                <option
-                  v-for="img in presetImages"
-                  :key="img"
-                  :value="img"
-                >
-                  {{ img.split('/').pop() }}
-                </option>
-              </select>
+              <div class="image-upload">
+                <select v-model="p.image" class="image-select">
+                  <option value="">Выберите изображение</option>
+                  <option
+                    v-for="img in presetImages"
+                    :key="img"
+                    :value="img"
+                  >
+                    {{ img.split('/').pop() }}
+                  </option>
+                  <option value="custom">Загрузить своё изображение</option>
+                </select>
+                <input
+                  v-if="p.image === 'custom'"
+                  type="file"
+                  accept="image/*"
+                  @change="(e) => handleImageUpload(e, p)"
+                  class="image-input"
+                />
+              </div>
               <img
-                v-if="p.image"
+                v-if="p.image && p.image !== 'custom'"
                 :src="p.image"
                 class="img-preview"
               />
@@ -231,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRuntimeConfig } from '#app'
 
 interface Product {
@@ -241,6 +292,7 @@ interface Product {
   extendedDescription?: string
   price: number
   image?: string
+  category: string
   specs?: Record<string,string>
 }
 
@@ -255,8 +307,10 @@ const newProd = reactive<Partial<Product>>({
   description: '',
   extendedDescription: '',
   price: 0,
-  image: ''
+  image: '',
+  category: ''
 })
+const newCategory = ref('')
 const activeId = ref<number|null>(null)
 
 // Характеристики
@@ -271,6 +325,24 @@ const presetImages = [
   '/images/cutouts/kotel3.png'
 ]
 
+const categories = ref<string[]>([])
+
+// Валидация формы
+const isFormValid = computed(() => {
+  return newProd.name && 
+         newProd.description && 
+         typeof newProd.price === 'number' && newProd.price > 0 && 
+         newProd.category && 
+         (newProd.category !== 'new' || (newCategory.value && !categories.value.includes(newCategory.value)))
+})
+
+function validateNewCategory() {
+  if (newCategory.value && categories.value.includes(newCategory.value)) {
+    newProd.category = newCategory.value
+    newCategory.value = ''
+  }
+}
+
 async function loadProducts() {
   products.value = await $fetch<Product[]>('/api/products')
   products.value.forEach(p => {
@@ -278,30 +350,51 @@ async function loadProducts() {
   })
 }
 
+async function loadCategories() {
+  try {
+    const cats = await $fetch<{name: string}[]>('/api/categories')
+    categories.value = cats.map(c => c.name)
+  } catch (e) {
+    console.error('Ошибка загрузки категорий:', e)
+  }
+}
+
 function login() {
   if (password.value === config.adminPassword) {
     authorized.value = true
     loadProducts()
+    loadCategories()
   } else {
     loginError.value = 'Неправильный пароль'
   }
 }
 
 async function addProduct() {
-  if (!newProd.name || !newProd.description || !newProd.price) return
+  if (!isFormValid.value) return
+  
+  const category = newProd.category === 'new' ? newCategory.value : newProd.category
   const specs: Record<string,string> = {}
   newSpecs.forEach(s=> specs[s.key]=s.value)
+  
   const added = await $fetch<Product>('/api/products', {
     method: 'POST',
-    body: { ...newProd, specs }
+    body: { ...newProd, category, specs }
   })
+  
   products.value.push(added)
   specsList[added.id] = newSpecs.slice()
+  
+  // Обновляем список категорий после добавления товара
+  await loadCategories()
+  
+  // Очистка формы
   newProd.name = ''
   newProd.description = ''
   newProd.extendedDescription = ''
   newProd.price = 0
   newProd.image = ''
+  newProd.category = ''
+  newCategory.value = ''
   newSpecs.splice(0)
 }
 
@@ -348,130 +441,328 @@ async function deleteProduct(id:number) {
   products.value = products.value.filter(x=>x.id!==id)
   delete specsList[id]
 }
+
+function handleImageUpload(e: Event, p: Product | Partial<Product>) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      if (p) {
+        p.image = event.target?.result as string
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+onMounted(() => {
+  if (authorized.value) {
+    loadProducts()
+    loadCategories()
+  }
+})
 </script>
 
 <style lang="scss" scoped>
 .admin-section {
-  padding: 4rem 0;
+  padding: 1rem;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
 
   .login-box {
-    max-width: 320px;
-    margin: auto;
-    text-align: center;
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: var(--bg);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    h2 {
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      color: var(--text);
+    }
 
     input {
       width: 100%;
-      margin: .5rem 0;
-      padding: .5rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--secondary);
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.95rem;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
     }
 
     .error {
-      color: red;
-      margin-top: .5rem;
+      color: #dc3545;
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
     }
   }
 
   .catalog-manager {
-    .add-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
-      margin-bottom: 1.5rem;
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      color: var(--text);
 
-      input,
-      textarea,
-      select {
-        padding: .5rem;
-        border: 1px solid var(--secondary);
-        border-radius: .25rem;
-        flex: 1 1 200px;
-      }
-
-      .img-preview {
-        width: 60px;
-        height: 60px;
-        object-fit: contain;
-        margin-left: .5rem;
-      }
-    }
-
-    .specs-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: .5rem 0;
-
-      td {
-        border: 1px solid var(--secondary);
-        padding: .25rem;
-      }
-    }
-
-    .prod-list {
-      .prod-item {
-        border: 1px solid var(--secondary);
-        border-radius: .5rem;
-        margin-bottom: 1rem;
-        overflow: hidden;
-
-        .prod-summary {
-          display: flex;
-          align-items: center;
-          padding: .75rem 1rem;
-          background: var(--secondary);
-          color: var(--bg);
-          cursor: pointer;
-
-          &__id { width: 40px; }
-          &__name { flex: 1; }
-          &__price { width: 100px; text-align: right; }
-          &__delete { margin-left: 1rem; }
-          &:hover { background: var(--accent); }
-        }
-
-        .prod-details {
-          background: var(--bg);
-          padding: 1rem;
-          display: flex;
-          flex-direction: column;
-          gap: .75rem;
-
-          label {
-            display: flex;
-            flex-direction: column;
-            font-weight: 500;
-          }
-
-          input, textarea, select {
-            width: 100%;
-            padding: .5rem;
-            border: 1px solid var(--secondary);
-            border-radius: .25rem;
-          }
-
-          .prod-details__actions {
-            display: flex;
-            gap: .5rem;
-            margin-top: .5rem;
-          }
-        }
-      }
-
-      /* Анимация разворачивания */
-      .slide-enter-active,
-      .slide-leave-active {
-        transition: max-height .3s ease, opacity .3s ease;
-      }
-      .slide-enter-from,
-      .slide-leave-to {
-        max-height: 0;
-        opacity: 0;
-      }
-      .slide-enter-to,
-      .slide-leave-from {
-        max-height: 500px;
-        opacity: 1;
+      @media (min-width: 768px) {
+        font-size: 2rem;
       }
     }
   }
+
+  .add-form {
+    background: var(--bg);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    .category-select {
+      margin-bottom: 1rem;
+
+      .category-input {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+
+        select, input {
+          flex: 1;
+        }
+      }
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--secondary);
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+      background: var(--bg);
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      margin: 1.5rem 0 1rem;
+      color: var(--text);
+    }
+
+    .img-preview {
+      max-width: 200px;
+      height: auto;
+      margin: 1rem 0;
+      border-radius: 0.25rem;
+    }
+  }
+
+  .specs-table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+
+    td {
+      padding: 0.5rem;
+      vertical-align: middle;
+
+      @media (max-width: 767px) {
+        display: block;
+        width: 100%;
+        padding: 0.25rem 0;
+      }
+    }
+
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--secondary);
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+      margin-bottom: 0;
+
+      @media (min-width: 768px) {
+        font-size: 0.95rem;
+      }
+    }
+
+    button {
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      margin: 0;
+
+      @media (min-width: 768px) {
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  .prod-list {
+    .prod-item {
+      background: var(--bg);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .prod-summary {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: rgba(0,0,0,0.05);
+      }
+
+      &__id {
+        width: 50px;
+        font-size: 0.9rem;
+        color: var(--secondary);
+      }
+
+      &__category {
+        width: 120px;
+        font-size: 0.9rem;
+        color: var(--primary);
+        margin-right: 1rem;
+      }
+
+      &__name {
+        flex: 1;
+        font-size: 1rem;
+        color: var(--text);
+        margin: 0 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &__price {
+        font-weight: 600;
+        color: var(--accent);
+        margin-right: 1rem;
+        font-size: 0.95rem;
+      }
+
+      &__delete {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    .prod-details {
+      padding: 1.5rem;
+      border-top: 1px solid var(--secondary);
+
+      label {
+        display: block;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+
+        @media (min-width: 768px) {
+          font-size: 1rem;
+        }
+
+        input, textarea, select {
+          width: 100%;
+          padding: 0.75rem;
+          margin-top: 0.5rem;
+          border: 1px solid var(--secondary);
+          border-radius: 0.5rem;
+          font-size: 0.95rem;
+          background: var(--bg);
+
+          @media (min-width: 768px) {
+            font-size: 1rem;
+          }
+        }
+
+        textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
+      }
+
+      .img-preview {
+        max-width: 200px;
+        height: auto;
+        margin: 1rem 0;
+        border-radius: 0.25rem;
+      }
+
+      &__actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+        }
+
+        button {
+          flex: 1;
+          padding: 0.75rem;
+          font-size: 0.95rem;
+
+          @media (min-width: 768px) {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Анимации
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

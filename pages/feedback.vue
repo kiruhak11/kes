@@ -56,37 +56,102 @@ async function onSubmit() {
 .feedback {
   max-width: 500px;
   margin: 0 auto;
-  &__title {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    text-align: center;
+  padding: 2rem 1rem;
+
+  @media (min-width: 768px) {
+    padding: 3rem 0;
   }
+
+  &__title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--text);
+
+    @media (min-width: 768px) {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
+  }
+
   &__form {
     .form-group {
       display: flex;
       flex-direction: column;
       margin-bottom: 1rem;
+
       label {
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+
+        @media (min-width: 768px) {
+          font-size: 1rem;
+        }
       }
+
       input,
       textarea {
-        padding: 0.5rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 1rem;
+        padding: 0.75rem;
+        border: 1px solid var(--secondary);
+        border-radius: 0.5rem;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 0.95rem;
+        width: 100%;
+        transition: border-color 0.2s;
+
+        @media (min-width: 768px) {
+          font-size: 1rem;
+        }
+
+        &:focus {
+          border-color: var(--accent);
+          outline: none;
+        }
+      }
+
+      textarea {
+        min-height: 120px;
         resize: vertical;
       }
     }
+
     button {
       display: block;
       width: 100%;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+      border-radius: 0.5rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+
+      &:hover {
+        background: var(--accent);
+      }
     }
   }
+
   &__status {
     margin-top: 1rem;
     text-align: center;
-    font-weight: bold;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text);
+
+    @media (min-width: 768px) {
+      font-size: 1rem;
+    }
   }
 }
 </style>
