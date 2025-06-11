@@ -51,6 +51,59 @@
       </p>
     </div>
   </section>
+
+
+  <section class="offers-section container">
+  <h2 class="offers-section__title">Специальные предложения</h2>
+  <div class="offers-section__grid">
+    <!-- Котлы водогрейные -->
+    <div class="offer-card">
+      <svg class="offer-card__icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <!-- Корпус котла -->
+        <rect x="10" y="30" width="60" height="30" rx="8" ry="8"/>
+        <!-- Верхняя крышка -->
+        <rect x="10" y="24" width="60" height="8" rx="4" ry="4"/>
+        <!-- Трубы -->
+        <rect x="4" y="36" width="6" height="18" rx="3"/>
+        <rect x="70" y="36" width="6" height="18" rx="3"/>
+      </svg>
+      <h3 class="offer-card__title">Котлы водогрейные</h3>
+      <p class="offer-card__text">
+        Энергосберегающие водогрейные котлы для любых задач – от 0,1 до 100 МВт.
+      </p>
+    </div>
+
+    <!-- Вентиляторы и дымососы -->
+    <div class="offer-card">
+      <svg class="offer-card__icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- Простая стилизация вентилятора -->
+        <circle cx="32" cy="32" r="4"/>
+        <path d="M32 32 L32 8 M32 32 L56 32 M32 32 L32 56 M32 32 L8 32" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <h3 class="offer-card__title">Вентиляторы и дымососы</h3>
+      <p class="offer-card__text">
+        Надёжные вентиляторы и дымососы для поддержания оптимальной тяги.
+      </p>
+    </div>
+
+    <!-- Циклоны -->
+    <div class="offer-card">
+      <svg class="offer-card__icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- Схематичный вихрь -->
+        <path d="M32 4
+                 C32 4, 12 20, 12 32
+                 C12 44, 32 60, 32 60
+                 C32 60, 52 44, 52 32
+                 C52 20, 32 4, 32 4 Z"
+              fill="none" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <h3 class="offer-card__title">Циклоны</h3>
+      <p class="offer-card__text">
+        Высокоэффективные циклонные установки для очистки газов от твёрдых частиц.
+      </p>
+    </div>
+  </div>
+</section>
 </template>
 
 <script setup lang="ts">
@@ -183,6 +236,7 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 2rem;
   text-align: center;
+  @include container();
 
   .advantage-item {
     background: rgba(255, 255, 255, 0.1);
@@ -224,6 +278,56 @@ onMounted(() => {
   h1,
   p {
     color: var(--bg);
+  }
+}
+.offers-section {
+  padding: 4rem 0;
+
+  &__title {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--text);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+  }
+
+  .offer-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform .2s, box-shadow .2s;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+    }
+
+    &__icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      fill: var(--accent);
+      stroke: var(--accent);
+    }
+
+    &__title {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    &__text {
+      font-size: 0.95rem;
+      color: var(--secondary);
+      line-height: 1.6;
+    }
   }
 }
 </style>

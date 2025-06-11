@@ -2,7 +2,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <NuxtLink to="/" class="logo-link" exact-active-class="active-link">
-        <img src="/logo.svg" alt="Логотип Котлы Барнаул" class="logo-img" />
+        <img src="/logo.png" alt="Логотип Котлы Барнаул" class="logo-img" />
       </NuxtLink>
       <nav class="main-nav">
         <ul class="nav-list">

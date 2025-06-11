@@ -66,3 +66,6 @@ a {
   flex: 1; // занимает всё свободное пространство
   width: 100%;
 }
+.container {
+  @include container(1290px);
+}
