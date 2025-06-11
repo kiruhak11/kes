@@ -2,7 +2,7 @@ import { defineEventHandler, createError } from 'h3'
 import { promises as fs, existsSync } from 'fs'
 import { resolve } from 'path'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   try {
     const categoriesFile = resolve(process.cwd(), 'data/categories.json')
     const productsFile = resolve(process.cwd(), 'data/products.json')
@@ -23,16 +23,24 @@ export default defineEventHandler(async () => {
       const products = JSON.parse(productsContent)
 
       // Add count to each category
-      return categories.map((category: any) => ({
+      const result = categories.map((category: any) => ({
         ...category,
         count: products.filter((p: any) => p.category === category.name).length
       }))
+
+      // Set proper content type and encoding
+      event.node.res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      return result
     }
 
-    return categories.map((category: any) => ({
+    const result = categories.map((category: any) => ({
       ...category,
       count: 0
     }))
+
+    // Set proper content type and encoding
+    event.node.res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    return result
   } catch (e: any) {
     console.error('GET /api/categories error:', e)
     throw createError({ statusCode: 500, statusMessage: 'Internal Server Error' })

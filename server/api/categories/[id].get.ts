@@ -26,12 +26,16 @@ export default defineEventHandler(async (event) => {
     // Read products
     const productsFile = resolve(process.cwd(), 'data/products.json')
     if (!existsSync(productsFile)) {
-      return []
+      return { name: category.name, products: [] }
     }
 
     const productsContent = await fs.readFile(productsFile, 'utf-8')
     const products = JSON.parse(productsContent)
-    return products.filter((p: any) => p.category === category.name)
+    const categoryProducts = products.filter((p: any) => p.category === category.name)
+
+    // Set proper content type and encoding
+    event.node.res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    return { name: category.name, products: categoryProducts }
   } catch (e: any) {
     console.error(`GET /api/categories/${event.context.params?.id} error:`, e)
     throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
