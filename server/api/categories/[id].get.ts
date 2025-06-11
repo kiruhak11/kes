@@ -12,13 +12,21 @@ export default defineEventHandler(async (event) => {
     // Read categories to get category name
     const categoriesFile = resolve(process.cwd(), 'data/categories.json')
     if (!existsSync(categoriesFile)) {
-      throw createError({ statusCode: 404, statusMessage: 'Categories not found' })
+      await fs.mkdir(resolve(process.cwd(), 'data'), { recursive: true })
+      await fs.writeFile(categoriesFile, '[]', 'utf-8')
+      return { name: '', products: [] }
     }
 
     const categoriesContent = await fs.readFile(categoriesFile, 'utf-8')
-    const categories = JSON.parse(categoriesContent)
-    const category = categories.find((c: any) => c.id === categoryId)
+    let categories = []
+    try {
+      categories = JSON.parse(categoriesContent)
+    } catch (e) {
+      console.error('Error parsing categories file:', e)
+      categories = []
+    }
 
+    const category = categories.find((c: any) => c.id === categoryId)
     if (!category) {
       throw createError({ statusCode: 404, statusMessage: 'Category not found' })
     }
@@ -26,18 +34,33 @@ export default defineEventHandler(async (event) => {
     // Read products
     const productsFile = resolve(process.cwd(), 'data/products.json')
     if (!existsSync(productsFile)) {
+      await fs.writeFile(productsFile, '[]', 'utf-8')
       return { name: category.name, products: [] }
     }
 
     const productsContent = await fs.readFile(productsFile, 'utf-8')
-    const products = JSON.parse(productsContent)
-    const categoryProducts = products.filter((p: any) => p.category === category.name)
+    let products = []
+    try {
+      products = JSON.parse(productsContent)
+    } catch (e) {
+      console.error('Error parsing products file:', e)
+      products = []
+    }
+
+    // Filter products by category name (case-insensitive)
+    const categoryProducts = products.filter((p: any) => 
+      p.category && p.category.toLowerCase() === category.name.toLowerCase()
+    )
 
     // Set proper content type and encoding
     event.node.res.setHeader('Content-Type', 'application/json; charset=utf-8')
     return { name: category.name, products: categoryProducts }
   } catch (e: any) {
     console.error(`GET /api/categories/${event.context.params?.id} error:`, e)
-    throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
+    throw createError({ 
+      statusCode: e.statusCode || 500, 
+      statusMessage: e.statusMessage || 'Internal Server Error',
+      data: e.message
+    })
   }
 }) 

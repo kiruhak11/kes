@@ -7,6 +7,7 @@
         v-model="password"
         type="password"
         placeholder="Пароль"
+        @keyup.enter="login"
       />
       <button class="btn btn-primary" @click="login">
         Войти
@@ -285,24 +286,34 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRuntimeConfig } from '#app'
 
+interface Category {
+  id: number
+  name: string
+  image?: string
+}
+
+interface Spec {
+  key: string
+  value: string
+}
+
 interface Product {
   id: number
   name: string
   description: string
   extendedDescription?: string
   price: number
-  image?: string
+  image: string
   category: string
   specs?: Record<string,string>
 }
 
 const config = useRuntimeConfig().public
 const password = ref('')
-const loginError = ref<string|null>(null)
+const loginError = ref('')
 const authorized = ref(false)
-
 const products = ref<Product[]>([])
-const newProd = reactive<Partial<Product>>({
+const newProd = ref<Partial<Product>>({
   name: '',
   description: '',
   extendedDescription: '',
@@ -314,9 +325,9 @@ const newCategory = ref('')
 const activeId = ref<number|null>(null)
 
 // Характеристики
-const specsList = reactive<Record<number, Array<{key:string,value:string}>>>({})
-const newSpecs = reactive<Array<{key:string,value:string}>>([])
-const newSpec = reactive<{ key:string, value:string }>({ key:'', value:'' })
+const specsList = ref<Record<number, Spec[]>>({})
+const newSpecs = ref<Spec[]>([])
+const newSpec = ref<Spec>({ key:'', value:'' })
 
 // Предзаготовленные картинки
 const presetImages = [
@@ -329,16 +340,16 @@ const categories = ref<string[]>([])
 
 // Валидация формы
 const isFormValid = computed(() => {
-  return newProd.name && 
-         newProd.description && 
-         typeof newProd.price === 'number' && newProd.price > 0 && 
-         newProd.category && 
-         (newProd.category !== 'new' || (newCategory.value && !categories.value.includes(newCategory.value)))
+  return newProd.value.name && 
+         newProd.value.description && 
+         typeof newProd.value.price === 'number' && newProd.value.price > 0 && 
+         newProd.value.category && 
+         (newProd.value.category !== 'new' || (newCategory.value && !categories.value.includes(newCategory.value)))
 })
 
 function validateNewCategory() {
   if (newCategory.value && categories.value.includes(newCategory.value)) {
-    newProd.category = newCategory.value
+    newProd.value.category = newCategory.value
     newCategory.value = ''
   }
 }
@@ -346,7 +357,7 @@ function validateNewCategory() {
 async function loadProducts() {
   products.value = await $fetch<Product[]>('/api/products')
   products.value.forEach(p => {
-    specsList[p.id] = Object.entries(p.specs||{}).map(([k,v])=>({key:k,value:v}))
+    specsList.value[p.id] = Object.entries(p.specs||{}).map(([k,v])=>({key:k,value:v}))
   })
 }
 
@@ -372,30 +383,43 @@ function login() {
 async function addProduct() {
   if (!isFormValid.value) return
   
-  const category = newProd.category === 'new' ? newCategory.value : newProd.category
+  let category = newProd.value.category
+  if (category === 'new') {
+    try {
+      const response = await $fetch<Category>('/api/categories', {
+        method: 'POST',
+        body: { name: newCategory.value }
+      })
+      category = response.name
+    } catch (e: any) {
+      console.error('Ошибка создания категории:', e)
+      return
+    }
+  }
+
   const specs: Record<string,string> = {}
-  newSpecs.forEach(s=> specs[s.key]=s.value)
+  newSpecs.value.forEach(s => specs[s.key] = s.value)
   
   const added = await $fetch<Product>('/api/products', {
     method: 'POST',
-    body: { ...newProd, category, specs }
+    body: { ...newProd.value, category, specs }
   })
   
   products.value.push(added)
-  specsList[added.id] = newSpecs.slice()
+  specsList.value[added.id] = newSpecs.value.slice()
   
   // Обновляем список категорий после добавления товара
   await loadCategories()
   
   // Очистка формы
-  newProd.name = ''
-  newProd.description = ''
-  newProd.extendedDescription = ''
-  newProd.price = 0
-  newProd.image = ''
-  newProd.category = ''
+  newProd.value.name = ''
+  newProd.value.description = ''
+  newProd.value.extendedDescription = ''
+  newProd.value.price = 0
+  newProd.value.image = ''
+  newProd.value.category = ''
   newCategory.value = ''
-  newSpecs.splice(0)
+  newSpecs.value.splice(0)
 }
 
 function toggle(id:number) {
@@ -404,7 +428,7 @@ function toggle(id:number) {
 
 async function updateWithSpecs(p:Product) {
   let specs: Record<string,string> = {}
-  specsList[p.id].forEach(s=> specs[s.key]=s.value)
+  specsList.value[p.id].forEach(s=> specs[s.key]=s.value)
   await $fetch<Product>(`/api/products/${p.id}`, {
     method: 'PUT',
     body: { ...p, specs }
@@ -417,29 +441,29 @@ function cancelEdit() {
 }
 
 function addSpec(id:number) {
-  specsList[id].push({ key:'', value:'' })
+  specsList.value[id].push({ key:'', value:'' })
 }
 
 function removeSpec(id:number, idx:number) {
-  specsList[id].splice(idx,1)
+  specsList.value[id].splice(idx,1)
 }
 
 function addNewSpec() {
-  if (newSpec.key && newSpec.value) {
-    newSpecs.push({ key:newSpec.key, value:newSpec.value })
-    newSpec.key = ''
-    newSpec.value = ''
+  if (newSpec.value.key && newSpec.value.value) {
+    newSpecs.value.push({ key:newSpec.value.key, value:newSpec.value.value })
+    newSpec.value.key = ''
+    newSpec.value.value = ''
   }
 }
 
 function removeNewSpec(idx:number) {
-  newSpecs.splice(idx,1)
+  newSpecs.value.splice(idx,1)
 }
 
 async function deleteProduct(id:number) {
   await $fetch(`/api/products/${id}`, { method:'DELETE' })
   products.value = products.value.filter(x=>x.id!==id)
-  delete specsList[id]
+  delete specsList.value[id]
 }
 
 function handleImageUpload(e: Event, p: Product | Partial<Product>) {

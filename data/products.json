@@ -1,12 +1,22 @@
 [
   {
     "id": 1,
-    "name": "Котел1",
-    "description": "описание котла 1",
+    "name": "котле",
+    "description": "123",
     "extendedDescription": "",
     "price": 123,
-    "image": "/images/cutouts/kotel1.png",
-    "category": "Котлы",
+    "image": "",
+    "category": "kotles",
+    "specs": {}
+  },
+  {
+    "id": 2,
+    "name": "312",
+    "description": "3123",
+    "extendedDescription": "1231",
+    "price": 3123,
+    "image": "",
+    "category": "312",
     "specs": {}
   }
 ]
