@@ -1,11 +1,11 @@
 services:
-  site-node:
-    container_name: site-node
+  kes-site-node:
+    container_name: kes-site-node
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: site-node
-    restart: always
+    image: kes-site-node
+    restart: always   
     ports:
       - "${PORT:-3000}:3000"
     networks:
