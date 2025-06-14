@@ -1,20 +1,36 @@
 import { defineEventHandler, createError } from 'h3'
-import { promises as fs } from 'fs'
-import { resolve } from 'path'
+import { serverSupabaseClient } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   try {
+    const client = await serverSupabaseClient(event)
     const id = Number(event.context.params?.id)
-    const file = resolve(process.cwd(), 'data/products.json')
-    const content = await fs.readFile(file, 'utf-8')
-    const products = JSON.parse(content) as any[]
 
-    const idx = products.findIndex(p => p.id === id)
-    if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Not found' })
+    // Сначала получаем продукт, чтобы вернуть его после удаления
+    const { data: productToDelete, error: fetchError } = await client.from('products')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    const [deleted] = products.splice(idx, 1)
-    await fs.writeFile(file, JSON.stringify(products, null, 2), 'utf-8')
-    return deleted
+    if (fetchError) {
+      console.error('Supabase fetch error before delete:', fetchError.message)
+      throw createError({ statusCode: 500, statusMessage: 'Failed to fetch product for deletion from Supabase' })
+    }
+
+    if (!productToDelete) {
+      throw createError({ statusCode: 404, statusMessage: 'Product not found' })
+    }
+
+    const { error: deleteError } = await client.from('products')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) {
+      console.error('Supabase delete error:', deleteError.message)
+      throw createError({ statusCode: 500, statusMessage: 'Failed to delete product from Supabase' })
+    }
+
+    return productToDelete
   } catch (e: any) {
     console.error(`DELETE /api/products/${event.context.params?.id} error:`, e)
     throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })

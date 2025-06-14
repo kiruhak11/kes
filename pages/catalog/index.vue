@@ -19,7 +19,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import productsData from '~/data/products.json';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -54,23 +53,36 @@ interface Category {
   description: string;
 }
 
-const products = ref<Product[]>(productsData.map(product => ({
-  ...product,
-  slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-})));
+const { data: fetchedProducts, error: fetchError } = await useFetch<Product[]>('/api/products');
+
+const products = ref<Product[]>([]);
+
+if (fetchedProducts.value) {
+  products.value = fetchedProducts.value.map(product => {
+    const slug = transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+    return {
+      ...product,
+      slug: slug,
+    };
+  });
+} else if (fetchError.value) {
+  console.error('Error loading products:', fetchError.value);
+}
 
 const categories = computed<Category[]>(() => {
   const uniqueCategories = new Map<string, Category>();
   products.value.forEach(product => {
     if (!uniqueCategories.has(product.category)) {
+      const slug = transliterate(product.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
       uniqueCategories.set(product.category, {
         title: product.category,
-        slug: transliterate(product.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+        slug: slug,
         image: product.image, // Using product image as category image, needs to be refined if categories have specific images
         description: `Товары категории ${product.category}` // Generic description, can be improved
       });
     }
   });
+  console.log('Generated categories:', Array.from(uniqueCategories.values())); // Log generated categories
   return Array.from(uniqueCategories.values());
 });
 </script>

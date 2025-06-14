@@ -331,8 +331,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRuntimeConfig } from '#app'
+
+const transliterate = (text: string): string => {
+  const mapping: { [key: string]: string } = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
+    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
+    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
+    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
+    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+  return text.split('').map(char => mapping[char] || char).join('');
+};
 
 interface Category {
   id: number
@@ -353,12 +367,13 @@ interface Product {
   price: number
   image: string
   category: string
-  specs?: Record<string,string>
+  slug: string
+  specs?: Record<string, any>
 }
 
 const config = useRuntimeConfig().public
 const password = ref('')
-const loginError = ref('')
+const loginError = ref<string | null>(null)
 const authorized = ref(false)
 const products = ref<Product[]>([])
 const newProd = ref<Partial<Product>>({
@@ -424,31 +439,69 @@ function validateNewCategory() {
   }
 }
 
-async function loadProducts() {
-  products.value = await $fetch<Product[]>('/api/products')
-  products.value.forEach(p => {
-    specsList.value[p.id] = Object.entries(p.specs||{}).map(([k,v])=>({key:k,value:v}))
+// Move product and category loading to top-level script setup
+const { data: fetchedProducts, error: productsFetchError } = await useFetch<Product[]>('/api/products')
+const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<string[]>('/api/categories')
+
+if (fetchedProducts.value) {
+  products.value = fetchedProducts.value.map(product => {
+    const powerMatch = product.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+    const powerValue = powerMatch ? parseFloat(powerMatch[1]) : 0
+    const powerUnit = powerMatch ? powerMatch[3] : ''
+    
+    let fuel: string[] = []
+    if (product.specs?.fuel) {
+      if (Array.isArray(product.specs.fuel)) {
+        fuel = product.specs.fuel.filter((f: string) => f !== 'отсутствует')
+      } else if (typeof product.specs.fuel === 'string') {
+        fuel = product.specs.fuel.split(', ').map(f => f.trim()).filter(f => f !== 'отсутствует')
+      }
+    }
+    
+    return {
+      ...product,
+      slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+      specs: {
+        ...product.specs,
+        power: powerValue,
+        powerUnit: powerUnit,
+        fuel: fuel,
+      }
+    }
   })
 }
 
-async function loadCategories() {
-  try {
-    // Получаем все товары и извлекаем уникальные категории
-    const products = await $fetch<Product[]>('/api/products')
-    categories.value = [...new Set(products.map(p => p.category))]
-  } catch (e) {
-    console.error('Ошибка загрузки категорий:', e)
-  }
+if (fetchedCategories.value) {
+  categories.value = fetchedCategories.value
 }
+
+if (productsFetchError.value) {
+  console.error('Error fetching products for admin:', productsFetchError.value)
+}
+
+if (categoriesFetchError.value) {
+  console.error('Error fetching categories for admin:', categoriesFetchError.value)
+}
+
+// Update specsList after products are loaded
+watch(products, (newProducts) => {
+  newProducts.forEach(p => {
+    specsList.value[p.id] = Object.entries(p.specs || {}).map(([k,v]) => ({key: k, value: String(v)}))
+  })
+}, { immediate: true })
 
 function login() {
   if (password.value === config.adminPassword) {
     authorized.value = true
-    loadProducts()
-    loadCategories()
   } else {
     loginError.value = 'Неправильный пароль'
   }
+}
+
+function logout() {
+  authorized.value = false
+  password.value = ''
+  loginError.value = null
 }
 
 async function addProduct() {
@@ -465,7 +518,7 @@ async function addProduct() {
   }
 
   // Инициализация specs с значениями по умолчанию и добавление из newSpecs
-  const productSpecs: Record<string, string> = {}
+  const productSpecs: Record<string, any> = {}
   
   // Добавляем мощность и топливо из новых полей ввода
   productSpecs.power = newProdPowerValue.value + ' ' + newProdPowerUnit.value
@@ -621,13 +674,6 @@ function toggleNewProdFuelDropdown() {
 function toggleEditProdFuelDropdown() {
   showEditProdFuelDropdown.value = !showEditProdFuelDropdown.value;
 }
-
-onMounted(() => {
-  if (authorized.value) {
-    loadProducts()
-    loadCategories()
-  }
-})
 </script>
 
 <style lang="scss" scoped>

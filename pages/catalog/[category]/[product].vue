@@ -36,7 +36,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import productsData from '~/data/products.json';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -68,22 +67,38 @@ const route = useRoute();
 const categorySlug = route.params.category as string;
 const productSlug = route.params.product as string;
 
-console.log('Debug - Category Slug:', categorySlug);
-console.log('Debug - Product Slug:', productSlug);
+console.log('Route Category Slug:', categorySlug);
+console.log('Route Product Slug:', productSlug);
 
-const allProducts = ref<Product[]>(productsData.map(product => ({
-  ...product,
-  slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-})));
+const { data: fetchedProducts, error: fetchError } = await useFetch<Product[]>(`/api/products?categorySlug=${categorySlug}`);
 
 const product = computed<Product | undefined>(() => {
-  return allProducts.value.find(p => 
-    transliterate(p.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug &&
-    transliterate(p.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === productSlug
-  );
+  if (fetchedProducts.value) {
+    const mappedProducts = fetchedProducts.value.map(p => {
+      const productSlugGenerated = transliterate(p.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+      const categorySlugGenerated = transliterate(p.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+
+      console.log(`Checking Product: ${p.name}, Category: ${p.category}`);
+      console.log(`  Generated Product Slug: ${productSlugGenerated}, Route Product Slug: ${productSlug}`);
+      console.log(`  Generated Category Slug: ${categorySlugGenerated}, Route Category Slug: ${categorySlug}`);
+
+      return {
+        ...p,
+        slug: productSlugGenerated,
+        categorySlug: categorySlugGenerated, // Temporarily add for logging
+      };
+    });
+
+    return mappedProducts.find(p => p.categorySlug === categorySlug && p.slug === productSlug);
+  }
+  return undefined;
 });
 
-console.log('Debug - Found Product:', product.value);
+if (fetchError.value) {
+  console.error('Error loading product:', fetchError.value);
+}
+
+console.log('Final Product Found:', product.value);
 
 const capitalize = (s: string) => {
   if (typeof s !== 'string') return ''

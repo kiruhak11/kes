@@ -43,5 +43,18 @@
       "efficiency": "95%",
       "weight": "350 kg"
     }
+  },
+  {
+    "id": 4,
+    "name": "qwe",
+    "description": "qwe",
+    "extendedDescription": "qwe",
+    "price": 123,
+    "image": "/images/cutouts/kotel2.png",
+    "category": "qwe",
+    "specs": {
+      "power": "123 МВт",
+      "fuel": "Природный газ"
+    }
   }
 ]

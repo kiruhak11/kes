@@ -66,8 +66,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import productsData from '~/data/products.json'
+  import { ref, computed, watch } from 'vue'
   
   const transliterate = (text: string): string => {
     const mapping: { [key: string]: string } = {
@@ -106,44 +105,57 @@
   }
   
   const route = useRoute()
-  const categorySlug = route.params.category as string
+  const categorySlug = ref(route.params.category as string)
   
-  console.log('Category Slug:', categorySlug)
+  // console.log('Category Slug:', categorySlug)
   
-  const allProducts = ref<Product[]>(productsData.map(product => {
-    const rawSpecs: Record<string, any> = product.specs || {};
-    
-    const power = String(rawSpecs.power ?? 'отсутствует');
+  const { data: fetchedAllProducts, error: fetchError } = await useFetch<Product[]>('/api/products');
 
-    let fuel: string[] = [];
-    if (Array.isArray(rawSpecs.fuel)) {
-      fuel = rawSpecs.fuel.filter((f: string) => f !== 'отсутствует');
-    } else if (typeof rawSpecs.fuel === 'string' && rawSpecs.fuel !== 'отсутствует' && rawSpecs.fuel !== '') {
-      fuel = rawSpecs.fuel.split(', ').map((f: string) => f.trim());
-    } else {
-      fuel = [];
-    }
+  const allProducts = ref<Product[]>([]) // Initialize as empty array
 
-    return {
-      ...product,
-      slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-      specs: {
-        power: power,
-        fuel: fuel.length > 0 ? fuel : ['отсутствует'],
-        ...Object.fromEntries(
-          Object.entries(rawSpecs).filter(([key]) => key !== 'power' && key !== 'fuel')
-        )
+  if (fetchedAllProducts.value) {
+    allProducts.value = fetchedAllProducts.value.map(product => {
+      const rawSpecs: Record<string, any> = product.specs || {};
+      
+      const power = String(rawSpecs.power ?? 'отсутствует');
+
+      let fuel: string[] = [];
+      if (Array.isArray(rawSpecs.fuel)) {
+        fuel = rawSpecs.fuel.filter((f: string) => f !== 'отсутствует');
+      } else if (typeof rawSpecs.fuel === 'string' && rawSpecs.fuel !== 'отсутствует' && rawSpecs.fuel !== '') {
+        fuel = rawSpecs.fuel.split(', ').map((f: string) => f.trim());
+      } else {
+        fuel = [];
       }
-    };
-  }))
+
+      return {
+        ...product,
+        slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+        specs: {
+          power: power,
+          fuel: fuel.length > 0 ? fuel : ['отсутствует'],
+          ...Object.fromEntries(
+            Object.entries(rawSpecs).filter(([key]) => key !== 'power' && key !== 'fuel')
+          )
+        }
+      };
+    })
+  } else if (fetchError.value) {
+    console.error('Error loading all products:', fetchError.value)
+  }
+
+  watch(() => route.params.category, (newCategorySlug) => {
+    categorySlug.value = newCategorySlug as string;
+    // No need to reload all products, just re-filter
+  });
   
   const category = computed<CategoryInfo | undefined>(() => {
-    const foundProduct = allProducts.value.find(p => transliterate(p.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug)
+    const foundProduct = allProducts.value.find(p => transliterate(p.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value)
     if (foundProduct) {
       return {
         title: foundProduct.category,
         description: `Товары категории ${foundProduct.category}`,
-        slug: categorySlug
+        slug: categorySlug.value
       }
     }
     return undefined
@@ -151,11 +163,11 @@
   
   const productsInCategory = computed<Product[]>(() => {
     return allProducts.value.filter(product => 
-      transliterate(product.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug
+      transliterate(product.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value
     )
   })
   
-  console.log('Products in Category:', productsInCategory.value)
+  // console.log('Products in Category:', productsInCategory.value)
   
   const filters = ref({
     minPower: undefined as number | undefined,

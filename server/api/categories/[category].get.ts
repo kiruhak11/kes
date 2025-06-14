@@ -1,22 +1,22 @@
 import { defineEventHandler, createError } from 'h3'
-import { promises as fs, existsSync } from 'fs'
-import { resolve } from 'path'
+import { serverSupabaseClient } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   try {
+    const client = await serverSupabaseClient(event)
     const category = decodeURIComponent(event.context.params?.category || '')
     if (!category) {
       throw createError({ statusCode: 400, statusMessage: 'Category is required' })
     }
 
-    const file = resolve(process.cwd(), 'data/products.json')
-    if (!existsSync(file)) {
-      throw createError({ statusCode: 404, statusMessage: 'Not found' })
-    }
+    const { data: categoryProducts, error } = await client.from('products')
+      .select('*')
+      .eq('category', category)
 
-    const content = await fs.readFile(file, 'utf-8')
-    const products = JSON.parse(content)
-    const categoryProducts = products.filter((p: any) => p.category === category)
+    if (error) {
+      console.error('Supabase query error:', error.message)
+      throw createError({ statusCode: 500, statusMessage: 'Failed to fetch products by category from Supabase' })
+    }
 
     return categoryProducts
   } catch (e: any) {

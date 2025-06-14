@@ -18,16 +18,23 @@ export default defineNuxtConfig({
       },
     },
   },
+  supabase: {
+    url: process.env.SUPABASE_URL ?? '',
+    key: process.env.SUPABASE_KEY ?? '',
+    redirect: false,
+
+  },
   runtimeConfig: {
     public: {
+      
+      sb_url: process.env.SUPABASE_URL ?? '',
+      sb_key: process.env.SUPABASE_KEY ?? '',
       telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
       telegramChatId: process.env.TELEGRAM_CHAT_ID,
       adminPassword: process.env.ADMIN_PASSWORD,
     },
   },
-  modules: [
-    '@nuxtjs/device'
-  ],
+  modules: ['@nuxtjs/device', '@nuxtjs/supabase'],
   device: {
     // опционально: можно обновлять при ресайзе
     refreshOnResize: true

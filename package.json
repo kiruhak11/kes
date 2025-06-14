@@ -16,11 +16,13 @@
   "dependencies": {
     "@nuxtjs/device": "^3.2.4",
     "nuxt": "^3.13.2",
+    "supabase": "^2.24.3",
     "telegraf": "^4.16.3",
     "vue": "latest",
     "vue-router": "latest"
   },
   "devDependencies": {
+    "@nuxtjs/supabase": "^1.5.2",
     "sass": "^1.89.0"
   }
 }

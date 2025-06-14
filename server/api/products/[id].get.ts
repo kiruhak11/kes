@@ -1,19 +1,25 @@
 import { defineEventHandler, createError } from 'h3'
-import { promises as fs, existsSync } from 'fs'
-import { resolve } from 'path'
+import { serverSupabaseClient } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   try {
+    const client = await serverSupabaseClient(event)
     const id = Number(event.context.params?.id)
-    const file = resolve(process.cwd(), 'data/products.json')
-    if (!existsSync(file)) {
-      throw createError({ statusCode: 404, statusMessage: 'Not found' })
+
+    const { data: product, error } = await client.from('products')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('Supabase query error:', error.message)
+      throw createError({ statusCode: 500, statusMessage: 'Failed to fetch product from Supabase' })
     }
-    const content = await fs.readFile(file, 'utf-8')
-    const products = JSON.parse(content) as any[]
-    const prod = products.find(p => p.id === id)
-    if (!prod) throw createError({ statusCode: 404, statusMessage: 'Not found' })
-    return prod
+
+    if (!product) {
+      throw createError({ statusCode: 404, statusMessage: 'Product not found' })
+    }
+    return product
   } catch (e: any) {
     console.error(`GET /api/products/${event.context.params?.id} error:`, e)
     throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
