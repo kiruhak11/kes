@@ -43,18 +43,5 @@
       "efficiency": "95%",
       "weight": "350 kg"
     }
-  },
-  {
-    "id": 4,
-    "name": "123",
-    "description": "321",
-    "extendedDescription": "123",
-    "price": 123,
-    "image": "/images/cutouts/kotel1.png",
-    "category": "Циклоны",
-    "specs": {
-      "power": "123 МВт",
-      "fuel": "Дизельное топливо, Мазут"
-    }
   }
 ]

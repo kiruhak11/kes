@@ -8,27 +8,8 @@ services:
     restart: always
     ports:
       - "${PORT:-3000}:3000"
-    environment:
-      DATABASE_URL: "mysql://user:password@db/cs"
-    depends_on:
-      - db
     networks:
       - app-network
-  db:
-    image: mysql:8.0
-    container_name: site-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: cs
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
-
-volumes:
-  mysql_data:
 
 networks:
   app-network:
