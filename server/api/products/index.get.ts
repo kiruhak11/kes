@@ -1,6 +1,6 @@
 import { defineEventHandler, createError } from 'h3'
 import { promises as fs } from 'fs'
-import { resolve } from 'path'
+import { resolve, dirname } from 'path'
 import { getQuery } from 'h3'
 
 export default defineEventHandler(async (event) => {
@@ -8,8 +8,24 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const category = query.category as string | undefined
 
-    const file = resolve(process.cwd(), 'data/products.json')
-    const content = await fs.readFile(file, 'utf-8')
+    const filePath = resolve(process.cwd(), 'data/products.json')
+    
+    // Проверяем, существует ли файл
+    let content: string
+    try {
+      content = await fs.readFile(filePath, 'utf-8')
+    } catch (readError: any) {
+      if (readError.code === 'ENOENT') { // Если файл не найден
+        console.warn('products.json not found, initializing with empty array.')
+        const dirPath = dirname(filePath)
+        await fs.mkdir(dirPath, { recursive: true }).catch(() => {}) // Создаем директорию, если ее нет
+        await fs.writeFile(filePath, '[]', 'utf-8') // Создаем файл с пустым массивом
+        content = '[]'
+      } else {
+        throw readError // Перебрасываем другие ошибки чтения
+      }
+    }
+    
     let products = JSON.parse(content)
 
     // Если указана категория, фильтруем товары

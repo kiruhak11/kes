@@ -1,165 +1,154 @@
 <template>
-  <div class="catalog container">
-    <h2 class="catalog__title">Категории товаров</h2>
-    <div class="catalog__grid">
-      <NuxtLink
-        v-for="category in categories"
-        :key="category"
-        :to="`/catalog/${encodeURIComponent(category)}`"
-        class="catalog__card card"
-      >
-        <div class="catalog__img-wrapper">
-          <img
-            :src="getCategoryImage(category)"
-            :alt="category"
-            class="catalog__card-img"
-          />
+  <div class="catalog-page">
+    <div class="container">
+      <h1 class="page-title">Каталог продукции</h1>
+      
+      <div class="catalog-grid">
+        <div v-for="category in categories" :key="category.slug" class="catalog-item">
+          <img :src="category.image" :alt="category.title" />
+          <div class="catalog-item__content">
+            <h2>{{ category.title }}</h2>
+            <p>{{ category.description }}</p>
+            <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
+          </div>
         </div>
-        <h3 class="catalog__card-name">{{ category }}</h3>
-        <p class="catalog__card-desc">{{ getCategoryCount(category) }} товаров</p>
-      </NuxtLink>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue';
+import productsData from '~/data/products.json';
+
+const transliterate = (text: string): string => {
+  const mapping: { [key: string]: string } = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
+    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
+    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
+    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
+    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+  return text.split('').map(char => mapping[char] || char).join('');
+};
 
 interface Product {
-  id: number
-  name: string
-  description: string
-  price: number
-  image?: string
-  category: string
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription: string;
+  price: number;
+  image: string;
+  category: string;
+  slug: string; // Add slug to Product interface
+  specs: Record<string, any>;
 }
 
-const products = ref<Product[]>([])
-const categories = ref<string[]>([])
-
-function getCategoryCount(category: string): number {
-  return products.value.filter(p => p.category === category).length
+interface Category {
+  title: string;
+  slug: string;
+  image: string;
+  description: string;
 }
 
-function getCategoryImage(category: string): string {
-  const categoryProducts = products.value.filter(p => p.category === category)
-  return categoryProducts.length > 0 ? categoryProducts[0].image || '/placeholder.jpg' : '/placeholder.jpg'
-}
+const products = ref<Product[]>(productsData.map(product => ({
+  ...product,
+  slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+})));
 
-async function loadProducts() {
-  try {
-    products.value = await $fetch<Product[]>('/api/products')
-    // Получаем уникальные категории из товаров
-    categories.value = [...new Set(products.value.map(p => p.category))]
-  } catch (e) {
-    console.error('Ошибка загрузки товаров:', e)
-  }
-}
-
-onMounted(loadProducts)
+const categories = computed<Category[]>(() => {
+  const uniqueCategories = new Map<string, Category>();
+  products.value.forEach(product => {
+    if (!uniqueCategories.has(product.category)) {
+      uniqueCategories.set(product.category, {
+        title: product.category,
+        slug: transliterate(product.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+        image: product.image, // Using product image as category image, needs to be refined if categories have specific images
+        description: `Товары категории ${product.category}` // Generic description, can be improved
+      });
+    }
+  });
+  return Array.from(uniqueCategories.values());
+});
 </script>
 
-<style lang="scss" scoped>
-.catalog {
-  padding: 1rem;
+<style scoped>
+.catalog-page {
+  padding: 40px 0;
+}
 
-  @media (min-width: 768px) {
-    padding: 2rem;
+.page-title {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 2.5rem;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.catalog-item {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  padding-top: 60px;
+}
+
+.catalog-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.catalog-item img {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+.catalog-item__content {
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.catalog-item h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.catalog-item p {
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1200px) {
+  .catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  &__title {
-    font-size: 1.5rem;
-    margin-top: 1rem;
-    margin-bottom: 3rem;
-    text-align: center;
-    color: var(--text);
-
-    @media (min-width: 768px) {
-      font-size: 2rem;
-      margin-top: 2rem;
-      margin-bottom: 5rem;
-    }
+@media (max-width: 768px) {
+  .catalog-grid {
+    grid-template-columns: 1fr;
   }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem 1rem;
-
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-  }
-
-  &__card {
-    position: relative;
-    padding-top: 80px;
-    overflow: visible;
-    text-decoration: none;
-    color: inherit;
-    transition: transform .2s, box-shadow .2s;
-    background: var(--bg);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    padding-top: 100px;
-
-    @media (min-width: 768px) {
-      padding-top: 100px;
-    }
-
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-    }
-  }
-
-  &__img-wrapper {
-    position: absolute;
-    top: -50px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 140px;
-    height: 140px;
-    overflow: visible;
-    pointer-events: none;
-
-    @media (min-width: 768px) {
-      top: -70px;
-      width: 180px;
-      height: 180px;
-    }
-  }
-
-  &__card-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
-  &__card-name {
-    margin-top: 0.5rem;
-    font-size: 1.1rem;
-    color: var(--text);
-    text-align: center;
-
-    @media (min-width: 768px) {
-      margin-top: 1rem;
-      font-size: 1.2rem;
-    }
-  }
-
-  &__card-desc {
-    font-size: 0.9rem;
-    color: var(--secondary);
-    margin: 0.5rem 0;
-    text-align: center;
-    line-height: 1.4;
-
-    @media (min-width: 768px) {
-      font-size: 0.95rem;
-      margin: 0.5rem 0;
-    }
+  
+  .page-title {
+    font-size: 2rem;
   }
 }
 </style>

@@ -1,125 +1,181 @@
 <template>
-  <header class="site-header">
-    <div class="container header-inner">
-      <NuxtLink to="/" class="logo-link" exact-active-class="active-link">
-        <img src="/logo.png" alt="Логотип Котлы Барнаул" class="logo-img" />
-      </NuxtLink>
-      <nav class="main-nav">
-        <ul class="nav-list">
-          <li>
-            <NuxtLink to="/" exact-active-class="active-link" class="nav-link">
-              Главная
+  <header class="header">
+    <div class="header__top">
+      <div class="container">
+        <div class="header__top-content">
+          <div class="header__contacts">
+            <a href="mailto:sb@kvzr.ru" class="header__email">sb@kvzr.ru</a>
+            <a href="tel:88007001743" class="header__phone">8-800-700-17-43</a>
+            <button class="header__callback">Заказать звонок</button>
+          </div>
+          <div class="header__user-actions">
+            <a href="/questionnaires" class="header__link">Опросные листы</a>
+            <a href="/faq" class="header__link">Вопрос-ответ</a>
+            <a href="/compare" class="header__link">Сравнение <span>0 товаров</span></a>
+            <a href="/cart" class="header__link">Корзина <span>0 товаров</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="header__main">
+      <div class="container">
+        <div class="header__main-content">
+          <div class="header__logo">
+            <NuxtLink to="/">
+              <img src="/images/logo.png" alt="Котельный завод РЭП" />
             </NuxtLink>
-          </li>
-          <li>
-            <NuxtLink to="/catalog" active-class="active-link" class="nav-link">
-              Каталог
-            </NuxtLink>
-          </li>
-          <li>
-            <NuxtLink to="/about" active-class="active-link" class="nav-link">
-              О нас
-            </NuxtLink>
-          </li>
-          <li>
-            <NuxtLink to="/blog" active-class="active-link" class="nav-link">
-              Статьи
-            </NuxtLink>
-          </li>
-          <li>
-            <NuxtLink to="/contact" active-class="active-link" class="nav-link">
-              Контакты
-            </NuxtLink>
-          </li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <ThemeSwitcher />
+          </div>
+          <nav class="header__nav">
+            <ul class="header__menu">
+              <li><NuxtLink to="/catalog">Каталог продукции</NuxtLink></li>
+              <li><NuxtLink to="/services">Услуги завода</NuxtLink></li>
+              <li><NuxtLink to="/contacts">Контакты</NuxtLink></li>
+              <li class="header__menu-item-has-children">
+                <NuxtLink to="/about">О заводе</NuxtLink>
+                <ul class="header__submenu">
+                  <li><NuxtLink to="/about/documents">Документы завода</NuxtLink></li>
+                  <li><NuxtLink to="/about/questionnaires">Опросные листы</NuxtLink></li>
+                  <li><NuxtLink to="/about/calculator">Подобрать мощность котла</NuxtLink></li>
+                  <li><NuxtLink to="/about/leasing">Купить котлы и котельные в лизинг</NuxtLink></li>
+                  <li><NuxtLink to="/about/delivery">Доставка продукции</NuxtLink></li>
+                  <li><NuxtLink to="/about/claims">Претензии и возврат</NuxtLink></li>
+                  <li><NuxtLink to="/about/payment">Условия оплаты</NuxtLink></li>
+                  <li><NuxtLink to="/about/vacancies">Вакансии</NuxtLink></li>
+                  <li><NuxtLink to="/about/news">Новости</NuxtLink></li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
+// Component logic here
 </script>
 
-<style lang="scss" scoped>
-.site-header {
-  position: sticky;
+<style scoped>
+
+
+.header__top {
+  background: #f5f5f5;
+  padding: 10px 0;
+  position: fixed;
   top: 0;
-  z-index: 100;
-  background-color: var(--primary);
-  backdrop-filter: blur(12px);
-
-  .header-inner {
-    @include container();
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 0;
-  }
-
-  .logo-img {
-    height: 48px;
-  }
-
-  .main-nav {
-    .nav-list {
-      display: flex;
-      gap: 2rem;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-
-      .nav-link {
-        position: relative;
-        font-weight: 500;
-        color: #ecf0f1;
-        text-decoration: none;
-        padding: 0.25rem 0;
-        transition: color 0.2s;
-
-        &:hover {
-          color: var(--accent);
-          animation: flame-glow 1.5s infinite ease-in-out;
-          text-shadow: 0 0 4px var(--accent), 0 0 8px var(--accent),
-            0 0 16px var(--accent);
-        }
-      }
-
-      .active-link {
-        color: var(--accent);
-        animation: flame-glow 1.5s infinite ease-in-out;
-        text-shadow: 0 0 4px var(--accent), 0 0 8px var(--accent),
-          0 0 16px var(--accent);
-      }
-    }
-  }
-
-  .header-actions {
-    button {
-      font-size: 1.25rem;
-    }
-  }
-
-  @include respond-to(sm) {
-    .main-nav {
-      display: none;
-    }
-  }
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Анимация пульсации «огненного свечения» */
-@keyframes flame-glow {
-  0%,
-  100% {
-    text-shadow: 0 0 4px var(--accent), 0 0 8px var(--accent),
-      0 0 16px var(--accent);
-  }
-  50% {
-    text-shadow: 0 0 6px var(--accent), 0 0 12px var(--accent),
-      0 0 24px var(--accent);
-  }
+.header__top-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header__contacts {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header__email,
+.header__phone {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.header__callback {
+  background: #e31e24;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.header__user-actions {
+  display: flex;
+  gap: 20px;
+}
+
+.header__link {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.header__main {
+  padding: 20px 0;
+  margin-top: 70px;
+}
+
+.header__main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header__logo img {
+  height: 60px;
+}
+
+.header__menu {
+  display: flex;
+  gap: 30px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.header__menu a {
+  color: #333;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.header__menu-item-has-children {
+  position: relative;
+}
+
+.header__submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px 0;
+  min-width: 250px;
+  display: none;
+}
+
+.header__menu-item-has-children:hover .header__submenu {
+  display: block;
+}
+
+.header__submenu li {
+  list-style: none;
+}
+
+.header__submenu a {
+  display: block;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+
+.header__submenu a:hover {
+  background: #f5f5f5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
 }
 </style>

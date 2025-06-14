@@ -26,8 +26,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
-    '@nuxtjs/device',
-    // остальные модули
+    '@nuxtjs/device'
   ],
   device: {
     // опционально: можно обновлять при ресайзе

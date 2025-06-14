@@ -86,6 +86,30 @@
         />
 
         <h3>Характеристики</h3>
+        <div class="filter-group">
+          <label>Мощность</label>
+          <div class="power-input-group">
+            <input type="number" v-model.number="newProdPowerValue" placeholder="Число" />
+            <select v-model="newProdPowerUnit">
+              <option value="">Ед. изм.</option>
+              <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Топливо</label>
+          <div class="fuel-dropdown-container">
+            <div class="fuel-dropdown-header" @click="toggleNewProdFuelDropdown">
+              {{ newProdSelectedFuels.length === 0 ? 'Выберите топливо' : newProdSelectedFuels.join(', ') }}
+            </div>
+            <div v-if="showNewProdFuelDropdown" class="fuel-dropdown-content">
+              <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
+                <input type="checkbox" :id="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'" :value="fuelOption" v-model="newProdSelectedFuels" />
+                <label :for="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'">{{ fuelOption }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
         <table class="specs-table">
           <tbody>
           <tr
@@ -224,10 +248,34 @@
               />
 
               <h3>Характеристики</h3>
+              <div class="filter-group">
+                <label>Мощность</label>
+                <div class="power-input-group">
+                  <input type="number" v-model.number="editProdPowerValue" placeholder="Число" />
+                  <select v-model="editProdPowerUnit">
+                    <option value="">Ед. изм.</option>
+                    <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="filter-group">
+                <label>Топливо</label>
+                <div class="fuel-dropdown-container">
+                  <div class="fuel-dropdown-header" @click="toggleEditProdFuelDropdown">
+                    {{ editProdSelectedFuels.length === 0 ? 'Выберите топливо' : editProdSelectedFuels.join(', ') }}
+                  </div>
+                  <div v-if="showEditProdFuelDropdown" class="fuel-dropdown-content">
+                    <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
+                      <input type="checkbox" :id="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id" :value="fuelOption" v-model="editProdSelectedFuels" />
+                      <label :for="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id">{{ fuelOption }}</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <table class="specs-table">
                 <tbody>
                 <tr
-                  v-for="(spec, idx) in specsList[p.id]"
+                  v-for="(spec, idx) in specsList[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel')"
                   :key="idx"
                 >
                   <td>
@@ -329,6 +377,24 @@ const specsList = ref<Record<number, Spec[]>>({})
 const newSpecs = ref<Spec[]>([])
 const newSpec = ref<Spec>({ key:'', value:'' })
 
+// Новые реактивные переменные для мощности и топлива
+const newProdPowerValue = ref(0)
+const newProdPowerUnit = ref('')
+const newProdSelectedFuels = ref<string[]>([])
+const showNewProdFuelDropdown = ref(false)
+
+// Новые реактивные переменные для редактирования
+const editProdPowerValue = ref(0)
+const editProdPowerUnit = ref('')
+const editProdSelectedFuels = ref<string[]>([])
+const showEditProdFuelDropdown = ref(false)
+
+// Доступные единицы измерения мощности
+const powerUnits = ['МВт', 'кВт', 'Гкал/ч']
+
+// Доступные виды топлива
+const availableFuels = ['Природный газ', 'Дизельное топливо', 'Мазут', 'Уголь', 'Биомасса', 'Электричество']
+
 // Предзаготовленные картинки
 const presetImages = [
   '/images/cutouts/kotel1.png',
@@ -340,11 +406,15 @@ const categories = ref<string[]>([])
 
 // Валидация формы
 const isFormValid = computed(() => {
-  return newProd.value.name && 
+  const baseValid = newProd.value.name && 
          newProd.value.description && 
          typeof newProd.value.price === 'number' && newProd.value.price > 0 && 
          newProd.value.category && 
          (newProd.value.category !== 'new' || (newCategory.value && !categories.value.includes(newCategory.value)))
+
+  const powerValid = !(newProdPowerValue.value > 0 && !newProdPowerUnit.value)
+
+  return baseValid && powerValid
 })
 
 function validateNewCategory() {
@@ -394,12 +464,22 @@ async function addProduct() {
     category = newCategory.value
   }
 
-  const specs: Record<string,string> = {}
-  newSpecs.value.forEach(s => specs[s.key] = s.value)
+  // Инициализация specs с значениями по умолчанию и добавление из newSpecs
+  const productSpecs: Record<string, string> = {}
   
+  // Добавляем мощность и топливо из новых полей ввода
+  productSpecs.power = newProdPowerValue.value + ' ' + newProdPowerUnit.value
+  productSpecs.fuel = newProdSelectedFuels.value.join(', ')
+
+  newSpecs.value.forEach(spec => {
+    if (spec.key && spec.value) {
+      productSpecs[spec.key] = spec.value
+    }
+  })
+
   const added = await $fetch<Product>('/api/products', {
     method: 'POST',
-    body: { ...newProd.value, category, specs }
+    body: { ...newProd.value, category, specs: productSpecs }
   })
   
   products.value.push(added)
@@ -417,15 +497,62 @@ async function addProduct() {
   newProd.value.category = ''
   newCategory.value = ''
   newSpecs.value.splice(0)
+  // Очищаем новые поля мощности и топлива
+  newProdPowerValue.value = 0
+  newProdPowerUnit.value = ''
+  newProdSelectedFuels.value = []
+  showNewProdFuelDropdown.value = false
 }
 
 function toggle(id:number) {
   activeId.value = activeId.value === id ? null : id
+  if (activeId.value === id) {
+    const productToEdit = products.value.find(p => p.id === id)
+    if (productToEdit) {
+      // Инициализируем значения для редактирования мощности
+      const powerMatch = productToEdit.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+      if (powerMatch) {
+        editProdPowerValue.value = parseFloat(powerMatch[1])
+        editProdPowerUnit.value = powerMatch[3]
+      } else {
+        editProdPowerValue.value = 0
+        editProdPowerUnit.value = ''
+      }
+
+      // Инициализируем значения для редактирования топлива
+      if (productToEdit.specs?.fuel) {
+        editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter(f => f !== 'отсутствует')
+      } else {
+        editProdSelectedFuels.value = []
+      }
+
+      // Обновляем specsList для редактируемого продукта
+      specsList.value[id] = Object.entries(productToEdit.specs || {}).map(([k,v]) => ({key: k, value: v}))
+      showEditProdFuelDropdown.value = false;
+    }
+  } else {
+    showEditProdFuelDropdown.value = false;
+  }
 }
 
 async function updateWithSpecs(p:Product) {
   let specs: Record<string,string> = {}
-  specsList.value[p.id].forEach(s=> specs[s.key]=s.value)
+
+  // Добавляем мощность из новых полей ввода
+  let powerString = ''
+  if (editProdPowerValue.value > 0 && editProdPowerUnit.value) {
+    powerString = `${editProdPowerValue.value} ${editProdPowerUnit.value}`
+  } else {
+    powerString = 'отсутствует'
+  }
+  specs.power = powerString
+
+  // Добавляем топливо из выбранных чекбоксов
+  specs.fuel = editProdSelectedFuels.value.length > 0 ? editProdSelectedFuels.value.join(', ') : 'отсутствует'
+
+  // Добавляем остальные характеристики, кроме power и fuel, чтобы не дублировать
+  specsList.value[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel').forEach(s => specs[s.key] = s.value)
+  
   await $fetch<Product>(`/api/products/${p.id}`, {
     method: 'PUT',
     body: { ...p, specs }
@@ -435,6 +562,11 @@ async function updateWithSpecs(p:Product) {
 
 function cancelEdit() {
   activeId.value = null
+  // Сбрасываем значения для редактирования мощности и топлива при отмене
+  editProdPowerValue.value = 0
+  editProdPowerUnit.value = ''
+  editProdSelectedFuels.value = []
+  showEditProdFuelDropdown.value = false
 }
 
 function addSpec(id:number) {
@@ -442,6 +574,12 @@ function addSpec(id:number) {
 }
 
 function removeSpec(id:number, idx:number) {
+  // Удаляем характеристику по индексу, но пропускаем power и fuel, так как они управляются отдельными полями
+  const originalIndex = products.value.find(prod => prod.id === id)?.specs ? Object.keys(products.value.find(prod => prod.id === id)?.specs || {}).indexOf(specsList.value[id][idx].key) : -1;
+  if (originalIndex !== -1 && (specsList.value[id][idx].key === 'power' || specsList.value[id][idx].key === 'fuel')) {
+    // Do nothing, these are managed by separate fields
+    return;
+  }
   specsList.value[id].splice(idx,1)
 }
 
@@ -474,6 +612,14 @@ function handleImageUpload(e: Event, p: Product | Partial<Product>) {
     }
     reader.readAsDataURL(file)
   }
+}
+
+function toggleNewProdFuelDropdown() {
+  showNewProdFuelDropdown.value = !showNewProdFuelDropdown.value;
+}
+
+function toggleEditProdFuelDropdown() {
+  showEditProdFuelDropdown.value = !showEditProdFuelDropdown.value;
 }
 
 onMounted(() => {
@@ -568,6 +714,34 @@ onMounted(() => {
 
         select, input {
           flex: 1;
+        }
+      }
+    }
+
+    .filter-group {
+      margin-bottom: 1rem;
+      
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+
+        @media (min-width: 768px) {
+          font-size: 1rem;
+        }
+      }
+
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--secondary);
+        border-radius: 0.5rem;
+        font-size: 0.95rem;
+        background: var(--bg);
+
+        @media (min-width: 768px) {
+          font-size: 1rem;
         }
       }
     }
@@ -785,5 +959,143 @@ onMounted(() => {
 .slide-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+.fuel-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fuel-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  width: 100%;
+
+  &:hover {
+    background-color: rgba(var(--primary-rgb), 0.1);
+  }
+
+  label {
+    cursor: pointer;
+    flex: 1;
+    margin-bottom: 0;
+    position: relative;
+    padding-right: 25px;
+  }
+
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    width: 0;
+    height: 0;
+  }
+
+  input[type="checkbox"]:checked + label::after {
+    content: '✔';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    font-size: 1.2em;
+    display: block;
+  }
+}
+
+.fuel-dropdown-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.fuel-dropdown-header {
+  border: 1px solid var(--secondary);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background-color: var(--bg);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  &::after {
+    content: '▼';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8em;
+    color: var(--text-light);
+    transition: transform 0.2s ease;
+  }
+}
+
+.fuel-dropdown-content {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background-color: var(--bg);
+  border: 1px solid var(--secondary);
+  border-radius: 0.5rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  z-index: 10;
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.fuel-dropdown-content .fuel-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  width: 100%;
+
+  &:hover {
+    background-color: rgba(var(--primary-rgb), 0.1);
+  }
+
+  label {
+    cursor: pointer;
+    flex: 1;
+    margin-bottom: 0;
+    position: relative;
+    padding-right: 25px;
+  }
+
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    width: 0;
+    height: 0;
+  }
+
+  input[type="checkbox"]:checked + label::after {
+    content: '✔';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    font-size: 1.2em;
+    display: block;
+  }
 }
 </style>

@@ -1,545 +1,324 @@
 <template>
-  <section class="hero-section" ref="heroRef">
-    <!-- Background Image Slider -->
-    <div class="hero-bg-slider">
-      <div 
-        v-for="(image, index) in heroImages" 
-        :key="index"
-        class="hero-bg-slide"
-        :class="{ 'active': currentSlide === index }"
-        :style="{ backgroundImage: `url(${image})` }"
-      ></div>
-    </div>
-    <!-- Тонировочный оверлей -->
-    <div class="hero-overlay"></div>
-
-    <div class="container hero-content" :class="{ 'in-view': contentVisible }">
-      <h1>
-        <span class="company-name">КотлоЭнергоСнаб</span>
-        <span class="slogan">«с нами тепло!»</span>
-      </h1>
-      <p>
-        КотлоЭнергоСнаб специализируется на производстве и поставке котельного
-        оборудования для промышленных предприятий.
-      </p>
-      <div class="cta-buttons">
-        <NuxtLink to="/catalog" class="btn btn-primary"
-          >Перейти в каталог</NuxtLink
-        >
-        <NuxtLink to="/contact" class="btn btn-secondary"
-          >Оставить заявку</NuxtLink
-        >
+  <div class="home">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero__content">
+          <h1 class="hero__title">Котельный завод «РЭП» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</h1>
+          <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="advantages-section container">
-    <div class="advantage-item">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path d="M12 1l8 4v6c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V5l8-4z" />
-      </svg>
-      <h3>Гарантия качества</h3>
-      <p>Сертифицированное оборудование от ведущих производителей.</p>
-    </div>
-    <div class="advantage-item">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path d="M6 2h12l-6 20-6-20z" />
-      </svg>
-      <h3>Энергоэффективность</h3>
-      <p>Современные решения для экономии топлива и снижения затрат.</p>
-    </div>
-    <div class="advantage-item">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path
-          d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"
-        />
-      </svg>
-      <h3>24/7 поддержка</h3>
-      <p>
-        Наши менеджеры всегда на связи для оперативного решения ваших задач.
-      </p>
-    </div>
-  </section>
+    <!-- Catalog Section -->
+    <section class="catalog">
+      <div class="container">
+        <h2 class="section-title">Каталог продукции</h2>
+        <div class="grid grid-3">
+          <div class="catalog-card">
+            <img src="/images/catalog/water-heating.jpg" alt="Водогрейные котлы" />
+            <h3>Водогрейные котлы</h3>
+            <p>Водогрейные котлы КВр, КВм, КВа, КВ мощностью до 4 МВт для отопления и горячего водоснабжения зданий и промышленных предприятий. Широкий модельный ряд позволяет подобрать котел для существующей или строящейся котельной.</p>
+            <NuxtLink to="/catalog/water-heating" class="btn btn-primary">Подробнее</NuxtLink>
+          </div>
 
-  <section class="offers-section container">
-    <h2 class="offers-section__title">Специальные предложения</h2>
-    <div class="offers-section__grid">
-      <div class="offer-card">
-        <svg class="offer-card__icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="30" width="60" height="30" rx="8" ry="8"/>
-          <rect x="10" y="24" width="60" height="8" rx="4" ry="4"/>
-          <rect x="4" y="36" width="6" height="18" rx="3"/>
-          <rect x="70" y="36" width="6" height="18" rx="3"/>
-        </svg>
-        <h3 class="offer-card__title">Котлы водогрейные</h3>
-        <p class="offer-card__text">
-          Энергосберегающие водогрейные котлы для любых задач – от 0,1 до 100 МВт.
-        </p>
+          <div class="catalog-card">
+            <img src="/images/catalog/steam.jpg" alt="Паровые котлы" />
+            <h3>Паровые котлы</h3>
+            <p>Промышленные паровые котлы на всех видах топлива. Мощность 300, 500, 700, 1000 кг пара в час, температура пара 115 - 170 °С, давление 0,07-0,8 МПа.</p>
+            <NuxtLink to="/catalog/steam" class="btn btn-primary">Подробнее</NuxtLink>
+          </div>
+
+          <div class="catalog-card">
+            <img src="/images/catalog/furnaces.jpg" alt="Топки" />
+            <h3>Топки</h3>
+            <p>Топки ТШПМ, ТЛЗМ, ТЧЗМ, ТЛПХ</p>
+            <NuxtLink to="/catalog/furnaces" class="btn btn-primary">Подробнее</NuxtLink>
+          </div>
+        </div>
+        <div class="text-center">
+          <NuxtLink to="/catalog" class="btn btn-primary">Все категории</NuxtLink>
+        </div>
       </div>
+    </section>
 
-      <div class="offer-card">
-        <svg class="offer-card__icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="4"/>
-          <path d="M32 32 L32 8 M32 32 L56 32 M32 32 L32 56 M32 32 L8 32" stroke-width="4" stroke-linecap="round"/>
-        </svg>
-        <h3 class="offer-card__title">Вентиляторы и дымососы</h3>
-        <p class="offer-card__text">
-          Надёжные вентиляторы и дымососы для поддержания оптимальной тяги.
-        </p>
+    <!-- About Section -->
+    <section class="about">
+      <div class="container">
+        <div class="about__content">
+          <div class="about__text">
+            <h2>О заводе</h2>
+            <ul class="about__list">
+              <li>Наше оборудование успешно работает практически во всех регионах России от Крыма до Камчатки, на территории соседних государств Казахстана, Белоруссии, Монголии, Литвы, Узбекистана.</li>
+              <li>Разработки проектного отдела завода имеют патенты. Оборудование производится по типовым проектам и по техническим заданиям.</li>
+              <li>Вся продукция завода сертифицирована.</li>
+              <li>Аттестованная технология сварки позволяет выпускать поднадзорную продукцию.</li>
+              <li>Выполняем разделы проектов теплоснабжения для прохождения экспертизы и составления проектно-сметной документации. Состоим в реестре членов СРО для выполнения проектных и строительных работы.</li>
+              <li>Выполняем инженерно-консультационные услуги по эксплуатации и наладке котельных.</li>
+              <li>Завод производит пуско-наладку котельных.</li>
+            </ul>
+          </div>
+          <div class="about__media">
+            <div class="about__tour">
+              <img src="/images/about/tour.jpg" alt="3D-тур по заводу" />
+              <h3>3D-тур по заводу</h3>
+              <p>Виртуальный тур нашего завода</p>
+            </div>
+            <div class="about__tour">
+              <img src="/images/about/boiler-room.jpg" alt="3D-тур по котельной" />
+              <h3>3D-тур по котельной</h3>
+              <p>Виртуальный тур нашего завода</p>
+            </div>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="offer-card">
-        <svg class="offer-card__icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-          <path d="M32 4
-                   C32 4, 12 20, 12 32
-                   C12 44, 32 60, 32 60
-                   C32 60, 52 44, 52 32
-                   C52 20, 32 4, 32 4 Z"
-                fill="none" stroke-width="4" stroke-linecap="round"/>
-        </svg>
-        <h3 class="offer-card__title">Циклоны</h3>
-        <p class="offer-card__text">
-          Высокоэффективные циклонные установки для очистки газов от твёрдых частиц.
-        </p>
+    <!-- Services Section -->
+    <section class="services">
+      <div class="container">
+        <h2 class="section-title">Услуги завода</h2>
+        <div class="grid grid-4">
+          <div class="service-card">
+            <img src="/images/services/installation.jpg" alt="Монтаж котельной" />
+            <h3>Монтаж котельной</h3>
+          </div>
+          <div class="service-card">
+            <img src="/images/services/design.jpg" alt="Проектирование котельной" />
+            <h3>Проектирование котельной</h3>
+          </div>
+          <div class="service-card">
+            <img src="/images/services/startup.jpg" alt="Пуско-наладка котельной" />
+            <h3>Пуско-наладка котельной</h3>
+          </div>
+          <div class="service-card">
+            <img src="/images/services/turnkey.jpg" alt="Котельная под ключ" />
+            <h3>Котельная под ключ</h3>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <!-- Calculator Section -->
+    <section class="calculator">
+      <div class="container">
+        <h2 class="section-title">Подберите необходимую мощность котельной для вашего объекта</h2>
+        <div class="calculator__form">
+          <div class="form-group">
+            <label>Тип здания</label>
+            <select>
+              <option>Административные здания</option>
+              <option>Бани</option>
+              <option>Больницы</option>
+              <option>Гаражи</option>
+              <option>Гостиницы</option>
+              <option>Детские сады</option>
+              <option>Жилые постройки 1930-1958 г.г</option>
+              <option>Жилые постройки после 1958 г.</option>
+              <option>Кафе рестораны</option>
+              <option>Кинотеатр</option>
+              <option>Клубы</option>
+              <option>Магазины</option>
+              <option>Пожарные Депо</option>
+              <option>Поликлиники</option>
+              <option>Школы</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Вид топлива</label>
+            <select>
+              <option>Газ</option>
+              <option>Твердое топливо</option>
+              <option>Жидкое топливо</option>
+              <option>Электричество</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Тип мощности</label>
+            <select>
+              <option>Паровая</option>
+              <option>Водогрейная</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Регион</label>
+            <select>
+              <option>Выберите регион</option>
+              <!-- Add regions -->
+            </select>
+          </div>
+          <button class="btn btn-primary">Рассчитать</button>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-
-const heroRef = ref<HTMLElement | null>(null);
-const contentVisible = ref(false);
-const currentSlide = ref(0);
-
-// Массив изображений для слайдера
-const heroImages = [
-  '/images/hero1.jpg',
-  '/images/hero2.png',
-  '/images/hero3.png',
-  '/images/hero4.png'
-];
-
-// Функция для автоматической смены слайдов
-let slideInterval: NodeJS.Timeout;
-
-const startSlideShow = () => {
-  slideInterval = setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % heroImages.length;
-  }, 5000); // Смена каждые 5 секунд
-};
-
-onMounted(() => {
-  if (heroRef.value) {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          contentVisible.value = true;
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(heroRef.value);
-  }
-  startSlideShow();
-});
-
-onUnmounted(() => {
-  if (slideInterval) {
-    clearInterval(slideInterval);
-  }
-});
+// Component logic here
 </script>
 
-<style lang="scss" scoped>
-.hero-section {
-  position: relative;
-  height: 85vh;
-  min-height: 500px;
-  max-height: 700px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  color: var(--bg);
-  padding: 0;
-
-  .hero-bg-slider {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-  }
-
-  .hero-bg-slide {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transition: opacity 2s ease-in-out, transform 2s ease-in-out;
-    transform: scale(1.05);
-    filter: blur(0);
-
-    &.active {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.6),
-      rgba(0, 0, 0, 0.4)
-    );
-    z-index: 1;
-  }
-
-  .hero-content {
-    @include container();
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2.5rem;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(12px);
-    border-radius: 1rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    word-break: break-word;
-    color: #ffffff;
-
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-
-    &.in-view {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    h1 {
-      font-size: clamp(1.75rem, 5vw, 2.75rem);
-      margin-bottom: 1.25rem;
-      font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-      color: #ffffff;
-      line-height: 1.3;
-
-      .company-name {
-        display: block;
-        margin-bottom: 0.2em;
-      }
-
-      .slogan {
-        display: block;
-        font-size: 0.85em;
-        font-weight: 600;
-        opacity: 0.9;
-      }
-    }
-
-    p {
-      font-size: clamp(0.95rem, 3vw, 1.15rem);
-      margin-bottom: 2rem;
-      color: rgba(255, 255, 255, 0.95);
-      line-height: 1.6;
-      font-weight: 500;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-    }
-
-    .cta-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      width: 100%;
-
-      .btn {
-        padding: 0.75em 1.5em;
-        font-size: clamp(0.85rem, 2.5vw, 1rem);
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        white-space: normal;
-        min-width: 200px;
-        max-width: 100%;
-        font-weight: 600;
-        text-align: center;
-        color: #ffffff;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-      }
-    }
-  }
+<style scoped>
+.hero {
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 100px 0;
+  text-align: center;
 }
 
-// Стили для экранов до 992px
-@include respond-to(lg) {
-  .hero-section {
-    min-height: 450px;
+.hero__title {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 2rem;
+}
+
+.catalog {
+  padding: 80px 0;
+}
+
+.catalog-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+}
+
+.catalog-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.catalog-card h3 {
+  margin-bottom: 15px;
+}
+
+.catalog-card p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.text-center {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.about {
+  padding: 80px 0;
+  background: #f5f5f5;
+}
+
+.about__content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.about__list {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.about__list li {
+  margin-bottom: 15px;
+}
+
+.about__media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.about__tour img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.services {
+  padding: 80px 0;
+}
+
+.service-card {
+  text-align: center;
+}
+
+.service-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.calculator {
+  padding: 80px 0;
+  background: #f5f5f5;
+}
+
+.calculator__form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.form-group select,
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.calculator .btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 992px) {
+  .about__content {
+    grid-template-columns: 1fr;
   }
   
-  .hero-content {
-    padding: 2rem;
-    margin: 0 1rem;
-    background: rgba(255, 255, 255, 0.9);
-    
-    .cta-buttons {
-      gap: 0.75rem;
-    }
+  .about__media {
+    grid-template-columns: 1fr;
   }
 }
 
-// Стили для экранов до 768px
-@include respond-to(sm) {
-  .hero-section {
-    min-height: 400px;
-  }
-
-  .hero-content {
-    padding: 1.5rem;
-    margin: 0 auto;
-    width: 90%;
-    max-width: 400px;
-    background: rgba(255, 255, 255, 0.2);
-    
-    h1 {
-      .company-name {
-        font-size: 1.8rem;
-        margin-bottom: 0.15em;
-      }
-
-      .slogan {
-        font-size: 1.2rem;
-      }
-    }
-    
-    p {
-      color: rgba(255, 255, 255, 0.9);
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-    }
-    
-    .cta-buttons {
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      width: 100%;
-      
-      .btn {
-        width: 85%;
-        min-width: 180px;
-        max-width: 280px;
-        padding: 0.6em 1em;
-        font-size: 0.9rem;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-      }
-    }
-  }
-}
-
-// Стили для экранов до 576px
-@include respond-to(xs) {
-  .hero-section {
-    min-height: 350px;
-  }
-
-  .hero-content {
-    padding: 1.25rem;
-    margin: 0 auto;
-    width: 85%;
-    max-width: 320px;
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.15);
-
-    h1 {
-      .company-name {
-        font-size: 1.5rem;
-        margin-bottom: 0.1em;
-      }
-
-      .slogan {
-        font-size: 1.1rem;
-      }
-    }
-
-    p {
-      margin-bottom: 1.5rem;
-      color: rgba(255, 255, 255, 0.85);
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-    }
-
-    .cta-buttons {
-      gap: 0.5rem;
-      
-      .btn {
-        width: 80%;
-        min-width: 160px;
-        max-width: 240px;
-        padding: 0.5em 0.75em;
-        font-size: 0.85rem;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-      }
-    }
-  }
-}
-
-// Стили для очень маленьких экранов
-@media (max-width: 360px) {
-  .hero-section {
-    min-height: 300px;
-  }
-
-  .hero-content {
-    padding: 1rem;
-    margin: 0 auto;
-    width: 80%;
-    max-width: 280px;
-    background: rgba(255, 255, 255, 0.12);
-
-    h1 {
-      .company-name {
-        font-size: 1.25rem;
-        margin-bottom: 0.1em;
-      }
-
-      .slogan {
-        font-size: 1rem;
-      }
-    }
-
-    p {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.8);
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    .cta-buttons {
-      gap: 0.4rem;
-      
-      .btn {
-        width: 75%;
-        min-width: 140px;
-        max-width: 200px;
-        font-size: 0.8rem;
-        padding: 0.4em 0.6em;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-      }
-    }
-  }
-}
-
-.advantages-section {
-  margin: 4rem auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 2rem;
-  text-align: center;
-  @include container();
-  max-width: 1200px;
-  width: 100%;
-  padding: 0 1rem;
-
-  @include respond-to(sm) {
-    margin: 3rem auto;
-    width: 90%;
-    max-width: 500px;
-    gap: 1.5rem;
-  }
-
-  @include respond-to(xs) {
-    margin: 2rem auto;
-    width: 85%;
-    max-width: 400px;
-    gap: 1rem;
-  }
-
-  .advantage-item {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    padding: 2rem 1.5rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-    }
-
-    .icon {
-      width: 48px;
-      height: 48px;
-      margin-bottom: 1rem;
-      fill: var(--accent);
-    }
-    h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-    p {
-      font-size: 0.95rem;
-      color: var(--secondary);
-    }
-  }
-}
-
-:deep([data-theme="dark"]) .hero-content {
-  background: rgba(0, 0, 0, 0.6);
-  color: var(--bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  h1,
-  p {
-    color: var(--bg);
-  }
-}
-
-.offers-section {
-  padding: 4rem 0;
-  &__title {
+@media (max-width: 768px) {
+  .hero__title {
     font-size: 2rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    color: var(--text);
   }
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 2rem;
-  }
-  .offer-card {
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(8px);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    text-align: center;
-    transition: transform .2s, box-shadow .2s;
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-    }
-    &__icon {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 1rem;
-      fill: var(--accent);
-      stroke: var(--accent);
-    }
-    &__title {
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-    &__text {
-      font-size: 0.95rem;
-      color: var(--secondary);
-      line-height: 1.6;
-    }
+  
+  .section-title {
+    font-size: 1.75rem;
   }
 }
 </style>
