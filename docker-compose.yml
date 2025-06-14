@@ -7,7 +7,7 @@ services:
     image: kes-site-node
     restart: always   
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-3001}:3001"
     networks:
       - app-network
 
