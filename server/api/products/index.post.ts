@@ -1,4 +1,3 @@
-import { defineEventHandler, readBody, createError } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
 
 interface ProductSpecs {
@@ -40,7 +39,9 @@ export default defineEventHandler(async (event) => {
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields)
       throw createError({
-        statusCode: 400,
+        // нейронка проебалась в статус кодах. Если у нас ошибка валидации, то это 422 статус код. И для валидации я бы лучше использовал ZOD
+        // https://github.com/kiruhak11/AirpodsStore/blob/server/server/api/auth/login.post.ts
+        statusCode: 422,
         message: `Missing required fields: ${missingFields.join(', ')}`
       })
     }

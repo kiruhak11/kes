@@ -331,9 +331,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue'
-import { useRuntimeConfig } from '#app'
-
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
@@ -602,14 +599,27 @@ async function addProduct() {
       // Отправка запроса на создание товара
       const response = await $fetch('/api/products', {
         method: 'POST',
-        body: productData,
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        body: JSON.stringify(productData),
       })
 
       console.log('Server response:', response)
 
+      // Привет нулевые
+      /**
+       * Сейчас так никто не пишет. Все юзают вот это:
+       * 
+       * $fetrh(url, {})
+       * .then((response) => {
+       *    обработка ответа
+       * })
+       * .catch((error) => {
+       *    обработка ошибок
+       * })
+       * .finally(() => {
+       *    выполнение кода как для ошибки, так и для успеха
+       * })
+       * 
+       */
       if (!response) {
         console.error('Failed to create product')
         return
