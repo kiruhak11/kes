@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useNuxtApp } from '#app';
+const { $device } = useNuxtApp();
 import { contacts } from "~/data/contacts";
 
 const sections = [
@@ -41,77 +43,99 @@ const toggleSection = (index: number) => {
 <template>
   <footer class="footer">
     <div class="container">
-      <div class="footer__content">
+      <div v-if="$device.isMobile" class="footer__mobile">
         <div class="footer__logo">
           <img src="/images/logo.png" alt="Котельный завод РЭП" />
           <p class="footer__slogan">Производим котлы для тех, кто выбирает качество</p>
         </div>
-        
-        <div class="footer__nav">
-          <div class="footer__nav-column">
-            <h3 class="footer__nav-title">О заводе</h3>
-            <ul class="footer__nav-list">
-              <li><NuxtLink to="/about/documents">Документы завода</NuxtLink></li>
-              <li><NuxtLink to="/about/questionnaires">Опросные листы</NuxtLink></li>
-              <li><NuxtLink to="/about/calculator">Подобрать мощность котла</NuxtLink></li>
-              <li><NuxtLink to="/about/leasing">Купить котлы и котельные в лизинг</NuxtLink></li>
-              <li><NuxtLink to="/about/delivery">Доставка продукции</NuxtLink></li>
-              <li><NuxtLink to="/about/claims">Претензии и возврат</NuxtLink></li>
-              <li><NuxtLink to="/about/payment">Условия оплаты</NuxtLink></li>
-              <li><NuxtLink to="/about/vacancies">Вакансии</NuxtLink></li>
-              <li><NuxtLink to="/about/news">Новости</NuxtLink></li>
-            </ul>
+        <nav class="footer__mobile-nav">
+          <NuxtLink to="/catalog">Каталог</NuxtLink>
+          <NuxtLink to="/about">О нас</NuxtLink>
+          <NuxtLink to="/services">Услуги</NuxtLink>
+          <NuxtLink to="/contacts">Контакты</NuxtLink>
+        </nav>
+        <div class="footer__phones">
+          <a href="tel:88007001743">+7 (800) 700-17-43</a>
+        </div>
+        <div class="footer__bottom">
+          <p class="footer__copyright">
+            © Котельный завод "РЭП" 2006—2025.
+          </p>
+        </div>
+      </div>
+      <div v-else>
+        <div class="footer__content">
+          <div class="footer__logo">
+            <img src="/images/logo.png" alt="Котельный завод РЭП" />
+            <p class="footer__slogan">Производим котлы для тех, кто выбирает качество</p>
           </div>
-
-          <div class="footer__nav-column">
-            <h3 class="footer__nav-title">Каталог продукции</h3>
-            <ul class="footer__nav-list">
-              <li><NuxtLink to="/catalog/water-heating">Водогрейные котлы</NuxtLink></li>
-              <li><NuxtLink to="/catalog/steam">Паровые котлы</NuxtLink></li>
-              <li><NuxtLink to="/catalog/furnaces">Топки</NuxtLink></li>
-              <li><NuxtLink to="/catalog/cyclones">Циклоны</NuxtLink></li>
-              <li><NuxtLink to="/catalog/fuel-supply">Топливоподача и шлакоудаление</NuxtLink></li>
-              <li><NuxtLink to="/catalog/skip-hoists">Скиповые подъемники</NuxtLink></li>
-              <li><NuxtLink to="/catalog/automation">Котловая автоматика</NuxtLink></li>
-              <li><NuxtLink to="/catalog/fans">Дымососы и вентиляторы</NuxtLink></li>
-              <li><NuxtLink to="/catalog/grids">Колосники чугунные</NuxtLink></li>
-            </ul>
-          </div>
-
-          <div class="footer__nav-column">
-            <h3 class="footer__nav-title">Услуги завода</h3>
-            <ul class="footer__nav-list">
-              <li><NuxtLink to="/services/installation">Монтаж котельной</NuxtLink></li>
-              <li><NuxtLink to="/services/design">Проектирование котельной</NuxtLink></li>
-              <li><NuxtLink to="/services/startup">Пуско-наладка котельной</NuxtLink></li>
-              <li><NuxtLink to="/services/turnkey">Котельная под ключ</NuxtLink></li>
-            </ul>
-          </div>
-
-          <div class="footer__contacts">
-            <h3 class="footer__nav-title">Контакты завода</h3>
-            <div class="footer__phones">
-              <a href="tel:88007001743">+7 (800) 700-17-43</a>
-              <a href="tel:73852299741">+7 (3852) 29-97-41</a>
-              <a href="tel:73852299742">+7 (3852) 29-97-42</a>
+          
+          <div class="footer__nav">
+            <div class="footer__nav-column">
+              <h3 class="footer__nav-title">О заводе</h3>
+              <ul class="footer__nav-list">
+                <li><NuxtLink to="/about/documents">Документы завода</NuxtLink></li>
+                <li><NuxtLink to="/about/questionnaires">Опросные листы</NuxtLink></li>
+                <li><NuxtLink to="/about/calculator">Подобрать мощность котла</NuxtLink></li>
+                <li><NuxtLink to="/about/leasing">Купить котлы и котельные в лизинг</NuxtLink></li>
+                <li><NuxtLink to="/about/delivery">Доставка продукции</NuxtLink></li>
+                <li><NuxtLink to="/about/claims">Претензии и возврат</NuxtLink></li>
+                <li><NuxtLink to="/about/payment">Условия оплаты</NuxtLink></li>
+                <li><NuxtLink to="/about/vacancies">Вакансии</NuxtLink></li>
+                <li><NuxtLink to="/about/news">Новости</NuxtLink></li>
+              </ul>
             </div>
-            <a href="mailto:sb@kvzr.ru" class="footer__email">sb@kvzr.ru</a>
-            <button class="footer__callback">Заказать звонок</button>
-            <div class="footer__social">
-              <span>Мы в соцсетях</span>
-              <!-- Add social media icons here -->
+
+            <div class="footer__nav-column">
+              <h3 class="footer__nav-title">Каталог продукции</h3>
+              <ul class="footer__nav-list">
+                <li><NuxtLink to="/catalog/water-heating">Водогрейные котлы</NuxtLink></li>
+                <li><NuxtLink to="/catalog/steam">Паровые котлы</NuxtLink></li>
+                <li><NuxtLink to="/catalog/furnaces">Топки</NuxtLink></li>
+                <li><NuxtLink to="/catalog/cyclones">Циклоны</NuxtLink></li>
+                <li><NuxtLink to="/catalog/fuel-supply">Топливоподача и шлакоудаление</NuxtLink></li>
+                <li><NuxtLink to="/catalog/skip-hoists">Скиповые подъемники</NuxtLink></li>
+                <li><NuxtLink to="/catalog/automation">Котловая автоматика</NuxtLink></li>
+                <li><NuxtLink to="/catalog/fans">Дымососы и вентиляторы</NuxtLink></li>
+                <li><NuxtLink to="/catalog/grids">Колосники чугунные</NuxtLink></li>
+              </ul>
+            </div>
+
+            <div class="footer__nav-column">
+              <h3 class="footer__nav-title">Услуги завода</h3>
+              <ul class="footer__nav-list">
+                <li><NuxtLink to="/services/installation">Монтаж котельной</NuxtLink></li>
+                <li><NuxtLink to="/services/design">Проектирование котельной</NuxtLink></li>
+                <li><NuxtLink to="/services/startup">Пуско-наладка котельной</NuxtLink></li>
+                <li><NuxtLink to="/services/turnkey">Котельная под ключ</NuxtLink></li>
+              </ul>
+            </div>
+
+            <div class="footer__contacts">
+              <h3 class="footer__nav-title">Контакты завода</h3>
+              <div class="footer__phones">
+                <a href="tel:88007001743">+7 (800) 700-17-43</a>
+                <a href="tel:73852299741">+7 (3852) 29-97-41</a>
+                <a href="tel:73852299742">+7 (3852) 29-97-42</a>
+              </div>
+              <a href="mailto:sb@kvzr.ru" class="footer__email">sb@kvzr.ru</a>
+              <button class="footer__callback">Заказать звонок</button>
+              <div class="footer__social">
+                <span>Мы в соцсетях</span>
+                <!-- Add social media icons here -->
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="footer__bottom">
-        <p class="footer__copyright">
-          © Котельный завод "РЭП" 2006—2025.
-        </p>
-        <p class="footer__disclaimer">
-          Обращаем ваше внимание на то, что данный интернет-сайт носит информационный характер и не является публичной офертой, определяемой положениями Статьи 437 (2) Гражданского кодекса Российской Федерации. Для получения подробной информации о наличии, стоимости, комплектации указанных товаров и (или) услуг, обращайтесь к менеджерам отдела сбыта с помощью специальной формы связи или по телефону: 8 800 700-17-43.
-        </p>
+        <div class="footer__bottom">
+          <p class="footer__copyright">
+            © Котельный завод "РЭП" 2006—2025.
+          </p>
+          <p class="footer__disclaimer">
+            Обращаем ваше внимание на то, что данный интернет-сайт носит информационный характер и не является публичной офертой, определяемой положениями Статьи 437 (2) Гражданского кодекса Российской Федерации. Для получения подробной информации о наличии, стоимости, комплектации указанных товаров и (или) услуг, обращайтесь к менеджерам отдела сбыта с помощью специальной формы связи или по телефону: 8 800 700-17-43.
+          </p>
+        </div>
       </div>
     </div>
   </footer>
@@ -237,5 +261,53 @@ const toggleSection = (index: number) => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 15px;
+}
+
+.footer__mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0 16px;
+  background: #1a1a1a;
+  color: #fff;
+  .footer__logo img {
+    height: 48px;
+    margin-bottom: 10px;
+  }
+  .footer__slogan {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .footer__mobile-nav {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 18px;
+    a {
+      color: #fff;
+      font-size: 1rem;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  }
+  .footer__phones {
+    margin-bottom: 12px;
+    a {
+      color: #fff;
+      font-size: 1.1rem;
+      text-decoration: none;
+    }
+  }
+  .footer__bottom {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+  }
+}
+@media (max-width: 768px) {
+  .footer__content, .footer__nav, .footer__nav-column, .footer__contacts {
+    display: none !important;
+  }
 }
 </style>

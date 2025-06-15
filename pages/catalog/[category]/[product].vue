@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -63,42 +63,93 @@ interface Product {
   specs?: Record<string, any>;
 }
 
-const route = useRoute();
-const categorySlug = route.params.category as string;
-const productSlug = route.params.product as string;
+const route = useRoute()
+const router = useRouter()
+const config = useRuntimeConfig()
 
-console.log('Route Category Slug:', categorySlug);
-console.log('Route Product Slug:', productSlug);
+// Get category and product slugs from route
+const categorySlug = computed(() => {
+  const slug = route.params.category
+  return typeof slug === 'string' ? slug : Array.isArray(slug) ? slug[0] : ''
+})
 
-const { data: fetchedProducts, error: fetchError } = await useFetch<Product[]>(`/api/products?categorySlug=${categorySlug}`);
+const productSlug = computed(() => {
+  const slug = route.params.product
+  return typeof slug === 'string' ? slug : Array.isArray(slug) ? slug[0] : ''
+})
 
-const product = computed<Product | undefined>(() => {
-  if (fetchedProducts.value) {
-    const mappedProducts = fetchedProducts.value.map(p => {
-      const productSlugGenerated = transliterate(p.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-      const categorySlugGenerated = transliterate(p.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-
-      console.log(`Checking Product: ${p.name}, Category: ${p.category}`);
-      console.log(`  Generated Product Slug: ${productSlugGenerated}, Route Product Slug: ${productSlug}`);
-      console.log(`  Generated Category Slug: ${categorySlugGenerated}, Route Category Slug: ${categorySlug}`);
-
-      return {
-        ...p,
-        slug: productSlugGenerated,
-        categorySlug: categorySlugGenerated, // Temporarily add for logging
-      };
-    });
-
-    return mappedProducts.find(p => p.categorySlug === categorySlug && p.slug === productSlug);
+// Fetch products
+const { data: fetchedProducts, error: fetchError } = await useFetch<Product[]>(`/api/products`, {
+  query: computed(() => ({
+    categorySlug: categorySlug.value
+  })),
+  transform: (response) => {
+    if (!response || !Array.isArray(response.products)) {
+      console.error('Invalid response format:', response)
+      return []
+    }
+    return response.products
   }
-  return undefined;
-});
+})
 
+// Initialize products as an empty array
+const products = ref<Product[]>([])
+
+// Handle fetch errors
 if (fetchError.value) {
-  console.error('Error loading product:', fetchError.value);
+  console.error('Error fetching products:', fetchError.value)
+  products.value = []
+} else if (fetchedProducts.value) {
+  // Only map if we have valid data
+  products.value = fetchedProducts.value.map(product => ({
+    ...product,
+    specs: {
+      ...product.specs,
+      power: product.specs?.power || 'отсутствует',
+      fuel: Array.isArray(product.specs?.fuel) 
+        ? product.specs.fuel 
+        : typeof product.specs?.fuel === 'string' 
+          ? product.specs.fuel.split(', ').map(f => f.trim())
+          : ['отсутствует']
+    }
+  }))
+} else {
+  products.value = []
 }
 
-console.log('Final Product Found:', product.value);
+// Get the current product
+const currentProduct = computed(() => {
+  if (!products.value || products.value.length === 0) return null
+  
+  // Find product by matching the generated slug
+  const foundProduct = products.value.find(p => {
+    const productSlugGenerated = transliterate(p.name || '').toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+    
+    return productSlugGenerated === productSlug.value
+  })
+
+  if (!foundProduct) {
+    console.error('Product not found:', {
+      productSlug: productSlug.value,
+      availableProducts: products.value.map(p => p.name)
+    })
+  }
+
+  return foundProduct || null
+})
+
+// Handle product not found
+watch(currentProduct, (product) => {
+  if (!product && products.value.length > 0) {
+    router.push(`/catalog/${categorySlug.value}`)
+  }
+}, { immediate: true })
+
+// Use currentProduct in the template
+const product = currentProduct
 
 const capitalize = (s: string) => {
   if (typeof s !== 'string') return ''
@@ -241,15 +292,67 @@ const capitalize = (s: string) => {
 
 @media (max-width: 768px) {
   .product-detail-content {
-    padding: 20px;
+    padding: 14px;
   }
-
   .product-title {
-    font-size: 2rem;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
   }
-
+  .product-short-description {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .product-specs {
+    margin-bottom: 10px;
+  }
+  .specs-title {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .product-specs li {
+    font-size: 13px;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+  }
   .product-price {
-    font-size: 1.8rem;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+  .add-to-cart-btn {
+    padding: 8px 14px;
+    font-size: 1rem;
+  }
+  .product-detail-image {
+    width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+  }
+  .product-extended-description {
+    margin-top: 16px;
+    padding-top: 10px;
+  }
+  .extended-description-title {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  .no-product-message {
+    font-size: 1rem;
+    padding: 20px 0;
+  }
+}
+@media (max-width: 480px) {
+  .product-detail-content {
+    padding: 6px;
+  }
+  .product-title {
+    font-size: 1.05rem;
+  }
+  .product-detail-image {
+    max-height: 110px;
+  }
+  .add-to-cart-btn {
+    padding: 6px 8px;
+    font-size: 0.95rem;
   }
 }
 

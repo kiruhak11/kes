@@ -26,8 +26,8 @@
           <div class="category-input">
             <select v-model="newProd.category">
               <option value="">Выберите категорию</option>
-              <option v-for="cat in categories" :key="cat" :value="cat">
-                {{ cat }}
+              <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                {{ cat.name }}
               </option>
               <option value="new">+ Добавить новую категорию</option>
             </select>
@@ -198,8 +198,8 @@
               <label>
                 Категория:
                 <select v-model="p.category">
-                  <option v-for="cat in categories" :key="cat" :value="cat">
-                    {{ cat }}
+                  <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                    {{ cat.name }}
                   </option>
                 </select>
               </label>
@@ -351,7 +351,7 @@ const transliterate = (text: string): string => {
 interface Category {
   id: number
   name: string
-  image?: string
+  slug: string
 }
 
 interface Spec {
@@ -376,6 +376,8 @@ const password = ref('')
 const loginError = ref<string | null>(null)
 const authorized = ref(false)
 const products = ref<Product[]>([])
+const categories = ref<Category[]>([])
+const specsList = ref<Record<number, {key: string, value: string}[]>>({})
 const newProd = ref<Partial<Product>>({
   name: '',
   description: '',
@@ -388,7 +390,6 @@ const newCategory = ref('')
 const activeId = ref<number|null>(null)
 
 // Характеристики
-const specsList = ref<Record<number, Spec[]>>({})
 const newSpecs = ref<Spec[]>([])
 const newSpec = ref<Spec>({ key:'', value:'' })
 
@@ -417,31 +418,19 @@ const presetImages = [
   '/images/cutouts/kotel3.png'
 ]
 
-const categories = ref<string[]>([])
-
-// Валидация формы
-const isFormValid = computed(() => {
-  const baseValid = newProd.value.name && 
-         newProd.value.description && 
-         typeof newProd.value.price === 'number' && newProd.value.price > 0 && 
-         newProd.value.category && 
-         (newProd.value.category !== 'new' || (newCategory.value && !categories.value.includes(newCategory.value)))
-
-  const powerValid = !(newProdPowerValue.value > 0 && !newProdPowerUnit.value)
-
-  return baseValid && powerValid
-})
-
-function validateNewCategory() {
-  if (newCategory.value && categories.value.includes(newCategory.value)) {
-    newProd.value.category = newCategory.value
-    newCategory.value = ''
-  }
-}
-
 // Move product and category loading to top-level script setup
-const { data: fetchedProducts, error: productsFetchError } = await useFetch<Product[]>('/api/products')
-const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<any[]>('/api/categories')
+const { data: fetchedProducts, error: productsFetchError, refresh: refreshProducts } = await useFetch<Product[]>('/api/products', {
+  query: {
+    categorySlug: 'all'
+  },
+  transform: (response) => {
+    if (!response || !Array.isArray(response.products)) {
+      console.error('Invalid response format:', response)
+      return []
+    }
+    return response.products
+  }
+})
 
 if (fetchedProducts.value) {
   products.value = fetchedProducts.value.map(product => {
@@ -460,7 +449,7 @@ if (fetchedProducts.value) {
     
     return {
       ...product,
-      slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+      slug: generateSlug(product.name),
       specs: {
         ...product.specs,
         power: powerValue,
@@ -471,87 +460,225 @@ if (fetchedProducts.value) {
   })
 }
 
+const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<any[]>('/api/categories')
+
 if (fetchedCategories.value) {
-  categories.value = fetchedCategories.value.map(cat => cat.title)
+  categories.value = fetchedCategories.value.map(cat => ({
+    id: cat.id,
+    name: cat.title,
+    slug: cat.slug
+  }))
 }
 
 if (productsFetchError.value) {
   console.error('Error fetching products for admin:', productsFetchError.value)
+  products.value = []
 }
 
 if (categoriesFetchError.value) {
   console.error('Error fetching categories for admin:', categoriesFetchError.value)
+  categories.value = []
 }
 
 // Update specsList after products are loaded
 watch(products, (newProducts) => {
-  newProducts.forEach(p => {
-    specsList.value[p.id] = Object.entries(p.specs || {}).map(([k,v]) => ({key: k, value: String(v)}))
-  })
+  if (Array.isArray(newProducts)) {
+    newProducts.forEach(p => {
+      specsList.value[p.id] = Object.entries(p.specs || {}).map(([k,v]) => ({key: k, value: String(v)}))
+    })
+  }
 }, { immediate: true })
 
-function login() {
-  if (password.value === config.adminPassword) {
-    authorized.value = true
-  } else {
-    loginError.value = 'Неправильный пароль'
+// Валидация формы
+const isFormValid = computed(() => {
+  const baseValid = newProd.value.name && 
+         newProd.value.description && 
+         typeof newProd.value.price === 'number' && newProd.value.price > 0 && 
+         newProd.value.category && 
+         (newProd.value.category !== 'new' || (newCategory.value && !categories.value.some(c => c.name === newCategory.value)))
+
+  const powerValid = !(newProdPowerValue.value > 0 && !newProdPowerUnit.value)
+
+  return baseValid && powerValid
+})
+
+function validateNewCategory() {
+  if (newCategory.value && categories.value.some(c => c.name === newCategory.value)) {
+    newProd.value.category = newCategory.value
+    newCategory.value = ''
   }
 }
 
-function logout() {
-  authorized.value = false
-  password.value = ''
-  loginError.value = null
+// Добавляем функцию generateSlug в начало скрипта после импортов
+function generateSlug(text: string): string {
+  return transliterate(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
 }
 
+// Обновляем функцию addProduct
 async function addProduct() {
-  if (!isFormValid.value) return
-  
-  let category = newProd.value.category
-  if (category === 'new') {
-    // Проверяем, что категория не существует
-    if (categories.value.includes(newCategory.value)) {
-      console.error('Категория уже существует')
+  try {
+    // Проверяем обязательные поля
+    if (!newProd.value.name || !newProd.value.category) {
+      console.error('Name and category are required')
       return
     }
-    category = newCategory.value
-  }
 
-  // Инициализация specs с значениями по умолчанию и добавление из newSpecs
-  const productSpecs: Record<string, any> = {}
-  
-  // Добавляем мощность и топливо из новых полей ввода
-  productSpecs.power = newProdPowerValue.value + ' ' + newProdPowerUnit.value
-  productSpecs.fuel = newProdSelectedFuels.value.join(', ')
+    // Определяем категорию и её slug
+    let categoryName = newProd.value.category
+    let categorySlug = ''
 
-  newSpecs.value.forEach(spec => {
-    if (spec.key && spec.value) {
-      productSpecs[spec.key] = spec.value
+    if (categoryName === 'new') {
+      if (!newCategory.value) {
+        console.error('New category name is required')
+        return
+      }
+      categoryName = newCategory.value
+      categorySlug = generateSlug(categoryName)
+
+      try {
+        // Добавляем новую категорию
+        const categoryResponse = await $fetch('/api/categories', {
+          method: 'POST',
+          body: {
+            title: categoryName,
+            slug: categorySlug
+          }
+        })
+
+        if (!categoryResponse) {
+          console.error('Failed to create category')
+          return
+        }
+
+        // Обновляем список категорий
+        const categoriesResponse = await $fetch('/api/categories')
+        if (Array.isArray(categoriesResponse)) {
+          categories.value = categoriesResponse.map(cat => ({
+            id: cat.id,
+            name: cat.title,
+            slug: cat.slug
+          }))
+        }
+      } catch (error) {
+        console.error('Error creating category:', error)
+        return
+      }
+    } else {
+      // Находим существующую категорию
+      const existingCategory = categories.value.find(c => c.name === categoryName)
+      if (!existingCategory) {
+        console.error('Category not found:', categoryName)
+        return
+      }
+      categorySlug = existingCategory.slug
     }
-  })
 
-  const added = await $fetch<Product>('/api/products', {
-    method: 'POST',
-    body: { ...newProd.value, category, specs: productSpecs }
-  })
-  
-  products.value.push(added)
-  specsList.value[added.id] = newSpecs.value.slice()
-  
-  // Очистка формы
-  newProd.value.name = ''
-  newProd.value.description = ''
-  newProd.value.extendedDescription = ''
-  newProd.value.price = 0
-  newProd.value.image = ''
-  newProd.value.category = ''
-  newCategory.value = ''
-  newSpecs.value.splice(0)
-  // Очищаем новые поля мощности и топлива
-  newProdPowerValue.value = 0
-  newProdPowerUnit.value = ''
-  newProdSelectedFuels.value = []
-  showNewProdFuelDropdown.value = false
+    // Подготовка данных для отправки
+    const productData = {
+      title: newProd.value.name.trim(),
+      description: (newProd.value.description || '').trim(),
+      extended_description: (newProd.value.extendedDescription || '').trim(),
+      price: Number(newProd.value.price) || 0,
+      image: newProd.value.image || '/placeholder.jpg',
+      category: categoryName,
+      category_slug: categorySlug,
+      slug: generateSlug(newProd.value.name),
+      specs: {
+        power: newProdPowerValue.value > 0 ? `${newProdPowerValue.value} ${newProdPowerUnit.value}` : 'отсутствует',
+        fuel: newProdSelectedFuels.value.length > 0 ? newProdSelectedFuels.value.join(', ') : 'отсутствует',
+        ...Object.fromEntries(newSpecs.value
+          .filter(spec => spec.key && spec.value)
+          .map(spec => [spec.key.trim(), spec.value.trim()]))
+      }
+    }
+
+    console.log('Sending product data:', JSON.stringify(productData, null, 2))
+
+    try {
+      // Отправка запроса на создание товара
+      const response = await $fetch('/api/products', {
+        method: 'POST',
+        body: productData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('Server response:', response)
+
+      if (!response) {
+        console.error('Failed to create product')
+        return
+      }
+
+      // Обновление списка товаров
+      const refreshedProducts = await $fetch('/api/products', {
+        query: {
+          categorySlug: 'all'
+        }
+      })
+
+      if (refreshedProducts && refreshedProducts.products) {
+        products.value = refreshedProducts.products.map(product => {
+          const powerMatch = product.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+          const powerValue = powerMatch ? parseFloat(powerMatch[1]) : 0
+          const powerUnit = powerMatch ? powerMatch[3] : ''
+          
+          let fuel: string[] = []
+          if (product.specs?.fuel) {
+            if (Array.isArray(product.specs.fuel)) {
+              fuel = product.specs.fuel.filter((f: string) => f !== 'отсутствует')
+            } else if (typeof product.specs.fuel === 'string') {
+              fuel = (product.specs.fuel as string).split(', ').map((f: string) => f.trim()).filter((f: string) => f !== 'отсутствует')
+            }
+          }
+          
+          return {
+            ...product,
+            slug: generateSlug(product.name),
+            specs: {
+              ...product.specs,
+              power: powerValue,
+              powerUnit: powerUnit,
+              fuel: fuel,
+            }
+          }
+        })
+      }
+
+      // Очистка формы
+      newProd.value = {
+        name: '',
+        description: '',
+        extendedDescription: '',
+        price: 0,
+        image: '',
+        category: ''
+      }
+      newCategory.value = ''
+      newSpecs.value = []
+      newSpec.value = { key: '', value: '' }
+      newProdPowerValue.value = 0
+      newProdPowerUnit.value = ''
+      newProdSelectedFuels.value = []
+
+    } catch (error) {
+      console.error('Error creating product:', error)
+      if (error.response) {
+        console.error('Error response:', error.response)
+      }
+    }
+
+  } catch (error) {
+    console.error('Error creating product:', error)
+    if (error.response) {
+      console.error('Error response:', error.response)
+    }
+  }
 }
 
 function toggle(id:number) {
@@ -585,29 +712,50 @@ function toggle(id:number) {
   }
 }
 
-async function updateWithSpecs(p:Product) {
-  let specs: Record<string,string> = {}
+// Обновляем функцию updateWithSpecs
+async function updateWithSpecs(p: Product) {
+  try {
+    let specs: Record<string, string> = {}
 
-  // Добавляем мощность из новых полей ввода
-  let powerString = ''
-  if (editProdPowerValue.value > 0 && editProdPowerUnit.value) {
-    powerString = `${editProdPowerValue.value} ${editProdPowerUnit.value}`
-  } else {
-    powerString = 'отсутствует'
+    // Добавляем мощность из новых полей ввода
+    let powerString = ''
+    if (editProdPowerValue.value > 0 && editProdPowerUnit.value) {
+      powerString = `${editProdPowerValue.value} ${editProdPowerUnit.value}`
+    } else {
+      powerString = 'отсутствует'
+    }
+    specs.power = powerString
+
+    // Добавляем топливо из выбранных чекбоксов
+    specs.fuel = editProdSelectedFuels.value.length > 0 ? editProdSelectedFuels.value.join(', ') : 'отсутствует'
+
+    // Добавляем остальные характеристики
+    specsList.value[p.id]
+      .filter(s => s.key !== 'power' && s.key !== 'fuel')
+      .forEach(s => specs[s.key] = s.value)
+
+    const categorySlug = categories.value.find(c => c.name === p.category)?.slug
+    if (!categorySlug) {
+      console.error('Category slug not found for category:', p.category)
+      return
+    }
+
+    await $fetch(`/api/products/${p.id}`, {
+      method: 'PUT',
+      body: { 
+        ...p, 
+        specs,
+        category_slug: categorySlug
+      }
+    })
+
+    // Обновляем список товаров после успешного обновления
+    await refreshProducts()
+
+    activeId.value = null
+  } catch (error) {
+    console.error('Error updating product:', error)
   }
-  specs.power = powerString
-
-  // Добавляем топливо из выбранных чекбоксов
-  specs.fuel = editProdSelectedFuels.value.length > 0 ? editProdSelectedFuels.value.join(', ') : 'отсутствует'
-
-  // Добавляем остальные характеристики, кроме power и fuel, чтобы не дублировать
-  specsList.value[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel').forEach(s => specs[s.key] = s.value)
-  
-  await $fetch<Product>(`/api/products/${p.id}`, {
-    method: 'PUT',
-    body: { ...p, specs }
-  })
-  activeId.value = null
 }
 
 function cancelEdit() {
@@ -671,6 +819,21 @@ function toggleNewProdFuelDropdown() {
 function toggleEditProdFuelDropdown() {
   showEditProdFuelDropdown.value = !showEditProdFuelDropdown.value;
 }
+
+// Возвращаем оригинальную функцию входа
+function login() {
+  if (password.value === config.adminPassword) {
+    authorized.value = true
+  } else {
+    loginError.value = 'Неправильный пароль'
+  }
+}
+
+function logout() {
+  authorized.value = false
+  password.value = ''
+  loginError.value = null
+}
 </script>
 
 <style lang="scss" scoped>
@@ -688,43 +851,47 @@ function toggleEditProdFuelDropdown() {
     background: var(--bg);
     border-radius: 0.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
 
-    h2 {
-      margin-bottom: 1.5rem;
-      text-align: center;
-      font-size: 1.5rem;
-      color: var(--text);
+  .login-box h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    color: var(--text);
+  }
+
+  .login-box input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--secondary);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  @media (min-width: 768px) {
+    .login-box input {
+      font-size: 1rem;
     }
+  }
 
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border: 1px solid var(--secondary);
-      border-radius: 0.5rem;
-      font-size: 0.95rem;
+  .login-box button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
 
-      @media (min-width: 768px) {
-        font-size: 1rem;
-      }
+  @media (min-width: 768px) {
+    .login-box button {
+      font-size: 1rem;
     }
+  }
 
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 0.95rem;
-
-      @media (min-width: 768px) {
-        font-size: 1rem;
-      }
-    }
-
-    .error {
-      color: #dc3545;
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 0.9rem;
-    }
+  .login-box .error {
+    color: #dc3545;
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
   }
 
   .catalog-manager {
@@ -1142,3 +1309,4 @@ function toggleEditProdFuelDropdown() {
   }
 }
 </style>
+

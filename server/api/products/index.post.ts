@@ -1,81 +1,92 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
-import type { TablesInsert } from '~/types/database.types'
 
-const transliterate = (text: string): string => {
-  const mapping: { [key: string]: string } = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
-    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
-    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
-    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
-    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
-    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
-    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
-  };
-  return text.split('').map(char => mapping[char] || char).join('');
-};
+interface ProductSpecs {
+  power?: string
+  fuel?: string | string[]
+  [key: string]: any
+}
+
+interface Product {
+  title: string
+  description: string
+  extended_description?: string
+  price: number
+  image: string
+  category: string
+  category_slug: string
+  slug: string
+  specs?: ProductSpecs
+}
 
 export default defineEventHandler(async (event) => {
   try {
-    const client = await serverSupabaseClient(event)
-    const body = await readBody<{ 
-      name: string; 
-      description: string; 
-      price: number; 
-      image?: string;
-      category: string;
-      extendedDescription?: string;
-      specs?: Record<string, any>;
-    }>(event)
-    
-    if (!body.name || !body.description || typeof body.price !== 'number' || !body.category) {
-      throw createError({ 
-        statusCode: 400, 
-        statusMessage: 'Bad Request: name, description, price and category are required' 
+    const body = await readBody(event)
+    console.log('Received body:', body)
+
+    // Validate request body
+    if (!body || typeof body !== 'object') {
+      console.error('Invalid request body:', body)
+      throw createError({
+        statusCode: 400,
+        message: 'Invalid request body'
       })
     }
 
-    // Ensure specs exist and default power/fuel if not provided
-    const newSpecs = body.specs || {};
-    if (!newSpecs.power) {
-      newSpecs.power = 'отсутствует';
+    // Validate required fields
+    const requiredFields = ['title', 'description', 'price', 'category', 'category_slug']
+    const missingFields = requiredFields.filter(field => !body[field])
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields)
+      throw createError({
+        statusCode: 400,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      })
     }
-    if (!newSpecs.fuel) {
-      newSpecs.fuel = 'отсутствует';
-    }
 
-    // Define a more flexible ProductInsert type if TablesInsert is too strict
-    type ProductInsert = Omit<TablesInsert<'products'>, 'id'>;
-
-    // Generate category slug
-    const categorySlug = transliterate(body.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-
-    // Explicitly define the product object to be inserted, excluding 'id'
-    const productToInsert: ProductInsert = {
-      name: body.name,
+    // Prepare product data
+    const productData = {
+      title: body.title,
       description: body.description,
-      price: body.price,
+      extended_description: body.extended_description || '',
+      price: Number(body.price),
       image: body.image || '/placeholder.jpg',
       category: body.category,
-      extendedDescription: body.extendedDescription,
-      specs: newSpecs,
-      category_slug: categorySlug,
+      category_slug: body.category_slug,
+      slug: body.slug,
+      specs: {
+        power: body.specs?.power || 'отсутствует',
+        fuel: body.specs?.fuel || 'отсутствует',
+        ...(body.specs || {})
+      }
     }
 
-    const { data, error } = await client.from('products')
-      .insert([productToInsert])
+    console.log('Prepared product data:', productData)
+
+    // Insert into database
+    const client = await serverSupabaseClient(event)
+    const { data, error } = await client
+      .from('products')
+      .insert([productData])
       .select()
       .single()
 
     if (error) {
-      console.error('Supabase insert error:', error.message)
-      throw createError({ statusCode: 500, statusMessage: 'Failed to create product in Supabase' })
+      console.error('Database error:', error)
+      throw createError({
+        statusCode: 500,
+        message: error.message
+      })
     }
 
+    console.log('Successfully created product:', data)
     return data
-  } catch (e: any) {
-    console.error('POST /api/products error:', e)
-    throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
+  } catch (error: any) {
+    console.error('Error in POST /api/products:', error)
+    throw createError({
+      statusCode: error.statusCode || 500,
+      message: error.message || 'Internal server error'
+    })
   }
 })

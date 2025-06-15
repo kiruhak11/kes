@@ -49,7 +49,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_products_paginated: {
+        Args: {
+          p_category_slug?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: number
+          name: string
+          description: string
+          price: number
+          image: string
+          category: string
+          category_slug: string
+          specs: Json
+        }[]
+      }
+      get_product_by_id: {
+        Args: {
+          p_id: number
+        }
+        Returns: {
+          id: number
+          name: string
+          description: string
+          extended_description: string
+          price: number
+          image: string
+          category: string
+          category_slug: string
+          specs: Json
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

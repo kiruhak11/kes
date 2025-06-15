@@ -38,5 +38,24 @@ export default defineNuxtConfig({
   device: {
     // опционально: можно обновлять при ресайзе
     refreshOnResize: true
+  },
+  nitro: {
+    routeRules: {
+      '/api/products': { 
+        cache: {
+          maxAge: 60 * 5 // 5 minutes
+        }
+      },
+      '/api/products/**': { 
+        cache: {
+          maxAge: 60 * 5 // 5 minutes
+        }
+      },
+      '/api/categories': { 
+        cache: {
+          maxAge: 60 * 30 // 30 minutes
+        }
+      }
+    }
   }
 });

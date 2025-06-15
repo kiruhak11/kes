@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" :class="{ 'hero--mobile': $device.isMobile }">
       <div
         v-for="(img, idx) in heroImages"
         :key="img"
@@ -13,7 +13,10 @@
       />
       <div class="container">
         <div class="hero__content">
-          <h1 class="hero__title">Котельный завод «РЭП» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</h1>
+          <h1 class="hero__title">
+            <span v-if="!$device.isMobile">Котельный завод «РЭП» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
+            <span v-else>Котельный завод «РЭП»<br>Производство и монтаж котлов</span>
+          </h1>
           <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
         </div>
       </div>
@@ -23,26 +26,12 @@
     <section class="catalog">
       <div class="container">
         <h2 class="section-title">Каталог продукции</h2>
-        <div class="grid grid-3">
-          <div class="catalog-card">
-            <img src="/images/catalog/water-heating.jpg" alt="Водогрейные котлы" />
-            <h3>Водогрейные котлы</h3>
-            <p>Водогрейные котлы КВр, КВм, КВа, КВ мощностью до 4 МВт для отопления и горячего водоснабжения зданий и промышленных предприятий. Широкий модельный ряд позволяет подобрать котел для существующей или строящейся котельной.</p>
-            <NuxtLink to="/catalog/water-heating" class="btn btn-primary">Подробнее</NuxtLink>
-          </div>
-
-          <div class="catalog-card">
-            <img src="/images/catalog/steam.jpg" alt="Паровые котлы" />
-            <h3>Паровые котлы</h3>
-            <p>Промышленные паровые котлы на всех видах топлива. Мощность 300, 500, 700, 1000 кг пара в час, температура пара 115 - 170 °С, давление 0,07-0,8 МПа.</p>
-            <NuxtLink to="/catalog/steam" class="btn btn-primary">Подробнее</NuxtLink>
-          </div>
-
-          <div class="catalog-card">
-            <img src="/images/catalog/furnaces.jpg" alt="Топки" />
-            <h3>Топки</h3>
-            <p>Топки ТШПМ, ТЛЗМ, ТЧЗМ, ТЛПХ</p>
-            <NuxtLink to="/catalog/furnaces" class="btn btn-primary">Подробнее</NuxtLink>
+        <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
+          <div class="catalog-card" v-for="(card, idx) in catalogCards" :key="idx">
+            <img :src="card.img" :alt="card.alt" />
+            <h3>{{ card.title }}</h3>
+            <p v-if="!$device.isMobile">{{ card.desc }}</p>
+            <NuxtLink :to="card.link" class="btn btn-primary">Подробнее</NuxtLink>
           </div>
         </div>
         <div class="text-center">
@@ -165,6 +154,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useNuxtApp } from '#app'
+const { $device } = useNuxtApp()
 
 const heroImages = [
   '/images/hero1.jpg',
@@ -183,9 +174,35 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (intervalId) clearInterval(intervalId)
 })
+
+const catalogCards = [
+  {
+    img: '/images/catalog/water-heating.jpg',
+    alt: 'Водогрейные котлы',
+    title: 'Водогрейные котлы',
+    desc: 'Водогрейные котлы КВр, КВм, КВа, КВ мощностью до 4 МВт для отопления и горячего водоснабжения зданий и промышленных предприятий. Широкий модельный ряд позволяет подобрать котел для существующей или строящейся котельной.',
+    link: '/catalog/water-heating',
+  },
+  {
+    img: '/images/catalog/steam.jpg',
+    alt: 'Паровые котлы',
+    title: 'Паровые котлы',
+    desc: 'Промышленные паровые котлы на всех видах топлива. Мощность 300, 500, 700, 1000 кг пара в час, температура пара 115 - 170 °С, давление 0,07-0,8 МПа.',
+    link: '/catalog/steam',
+  },
+  {
+    img: '/images/catalog/furnaces.jpg',
+    alt: 'Топки',
+    title: 'Топки',
+    desc: 'Топки ТШПМ, ТЛЗМ, ТЧЗМ, ТЛПХ',
+    link: '/catalog/furnaces',
+  },
+]
 </script>
 
 <style scoped>
+@use "@/assets/styles/collection/functions" as *;
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -357,12 +374,77 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .hero__title {
-    font-size: 2rem;
+  .hero,
+  .hero--mobile {
+    padding: 40px 0;
   }
-  
-  .section-title {
-    font-size: 1.75rem;
+  .hero__title,
+  .hero--mobile .hero__title {
+    font-size: 1.3rem;
+    max-width: 95vw;
+  }
+  .catalog .grid-3,
+  .catalog .grid-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .catalog-card {
+    padding: 16px;
+  }
+  .catalog-card img {
+    height: 120px;
+  }
+  .about {
+    padding: 40px 0;
+  }
+  .about__content {
+    gap: 20px;
+  }
+  .about__list li {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .about__media {
+    gap: 10px;
+  }
+  .about__tour img {
+    height: 120px;
+    margin-bottom: 8px;
+  }
+  .about__tour h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  .services {
+    padding: 40px 0;
+  }
+  .grid.grid-4 {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .service-card img {
+    height: 100px;
+    margin-bottom: 8px;
+  }
+  .service-card h3 {
+    font-size: 1rem;
+  }
+  .calculator {
+    padding: 40px 0;
+  }
+  .calculator__form {
+    padding: 16px;
+    gap: 10px;
+  }
+  .form-group label {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .calculator .btn {
+    padding: 8px;
+    font-size: 1rem;
   }
 }
 </style>

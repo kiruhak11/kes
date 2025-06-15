@@ -9,27 +9,32 @@
         <div class="category-content">
           <div class="category-sidebar">
             <div class="filter-section">
-              <h3>Фильтры</h3>
-              <div class="filter-group">
-                <label>Мощность</label>
-                <div class="power-range-filter">
-                  <input type="number" v-model.number="filters.minPower" placeholder="От" />
-                  <input type="number" v-model.number="filters.maxPower" placeholder="До" />
-                  <select v-model="filters.powerUnit">
-                    <option value="">Ед. изм.</option>
-                    <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+              <h3 @click="isMobile ? toggleFilters() : null" :class="{ 'filter-toggle': isMobile }">
+                Фильтры
+                <span v-if="isMobile" class="filter-arrow">{{ filtersOpen ? '▲' : '▼' }}</span>
+              </h3>
+              <div v-show="!isMobile || filtersOpen">
+                <div class="filter-group">
+                  <label>Мощность</label>
+                  <div class="power-range-filter">
+                    <input type="number" v-model.number="filters.minPower" placeholder="От" />
+                    <input type="number" v-model.number="filters.maxPower" placeholder="До" />
+                    <select v-model="filters.powerUnit">
+                      <option value="">Ед. изм.</option>
+                      <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="filter-group">
+                  <label>Топливо</label>
+                  <select v-model="filters.fuel" multiple class="multi-select-fuel">
+                    <option value="">Все</option>
+                    <option value="отсутствует">Отсутствует</option>
+                    <option v-for="fuel in uniqueFuels" :key="fuel" :value="fuel">{{ fuel }}</option>
                   </select>
                 </div>
+                <button class="btn btn-primary" @click="applyFilters">Применить</button>
               </div>
-              <div class="filter-group">
-                <label>Топливо</label>
-                <select v-model="filters.fuel" multiple class="multi-select-fuel">
-                  <option value="">Все</option>
-                  <option value="отсутствует">Отсутствует</option>
-                  <option v-for="fuel in uniqueFuels" :key="fuel" :value="fuel">{{ fuel }}</option>
-                </select>
-              </div>
-              <button class="btn btn-primary" @click="applyFilters">Применить</button>
             </div>
           </div>
   
@@ -50,7 +55,10 @@
                       <span class="spec-value">{{ Array.isArray(product.specs?.fuel) && product.specs.fuel.length > 0 && product.specs.fuel[0] !== 'отсутствует' ? product.specs.fuel.join(', ') : 'Отсутствует' }}</span>
                     </div>
                   </div>
-                  <NuxtLink :to="`/catalog/${categorySlug}/${product.slug}`" class="btn btn-primary">
+                  <NuxtLink 
+                    :to="`/catalog/${generateCategorySlug(product.category || '')}/${generateProductSlug(product)}`"
+                    class="btn btn-primary"
+                  >
                     Подробнее
                   </NuxtLink>
                 </div>
@@ -66,7 +74,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   
   const transliterate = (text: string): string => {
     const mapping: { [key: string]: string } = {
@@ -105,45 +113,58 @@
   }
   
   const route = useRoute()
+  const router = useRouter()
+  const config = useRuntimeConfig()
+
+  // Pagination state
+  const currentPage = ref(1)
+  const itemsPerPage = 10
+
+  // Products state
+  const allProducts = ref<Product[]>([])
+
+  // Fetch products
+  const { data: fetchedAllProducts, error: fetchError } = await useFetch<Product[]>(`/api/products`, {
+    query: {
+      categorySlug: route.params.category,
+      page: currentPage.value,
+      limit: itemsPerPage
+    },
+    transform: (response) => {
+      if (!response || !Array.isArray(response.products)) {
+        console.error('Invalid response format:', response)
+        return []
+      }
+      return response.products
+    }
+  })
+
+  // Handle fetch errors
+  if (fetchError.value) {
+    console.error('Error fetching products:', fetchError.value)
+    allProducts.value = []
+  } else if (fetchedAllProducts.value) {
+    // Only map if we have valid data
+    allProducts.value = fetchedAllProducts.value.map(product => ({
+      ...product,
+      specs: {
+        ...product.specs,
+        power: product.specs?.power || 'отсутствует',
+        fuel: Array.isArray(product.specs?.fuel) 
+          ? product.specs.fuel 
+          : typeof product.specs?.fuel === 'string' 
+            ? product.specs.fuel.split(', ').map(f => f.trim())
+            : ['отсутствует']
+      }
+    }))
+  } else {
+    allProducts.value = []
+  }
+
   const categorySlug = ref(route.params.category as string)
   
   // console.log('Category Slug:', categorySlug)
   
-  const { data: fetchedAllProducts, error: fetchError } = await useFetch<Product[]>('/api/products');
-
-  const allProducts = ref<Product[]>([]) // Initialize as empty array
-
-  if (fetchedAllProducts.value) {
-    allProducts.value = fetchedAllProducts.value.map(product => {
-      const rawSpecs: Record<string, any> = product.specs || {};
-      
-      const power = String(rawSpecs.power ?? 'отсутствует');
-
-      let fuel: string[] = [];
-      if (Array.isArray(rawSpecs.fuel)) {
-        fuel = rawSpecs.fuel.filter((f: string) => f !== 'отсутствует');
-      } else if (typeof rawSpecs.fuel === 'string' && rawSpecs.fuel !== 'отсутствует' && rawSpecs.fuel !== '') {
-        fuel = rawSpecs.fuel.split(', ').map((f: string) => f.trim());
-      } else {
-        fuel = [];
-      }
-
-      return {
-        ...product,
-        slug: transliterate(product.name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-        specs: {
-          power: power,
-          fuel: fuel.length > 0 ? fuel : ['отсутствует'],
-          ...Object.fromEntries(
-            Object.entries(rawSpecs).filter(([key]) => key !== 'power' && key !== 'fuel')
-          )
-        }
-      };
-    })
-  } else if (fetchError.value) {
-    console.error('Error loading all products:', fetchError.value)
-  }
-
   watch(() => route.params.category, (newCategorySlug) => {
     categorySlug.value = newCategorySlug as string;
     // No need to reload all products, just re-filter
@@ -263,6 +284,46 @@
   function applyFilters() {
     // Filters are reactive, no need for explicit apply logic here beyond just triggering re-computation.
     // This function can be used for any additional side effects if needed in the future.
+  }
+
+  const isMobile = ref(false)
+  onMounted(() => {
+    isMobile.value = window.innerWidth <= 768
+    window.addEventListener('resize', () => {
+      isMobile.value = window.innerWidth <= 768
+    })
+  })
+
+  const filtersOpen = ref(!isMobile.value)
+  watch(isMobile, (val) => {
+    filtersOpen.value = !val
+  })
+  function toggleFilters() {
+    filtersOpen.value = !filtersOpen.value
+  }
+
+  const generateProductSlug = (product: Product) => {
+    const slug = transliterate(product.name || '').toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+    console.log('Generated product slug:', {
+      name: product.name,
+      slug: slug
+    })
+    return slug
+  }
+
+  const generateCategorySlug = (category: string) => {
+    const slug = transliterate(category).toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+    console.log('Generated category slug:', {
+      category: category,
+      slug: slug
+    })
+    return slug
   }
   </script>
   
@@ -441,20 +502,80 @@
   }
   
   @media (max-width: 768px) {
+    .category-page {
+      padding: 20px 0;
+    }
+    .category-header {
+      margin-bottom: 10px;
+    }
+    .category-content {
+      gap: 16px;
+    }
+    .category-sidebar {
+      padding: 10px;
+      font-size: 14px;
+    }
+    .filter-section h3 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .filter-toggle {
+      user-select: none;
+    }
+    .filter-arrow {
+      font-size: 1.2em;
+      margin-left: 8px;
+    }
+    .filter-group {
+      margin-bottom: 10px;
+    }
+    .power-range-filter input[type="number"],
+    .power-range-filter select,
+    .filter-group select {
+      padding: 6px;
+      font-size: 13px;
+    }
+    .multi-select-fuel {
+      min-height: 60px;
+      padding: 6px;
+      font-size: 13px;
+    }
     .products-grid {
-      grid-template-columns: 1fr;
+      gap: 14px;
     }
-    
-    .page-title {
-      font-size: 2rem;
+    .product-card {
+      padding-top: 30px;
     }
-  }
-  
-  .no-products-message {
-    text-align: center;
-    grid-column: 1 / -1;
-    padding: 20px;
-    color: #888;
-    font-size: 1.2rem;
+    .product-card img {
+      width: 70px;
+      height: 70px;
+      top: -20px;
+    }
+    .product-card__content {
+      padding: 10px;
+    }
+    .product-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+    .product-card p {
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .product-card__specs {
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .spec-item {
+      margin-bottom: 4px;
+    }
+    .no-products-message {
+      font-size: 1rem;
+      padding: 10px;
+    }
   }
   </style> 

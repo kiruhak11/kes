@@ -6,8 +6,9 @@ export default defineEventHandler(async (event) => {
     const client = await serverSupabaseClient(event)
     const id = Number(event.context.params?.id)
 
-    const { data: product, error } = await client.from('products')
-      .select('*')
+    const { data: product, error } = await client
+      .from('products')
+      .select('id, name, description, extendedDescription, price, image, category, category_slug, specs')
       .eq('id', id)
       .single()
 
@@ -19,6 +20,7 @@ export default defineEventHandler(async (event) => {
     if (!product) {
       throw createError({ statusCode: 404, statusMessage: 'Product not found' })
     }
+
     return product
   } catch (e: any) {
     console.error(`GET /api/products/${event.context.params?.id} error:`, e)
