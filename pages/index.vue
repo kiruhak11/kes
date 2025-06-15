@@ -2,6 +2,15 @@
   <div class="home">
     <!-- Hero Section -->
     <section class="hero">
+      <div
+        v-for="(img, idx) in heroImages"
+        :key="img"
+        class="hero__bg"
+        :class="{ active: idx === currentHero }"
+        :style="{
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url('${img}')`
+        }"
+      />
       <div class="container">
         <div class="hero__content">
           <h1 class="hero__title">Котельный завод «РЭП» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</h1>
@@ -155,17 +164,52 @@
 </template>
 
 <script setup lang="ts">
-// Component logic here
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+const heroImages = [
+  '/images/hero1.jpg',
+  '/images/hero2.png',
+  '/images/hero3.png',
+  '/images/hero4.png',
+]
+const currentHero = ref(0)
+let intervalId: number | undefined
+
+onMounted(() => {
+  intervalId = window.setInterval(() => {
+    currentHero.value = (currentHero.value + 1) % heroImages.length
+  }, 5000) // 5 секунд на каждый фон
+})
+onBeforeUnmount(() => {
+  if (intervalId) clearInterval(intervalId)
+})
 </script>
 
 <style scoped>
 .hero {
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/hero-bg.jpg');
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  overflow: hidden;
   color: #fff;
   padding: 100px 0;
   text-align: center;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s;
+}
+.hero__bg.active {
+  opacity: 1;
+}
+.hero__content {
+  position: relative;
+  z-index: 1;
 }
 
 .hero__title {

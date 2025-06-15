@@ -441,7 +441,7 @@ function validateNewCategory() {
 
 // Move product and category loading to top-level script setup
 const { data: fetchedProducts, error: productsFetchError } = await useFetch<Product[]>('/api/products')
-const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<string[]>('/api/categories')
+const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<any[]>('/api/categories')
 
 if (fetchedProducts.value) {
   products.value = fetchedProducts.value.map(product => {
@@ -454,7 +454,7 @@ if (fetchedProducts.value) {
       if (Array.isArray(product.specs.fuel)) {
         fuel = product.specs.fuel.filter((f: string) => f !== 'отсутствует')
       } else if (typeof product.specs.fuel === 'string') {
-        fuel = product.specs.fuel.split(', ').map(f => f.trim()).filter(f => f !== 'отсутствует')
+        fuel = (product.specs.fuel as string).split(', ').map((f: string) => f.trim()).filter((f: string) => f !== 'отсутствует')
       }
     }
     
@@ -472,7 +472,7 @@ if (fetchedProducts.value) {
 }
 
 if (fetchedCategories.value) {
-  categories.value = fetchedCategories.value
+  categories.value = fetchedCategories.value.map(cat => cat.title)
 }
 
 if (productsFetchError.value) {
@@ -538,9 +538,6 @@ async function addProduct() {
   products.value.push(added)
   specsList.value[added.id] = newSpecs.value.slice()
   
-  // Обновляем список категорий после добавления товара
-  await loadCategories()
-  
   // Очистка формы
   newProd.value.name = ''
   newProd.value.description = ''
@@ -574,7 +571,7 @@ function toggle(id:number) {
 
       // Инициализируем значения для редактирования топлива
       if (productToEdit.specs?.fuel) {
-        editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter(f => f !== 'отсутствует')
+        editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter((f: string) => f !== 'отсутствует')
       } else {
         editProdSelectedFuels.value = []
       }
