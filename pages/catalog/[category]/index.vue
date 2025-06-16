@@ -40,7 +40,7 @@
   
           <div class="category-products">
             <div class="products-grid">
-              <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+              <div v-for="product in paginatedProducts" :key="product.id" class="product-card">
                 <img :src="product.image" :alt="product.name" />
                 <div class="product-card__content">
                   <h3>{{ product.name }}</h3>
@@ -69,6 +69,23 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="pagination" v-if="totalPages > 1">
+        <button 
+          class="btn btn-secondary" 
+          :disabled="currentPage === 1"
+          @click="goToPage(currentPage - 1)"
+        >
+          Назад
+        </button>
+        <span class="page-info">Страница {{ currentPage }} из {{ totalPages }}</span>
+        <button 
+          class="btn btn-secondary" 
+          :disabled="currentPage === totalPages"
+          @click="goToPage(currentPage + 1)"
+        >
+          Вперед
+        </button>
       </div>
     </div>
   </template>
@@ -227,63 +244,60 @@
   });
 
   const filteredProducts = computed(() => {
-    return productsInCategory.value.filter(product => {
-      const productPower = product.specs?.power || 'отсутствует'
-      const productFuels = product.specs?.fuel || []
-  
-      const productPowerMatch = productPower.match(/^(\d+(\.\d+)?)\s*(.*)$/);
-      let currentProductPowerValue = 0;
-      let currentProductPowerUnit = '';
-      if (productPowerMatch) {
-        currentProductPowerValue = parseFloat(productPowerMatch[1]);
-        currentProductPowerUnit = productPowerMatch[3];
-      }
+    let result = productsInCategory.value
 
-      if ((filters.value.minPower !== undefined && filters.value.minPower !== null && filters.value.minPower > 0) || 
-          (filters.value.maxPower !== undefined && filters.value.maxPower !== null && filters.value.maxPower > 0) || 
-          filters.value.powerUnit) {
+    // Применяем фильтры только если они установлены
+    if (filters.value.minPower || filters.value.maxPower || filters.value.powerUnit || filters.value.fuel.length > 0) {
+      result = result.filter(product => {
+        const productPower = product.specs?.power || 'отсутствует'
+        const productFuels = Array.isArray(product.specs?.fuel) ? product.specs.fuel : []
 
-        if (productPower === 'отсутствует') return false;
+        // Фильтрация по мощности
+        if (filters.value.minPower || filters.value.maxPower || filters.value.powerUnit) {
+          if (productPower === 'отсутствует') return false
 
-        if (filters.value.powerUnit && filters.value.powerUnit !== currentProductPowerUnit) {
-          return false;
+          const powerMatch = productPower.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+          if (!powerMatch) return false
+
+          const powerValue = parseFloat(powerMatch[1])
+          const powerUnit = powerMatch[3]
+
+          if (filters.value.powerUnit && filters.value.powerUnit !== powerUnit) return false
+          if (filters.value.minPower && powerValue < filters.value.minPower) return false
+          if (filters.value.maxPower && powerValue > filters.value.maxPower) return false
         }
 
-        if (filters.value.minPower !== undefined && filters.value.minPower !== null && currentProductPowerValue < filters.value.minPower) {
-          return false;
+        // Фильтрация по топливу
+        if (filters.value.fuel.length > 0) {
+          if (!productFuels.some(fuel => filters.value.fuel.includes(fuel))) return false
         }
 
-        if (filters.value.maxPower !== undefined && filters.value.maxPower !== null && currentProductPowerValue > filters.value.maxPower) {
-          return false;
-        }
-      }
+        return true
+      })
+    }
 
-      // Filter by fuel (multiple selection from dropdown)
-      if (filters.value.fuel.length === 0) {
-        return true;
-      }
-
-      if (filters.value.fuel.includes('')) {
-        return true;
-      }
-
-      const selectedFuelsExcludingNone = filters.value.fuel.filter(f => f !== 'отсутствует');
-
-      if (filters.value.fuel.includes('отсутствует')) {
-        if (selectedFuelsExcludingNone.length === 0) {
-          return productFuels.includes('отсутствует') && productFuels.length === 1;
-        } else {
-          return (productFuels.includes('отсутствует') && productFuels.length === 1) ||
-                 selectedFuelsExcludingNone.some(filterFuel => productFuels.includes(filterFuel));
-        }
-      } else {
-        return filters.value.fuel.some(filterFuel => productFuels.includes(filterFuel));
-      }
-      
-      return true
-    })
+    return result
   })
   
+  // Добавляем состояние для пагинации
+  const paginatedProducts = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage
+    const end = start + itemsPerPage
+    return filteredProducts.value.slice(start, end)
+  })
+
+  const totalPages = computed(() => {
+    return Math.ceil(filteredProducts.value.length / itemsPerPage)
+  })
+
+  // Добавляем методы для пагинации
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages.value) {
+      currentPage.value = page
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   function applyFilters() {
     // Filters are reactive, no need for explicit apply logic here beyond just triggering re-computation.
     // This function can be used for any additional side effects if needed in the future.
@@ -580,5 +594,32 @@
       font-size: 1rem;
       padding: 10px;
     }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .page-info {
+    font-size: 1rem;
+    color: #666;
+  }
+
+  .btn-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   </style> 

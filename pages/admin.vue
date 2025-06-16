@@ -75,7 +75,7 @@
             v-if="newProd.image === 'custom'"
             type="file"
             accept="image/*"
-            @change="(e) => handleImageUpload(e, newProd)"
+            @change="(e: any) => handleImageUpload(e, newProd)"
             class="image-input"
           />
         </div>
@@ -237,7 +237,7 @@
                   v-if="p.image === 'custom'"
                   type="file"
                   accept="image/*"
-                  @change="(e) => handleImageUpload(e, p)"
+                  @change="(e: any) => handleImageUpload(e, p)"
                   class="image-input"
                 />
               </div>
@@ -347,6 +347,14 @@ const transliterate = (text: string): string => {
 
 interface Category {
   id: number
+  title: string
+  slug: string
+  image: string
+  description: string
+}
+
+interface AdminCategory {
+  id: number
   name: string
   slug: string
 }
@@ -373,7 +381,7 @@ const password = ref('')
 const loginError = ref<string | null>(null)
 const authorized = ref(false)
 const products = ref<Product[]>([])
-const categories = ref<Category[]>([])
+const categories = ref<AdminCategory[]>([])
 const specsList = ref<Record<number, {key: string, value: string}[]>>({})
 const newProd = ref<Partial<Product>>({
   name: '',
@@ -416,12 +424,12 @@ const presetImages = [
 ]
 
 // Move product and category loading to top-level script setup
-const { data: fetchedProducts, error: productsFetchError, refresh: refreshProducts } = await useFetch<Product[]>('/api/products', {
+const { data: fetchedProducts, error: productsFetchError, refresh: refreshProducts } = await useFetch<any>('/api/products', {
   query: {
     categorySlug: 'all'
   },
   transform: (response) => {
-    if (!response || !Array.isArray(response.products)) {
+    if (!response || !response.products || !Array.isArray(response.products)) {
       console.error('Invalid response format:', response)
       return []
     }
@@ -430,7 +438,7 @@ const { data: fetchedProducts, error: productsFetchError, refresh: refreshProduc
 })
 
 if (fetchedProducts.value) {
-  products.value = fetchedProducts.value.map(product => {
+  products.value = fetchedProducts.value.map((product: Product) => {
     const powerMatch = product.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
     const powerValue = powerMatch ? parseFloat(powerMatch[1]) : 0
     const powerUnit = powerMatch ? powerMatch[3] : ''
@@ -446,7 +454,7 @@ if (fetchedProducts.value) {
     
     return {
       ...product,
-      slug: generateSlug(product.name),
+      slug: generateSlug(product.name || ''),
       specs: {
         ...product.specs,
         power: powerValue,
@@ -457,14 +465,14 @@ if (fetchedProducts.value) {
   })
 }
 
-const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<any[]>('/api/categories')
+const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<Category[]>('/api/categories')
 
 if (fetchedCategories.value) {
   categories.value = fetchedCategories.value.map(cat => ({
     id: cat.id,
     name: cat.title,
     slug: cat.slug
-  }))
+  })) as AdminCategory[]
 }
 
 if (productsFetchError.value) {
@@ -676,16 +684,16 @@ async function addProduct() {
       newProdPowerUnit.value = ''
       newProdSelectedFuels.value = []
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating product:', error)
-      if (error.response) {
+      if (error && typeof error === 'object' && 'response' in error) {
         console.error('Error response:', error.response)
       }
     }
 
   } catch (error) {
     console.error('Error creating product:', error)
-    if (error.response) {
+    if (error && typeof error === 'object' && 'response' in error) {
       console.error('Error response:', error.response)
     }
   }
@@ -809,16 +817,28 @@ async function deleteProduct(id:number) {
   delete specsList.value[id]
 }
 
-function handleImageUpload(e: Event, p: Product | Partial<Product>) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      if (p) {
-        p.image = event.target?.result as string
+async function handleImageUpload(event: Event, product: Product | Partial<Product>) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || !input.files[0]) return
+
+  const file = input.files[0]
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const response = await $fetch('/api/upload/image', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
       }
+    })
+
+    if (response && response.path) {
+      product.image = response.path
     }
-    reader.readAsDataURL(file)
+  } catch (error) {
+    console.error('Error uploading image:', error)
   }
 }
 

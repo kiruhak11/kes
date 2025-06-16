@@ -12,15 +12,23 @@
     "deploy": "scp -r .output/* j53779400@c64869e17b97.hosting.myjino.ru:~/domains/kes.kiruhak11.ru/ && ssh j53779400@c64869e17b97.hosting.myjino.ru \"chmod -R 0777 ~/domains/kes.kiruhak11.ru && mkdir -p ~/domains/kes.kiruhak11.ru/tmp && touch ~/domains/kes.kiruhak11.ru/tmp/restart.txt\""
   },
   "dependencies": {
+    "@nuxt/image": "^1.10.0",
+    "@nuxtjs/color-mode": "^3.5.2",
     "@nuxtjs/device": "^3.2.4",
     "@nuxtjs/supabase": "^1.5.2",
+    "@pinia/nuxt": "^0.11.1",
+    "@vueuse/nuxt": "^13.3.0",
     "nuxt": "^3.13.2",
+    "pinia": "^3.0.3",
     "supabase": "^2.24.3",
     "telegraf": "^4.16.3",
     "vue": "latest",
     "vue-router": "latest"
   },
   "devDependencies": {
-    "sass": "^1.89.0"
+    "@types/node": "^24.0.1",
+    "sass": "^1.89.0",
+    "typescript": "^5.8.3",
+    "vue-tsc": "^2.2.10"
   }
 }
