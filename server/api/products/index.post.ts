@@ -1,4 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server'
+import { createError } from 'h3'
 
 interface ProductSpecs {
   power?: string
@@ -7,14 +8,13 @@ interface ProductSpecs {
 }
 
 interface Product {
-  title: string
+  name: string
   description: string
-  extended_description?: string
+  extendedDescription?: string
   price: number
   image: string
   category: string
   category_slug: string
-  slug: string
   specs?: ProductSpecs
 }
 
@@ -39,23 +39,36 @@ export default defineEventHandler(async (event) => {
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields)
       throw createError({
-        // нейронка проебалась в статус кодах. Если у нас ошибка валидации, то это 422 статус код. И для валидации я бы лучше использовал ZOD
-        // https://github.com/kiruhak11/AirpodsStore/blob/server/server/api/auth/login.post.ts
         statusCode: 422,
         message: `Missing required fields: ${missingFields.join(', ')}`
       })
     }
 
+    const client = await serverSupabaseClient(event)
+
+    // Проверяем уникальность slug
+    const { data: existingProduct } = await client
+      .from('products')
+      .select('id')
+      .eq('slug', body.slug)
+      .single()
+
+    if (existingProduct) {
+      throw createError({
+        statusCode: 422,
+        message: 'Product with this slug already exists'
+      })
+    }
+
     // Prepare product data
     const productData = {
-      title: body.title,
+      name: body.title,
       description: body.description,
-      extended_description: body.extended_description || '',
-      price: Number(body.price),
+      extendedDescription: body.extended_description || '',
+      price: Number(body.price) || 0,
       image: body.image || '/placeholder.jpg',
       category: body.category,
       category_slug: body.category_slug,
-      slug: body.slug,
       specs: {
         power: body.specs?.power || 'отсутствует',
         fuel: body.specs?.fuel || 'отсутствует',
@@ -66,7 +79,6 @@ export default defineEventHandler(async (event) => {
     console.log('Prepared product data:', productData)
 
     // Insert into database
-    const client = await serverSupabaseClient(event)
     const { data, error } = await client
       .from('products')
       .insert([productData])
@@ -75,6 +87,12 @@ export default defineEventHandler(async (event) => {
 
     if (error) {
       console.error('Database error:', error)
+      if (error.code === '42501') {
+        throw createError({
+          statusCode: 403,
+          message: 'Permission denied. Please check RLS policies.'
+        })
+      }
       throw createError({
         statusCode: 500,
         message: error.message

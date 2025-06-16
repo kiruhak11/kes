@@ -124,14 +124,15 @@
   const allProducts = ref<Product[]>([])
 
   // Fetch products
-  const { data: fetchedAllProducts, error: fetchError } = await useFetch<Product[]>(`/api/products`, {
+  const { data: fetchedAllProducts, error: fetchError } = await useFetch(`/api/products`, {
     query: {
       categorySlug: route.params.category,
       page: currentPage.value,
       limit: itemsPerPage
     },
     transform: (response) => {
-      if (!response || !Array.isArray(response.products)) {
+      console.log('API Response:', response)
+      if (!response || !response.products) {
         console.error('Invalid response format:', response)
         return []
       }
@@ -144,6 +145,7 @@
     console.error('Error fetching products:', fetchError.value)
     allProducts.value = []
   } else if (fetchedAllProducts.value) {
+    console.log('Fetched products:', fetchedAllProducts.value)
     // Only map if we have valid data
     allProducts.value = fetchedAllProducts.value.map(product => ({
       ...product,
@@ -153,11 +155,12 @@
         fuel: Array.isArray(product.specs?.fuel) 
           ? product.specs.fuel 
           : typeof product.specs?.fuel === 'string' 
-            ? product.specs.fuel.split(', ').map(f => f.trim())
+            ? product.specs.fuel.split(', ').map((f: string) => f.trim())
             : ['отсутствует']
       }
     }))
   } else {
+    console.log('No products fetched')
     allProducts.value = []
   }
 

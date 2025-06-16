@@ -21,6 +21,7 @@ interface Product {
 
 export default defineEventHandler(async (event) => {
   try {
+    console.log('Starting products fetch...')
     const client = await serverSupabaseClient(event)
     const query = getQuery(event)
     const categorySlug = query.categorySlug as string | undefined
@@ -29,19 +30,28 @@ export default defineEventHandler(async (event) => {
     const limit = parseInt(query.limit as string) || 10
     const offset = (page - 1) * limit
 
-    // Build the base query with only necessary fields
+    console.log('Query params:', { categorySlug, productSlug, page, limit, offset })
+
+    // Сначала проверим, есть ли вообще товары
+    const { count: totalCount, error: countError } = await client
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+
+    if (countError) {
+      console.error('Count error:', countError)
+      throw createError({ 
+        statusCode: 500, 
+        statusMessage: 'Failed to count products',
+        data: { error: countError.message }
+      })
+    }
+
+    console.log('Total products in database:', totalCount)
+
+    // Build the base query
     let dbQuery = client
       .from('products')
-      .select(`
-        id,
-        name,
-        description,
-        price,
-        image,
-        category,
-        category_slug,
-        specs
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
 
     // Add category filter if not 'all'
     if (categorySlug && categorySlug !== 'all') {
@@ -56,19 +66,23 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    console.log('Executing Supabase query...')
     // Add pagination and ordering
     const { data: products, error, count } = await dbQuery
       .order('id', { ascending: true })
       .range(offset, offset + limit - 1)
 
     if (error) {
-      console.error('Supabase query error:', error.message)
+      console.error('Supabase query error:', error)
       throw createError({ 
         statusCode: 500, 
         statusMessage: 'Failed to fetch products from Supabase',
         data: { error: error.message }
       })
     }
+
+    console.log('Query successful, products count:', products?.length || 0)
+    console.log('First product sample:', products?.[0])
 
     if (!products || products.length === 0) {
       return {
