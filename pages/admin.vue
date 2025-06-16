@@ -705,10 +705,16 @@ function toggle(id:number) {
     const productToEdit = products.value.find(p => p.id === id)
     if (productToEdit) {
       // Инициализируем значения для редактирования мощности
-      const powerMatch = productToEdit.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-      if (powerMatch) {
-        editProdPowerValue.value = parseFloat(powerMatch[1])
-        editProdPowerUnit.value = powerMatch[3]
+      const powerValue = productToEdit.specs?.power
+      if (typeof powerValue === 'string' && powerValue !== 'отсутствует') {
+        const powerMatch = powerValue.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+        if (powerMatch) {
+          editProdPowerValue.value = parseFloat(powerMatch[1])
+          editProdPowerUnit.value = powerMatch[3]
+        } else {
+          editProdPowerValue.value = 0
+          editProdPowerUnit.value = ''
+        }
       } else {
         editProdPowerValue.value = 0
         editProdPowerUnit.value = ''
@@ -716,13 +722,22 @@ function toggle(id:number) {
 
       // Инициализируем значения для редактирования топлива
       if (productToEdit.specs?.fuel) {
-        editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter((f: string) => f !== 'отсутствует')
+        if (Array.isArray(productToEdit.specs.fuel)) {
+          editProdSelectedFuels.value = productToEdit.specs.fuel.filter((f: string) => f !== 'отсутствует')
+        } else if (typeof productToEdit.specs.fuel === 'string') {
+          editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter((f: string) => f !== 'отсутствует')
+        } else {
+          editProdSelectedFuels.value = []
+        }
       } else {
         editProdSelectedFuels.value = []
       }
 
-      // Обновляем specsList для редактируемого продукта
-      specsList.value[id] = Object.entries(productToEdit.specs || {}).map(([k,v]) => ({key: k, value: v}))
+      // Обновляем specsList для редактируемого продукта, исключая power, powerUnit и fuel
+      specsList.value[id] = Object.entries(productToEdit.specs || {})
+        .filter(([key]) => !['power', 'powerUnit', 'fuel'].includes(key))
+        .map(([k,v]) => ({key: k, value: String(v)}))
+      
       showEditProdFuelDropdown.value = false;
     }
   } else {
@@ -758,13 +773,17 @@ async function updateWithSpecs(p: Product) {
       return
     }
 
+    const updateData = { 
+      ...p, 
+      specs,
+      category_slug: categorySlug
+    }
+
+    console.log('Sending update data:', updateData)
+
     await $fetch(`/api/products/${p.id}`, {
       method: 'PUT',
-      body: { 
-        ...p, 
-        specs,
-        category_slug: categorySlug
-      }
+      body: updateData
     })
 
     // Обновляем список товаров после успешного обновления

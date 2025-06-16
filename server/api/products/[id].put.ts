@@ -5,10 +5,24 @@ export default defineEventHandler(async (event) => {
   try {
     const client = await serverSupabaseClient(event)
     const id = Number(event.context.params?.id)
-    const body = await readBody<Partial<{ name: string; description: string; price: number; image: string; specs: Record<string,string> }>>(event)
+    const body = await readBody(event)
+
+    // Map the incoming data to match the database schema
+    const updateData = {
+      name: body.name,
+      description: body.description,
+      extendedDescription: body.extendedDescription,
+      price: body.price,
+      image: body.image,
+      category: body.category,
+      category_slug: body.category_slug,
+      specs: body.specs || {}
+    }
+
+    console.log('Updating product with data:', updateData)
 
     const { data, error } = await client.from('products')
-      .update(body)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
@@ -19,7 +33,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (!data) {
-        throw createError({ statusCode: 404, statusMessage: 'Product not found' })
+      throw createError({ statusCode: 404, statusMessage: 'Product not found' })
     }
 
     return data
