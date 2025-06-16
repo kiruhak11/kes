@@ -85,6 +85,15 @@
           class="img-preview"
         />
 
+        <h4>Дополнительные изображения</h4>
+        <input type="file" multiple accept="image/*" @change="handleGalleryUpload" />
+        <div class="gallery-previews">
+          <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
+            <img :src="gimg" class="img-preview" />
+            <button class="btn btn-danger btn-sm" @click.prevent="removeGalleryImage(gidx)">✕</button>
+          </div>
+        </div>
+
         <h3>Характеристики</h3>
         <div class="filter-group">
           <label>Мощность</label>
@@ -275,7 +284,7 @@
               <table class="specs-table">
                 <tbody>
                 <tr
-                  v-for="(spec, idx) in specsList[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel')"
+                  v-for="(spec, idx) in specsList[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')"
                   :key="idx"
                 >
                   <td>
@@ -307,6 +316,15 @@
                 </tr>
                 </tbody>
               </table>
+
+              <h4>Дополнительные изображения</h4>
+              <input type="file" multiple accept="image/*" @change="e => handleEditGalleryUpload(e, p)" />
+              <div class="gallery-previews">
+                <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
+                  <img :src="gimg" class="img-preview" />
+                  <button class="btn btn-danger btn-sm" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
+                </div>
+              </div>
 
               <div class="prod-details__actions">
                 <button
@@ -422,6 +440,9 @@ const presetImages = [
   '/images/cutouts/kotel2.png',
   '/images/cutouts/kotel3.png'
 ]
+
+// add after newProdSelectedFuels definitions
+const newProdGallery = ref<string[]>([])
 
 // Move product and category loading to top-level script setup
 const { data: fetchedProducts, error: productsFetchError, refresh: refreshProducts } = await useFetch<any>('/api/products', {
@@ -597,7 +618,8 @@ async function addProduct() {
         fuel: newProdSelectedFuels.value.length > 0 ? newProdSelectedFuels.value.join(', ') : 'отсутствует',
         ...Object.fromEntries(newSpecs.value
           .filter(spec => spec.key && spec.value)
-          .map(spec => [spec.key.trim(), spec.value.trim()]))
+          .map(spec => [spec.key.trim(), spec.value.trim()])),
+        images: newProdGallery.value,
       }
     }
 
@@ -683,6 +705,7 @@ async function addProduct() {
       newProdPowerValue.value = 0
       newProdPowerUnit.value = ''
       newProdSelectedFuels.value = []
+      newProdGallery.value = []
 
     } catch (error: unknown) {
       console.error('Error creating product:', error)
@@ -748,7 +771,7 @@ function toggle(id:number) {
 // Обновляем функцию updateWithSpecs
 async function updateWithSpecs(p: Product) {
   try {
-    let specs: Record<string, string> = {}
+    let specs: Record<string, string | string[]> = {}
 
     // Добавляем мощность из новых полей ввода
     let powerString = ''
@@ -764,8 +787,13 @@ async function updateWithSpecs(p: Product) {
 
     // Добавляем остальные характеристики
     specsList.value[p.id]
-      .filter(s => s.key !== 'power' && s.key !== 'fuel')
+      .filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')
       .forEach(s => specs[s.key] = s.value)
+
+    // Добавляем изображения галереи, если есть
+    if (p.specs && Array.isArray(p.specs.images)) {
+      specs.images = p.specs.images
+    }
 
     const categorySlug = categories.value.find(c => c.name === p.category)?.slug
     if (!categorySlug) {
@@ -882,6 +910,69 @@ function logout() {
   authorized.value = false
   password.value = ''
   loginError.value = null
+}
+
+// Existing handleImageUpload remains. I'll add new function:
+async function handleGalleryUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+  const files = Array.from(input.files)
+  for (const file of files) {
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const response = await $fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+      if (response && response.path) {
+        newProdGallery.value.push(response.path)
+      }
+    } catch (error) {
+      console.error('Error uploading gallery image:', error)
+    }
+  }
+  // clear input value for same file re-upload capability
+  input.value = ''
+}
+
+function removeGalleryImage(idx:number) {
+  newProdGallery.value.splice(idx,1)
+}
+
+// Для редактирования галереи
+function removeEditGalleryImage(p: Product, idx: number) {
+  if (p.specs && Array.isArray(p.specs.images)) {
+    p.specs.images.splice(idx, 1)
+  }
+}
+
+async function handleEditGalleryUpload(event: Event, p: Product) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+  const files = Array.from(input.files)
+  if (!p.specs) p.specs = {}
+  if (!Array.isArray(p.specs.images)) p.specs.images = []
+  for (const file of files) {
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const response = await $fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      })
+      if (response && response.path) {
+        p.specs.images.push(response.path)
+      }
+    } catch (error) {
+      console.error('Error uploading gallery image:', error)
+    }
+  }
+  input.value = ''
 }
 </script>
 
@@ -1046,6 +1137,29 @@ function logout() {
       height: auto;
       margin: 1rem 0;
       border-radius: 0.25rem;
+    }
+
+    .gallery-previews {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .gallery-item {
+      position: relative;
+    }
+
+    .gallery-item .img-preview {
+      width: 120px;
+      height: auto;
+    }
+
+    .gallery-item button {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 0.25rem 0.4rem;
     }
   }
 

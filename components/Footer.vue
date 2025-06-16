@@ -16,9 +16,10 @@ const sections = [
     content: [
       { text: 'Главная', to: '/' },
       { text: 'Каталог', to: '/catalog' },
-      { text: 'О нас', to: '/about' },
-      { text: 'Статьи', to: '/blog' },
-      { text: 'Контакты', to: '/contact' }
+      { text: 'О компании', to: '/about' },
+      { text: 'Фотогалерея', to: '/gallery' },
+      { text: 'Контакты', to: '/contacts' }
+
     ]
   },
   {
@@ -38,6 +39,21 @@ const openSections = ref(sections.map((_, index) => index === 0)); // Откры
 const toggleSection = (index: number) => {
   openSections.value[index] = !openSections.value[index];
 };
+
+// Получаем категории для футера
+interface Category {
+  title: string;
+  slug: string;
+  image: string;
+  description: string;
+}
+const { data: fetchedCategories, error: fetchError } = await useFetch<Category[]>('/api/categories');
+const footerCategories = ref<Category[]>([]);
+if (fetchedCategories.value) {
+  footerCategories.value = fetchedCategories.value.slice(0, 5);
+} else if (fetchError.value) {
+  console.error('Error loading categories:', fetchError.value);
+}
 </script>
 
 <template>
@@ -45,7 +61,7 @@ const toggleSection = (index: number) => {
     <div class="container">
       <div v-if="$device.isMobile" class="footer__mobile">
         <div class="footer__logo">
-          <img src="/images/logo.png" alt="Котельный завод РЭП" />
+          <img src="/images/logo-white.png" alt="ООО «КотлоЭнергоСнаб»" />
           <p class="footer__slogan">Производим котлы для тех, кто выбирает качество</p>
         </div>
         <nav class="footer__mobile-nav">
@@ -66,52 +82,36 @@ const toggleSection = (index: number) => {
       <div v-else>
         <div class="footer__content">
           <div class="footer__logo">
-            <img src="/images/logo.png" alt="ООО «КотлоЭнергоСнаб»" />
-            <p class="footer__slogan">Котлы и котельное оборудование Барнаул — надёжность с 1998 года</p>
+            <img src="/images/logo-white.png" alt="ООО «КотлоЭнергоСнаб»" />
+            <p class="footer__slogan">Котлы и котельное оборудование Барнаул — надёжность с 2010 года</p>
           </div>
           
           <div class="footer__nav">
             <div class="footer__nav-column">
               <h3 class="footer__nav-title">О заводе</h3>
               <ul class="footer__nav-list">
-                <li><NuxtLink to="/about/documents">Документы завода</NuxtLink></li>
-                <li><NuxtLink to="/about/questionnaires">Опросные листы</NuxtLink></li>
-                <li><NuxtLink to="/about/calculator">Подобрать мощность котла</NuxtLink></li>
-                <li><NuxtLink to="/about/leasing">Купить котлы и котельные в лизинг</NuxtLink></li>
-                <li><NuxtLink to="/about/delivery">Доставка продукции</NuxtLink></li>
-                <li><NuxtLink to="/about/claims">Претензии и возврат</NuxtLink></li>
-                <li><NuxtLink to="/about/payment">Условия оплаты</NuxtLink></li>
-                <li><NuxtLink to="/about/vacancies">Вакансии</NuxtLink></li>
-                <li><NuxtLink to="/about/news">Новости</NuxtLink></li>
+                <li><NuxtLink to="/about/certificates">Сертификаты</NuxtLink></li>
+                <li><NuxtLink to="/about/gallery">Фотогалерея</NuxtLink></li>
+                <li><NuxtLink to="/about/contacts">Контакты</NuxtLink></li>
+                <li><NuxtLink to="/contact">Оставить заявку</NuxtLink></li>
+                <li><NuxtLink to="/cart">Корзина</NuxtLink></li>
+                <li><NuxtLink to="/about">О компании</NuxtLink></li>
               </ul>
             </div>
 
             <div class="footer__nav-column">
               <h3 class="footer__nav-title">Каталог продукции</h3>
               <ul class="footer__nav-list">
-                <li><NuxtLink to="/catalog/water-heating">Водогрейные котлы</NuxtLink></li>
-                <li><NuxtLink to="/catalog/steam">Паровые котлы</NuxtLink></li>
-                <li><NuxtLink to="/catalog/furnaces">Топки</NuxtLink></li>
-                <li><NuxtLink to="/catalog/cyclones">Циклоны</NuxtLink></li>
-                <li><NuxtLink to="/catalog/fuel-supply">Топливоподача и шлакоудаление</NuxtLink></li>
-                <li><NuxtLink to="/catalog/skip-hoists">Скиповые подъемники</NuxtLink></li>
-                <li><NuxtLink to="/catalog/automation">Котловая автоматика</NuxtLink></li>
-                <li><NuxtLink to="/catalog/fans">Дымососы и вентиляторы</NuxtLink></li>
-                <li><NuxtLink to="/catalog/grids">Колосники чугунные</NuxtLink></li>
+                <li><NuxtLink to="/catalog">Все категории</NuxtLink></li>
+                <li v-for="category in footerCategories" :key="category.slug">
+                  <NuxtLink :to="`/catalog/${category.slug}`">{{ category.title }}</NuxtLink>
+                </li>
               </ul>
             </div>
+
+           
 
             <div class="footer__nav-column">
-              <h3 class="footer__nav-title">Услуги завода</h3>
-              <ul class="footer__nav-list">
-                <li><NuxtLink to="/services/installation">Монтаж котельной</NuxtLink></li>
-                <li><NuxtLink to="/services/design">Проектирование котельной</NuxtLink></li>
-                <li><NuxtLink to="/services/startup">Пуско-наладка котельной</NuxtLink></li>
-                <li><NuxtLink to="/services/turnkey">Котельная под ключ</NuxtLink></li>
-              </ul>
-            </div>
-
-            <div class="footer__contacts">
               <h3 class="footer__nav-title">Контакты</h3>
               <div class="footer__phones">
                 <a href="tel:+73852226337">+7 (3852) 226-337</a>
@@ -121,10 +121,7 @@ const toggleSection = (index: number) => {
               </div>
               <a href="mailto:kes-altai@mail.ru" class="footer__email">kes-altai@mail.ru</a>
               <button class="footer__callback">Заказать звонок</button>
-              <div class="footer__social">
-                <span>Мы в соцсетях</span>
-                <!-- Add social media icons here -->
-              </div>
+        
             </div>
           </div>
         </div>
@@ -132,9 +129,6 @@ const toggleSection = (index: number) => {
         <div class="footer__bottom">
           <p class="footer__copyright">
             © 2010—2025 ООО «КотлоЭнергоСнаб»
-          </p>
-          <p class="footer__disclaimer">
-            Обращаем ваше внимание на то, что данный интернет-сайт носит информационный характер и не является публичной офертой, определяемой положениями Статьи 437 (2) Гражданского кодекса Российской Федерации. Для получения подробной информации о наличии, стоимости, комплектации указанных товаров и (или) услуг, обращайтесь к менеджерам отдела сбыта с помощью специальной формы связи или по телефону: +7 (3852) 226-337.
           </p>
         </div>
       </div>

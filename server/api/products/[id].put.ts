@@ -16,7 +16,10 @@ export default defineEventHandler(async (event) => {
       image: body.image,
       category: body.category,
       category_slug: body.category_slug,
-      specs: body.specs || {}
+      specs: {
+        ...(body.specs || {}),
+        images: Array.isArray(body.specs?.images) ? body.specs.images : []
+      }
     }
 
     console.log('Updating product with data:', updateData)

@@ -46,7 +46,7 @@
           <nav class="header__nav" v-else>
             <ul class="header__menu">
               <li><NuxtLink to="/catalog">Каталог продукции</NuxtLink></li>
-              <li><NuxtLink to="/cart">Корзина {{ cartStore.totalItems }}</NuxtLink></li>
+              <li><NuxtLink to="/cart">Корзина {{ cartStore.totalItems }} {{ cartStore.totalItems === 1 ? 'товар' : cartStore.totalItems === 2 ? 'товара' : 'товаров' }} ({{ cartStore.totalPrice.toLocaleString() }} &#8381;)</NuxtLink></li>
             </ul>
           </nav>
         </div>

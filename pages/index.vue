@@ -27,11 +27,11 @@
       <div class="container">
         <h2 class="section-title">Каталог продукции</h2>
         <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
-          <div class="catalog-card" v-for="(card, idx) in catalogCards" :key="idx">
-            <img :src="card.img" :alt="card.alt" />
-            <h3>{{ card.title }}</h3>
-            <p v-if="!$device.isMobile">{{ card.desc }}</p>
-            <NuxtLink :to="card.link" class="btn btn-primary">Подробнее</NuxtLink>
+          <div class="catalog-card" v-for="category in mainCategories" :key="category.slug">
+            <img :src="category.image" :alt="category.title" />
+            <h3>{{ category.title }}</h3>
+            <p v-if="!$device.isMobile">{{ category.description }}</p>
+            <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
           </div>
         </div>
         <div class="text-center">
@@ -203,6 +203,21 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useNuxtApp } from '#app'
 const { $device } = useNuxtApp()
+
+// Получаем реальные категории для каталога на главной
+interface Category {
+  title: string;
+  slug: string;
+  image: string;
+  description: string;
+}
+const mainCategories = ref<Category[]>([]);
+const { data: fetchedCategories, error: fetchError } = await useFetch<Category[]>('/api/categories');
+if (fetchedCategories.value) {
+  mainCategories.value = fetchedCategories.value.slice(0, 3);
+} else if (fetchError.value) {
+  console.error('Error loading categories:', fetchError.value);
+}
 
 const typeBuilding = ref('')
 const fuelType = ref('')
@@ -388,30 +403,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (intervalId) clearInterval(intervalId)
 })
-
-const catalogCards = [
-  {
-    img: '/images/catalog/water-heating.jpg',
-    alt: 'Водогрейные котлы',
-    title: 'Водогрейные котлы',
-    desc: 'Водогрейные котлы КВр, КВм, КВа, КВ мощностью до 4 МВт для отопления и горячего водоснабжения зданий и промышленных предприятий. Широкий модельный ряд позволяет подобрать котел для существующей или строящейся котельной.',
-    link: '/catalog/water-heating',
-  },
-  {
-    img: '/images/catalog/steam.jpg',
-    alt: 'Паровые котлы',
-    title: 'Паровые котлы',
-    desc: 'Промышленные паровые котлы на всех видах топлива. Мощность 300, 500, 700, 1000 кг пара в час, температура пара 115 - 170 °С, давление 0,07-0,8 МПа.',
-    link: '/catalog/steam',
-  },
-  {
-    img: '/images/catalog/furnaces.jpg',
-    alt: 'Топки',
-    title: 'Топки',
-    desc: 'Топки ТШПМ, ТЛЗМ, ТЧЗМ, ТЛПХ',
-    link: '/catalog/furnaces',
-  },
-]
 </script>
 
 <style scoped>
@@ -456,26 +447,35 @@ const catalogCards = [
 }
 
 .catalog {
-  padding: 80px 0;
+  padding: 60px 0 80px 0;
 }
 
 .catalog-card {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  padding: 20px 20px 20px 20px;
   text-align: center;
+  position: relative;
+  padding-top: 80px;
+  overflow: visible;
 }
-
 .catalog-card img {
-  width: 100%;
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
   height: 200px;
-  object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f7f7fa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  z-index: 2;
+  margin-bottom: 0;
 }
-
 .catalog-card h3 {
+  margin-top: 80px;
   margin-bottom: 15px;
 }
 

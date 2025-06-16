@@ -4,6 +4,7 @@ import { createError } from 'h3'
 interface ProductSpecs {
   power?: string
   fuel?: string | string[]
+  images?: string[]
   [key: string]: any
 }
 
@@ -15,6 +16,7 @@ interface Product {
   image: string
   category: string
   category_slug: string
+  gallery?: string[]
   specs?: ProductSpecs
 }
 
@@ -72,6 +74,7 @@ export default defineEventHandler(async (event) => {
       specs: {
         power: body.specs?.power || 'отсутствует',
         fuel: body.specs?.fuel || 'отсутствует',
+        images: Array.isArray(body.specs?.images) ? body.specs.images : [],
         ...(body.specs || {})
       }
     }
