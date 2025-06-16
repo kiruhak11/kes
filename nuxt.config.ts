@@ -37,7 +37,7 @@ export default defineNuxtConfig({
       adminPassword: process.env.ADMIN_PASSWORD || 'admin'
     },
   },
-  modules: ['@nuxtjs/device', '@nuxtjs/supabase', '@pinia/nuxt', '@pinia-plugin-persistedstate/nuxt'],
+  modules: ['@nuxtjs/device', '@nuxtjs/supabase', '@pinia/nuxt'],
   device: {
     // опционально: можно обновлять при ресайзе
     refreshOnResize: true
@@ -45,9 +45,9 @@ export default defineNuxtConfig({
   // nitro: {
   //   routeRules: {
   //     '/api/products': { 
-  //       cache: {
-  //         maxAge: 60 * 5 // 5 minutes
-  //       }
+  //       // cache: {
+  //       //   maxAge: 60 * 5 // 5 minutes
+  //       // }
   //     },
   //     '/api/products/**': { 
   //       cache: {

@@ -17,7 +17,7 @@ FROM base as build
 
 COPY package*.json ./
 
-RUN npm install --legacy-peer-deps --production=false
+RUN npm install --production=false
 
 COPY . .
 
