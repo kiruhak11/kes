@@ -13,28 +13,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Создаем новый продукт с категорией
-    const { data, error } = await client.from('products')
-      .insert([{
-        name: body.title,
-        description: `Товары категории ${body.title}`,
-        price: 0,
-        category: body.title,
-        category_slug: body.slug,
-        specs: {
-          power: 'отсутствует',
-          fuel: ['отсутствует']
-        }
-      }])
-      .select()
-      .single()
+    // Пока категории хранятся имплицитно через товары, нам не нужно ничего создавать.
+    // Просто возвращаем объект категории, чтобы фронтенд мог продолжить работу.
+    // Категория появится в выдаче, как только будет добавлен хотя бы один товар с этим category_slug.
 
-    if (error) {
-      console.error('Supabase insert error:', error.message)
-      throw createError({ statusCode: 500, statusMessage: 'Failed to create category in Supabase' })
+    return {
+      title: body.title,
+      slug: body.slug
     }
-
-    return data
   } catch (e: any) {
     console.error('POST /api/categories error:', e)
     throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })

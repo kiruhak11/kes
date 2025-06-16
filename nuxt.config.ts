@@ -37,7 +37,7 @@ export default defineNuxtConfig({
       adminPassword: process.env.ADMIN_PASSWORD,
     },
   },
-  modules: ['@nuxtjs/device', '@nuxtjs/supabase'],
+  modules: ['@nuxtjs/device', '@nuxtjs/supabase', '@pinia/nuxt', '@pinia-plugin-persistedstate/nuxt'],
   device: {
     // опционально: можно обновлять при ресайзе
     refreshOnResize: true

@@ -4,15 +4,15 @@
       <div class="container">
         <div class="header__top-content">
           <div class="header__contacts">
-            <a href="mailto:sb@kvzr.ru" class="header__email">sb@kvzr.ru</a>
-            <a href="tel:88007001743" class="header__phone">8-800-700-17-43</a>
-            <button class="header__callback">Заказать звонок</button>
+            <a href="mailto:sb@kvzr.ru" class="header__email">kes-altai@mail.ru</a>
+            <a href="tel:226337" class="header__phone">226-337 | 226-338 | 226-938</a>
+            <NuxtLink to="/contact" class="header__callback">Заказать звонок</NuxtLink>
           </div>
           <div class="header__user-actions" v-if="!$device.isMobile">
-            <a href="/questionnaires" class="header__link">Опросные листы</a>
-            <a href="/faq" class="header__link">Вопрос-ответ</a>
-            <a href="/compare" class="header__link">Сравнение <span>0 товаров</span></a>
-            <a href="/cart" class="header__link">Корзина <span>0 товаров</span></a>
+            <a href="/certificates" class="header__link">Сертификаты</a>
+            <a href="/about" class="header__link">О компании</a>
+            <a href="/about/gallery" class="header__link">Фотогалерея</a>
+            <a href="/about/contacts" class="header__link">Контакты</a>
           </div>
         </div>
       </div>
@@ -31,14 +31,11 @@
               <nav v-if="showMobileMenu" class="mobile-nav">
                 <ul class="mobile-menu">
                   <li><NuxtLink to="/catalog" @click="showMobileMenu = false">Каталог продукции</NuxtLink></li>
-                  <li><NuxtLink to="/services" @click="showMobileMenu = false">Услуги завода</NuxtLink></li>
-                  <li><NuxtLink to="/contacts" @click="showMobileMenu = false">Контакты</NuxtLink></li>
-                  <li><NuxtLink to="/about" @click="showMobileMenu = false">О заводе</NuxtLink></li>
-                  <li><NuxtLink to="/blog" @click="showMobileMenu = false">Блог</NuxtLink></li>
-                  <li><NuxtLink to="/cart" @click="showMobileMenu = false">Корзина</NuxtLink></li>
-                  <li><NuxtLink to="/compare" @click="showMobileMenu = false">Сравнение</NuxtLink></li>
-                  <li><NuxtLink to="/faq" @click="showMobileMenu = false">Вопрос-ответ</NuxtLink></li>
-                  <li><NuxtLink to="/questionnaires" @click="showMobileMenu = false">Опросные листы</NuxtLink></li>
+                  <li><NuxtLink to="/about/contacts" @click="showMobileMenu = false">Контакты</NuxtLink></li>
+                  <li><NuxtLink to="/about" @click="showMobileMenu = false">О компании</NuxtLink></li>
+                  <li><NuxtLink to="/about/gallery" @click="showMobileMenu = false">Фотогалерея</NuxtLink></li>
+                  <li><NuxtLink to="/certificates" @click="showMobileMenu = false">Сертификаты</NuxtLink></li>
+                  <li><NuxtLink to="/cart" @click="showMobileMenu = false">Корзина {{ cartStore.totalItems }}</NuxtLink></li>
                 </ul>
               </nav>
             </transition>
@@ -49,22 +46,7 @@
           <nav class="header__nav" v-else>
             <ul class="header__menu">
               <li><NuxtLink to="/catalog">Каталог продукции</NuxtLink></li>
-              <li><NuxtLink to="/services">Услуги завода</NuxtLink></li>
-              <li><NuxtLink to="/contacts">Контакты</NuxtLink></li>
-              <li class="header__menu-item-has-children">
-                <NuxtLink to="/about">О заводе</NuxtLink>
-                <ul class="header__submenu">
-                  <li><NuxtLink to="/about/documents">Документы завода</NuxtLink></li>
-                  <li><NuxtLink to="/about/questionnaires">Опросные листы</NuxtLink></li>
-                  <li><NuxtLink to="/about/calculator">Подобрать мощность котла</NuxtLink></li>
-                  <li><NuxtLink to="/about/leasing">Купить котлы и котельные в лизинг</NuxtLink></li>
-                  <li><NuxtLink to="/about/delivery">Доставка продукции</NuxtLink></li>
-                  <li><NuxtLink to="/about/claims">Претензии и возврат</NuxtLink></li>
-                  <li><NuxtLink to="/about/payment">Условия оплаты</NuxtLink></li>
-                  <li><NuxtLink to="/about/vacancies">Вакансии</NuxtLink></li>
-                  <li><NuxtLink to="/about/news">Новости</NuxtLink></li>
-                </ul>
-              </li>
+              <li><NuxtLink to="/cart">Корзина {{ cartStore.totalItems }}</NuxtLink></li>
             </ul>
           </nav>
         </div>
@@ -76,19 +58,23 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useNuxtApp } from '#app'
+import { useCartStore } from '~/stores/cart'
+
 const { $device } = useNuxtApp()
 const showMobileMenu = ref(false)
+const cartStore = useCartStore()
 
 function closeMenuOnOutsideClick(e: MouseEvent) {
-  const menu = document.querySelector('.mobile-nav')
-  const burger = document.querySelector('.burger-btn')
-  if (showMobileMenu.value && menu && !menu.contains(e.target as Node) && burger && !burger.contains(e.target as Node)) {
+  const target = e.target as HTMLElement
+  if (!target.closest('.header__mobile-menu') && !target.closest('.header__mobile-menu-toggle')) {
     showMobileMenu.value = false
   }
 }
+
 onMounted(() => {
   document.addEventListener('click', closeMenuOnOutsideClick)
 })
+
 onBeforeUnmount(() => {
   document.removeEventListener('click', closeMenuOnOutsideClick)
 })
@@ -297,5 +283,34 @@ onBeforeUnmount(() => {
   .header__user-actions {
     display: none;
   }
+}
+
+.header__cart {
+  position: relative;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text);
+  padding: 0.5rem;
+}
+
+.cart-icon {
+  font-size: 1.2rem;
+}
+
+.cart-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.8rem;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
 }
 </style>

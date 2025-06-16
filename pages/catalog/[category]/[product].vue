@@ -14,12 +14,13 @@
             <ul>
               <li v-for="(value, key) in product.specs" :key="key">
                 <span class="spec-label">{{ capitalize(key) }}:</span>
+                <span class="spec-dots"></span>
                 <span class="spec-value">{{ value }}</span>
               </li>
             </ul>
           </div>
           <p class="product-price">{{ product.price.toLocaleString() }} &#8381;</p>
-          <button class="btn btn-primary add-to-cart-btn">Добавить в корзину</button>
+          <button class="btn btn-primary add-to-cart-btn" @click="addToCart">Добавить в корзину</button>
           
           <div class="product-extended-description">
             <h3 class="extended-description-title">Подробное описание:</h3>
@@ -36,6 +37,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useCartStore } from '~/stores/cart';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -59,6 +61,7 @@ interface Product {
   price: number;
   image: string;
   category: string;
+  category_slug: string;
   slug: string;
   specs?: Record<string, any>;
 }
@@ -79,12 +82,13 @@ const productSlug = computed(() => {
 })
 
 // Fetch products
-const { data: fetchedProducts, error: fetchError } = await useFetch<Product[]>(`/api/products`, {
+const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/products`, {
   query: computed(() => ({
     categorySlug: categorySlug.value
   })),
   transform: (response) => {
-    if (!response || !Array.isArray(response.products)) {
+    console.log('API Response:', response)
+    if (!response || typeof response !== 'object' || !('products' in response)) {
       console.error('Invalid response format:', response)
       return []
     }
@@ -109,7 +113,7 @@ if (fetchError.value) {
       fuel: Array.isArray(product.specs?.fuel) 
         ? product.specs.fuel 
         : typeof product.specs?.fuel === 'string' 
-          ? product.specs.fuel.split(', ').map(f => f.trim())
+          ? product.specs.fuel.split(', ').map((f: string) => f.trim())
           : ['отсутствует']
     }
   }))
@@ -119,23 +123,39 @@ if (fetchError.value) {
 
 // Get the current product
 const currentProduct = computed(() => {
-  if (!products.value || products.value.length === 0) return null
+  if (!products.value || products.value.length === 0) {
+    console.log('No products available')
+    return null
+  }
   
-  // Find product by matching the generated slug
+  console.log('Searching for product with slug:', productSlug.value)
+  console.log('Available products:', products.value.map(p => ({
+    name: p.name,
+    slug: p.slug,
+    id: p.id
+  })))
+  
+  // Find product by matching slug or generated slug from name
   const foundProduct = products.value.find(p => {
-    const productSlugGenerated = transliterate(p.name || '').toLowerCase()
+    const generatedSlug = transliterate((p.name || '').toLowerCase())
+      .toLowerCase()
       .replace(/[^a-z0-9 -]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
-    
-    return productSlugGenerated === productSlug.value
-  })
 
+    return p.slug === productSlug.value || generatedSlug === productSlug.value
+  })
+  
   if (!foundProduct) {
     console.error('Product not found:', {
       productSlug: productSlug.value,
-      availableProducts: products.value.map(p => p.name)
+      availableProducts: products.value.map(p => ({
+        name: p.name,
+        slug: p.slug
+      }))
     })
+  } else {
+    console.log('Found product:', foundProduct)
   }
 
   return foundProduct || null
@@ -144,6 +164,7 @@ const currentProduct = computed(() => {
 // Handle product not found
 watch(currentProduct, (product) => {
   if (!product && products.value.length > 0) {
+    console.log('Product not found, redirecting to category:', categorySlug.value)
     router.push(`/catalog/${categorySlug.value}`)
   }
 }, { immediate: true })
@@ -155,6 +176,24 @@ const capitalize = (s: string) => {
   if (typeof s !== 'string') return ''
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+const cartStore = useCartStore();
+
+const addToCart = () => {
+  if (product.value) {
+    cartStore.addItem({
+      id: product.value.id,
+      name: product.value.name,
+      price: product.value.price,
+      image: product.value.image,
+      category: product.value.category,
+      category_slug: product.value.category_slug,
+      slug: product.value.slug,
+      quantity: 1
+    });
+    alert('Товар добавлен в корзину');
+  }
+};
 </script>
 
 <style scoped>
@@ -222,19 +261,23 @@ const capitalize = (s: string) => {
 
 .product-specs li {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
-  border-bottom: 1px dashed #eee;
-  padding-bottom: 5px;
 }
 
 .spec-label {
-  font-weight: 500;
-  color: #666;
+  white-space: nowrap;
+}
+
+.spec-dots {
+  flex: 1;
+  border-bottom: 1px dotted #999;
+  padding-bottom: 10px;
+  margin: 0 10px;
 }
 
 .spec-value {
-  color: #333;
+  white-space: nowrap;
 }
 
 .product-price {

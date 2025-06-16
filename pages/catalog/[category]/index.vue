@@ -21,6 +21,7 @@
                     <input type="number" v-model.number="filters.maxPower" placeholder="До" />
                     <select v-model="filters.powerUnit">
                       <option value="">Ед. изм.</option>
+
                       <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
                     </select>
                   </div>
@@ -48,11 +49,18 @@
                   <div class="product-card__specs">
                     <div class="spec-item">
                       <span class="spec-label">Мощность:</span>
+                      <span class="spec-dots"></span>
                       <span class="spec-value">{{ product.specs?.power }}</span>
                     </div>
                     <div class="spec-item">
                       <span class="spec-label">Топливо:</span>
+                      <span class="spec-dots"></span>
                       <span class="spec-value">{{ Array.isArray(product.specs?.fuel) && product.specs.fuel.length > 0 && product.specs.fuel[0] !== 'отсутствует' ? product.specs.fuel.join(', ') : 'Отсутствует' }}</span>
+                    </div>
+                    <div class="spec-item">
+                      <span class="spec-label">Цена:</span>
+                      <span class="spec-dots"></span>
+                      <span class="spec-value">{{ product.price.toLocaleString() }} &#8381;</span>
                     </div>
                   </div>
                   <NuxtLink 
@@ -381,7 +389,12 @@
     margin-bottom: 20px;
     font-size: 1.25rem;
   }
+  .spec-dots {
+  flex: 1;
+  border-bottom: 1px dotted #999;
   
+  margin: 0 10px;
+}
   .filter-group {
     margin-bottom: 20px;
   }

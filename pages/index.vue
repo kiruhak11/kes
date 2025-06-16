@@ -104,48 +104,95 @@
         <div class="calculator__form">
           <div class="form-group">
             <label>Тип здания</label>
-            <select>
-              <option>Административные здания</option>
-              <option>Бани</option>
-              <option>Больницы</option>
-              <option>Гаражи</option>
-              <option>Гостиницы</option>
-              <option>Детские сады</option>
-              <option>Жилые постройки 1930-1958 г.г</option>
-              <option>Жилые постройки после 1958 г.</option>
-              <option>Кафе рестораны</option>
-              <option>Кинотеатр</option>
-              <option>Клубы</option>
-              <option>Магазины</option>
-              <option>Пожарные Депо</option>
-              <option>Поликлиники</option>
-              <option>Школы</option>
-            </select>
+            <div class="input-with-select">
+              <select v-model="typeBuilding">
+                <option value="">Выберите тип здания</option>
+                <option v-for="building in buildingTypes" :key="building" :value="building">
+                  {{ building }}
+                </option>
+              </select>
+              <input 
+                type="text" 
+                v-model="typeBuilding"
+                placeholder="Или введите свой вариант"
+                class="manual-input"
+              >
+            </div>
           </div>
+
           <div class="form-group">
             <label>Вид топлива</label>
-            <select>
-              <option>Газ</option>
-              <option>Твердое топливо</option>
-              <option>Жидкое топливо</option>
-              <option>Электричество</option>
-            </select>
+            <div class="input-with-select">
+              <select v-model="fuelType">
+                <option value="">Выберите вид топлива</option>
+                <option v-for="fuel in fuelTypes" :key="fuel" :value="fuel">
+                  {{ fuel }}
+                </option>
+              </select>
+              <input 
+                type="text" 
+                v-model="fuelType"
+                placeholder="Или введите свой вариант"
+                class="manual-input"
+              >
+            </div>
           </div>
+
           <div class="form-group">
             <label>Тип мощности</label>
-            <select>
-              <option>Паровая</option>
-              <option>Водогрейная</option>
-            </select>
+            <div class="input-with-select">
+              <select v-model="powerType">
+                <option value="">Выберите тип мощности</option>
+                <option v-for="power in powerTypes" :key="power" :value="power">
+                  {{ power }}
+                </option>
+              </select>
+              <input 
+                type="text" 
+                v-model="powerType"
+                placeholder="Или введите свой вариант"
+                class="manual-input"
+              >
+            </div>
           </div>
+
           <div class="form-group">
             <label>Регион</label>
-            <select>
-              <option>Выберите регион</option>
-              <!-- Add regions -->
-            </select>
+            <div class="region-select">
+              <input 
+                type="text" 
+                v-model="regionSearch" 
+                placeholder="Поиск региона..."
+                class="region-search"
+              >
+              <div class="region-dropdown" v-if="regionSearch && filteredRegions.length">
+                <div 
+                  v-for="region in filteredRegions" 
+                  :key="region"
+                  class="region-option"
+                  @click="selectRegion(region)"
+                >
+                  {{ region }}
+                </div>
+              </div>
+            </div>
           </div>
-          <button class="btn btn-primary">Рассчитать</button>
+
+          <div class="form-group phone-group">
+            <label>Телефон для связи</label>
+            <div class="phone-input">
+              <span class="phone-prefix">+7</span>
+              <input 
+                type="tel" 
+                v-model="phoneNumber"
+                placeholder="(___) ___-__-__"
+                @input="formatPhoneNumber"
+                class="phone-field"
+              >
+            </div>
+          </div>
+
+          <button class="btn btn-primary" @click="calculate">Рассчитать</button>
         </div>
       </div>
     </section>
@@ -156,6 +203,173 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useNuxtApp } from '#app'
 const { $device } = useNuxtApp()
+
+const typeBuilding = ref('')
+const fuelType = ref('')
+const powerType = ref('')
+const phoneNumber = ref('')
+
+const regions = [
+  'Алтайский край',
+  'Амурская область',
+  'Архангельская область',
+  'Астраханская область',
+  'Белгородская область',
+  'Брянская область',
+  'Владимирская область',
+  'Волгоградская область',
+  'Вологодская область',
+  'Воронежская область',
+  'Еврейская автономная область',
+  'Забайкальский край',
+  'Ивановская область',
+  'Иркутская область',
+  'Кабардино-Балкарская Республика',
+  'Калининградская область',
+  'Калужская область',
+  'Камчатский край',
+  'Карачаево-Черкесская Республика',
+  'Кемеровская область',
+  'Кировская область',
+  'Костромская область',
+  'Краснодарский край',
+  'Красноярский край',
+  'Курганская область',
+  'Курская область',
+  'Ленинградская область',
+  'Липецкая область',
+  'Магаданская область',
+  'Москва',
+  'Московская область',
+  'Мурманская область',
+  'Ненецкий автономный округ',
+  'Нижегородская область',
+  'Новгородская область',
+  'Новосибирская область',
+  'Омская область',
+  'Оренбургская область',
+  'Орловская область',
+  'Пензенская область',
+  'Пермский край',
+  'Приморский край',
+  'Псковская область',
+  'Республика Адыгея',
+  'Республика Алтай',
+  'Республика Башкортостан',
+  'Республика Бурятия',
+  'Республика Дагестан',
+  'Республика Ингушетия',
+  'Республика Калмыкия',
+  'Республика Карелия',
+  'Республика Коми',
+  'Республика Крым',
+  'Республика Марий Эл',
+  'Республика Мордовия',
+  'Республика Саха (Якутия)',
+  'Республика Северная Осетия - Алания',
+  'Республика Татарстан',
+  'Республика Тыва',
+  'Республика Хакасия',
+  'Ростовская область',
+  'Рязанская область',
+  'Самарская область',
+  'Санкт-Петербург',
+  'Саратовская область',
+  'Сахалинская область',
+  'Свердловская область',
+  'Смоленская область',
+  'Ставропольский край',
+  'Тамбовская область',
+  'Тверская область',
+  'Томская область',
+  'Тульская область',
+  'Тюменская область',
+  'Удмуртская Республика',
+  'Ульяновская область',
+  'Хабаровский край',
+  'Ханты-Мансийский автономный округ - Югра',
+  'Челябинская область',
+  'Чеченская Республика',
+  'Чувашская Республика',
+  'Чукотский автономный округ',
+  'Ямало-Ненецкий автономный округ',
+  'Ярославская область'
+]
+
+const buildingTypes = [
+  'Административные здания',
+  'Бани',
+  'Больницы',
+  'Гаражи',
+  'Гостиницы',
+  'Детские сады',
+  'Жилые постройки 1930-1958 г.г',
+  'Жилые постройки после 1958 г.',
+  'Кафе рестораны',
+  'Кинотеатр',
+  'Клубы',
+  'Магазины',
+  'Пожарные Депо',
+  'Поликлиники',
+  'Школы'
+]
+
+const fuelTypes = [
+  'Газ',
+  'Твердое топливо',
+  'Жидкое топливо',
+  'Электричество'
+]
+
+const powerTypes = [
+  'Паровая',
+  'Водогрейная'
+]
+
+const selectRegion = (region: string) => {
+  regionSearch.value = region
+}
+
+const formatPhoneNumber = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let value = input.value.replace(/\D/g, '')
+  
+  if (value.length > 0) {
+    value = value.match(new RegExp('.{1,3}', 'g'))?.join(' ') || value
+  }
+  
+  phoneNumber.value = value
+}
+
+async function calculate() {
+  const payload = {
+    text: `📩 Новая заявка:
+- Телефон: ${phoneNumber.value}
+- Регион: ${regionSearch.value}
+- Тип здания: ${typeBuilding.value}
+- Вид топлива: ${fuelType.value}
+- Тип мощности: ${powerType.value}`,
+  };
+
+  try {
+    const res = await $fetch("/api/contact", {
+      method: "POST",
+      body: payload,
+    });
+    console.log("Telegram response:", res);
+    // тут можно очистить поля и показать уведомление пользователю
+  } catch (err) {
+    console.error("Ошибка отправки:", err);
+  }
+}
+
+const regionSearch = ref('')
+const filteredRegions = computed(() => {
+  if (!regionSearch.value) return regions
+  return regions.filter(region => 
+    region.toLowerCase().includes(regionSearch.value.toLowerCase())
+  )
+})
 
 const heroImages = [
   '/images/hero1.jpg',
@@ -201,8 +415,6 @@ const catalogCards = [
 </script>
 
 <style scoped>
-@use "@/assets/styles/collection/functions" as *;
-
 .hero {
   position: relative;
   overflow: hidden;
@@ -333,34 +545,135 @@ const catalogCards = [
 }
 
 .calculator__form {
+  max-width: 800px;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
   background: #fff;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  font-weight: bold;
+  font-weight: 500;
+  color: #333;
 }
 
-.form-group select,
-.form-group input[type="text"] {
+.input-with-select {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-with-select select,
+.input-with-select input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  box-sizing: border-box;
+  font-size: 16px;
+  transition: border-color 0.3s;
 }
 
-.calculator .btn {
+.input-with-select select:focus,
+.input-with-select input:focus {
+  outline: none;
+}
+
+.manual-input {
+  margin-top: 4px;
+}
+
+.region-select {
+  position: relative;
+}
+
+.region-search {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.region-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.region-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.region-option:hover {
+  background-color: #f5f5f5;
+}
+
+.phone-group {
   margin-top: 20px;
+}
+
+.phone-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 12px;
+  transition: border-color 0.3s;
+}
+
+.phone-input:focus-within {
+  border-color: #007bff;
+}
+
+.phone-prefix {
+  color: #666;
+  font-size: 16px;
+}
+
+.phone-field {
+  border: none;
+  padding: 8px 0;
+  font-size: 16px;
+  width: 100%;
+}
+
+.phone-field:focus {
+  outline: none;
+}
+
+.btn-primary {
+  grid-column: 1 / -1;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
 }
 
 @media (max-width: 992px) {
@@ -435,16 +748,18 @@ const catalogCards = [
     padding: 40px 0;
   }
   .calculator__form {
-    padding: 16px;
-    gap: 10px;
+    padding: 20px;
+    gap: 16px;
   }
-  .form-group label {
+  .input-with-select select,
+  .input-with-select input,
+  .region-search,
+  .phone-field {
     font-size: 14px;
-    margin-bottom: 4px;
+    padding: 10px;
   }
-  .calculator .btn {
-    padding: 8px;
-    font-size: 1rem;
+  .phone-prefix {
+    font-size: 14px;
   }
 }
 </style>

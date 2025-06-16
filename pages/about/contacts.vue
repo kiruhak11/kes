@@ -70,14 +70,16 @@
       </div>
 
       <!-- Карта -->
-      <div class="map-section">
+      <div class="contact-card map-container">
         <h2>Как нас найти</h2>
         <div class="map">
           <iframe 
-            src="https://yandex.ru/map-widget/v1/?um=constructor%3A123456789&amp;source=constructor" 
+            src="https://static-maps.yandex.ru/v1?ll=53.388598,83.762407&z=16&l=map&pt=53.388598,83.762407,pm2rdm&apikey=fb86c542-071d-40a4-86e8-2a7f52e79259" 
             width="100%" 
-            height="500" 
-            frameborder="0"
+            height="450" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy"
           ></iframe>
         </div>
       </div>
@@ -107,8 +109,8 @@ definePageMeta({
 }
 
 .contacts-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 2rem;
 }
 
@@ -117,9 +119,6 @@ definePageMeta({
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
-  margin: 0 auto;
-  width: 100%;
 }
 
 .contact-card h2 {
@@ -128,15 +127,12 @@ definePageMeta({
   margin-bottom: 1.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid #007bff;
-  text-align: center;
 }
 
 .contact-details {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 800px;
-  margin: 0 auto;
 }
 
 .contact-item {
@@ -171,8 +167,6 @@ definePageMeta({
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
 }
 
 .requisites-group {
@@ -185,7 +179,6 @@ definePageMeta({
   font-size: 1.2rem;
   color: #333;
   margin-bottom: 0.5rem;
-  text-align: center;
 }
 
 .bank-details {
@@ -199,21 +192,8 @@ definePageMeta({
   margin: 0.5rem 0;
 }
 
-.map-section {
-  width: 100%;
-  padding: 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.map-section h2 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #007bff;
-  text-align: center;
+.map-container {
+  grid-column: 1 / -1;
 }
 
 .map {
@@ -223,6 +203,10 @@ definePageMeta({
 }
 
 @media (max-width: 768px) {
+  .contacts-grid {
+    grid-template-columns: 1fr;
+  }
+
   .contact-card {
     padding: 1.5rem;
   }
