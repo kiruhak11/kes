@@ -1,347 +1,497 @@
 <template>
   <section class="admin-section container">
-    <!-- Вход в админ-панель -->
-    <div v-if="!authorized" class="login-box">
-      <h2>Вход в админ-панель</h2>
-      <input
-        v-model="password"
-        type="password"
-        placeholder="Пароль"
-        @keyup.enter="login"
-      />
-      <button class="btn btn-primary" @click="login">
-        Войти
-      </button>
-      <p v-if="loginError" class="error">{{ loginError }}</p>
+    <!-- Вкладки -->
+    <div class="admin-tabs">
+      <button :class="{active: adminTab==='catalog'}" @click="adminTab='catalog'">Каталог</button>
+      <button :class="{active: adminTab==='stats'}" @click="adminTab='stats'">Статистика</button>
     </div>
 
-    <!-- Управление каталогом -->
-    <div v-else class="catalog-manager">
-      <h1>Управление каталогом</h1>
-
-      <!-- Форма добавления нового товара -->
-      <div class="add-form">
-        <div class="category-select">
-          <label>Категория:</label>
-          <div class="category-input">
-            <select v-model="newProd.category">
-              <option value="">Выберите категорию</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-                {{ cat.name }}
-              </option>
-              <option value="new">+ Добавить новую категорию</option>
-            </select>
-            <input
-              v-if="newProd.category === 'new'"
-              v-model="newCategory"
-              placeholder="Название новой категории"
-              @input="validateNewCategory"
-            />
-          </div>
-        </div>
-
+    <!-- Каталог -->
+    <div v-if="adminTab==='catalog'">
+      <!-- Вход в админ-панель -->
+      <div v-if="!authorized" class="login-box">
+        <h2>Вход в админ-панель</h2>
         <input
-          v-model="newProd.name"
-          placeholder="Название"
+          v-model="password"
+          type="password"
+          placeholder="Пароль"
+          @keyup.enter="login"
         />
-        <textarea
-          v-model="newProd.description"
-          placeholder="Краткое описание"
-        ></textarea>
-        <textarea
-          v-model="newProd.extendedDescription"
-          placeholder="Расширенное описание"
-        ></textarea>
-        <input
-          v-model.number="newProd.price"
-          type="number"
-          placeholder="Цена"
-        />
-
-        <label>Изображение:</label>
-        <div class="image-upload">
-          <select v-model="newProd.image" class="image-select">
-            <option value="">Выберите изображение</option>
-            <option
-              v-for="img in presetImages"
-              :key="img"
-              :value="img"
-            >
-              {{ img.split('/').pop() }}
-            </option>
-            <option value="custom">Загрузить своё изображение</option>
-          </select>
-          <input
-            v-if="newProd.image === 'custom'"
-            type="file"
-            accept="image/*"
-            @change="(e: any) => handleImageUpload(e, newProd)"
-            class="image-input"
-          />
-        </div>
-        <img
-          v-if="newProd.image && newProd.image !== 'custom'"
-          :src="newProd.image"
-          class="img-preview"
-        />
-
-        <h4>Дополнительные изображения</h4>
-        <input type="file" multiple accept="image/*" @change="handleGalleryUpload" />
-        <div class="gallery-previews">
-          <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
-            <img :src="gimg" class="img-preview" />
-            <button class="btn btn-danger btn-sm" @click.prevent="removeGalleryImage(gidx)">✕</button>
-          </div>
-        </div>
-
-        <h3>Характеристики</h3>
-        <div class="filter-group">
-          <label>Мощность</label>
-          <div class="power-input-group">
-            <input type="number" v-model.number="newProdPowerValue" placeholder="Число" />
-            <select v-model="newProdPowerUnit">
-              <option value="">Ед. изм.</option>
-              <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="filter-group">
-          <label>Топливо</label>
-          <div class="fuel-dropdown-container">
-            <div class="fuel-dropdown-header" @click="toggleNewProdFuelDropdown">
-              {{ newProdSelectedFuels.length === 0 ? 'Выберите топливо' : newProdSelectedFuels.join(', ') }}
-            </div>
-            <div v-if="showNewProdFuelDropdown" class="fuel-dropdown-content">
-              <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
-                <input type="checkbox" :id="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'" :value="fuelOption" v-model="newProdSelectedFuels" />
-                <label :for="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'">{{ fuelOption }}</label>
-              </div>
-            </div>
-          </div>
-        </div>
-        <table class="specs-table">
-          <tbody>
-          <tr
-            v-for="(spec, idx) in newSpecs"
-            :key="idx"
-          >
-            <td>
-              <input
-                v-model="spec.key"
-                placeholder="Параметр"
-              />
-            </td>
-            <td>
-              <input
-                v-model="spec.value"
-                placeholder="Значение"
-              />
-            </td>
-            <td>
-              <button
-                class="btn btn-danger btn-sm"
-                @click.prevent="removeNewSpec(idx)"
-              >✕</button>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <input
-                v-model="newSpec.key"
-                placeholder="Новая характеристика"
-              />
-            </td>
-            <td>
-              <input
-                v-model="newSpec.value"
-                placeholder="Значение"
-              />
-            </td>
-            <td>
-              <button
-                class="btn btn-secondary btn-sm"
-                @click.prevent="addNewSpec"
-              >Добавить</button>
-            </td>
-          </tr>
-        </tbody>
-        </table>
-
-        <button
-          class="btn btn-secondary"
-          @click="addProduct"
-          :disabled="!isFormValid"
-        >
-          Добавить товар
+        <button class="btn btn-primary" @click="login">
+          Войти
         </button>
+        <p v-if="loginError" class="error">{{ loginError }}</p>
       </div>
 
-      <!-- Список товаров с аккордеоном -->
-      <div class="prod-list">
-        <div
-          v-for="p in products"
-          :key="p.id"
-          class="prod-item"
-        >
-          <!-- Сводная строка -->
-          <div
-            class="prod-summary"
-            @click="toggle(p.id)"
-          >
-            <span class="prod-summary__id">{{ p.id }}</span>
-            <span class="prod-summary__category">{{ p.category }}</span>
-            <span class="prod-summary__name">{{ p.name }}</span>
-            <span class="prod-summary__price">{{ p.price }} ₽</span>
-            <button
-              class="btn btn-danger btn-sm prod-summary__delete"
-              @click.stop="deleteProduct(p.id)"
-            >✕</button>
+      <!-- Управление каталогом -->
+      <div v-else class="catalog-manager">
+        <h1>Управление каталогом</h1>
+
+        <!-- Форма добавления нового товара -->
+        <div class="add-form">
+          <div class="category-select">
+            <label>Категория:</label>
+            <div class="category-input">
+              <select v-model="newProd.category">
+                <option value="">Выберите категорию</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                  {{ cat.name }}
+                </option>
+                <option value="new">+ Добавить новую категорию</option>
+              </select>
+              <input
+                v-if="newProd.category === 'new'"
+                v-model="newCategory"
+                placeholder="Название новой категории"
+                @input="validateNewCategory"
+              />
+            </div>
           </div>
 
-          <!-- Детальная форма редактирования -->
-          <transition name="slide">
-            <div
-              v-if="activeId === p.id"
-              class="prod-details"
-            >
-              <label>
-                Категория:
-                <select v-model="p.category">
-                  <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-                    {{ cat.name }}
-                  </option>
-                </select>
-              </label>
-              <label>
-                Название:
-                <input v-model="p.name" />
-              </label>
-              <label>
-                Краткое описание:
-                <textarea v-model="p.description" rows="2"></textarea>
-              </label>
-              <label>
-                Расширенное описание:
-                <textarea v-model="p.extendedDescription" rows="3"></textarea>
-              </label>
-              <label>
-                Цена:
-                <input type="number" v-model.number="p.price" />
-              </label>
+          <input
+            v-model="newProd.name"
+            placeholder="Название"
+          />
+          <textarea
+            v-model="newProd.description"
+            placeholder="Краткое описание"
+          ></textarea>
+          <textarea
+            v-model="newProd.extendedDescription"
+            placeholder="Расширенное описание"
+          ></textarea>
+          <input
+            v-model.number="newProd.price"
+            type="number"
+            placeholder="Цена"
+          />
 
-              <label>Изображение:</label>
-              <div class="image-upload">
-                <select v-model="p.image" class="image-select">
-                  <option value="">Выберите изображение</option>
-                  <option
-                    v-for="img in presetImages"
-                    :key="img"
-                    :value="img"
-                  >
-                    {{ img.split('/').pop() }}
-                  </option>
-                  <option value="custom">Загрузить своё изображение</option>
-                </select>
-                <input
-                  v-if="p.image === 'custom'"
-                  type="file"
-                  accept="image/*"
-                  @change="(e: any) => handleImageUpload(e, p)"
-                  class="image-input"
-                />
+          <label>Изображение:</label>
+          <div class="image-upload">
+            <select v-model="newProd.image" class="image-select">
+              <option value="">Выберите изображение</option>
+              <option
+                v-for="img in presetImages"
+                :key="img"
+                :value="img"
+              >
+                {{ img.split('/').pop() }}
+              </option>
+              <option value="custom">Загрузить своё изображение</option>
+            </select>
+            <input
+              v-if="newProd.image === 'custom'"
+              type="file"
+              accept="image/*"
+              @change="(e: any) => handleImageUpload(e, newProd)"
+              class="image-input"
+            />
+          </div>
+          <img
+            v-if="newProd.image && newProd.image !== 'custom'"
+            :src="newProd.image"
+            class="img-preview"
+          />
+
+          <h4>Дополнительные изображения</h4>
+          <input type="file" multiple accept="image/*" @change="handleGalleryUpload" />
+          <div class="gallery-previews">
+            <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
+              <img :src="gimg" class="img-preview" />
+              <button class="btn btn-danger btn-sm" @click.prevent="removeGalleryImage(gidx)">✕</button>
+            </div>
+          </div>
+
+          <h3>Характеристики</h3>
+          <div class="filter-group">
+            <label>Мощность</label>
+            <div class="power-input-group">
+              <input type="number" v-model.number="newProdPowerValue" placeholder="Число" />
+              <select v-model="newProdPowerUnit">
+                <option value="">Ед. изм.</option>
+                <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>Топливо</label>
+            <div class="fuel-dropdown-container">
+              <div class="fuel-dropdown-header" @click="toggleNewProdFuelDropdown">
+                {{ newProdSelectedFuels.length === 0 ? 'Выберите топливо' : newProdSelectedFuels.join(', ') }}
               </div>
-              <img
-                v-if="p.image && p.image !== 'custom'"
-                :src="p.image"
-                class="img-preview"
-              />
-
-              <h3>Характеристики</h3>
-              <div class="filter-group">
-                <label>Мощность</label>
-                <div class="power-input-group">
-                  <input type="number" v-model.number="editProdPowerValue" placeholder="Число" />
-                  <select v-model="editProdPowerUnit">
-                    <option value="">Ед. изм.</option>
-                    <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
-                  </select>
+              <div v-if="showNewProdFuelDropdown" class="fuel-dropdown-content">
+                <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
+                  <input type="checkbox" :id="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'" :value="fuelOption" v-model="newProdSelectedFuels" />
+                  <label :for="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'">{{ fuelOption }}</label>
                 </div>
               </div>
-              <div class="filter-group">
-                <label>Топливо</label>
-                <div class="fuel-dropdown-container">
-                  <div class="fuel-dropdown-header" @click="toggleEditProdFuelDropdown">
-                    {{ editProdSelectedFuels.length === 0 ? 'Выберите топливо' : editProdSelectedFuels.join(', ') }}
+            </div>
+          </div>
+          <table class="specs-table">
+            <tbody>
+            <tr
+              v-for="(spec, idx) in newSpecs"
+              :key="idx"
+            >
+              <td>
+                <input
+                  v-model="spec.key"
+                  placeholder="Параметр"
+                />
+              </td>
+              <td>
+                <input
+                  v-model="spec.value"
+                  placeholder="Значение"
+                />
+              </td>
+              <td>
+                <button
+                  class="btn btn-danger btn-sm"
+                  @click.prevent="removeNewSpec(idx)"
+                >✕</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input
+                  v-model="newSpec.key"
+                  placeholder="Новая характеристика"
+                />
+              </td>
+              <td>
+                <input
+                  v-model="newSpec.value"
+                  placeholder="Значение"
+                />
+              </td>
+              <td>
+                <button
+                  class="btn btn-secondary btn-sm"
+                  @click.prevent="addNewSpec"
+                >Добавить</button>
+              </td>
+            </tr>
+          </tbody>
+          </table>
+
+          <button
+            class="btn btn-secondary"
+            @click="addProduct"
+            :disabled="!isFormValid"
+          >
+            Добавить товар
+          </button>
+        </div>
+
+        <!-- Список товаров с аккордеоном -->
+        <div class="prod-list">
+          <div
+            v-for="p in products"
+            :key="p.id"
+            class="prod-item"
+          >
+            <!-- Сводная строка -->
+            <div
+              class="prod-summary"
+              @click="toggle(p.id)"
+            >
+              <span class="prod-summary__id">{{ p.id }}</span>
+              <span class="prod-summary__category">{{ p.category }}</span>
+              <span class="prod-summary__name">{{ p.name }}</span>
+              <span class="prod-summary__price">{{ p.price }} ₽</span>
+              <button
+                class="btn btn-danger btn-sm prod-summary__delete"
+                @click.stop="deleteProduct(p.id)"
+              >✕</button>
+            </div>
+
+            <!-- Детальная форма редактирования -->
+            <transition name="slide">
+              <div
+                v-if="activeId === p.id"
+                class="prod-details"
+              >
+                <label>
+                  Категория:
+                  <select v-model="p.category">
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                      {{ cat.name }}
+                    </option>
+                  </select>
+                </label>
+                <label>
+                  Название:
+                  <input v-model="p.name" />
+                </label>
+                <label>
+                  Краткое описание:
+                  <textarea v-model="p.description" rows="2"></textarea>
+                </label>
+                <label>
+                  Расширенное описание:
+                  <textarea v-model="p.extendedDescription" rows="3"></textarea>
+                </label>
+                <label>
+                  Цена:
+                  <input type="number" v-model.number="p.price" />
+                </label>
+
+                <label>Изображение:</label>
+                <div class="image-upload">
+                  <select v-model="p.image" class="image-select">
+                    <option value="">Выберите изображение</option>
+                    <option
+                      v-for="img in presetImages"
+                      :key="img"
+                      :value="img"
+                    >
+                      {{ img.split('/').pop() }}
+                    </option>
+                    <option value="custom">Загрузить своё изображение</option>
+                  </select>
+                  <input
+                    v-if="p.image === 'custom'"
+                    type="file"
+                    accept="image/*"
+                    @change="(e: any) => handleImageUpload(e, p)"
+                    class="image-input"
+                  />
+                </div>
+                <img
+                  v-if="p.image && p.image !== 'custom'"
+                  :src="p.image"
+                  class="img-preview"
+                />
+
+                <h3>Характеристики</h3>
+                <div class="filter-group">
+                  <label>Мощность</label>
+                  <div class="power-input-group">
+                    <input type="number" v-model.number="editProdPowerValue" placeholder="Число" />
+                    <select v-model="editProdPowerUnit">
+                      <option value="">Ед. изм.</option>
+                      <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+                    </select>
                   </div>
-                  <div v-if="showEditProdFuelDropdown" class="fuel-dropdown-content">
-                    <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
-                      <input type="checkbox" :id="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id" :value="fuelOption" v-model="editProdSelectedFuels" />
-                      <label :for="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id">{{ fuelOption }}</label>
+                </div>
+                <div class="filter-group">
+                  <label>Топливо</label>
+                  <div class="fuel-dropdown-container">
+                    <div class="fuel-dropdown-header" @click="toggleEditProdFuelDropdown">
+                      {{ editProdSelectedFuels.length === 0 ? 'Выберите топливо' : editProdSelectedFuels.join(', ') }}
+                    </div>
+                    <div v-if="showEditProdFuelDropdown" class="fuel-dropdown-content">
+                      <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
+                        <input type="checkbox" :id="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id" :value="fuelOption" v-model="editProdSelectedFuels" />
+                        <label :for="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id">{{ fuelOption }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <table class="specs-table">
-                <tbody>
-                <tr
-                  v-for="(spec, idx) in specsList[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')"
-                  :key="idx"
-                >
-                  <td>
-                    <input
-                      v-model="spec.key"
-                      placeholder="Параметр"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      v-model="spec.value"
-                      placeholder="Значение"
-                    />
-                  </td>
-                  <td>
-                    <button
-                      class="btn btn-danger btn-sm"
-                      @click.prevent="removeSpec(p.id, idx)"
-                    >✕</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td colspan="3">
-                    <button
-                      class="btn btn-secondary btn-sm"
-                      @click.prevent="addSpec(p.id)"
-                    >Добавить характеристику</button>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
+                <table class="specs-table">
+                  <tbody>
+                  <tr
+                    v-for="(spec, idx) in specsList[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')"
+                    :key="idx"
+                  >
+                    <td>
+                      <input
+                        v-model="spec.key"
+                        placeholder="Параметр"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        v-model="spec.value"
+                        placeholder="Значение"
+                      />
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-danger btn-sm"
+                        @click.prevent="removeSpec(p.id, idx)"
+                      >✕</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="3">
+                      <button
+                        class="btn btn-secondary btn-sm"
+                        @click.prevent="addSpec(p.id)"
+                      >Добавить характеристику</button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
 
-              <h4>Дополнительные изображения</h4>
-              <input type="file" multiple accept="image/*" @change="e => handleEditGalleryUpload(e, p)" />
-              <div class="gallery-previews">
-                <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
-                  <img :src="gimg" class="img-preview" />
-                  <button class="btn btn-danger btn-sm" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
+                <h4>Дополнительные изображения</h4>
+                <input type="file" multiple accept="image/*" @change="e => handleEditGalleryUpload(e, p)" />
+                <div class="gallery-previews">
+                  <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
+                    <img :src="gimg" class="img-preview" />
+                    <button class="btn btn-danger btn-sm" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
+                  </div>
+                </div>
+
+                <div class="prod-details__actions">
+                  <button
+                    class="btn btn-primary"
+                    @click="updateWithSpecs(p)"
+                  >
+                    Сохранить
+                  </button>
+                  <button
+                    class="btn btn-secondary"
+                    @click="cancelEdit"
+                  >
+                    Отмена
+                  </button>
                 </div>
               </div>
+            </transition>
+          </div>
+        </div>
+      </div>
+    </div>
 
-              <div class="prod-details__actions">
-                <button
-                  class="btn btn-primary"
-                  @click="updateWithSpecs(p)"
-                >
-                  Сохранить
-                </button>
-                <button
-                  class="btn btn-secondary"
-                  @click="cancelEdit"
-                >
-                  Отмена
-                </button>
-              </div>
+    <!-- Статистика -->
+    <div v-if="adminTab==='stats' && authorized">
+      <h1>Статистика посещений и заявок</h1>
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Загрузка данных...</p>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <p class="error-message">{{ error }}</p>
+        <button class="btn btn-primary" @click="fetchStats">Повторить</button>
+      </div>
+      <div v-else class="stats-section">
+        <!-- Статистика посещений -->
+        <div class="stats-overview">
+          <div class="stats-card">
+            <h3>Посещения сегодня</h3>
+            <div class="stats-value">{{ stats.visits.today }}</div>
+          </div>
+          <div class="stats-card">
+            <h3>За неделю</h3>
+            <div class="stats-value">{{ stats.visits.week }}</div>
+          </div>
+          <div class="stats-card">
+            <h3>За месяц</h3>
+            <div class="stats-value">{{ stats.visits.month }}</div>
+          </div>
+          <div class="stats-card">
+            <h3>Всего</h3>
+            <div class="stats-value">{{ stats.visits.total }}</div>
+          </div>
+        </div>
+
+        <!-- График посещений -->
+        <div class="stats-chart">
+          <canvas id="visitsChart"></canvas>
+        </div>
+
+        <!-- Статистика заявок -->
+        <div class="stats-requests">
+          <h2>Заявки</h2>
+          
+          <!-- Статистика по типам заявок -->
+          <div class="request-stats">
+            <div class="stats-card" v-for="(count, type) in stats.requests.stats" :key="type">
+              <h3>{{ type === 'order' ? 'Заказы' : 'Контакты' }}</h3>
+              <div class="stats-value">{{ count }}</div>
             </div>
-          </transition>
+          </div>
+
+          <!-- Таблица заявок -->
+          <div v-if="stats.requests.list.length === 0" class="no-data">
+            <p>Нет данных о заявках</p>
+          </div>
+          <div v-else class="table-container">
+            <table class="requests-table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Тип</th>
+                  <th>Телефон</th>
+                  <th>Регион</th>
+                  <th>Тип здания</th>
+                  <th>Топливо</th>
+                  <th>Тип мощности</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  v-for="request in stats.requests.list" 
+                  :key="request.id" 
+                  @click="showRequestDetails(request)" 
+                  class="clickable-row"
+                  style="cursor: pointer;"
+                >
+                  <td>{{ new Date(request.created_at).toLocaleDateString() }}</td>
+                  <td>{{ request.type === 'calculation' ? 'Заказ' : 'Консультация' }}</td>
+                  <td>{{ request.phone }}</td>
+                  <td>{{ request.region }}</td>
+                  <td>{{ request.type_building }}</td>
+                  <td>{{ request.fuel_type }}</td>
+                  <td>{{ request.power_type }}</td>
+                  <td>{{ request.status }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно с деталями заявки -->
+    <div v-if="selectedRequest" class="modal-overlay" @click="closeRequestDetails">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>Детали заявки</h2>
+          <button class="close-button" @click="closeRequestDetails">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="request-details">
+            <div class="detail-row">
+              <span class="detail-label">Тип:</span>
+              <span class="detail-value">{{ selectedRequest.type === 'calculation' ? 'Заказ' : 'Консультация' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Телефон:</span>
+              <span class="detail-value">{{ selectedRequest.phone }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Регион:</span>
+              <span class="detail-value">{{ selectedRequest.region }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Тип здания:</span>
+              <span class="detail-value">{{ selectedRequest.type_building }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Топливо:</span>
+              <span class="detail-value">{{ selectedRequest.fuel_type }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Мощность:</span>
+              <span class="detail-value">{{ selectedRequest.power_type }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Статус:</span>
+              <span class="detail-value">{{ selectedRequest.status }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Дата:</span>
+              <span class="detail-value">{{ new Date(selectedRequest.created_at).toLocaleString() }}</span>
+            </div>
+            <div class="detail-row full-width">
+              <span class="detail-label">Текст заявки:</span>
+              <div class="detail-value text-content">{{ selectedRequest.raw_text }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -349,6 +499,14 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import { createClient } from '@supabase/supabase-js'
+import Chart from 'chart.js/auto'
+import { useStats } from '~/composables/useStats'
+
+// Добавляем объявление переменной chart
+let chart: Chart | null = null
+
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
@@ -394,7 +552,33 @@ interface Product {
   specs?: Record<string, any>
 }
 
-const config = useRuntimeConfig().public
+interface Request {
+  id: number
+  type: string
+  phone: string
+  region?: string
+  type_building?: string
+  fuel_type?: string
+  power_type?: string
+  status: string
+  raw_text?: string
+  created_at: string
+}
+
+interface Stats {
+  visits: {
+    today: number
+    week: number
+    month: number
+    total: number
+  }
+  requests: {
+    list: Request[]
+    stats: Record<string, number>
+  }
+}
+
+const config = useRuntimeConfig()
 const password = ref('')
 const loginError = ref<string | null>(null)
 const authorized = ref(false)
@@ -899,7 +1083,7 @@ function toggleEditProdFuelDropdown() {
 
 // Возвращаем оригинальную функцию входа
 function login() {
-  if (password.value === config.adminPassword) {
+  if (password.value === config.public.adminPassword) {
     authorized.value = true
   } else {
     loginError.value = 'Неправильный пароль'
@@ -973,6 +1157,172 @@ async function handleEditGalleryUpload(event: Event, p: Product) {
     }
   }
   input.value = ''
+}
+
+const adminTab = ref('catalog')
+
+// Supabase client
+const supabaseUrl = config.public.supabaseUrl
+const supabaseKey = config.public.supabaseKey
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Supabase configuration is missing')
+  throw new Error('Supabase configuration is missing')
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Заменяем существующие переменные для статистики
+const { visits, requests, loading, error, fetchVisits, fetchRequests } = useStats()
+
+// Обновляем функцию renderChart
+function renderChart() {
+  if (!visits.value.length) return
+  const ctx = document.getElementById('visitsChart') as HTMLCanvasElement
+  if (!ctx) return
+  if (chart) chart.destroy()
+  
+  // Сортируем данные по дате
+  const sortedVisits = [...visits.value].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  
+  // Получаем последние 30 дней
+  const last30Days = sortedVisits.slice(-30)
+  
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: last30Days.map(v => new Date(v.date).toLocaleDateString()),
+      datasets: [{
+        label: 'Посещения',
+        data: last30Days.map(v => v.count),
+        borderColor: '#007bff',
+        backgroundColor: 'rgba(0,123,255,0.1)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `Посещений: ${context.raw}`
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  })
+}
+
+// Обновляем функцию fetchStats
+async function fetchStats() {
+  loading.value = true
+  error.value = null
+  try {
+    // Получаем общую статистику
+    const { data: statsData } = await useFetch<Stats>('/api/stats')
+    if (statsData.value) {
+      stats.value = {
+        visits: statsData.value.visits,
+        requests: {
+          list: statsData.value.requests.list,
+          stats: statsData.value.requests.stats || {}
+        }
+      }
+    }
+
+    // Получаем данные для графика
+    const { data: visitsData } = await useFetch<{ visits: { date: string; count: number; }[] }>('/api/visits')
+    if (visitsData.value?.visits) {
+      visits.value = visitsData.value.visits
+      renderChart()
+    }
+
+    // Получаем список заявок
+    const { data: requestsData } = await useFetch<{ requests: Request[] }>('/api/requests')
+    if (requestsData.value?.requests) {
+      // Группируем заявки по типу для статистики
+      const requestStats = requestsData.value.requests.reduce((acc: Record<string, number>, req) => {
+        acc[req.type] = (acc[req.type] || 0) + 1
+        return acc
+      }, {})
+
+      stats.value = {
+        ...stats.value,
+        requests: {
+          list: requestsData.value.requests,
+          stats: requestStats
+        }
+      }
+    }
+  } catch (e) {
+    error.value = 'Failed to fetch statistics'
+    console.error('Error fetching statistics:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Добавляем функцию для получения данных о посещениях
+async function fetchVisitsData(): Promise<{ date: string; count: number; }[]> {
+  try {
+    const { data } = await useFetch<{ visits: { date: string; count: number; }[] }>('/api/visits')
+    return data.value?.visits || []
+  } catch (e) {
+    console.error('Error fetching visits data:', e)
+    return []
+  }
+}
+
+// Обновляем watch для adminTab
+watch(adminTab, (tab) => {
+  if (tab === 'stats' && authorized.value) {
+    fetchStats()
+  }
+})
+
+// Обновляем onMounted
+onMounted(() => {
+  if (adminTab.value === 'stats' && authorized.value) {
+    fetchStats()
+  }
+})
+
+// Обновляем состояние для статистики
+const stats = ref<Stats>({
+  visits: {
+    today: 0,
+    week: 0,
+    month: 0,
+    total: 0
+  },
+  requests: {
+    list: [],
+    stats: {}
+  }
+})
+
+const selectedRequest = ref<Request | null>(null)
+
+const showRequestDetails = (request: Request) => {
+  console.log('Opening request details:', request)
+  selectedRequest.value = request
+}
+
+const closeRequestDetails = () => {
+  console.log('Closing request details')
+  selectedRequest.value = null
 }
 </script>
 
@@ -1470,6 +1820,282 @@ async function handleEditGalleryUpload(event: Event, p: Product) {
     font-size: 1.2em;
     display: block;
   }
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.admin-tabs button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: #f5f5f5;
+  color: #333;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.admin-tabs button.active {
+  background: #fff;
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.stats-chart {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 1rem;
+}
+.stats-requests {
+  width: 100%;
+}
+.request-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 1rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+.requests-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.requests-table th, 
+.requests-table td {
+  border: 1px solid #eee;
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+.requests-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.requests-table td {
+  vertical-align: top;
+}
+.requests-table tr:hover {
+  background-color: #f9f9f9;
+}
+@media (max-width: 768px) {
+  .table-container {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+  
+  .requests-table th,
+  .requests-table td {
+    max-width: none;
+  }
+}
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--secondary);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+  }
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+
+  .error-message {
+    color: #dc3545;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-light);
+  font-size: 1.1rem;
+  background: var(--bg);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stats-card {
+  background: var(--bg);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+
+  h3 {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+}
+
+.request-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 2fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.clickable-row {
+  cursor: pointer !important;
+  transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: #f0f0f0;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #666;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.request-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-row.full-width {
+  flex-direction: column;
+}
+
+.detail-label {
+  font-weight: 600;
+  min-width: 120px;
+  color: #666;
+}
+
+.detail-value {
+  flex: 1;
+}
+
+.text-content {
+  white-space: pre-wrap;
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
 }
 </style>
 

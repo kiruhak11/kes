@@ -9,14 +9,30 @@
 <script setup lang="ts">
 // Подключаем тему, чтобы установить атрибут data-theme при старте
 import { useTheme } from "@/composables/useTheme";
+import { useVisitTracking } from '~/composables/useVisitTracking'
 
 const { theme, setTheme } = useTheme();
+
+// Инициализируем отслеживание посещений
+const { trackVisit, error: trackingError } = useVisitTracking()
 
 // При монтировании на клиенте выставим сохранённую тему
 if (process.client) {
   setTheme(theme.value === "dark" ? "dark" : "light");
 }
 
+// Отслеживаем посещение при загрузке приложения
+onMounted(() => {
+  console.log('App mounted, tracking visit...')
+  trackVisit()
+})
+
+// Логируем ошибки отслеживания
+watch(trackingError, (error) => {
+  if (error) {
+    console.error('Visit tracking error:', error)
+  }
+})
 
 useSeoMeta({
   titleTemplate: (title) => "КотлоЭнергоСнаб"

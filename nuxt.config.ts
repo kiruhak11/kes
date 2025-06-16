@@ -30,11 +30,11 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      sb_url: process.env.SUPABASE_URL,
-      sb_key: process.env.SUPABASE_KEY,
+      supabaseUrl: process.env.SUPABASE_URL || 'https://your-project.supabase.co',
+      supabaseKey: process.env.SUPABASE_KEY || 'your-anon-key',
       telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
       telegramChatId: process.env.TELEGRAM_CHAT_ID,
-      adminPassword: process.env.ADMIN_PASSWORD,
+      adminPassword: process.env.ADMIN_PASSWORD || 'admin'
     },
   },
   modules: ['@nuxtjs/device', '@nuxtjs/supabase', '@pinia/nuxt', '@pinia-plugin-persistedstate/nuxt'],
