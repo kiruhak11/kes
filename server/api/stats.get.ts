@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.SUPABASE_URL as string
-const supabaseKey = process.env.SUPABASE_KEY as string
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabase } from '~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,12 +14,28 @@ export default defineEventHandler(async (event) => {
       .eq('date', today)
       .single()
 
+    if (todayError && todayError.code !== 'PGRST116') {
+      console.error('Error fetching today visits:', todayError)
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to fetch today visits'
+      })
+    }
+
     // Посещения за неделю
     const { data: weekVisits, error: weekError } = await supabase
       .from('visits')
       .select('count')
       .gte('date', weekAgo)
       .lte('date', today)
+
+    if (weekError) {
+      console.error('Error fetching week visits:', weekError)
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to fetch week visits'
+      })
+    }
 
     // Посещения за месяц
     const { data: monthVisits, error: monthError } = await supabase
@@ -32,10 +44,26 @@ export default defineEventHandler(async (event) => {
       .gte('date', monthAgo)
       .lte('date', today)
 
+    if (monthError) {
+      console.error('Error fetching month visits:', monthError)
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to fetch month visits'
+      })
+    }
+
     // Всего посещений
     const { data: totalVisits, error: totalError } = await supabase
       .from('visits')
       .select('count')
+
+    if (totalError) {
+      console.error('Error fetching total visits:', totalError)
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to fetch total visits'
+      })
+    }
 
     // Статистика по заявкам
     const { data: requests, error: requestsError } = await supabase
@@ -44,8 +72,12 @@ export default defineEventHandler(async (event) => {
       .order('created_at', { ascending: false })
       .limit(100)
 
-    if (todayError || weekError || monthError || totalError || requestsError) {
-      throw new Error('Failed to fetch statistics')
+    if (requestsError) {
+      console.error('Error fetching requests:', requestsError)
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to fetch requests'
+      })
     }
 
     // Считаем статистику по типам заявок
@@ -67,11 +99,11 @@ export default defineEventHandler(async (event) => {
         stats: requestStats
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching statistics:', error)
     throw createError({
       statusCode: 500,
-      message: 'Failed to fetch statistics'
+      message: error.message || 'Failed to fetch statistics'
     })
   }
 }) 

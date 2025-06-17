@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.SUPABASE_URL as string
-const supabaseKey = process.env.SUPABASE_KEY as string
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabase } from '~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,7 +14,10 @@ export default defineEventHandler(async (event) => {
 
     if (selectError && selectError.code !== 'PGRST116') {
       console.error('Error checking existing visit:', selectError)
-      throw selectError
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to check existing visit'
+      })
     }
 
     if (existingVisit) {
@@ -33,7 +32,10 @@ export default defineEventHandler(async (event) => {
 
       if (updateError) {
         console.error('Error updating visit:', updateError)
-        throw updateError
+        throw createError({
+          statusCode: 500,
+          message: 'Failed to update visit count'
+        })
       }
 
       console.log('Visit updated successfully:', data)
@@ -49,17 +51,20 @@ export default defineEventHandler(async (event) => {
 
       if (insertError) {
         console.error('Error creating visit:', insertError)
-        throw insertError
+        throw createError({
+          statusCode: 500,
+          message: 'Failed to create visit record'
+        })
       }
 
       console.log('Visit created successfully:', data)
       return data
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error tracking visit:', error)
     throw createError({
       statusCode: 500,
-      message: 'Failed to track visit'
+      message: error.message || 'Failed to track visit'
     })
   }
 }) 
