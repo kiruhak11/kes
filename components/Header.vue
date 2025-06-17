@@ -406,7 +406,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .form-group {
     display: flex;
     flex-direction: column;
@@ -996,5 +996,61 @@ onBeforeUnmount(() => {
   .search-results::-webkit-scrollbar-thumb:hover {
     background: #999;
   }
+}
+
+/* Стили для поиска на десктопе */
+.search-container {
+  position: relative;
+  width: 300px; /* Увеличиваем ширину */
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 32px 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  background: white;
+  height: 28px; /* Уменьшаем высоту */
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 57%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1; /* Добавляем z-index чтобы иконка была поверх */
+}
+
+.search-input:focus {
+  border-color: #e31e24;
+  box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.1);
+  outline: none;
+}
+
+/* Стили для выпадающего списка */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
 }
 </style>
