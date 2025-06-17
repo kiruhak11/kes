@@ -71,11 +71,11 @@ if (fetchedCategories.value) {
           <NuxtLink to="/contacts">Контакты</NuxtLink>
         </nav>
         <div class="footer__phones">
-          <a href="tel:88007001743">+7 (800) 700-17-43</a>
+          <a href="tel:{{ contacts.phone[0] }}">{{ contacts.phone[0] }}</a>
         </div>
         <div class="footer__bottom">
           <p class="footer__copyright">
-            © Котельный завод "КЭС" 2006—2025.
+            © Котельный завод "КЭС" 2009—2025.
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ if (fetchedCategories.value) {
         <div class="footer__content">
           <div class="footer__logo">
             <img src="/images/logo-white.png" alt="ООО «КотлоЭнергоСнаб»" />
-            <p class="footer__slogan">Котлы и котельное оборудование Барнаул — надёжность с 2010 года</p>
+            <p class="footer__slogan">Котлы и котельное оборудование Барнаул — надёжность с 2009 года</p>
           </div>
           
           <div class="footer__nav">
@@ -113,13 +113,10 @@ if (fetchedCategories.value) {
 
             <div class="footer__nav-column">
               <h3 class="footer__nav-title">Контакты</h3>
-              <div class="footer__phones">
-                <a href="tel:+73852226337">+7 (3852) 226-337</a>
-                <a href="tel:+73852226338">+7 (3852) 226-338</a>
-                <a href="tel:+73852226938">+7 (3852) 226-938</a>
-                <a href="tel:+73852226939">+7 (3852) 226-939</a>
+              <div class="footer__phones" v-if="contacts.phone.length > 0">
+                <a v-for="phone in contacts.phone" :key="phone" href="tel:{{ phone }}">{{ phone }}</a>
               </div>
-              <a href="mailto:kes-altai@mail.ru" class="footer__email">kes-altai@mail.ru</a>
+              <a href="mailto:{{ contacts.email }}" class="footer__email">{{ contacts.email }}</a>
               <button class="footer__callback">Заказать звонок</button>
         
             </div>
@@ -128,7 +125,7 @@ if (fetchedCategories.value) {
 
         <div class="footer__bottom">
           <p class="footer__copyright">
-            © 2010—2025 ООО «КотлоЭнергоСнаб»
+            © 2009—2025 ООО «КотлоЭнергоСнаб» {{ contacts.workingHours }}
           </p>
         </div>
       </div>

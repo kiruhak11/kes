@@ -16,8 +16,8 @@ export interface ContactInfo {
  */
 export const contacts: ContactInfo = {
   companyName: "КотлоЭнергоСнаб",
-  address: "г. Барнаул, ул. Промышленная, 10",
-  phone: ["+7 (3852) 123-456", "+7 (3852) 654-321"],
-  email: "info@kotlenergosnab.ru",
-  workingHours: "Пн–Пт: 9:00–18:00, Сб–Вс: выходной",
+  address: "г. Барнаул, ул. Бриллиантовая, 2Е",
+  phone: ["+7 (903) 948-72-73"],
+  email: "kotloenergosnab1@mail.ru",
+  workingHours: "Пн–Пт: 8:00–17:00, Сб–Вс: выходной",
 };

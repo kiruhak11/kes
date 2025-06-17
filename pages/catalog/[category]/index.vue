@@ -41,34 +41,40 @@
   
           <div class="category-products">
             <div class="products-grid">
-              <div v-for="product in paginatedProducts" :key="product.id" class="product-card">
-                <img :src="product.image" :alt="product.name" />
+              <div
+                v-for="product in paginatedProducts"
+                :key="product.id"
+                class="product-card"
+                @click="router.push(`/catalog/${generateCategorySlug(product.category || '')}/${generateProductSlug(product)}`)"
+              >
+                <div class="product-card__img-wrap">
+                  <img :src="product.image" :alt="product.name" class="product-image" />
+                </div>
                 <div class="product-card__content">
-                  <h3>{{ product.name }}</h3>
-                  <p>{{ product.description }}</p>
+                  <div class="product-card__title-row">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <span class="product-title-icon"><!-- иконка, если нужна --></span>
+                  </div>
                   <div class="product-card__specs">
-                    <div class="spec-item">
-                      <span class="spec-label">Мощность:</span>
+                    <div v-for="([key, value], idx) in Object.entries(product.specs).filter(([k]) => k !== 'images').slice(0, 4)" :key="key" class="spec-item">
+                      <span class="spec-label">
+                        {{ key === 'fuel' ? 'Топливо' : key === 'power' ? 'Мощность' : key }}
+                      </span>
                       <span class="spec-dots"></span>
-                      <span class="spec-value">{{ product.specs?.power }}</span>
-                    </div>
-                    <div class="spec-item">
-                      <span class="spec-label">Топливо:</span>
-                      <span class="spec-dots"></span>
-                      <span class="spec-value">{{ Array.isArray(product.specs?.fuel) && product.specs.fuel.length > 0 && product.specs.fuel[0] !== 'отсутствует' ? product.specs.fuel.join(', ') : 'Отсутствует' }}</span>
-                    </div>
-                    <div class="spec-item">
-                      <span class="spec-label">Цена:</span>
-                      <span class="spec-dots"></span>
-                      <span class="spec-value">{{ product.price.toLocaleString() }} &#8381;</span>
+                      <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
                     </div>
                   </div>
-                  <NuxtLink 
-                    :to="`/catalog/${generateCategorySlug(product.category || '')}/${generateProductSlug(product)}`"
-                    class="btn btn-primary"
-                  >
-                    Подробнее
-                  </NuxtLink>
+                  <div class="product-card__bottom">
+                    <div class="product-card__price-block">
+                      <span class="product-price">{{ product.price.toLocaleString() }} <span class="currency">р.</span></span>
+                      <span class="product-price-note">Цена с НДС</span>
+                    </div>
+                    <button class="buy-btn" @click.stop="addToCart(product, $event)">
+                      <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
+                      <span>Купить</span>
+                    </button>
+                  </div>
+                  <button class="offer-btn" @click.stop>Заказать коммерческое предложение</button>
                 </div>
               </div>
               <div v-if="filteredProducts.length === 0" class="no-products-message">
@@ -100,6 +106,7 @@
   
   <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
+  import { useCartStore } from '~/stores/cart'
   
   const transliterate = (text: string): string => {
     const mapping: { [key: string]: string } = {
@@ -350,6 +357,23 @@
     })
     return slug
   }
+
+  const cartStore = useCartStore()
+
+  function addToCart(product: Product, e: Event) {
+    e.stopPropagation();
+    // @ts-ignore
+    cartStore.addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+      category_slug: product.category,
+      slug: product.slug,
+      quantity: 1
+    });
+  }
   </script>
   
   <style scoped>
@@ -455,64 +479,167 @@
   
   .product-card {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     overflow: visible;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s, box-shadow 0.3s;
     position: relative;
-    padding-top: 60px;
+    padding: 0 0 18px 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
   
   .product-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
   }
   
-  .product-card img {
-    position: absolute;
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px;
-    height: 120px;
+  .product-card__img-wrap {
+    height: 170px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+  }
+  
+  .product-image {
+    width: 220px;
+    height: 170px;
     object-fit: contain;
+    border-radius: 8px;
     z-index: 2;
+    margin-top: -40px;
+    position: static;
   }
   
   .product-card__content {
-    padding: 20px;
-    text-align: center;
-    position: relative;
-    z-index: 1;
+    padding: 0 24px 0 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
   
-  .product-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
+  .product-card__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 18px 0 10px 0;
   }
   
-  .product-card p {
-    color: #666;
-    margin-bottom: 20px;
-    line-height: 1.6;
+  .product-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    line-height: 1.2;
+  }
+  
+  .product-title-icon {
+    margin-left: 8px;
   }
   
   .product-card__specs {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    flex-grow: 1;
   }
   
   .spec-item {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    align-items: center;
+    font-size: 1rem;
+    margin-bottom: 4px;
   }
   
   .spec-label {
-    color: #666;
+    color: #222;
+    min-width: 120px;
+    font-weight: 600;
+  }
+  
+  .spec-dots {
+    flex: 1;
+    border-bottom: 1px dotted #bbb;
+    margin: 0 8px;
+    height: 1px;
   }
   
   .spec-value {
     font-weight: 500;
+    color: #333;
+  }
+  
+  .product-card__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 18px;
+  }
+  
+  .product-card__price-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: #f7f7f7;
+    border-radius: 8px;
+    padding: 10px 18px 8px 18px;
+  }
+  
+  .product-price {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: #e31e24;
+    line-height: 1;
+  }
+  
+  .currency {
+    font-size: 1.2rem;
+  }
+  
+  .product-price-note {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 2px;
+  }
+  
+  .buy-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    color: #e31e24;
+    border: 1px solid #e31e24;
+    border-radius: 8px;
+    padding: 12px 22px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  
+  .buy-btn:hover {
+    background: #e31e24;
+    color: #fff;
+  }
+  
+  .offer-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: #e31e24;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .offer-btn:hover {
+    background: #b71c1c;
   }
   
   @media (max-width: 1200px) {
@@ -575,33 +702,57 @@
       font-size: 13px;
     }
     .products-grid {
+      grid-template-columns: 1fr;
       gap: 14px;
     }
     .product-card {
-      padding-top: 30px;
+      padding: 0 0 12px 0;
     }
-    .product-card img {
-      width: 70px;
-      height: 70px;
-      top: -20px;
+    .product-card__img-wrap {
+      height: 90px;
+    }
+    .product-image {
+      width: 130px;
+      height: 90px;
+      margin-top: -25px;
     }
     .product-card__content {
-      padding: 10px;
+      padding: 0 10px 0 10px;
     }
-    .product-card h3 {
-      font-size: 1.1rem;
-      margin-bottom: 6px;
-    }
-    .product-card p {
-      font-size: 13px;
-      margin-bottom: 10px;
+    .product-title {
+      font-size: 1.05rem;
+      margin-bottom: 7px;
+      text-align: center;
     }
     .product-card__specs {
       margin-bottom: 10px;
-      font-size: 13px;
+      font-size: 0.95rem;
+      flex-grow: 1;
     }
-    .spec-item {
-      margin-bottom: 4px;
+    .product-card__bottom {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .product-card__price-block {
+      align-items: flex-start;
+      padding: 8px 10px 6px 10px;
+    }
+    .product-price {
+      font-size: 1.3rem;
+    }
+    .product-price-note {
+      font-size: 0.8rem;
+    }
+    .buy-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 10px 0;
+      font-size: 1rem;
+    }
+    .offer-btn {
+      font-size: 1rem;
+      padding: 10px 0;
     }
     .no-products-message {
       font-size: 1rem;

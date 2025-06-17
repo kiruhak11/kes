@@ -59,15 +59,36 @@
             </ul>
           </div>
           <div class="about__media">
-            <div class="about__tour">
-              <img src="/images/about/tour.jpg" alt="3D-тур по заводу" />
-              <h3>3D-тур по заводу</h3>
-              <p>Виртуальный тур нашего завода</p>
-            </div>
-            <div class="about__tour">
-              <img src="/images/about/boiler-room.jpg" alt="3D-тур по котельной" />
-              <h3>3D-тур по котельной</h3>
-              <p>Виртуальный тур нашего завода</p>
+            <div class="factory-slider">
+              <div 
+                v-for="(img, idx) in factoryImages" 
+                :key="img"
+                class="factory-slide"
+                :class="{ active: idx === currentFactorySlide }"
+              >
+                <img :src="img" :alt="`Фото завода ${idx + 1}`" />
+              </div>
+              <div class="factory-slider__caption">
+                <h3>Наш завод</h3>
+                <p>Современное производство котельного оборудования</p>
+              </div>
+              <div class="factory-slider__controls">
+                <button class="slider-control prev" @click="prevSlide">
+                  <BackIcon class="arrow-icon" />
+                </button>
+                <button class="slider-control next" @click="nextSlide">
+                  <NextIcon class="arrow-icon" />
+                </button>
+              </div>
+              <div class="factory-slider__dots">
+                <button 
+                  v-for="(_, idx) in factoryImages" 
+                  :key="idx"
+                  class="dot"
+                  :class="{ active: idx === currentFactorySlide }"
+                  @click="currentFactorySlide = idx"
+                ></button>
+              </div>
             </div>
           </div>
         </div>
@@ -81,7 +102,7 @@
         <div class="grid grid-4">
           <div class="service-card">
             <img src="/images/services/installation.jpg" alt="Монтаж котельной" />
-            <h3>Монтаж котельной</h3>
+            <h3>Монтаж | Демонтаж <br>котлов</h3>
           </div>
           <div class="service-card">
             <img src="/images/services/design.jpg" alt="Проектирование котельной" />
@@ -102,7 +123,10 @@
     <!-- Calculator Section -->
     <section class="calculator">
       <div class="container">
-        <h2 class="section-title">Подберите необходимую мощность котельной для вашего объекта</h2>
+        <h2 class="section-title">
+          <TypeWriter />
+          для вашего объекта
+        </h2>
         <div class="calculator__form">
           <div class="form-group">
             <label>Тип здания</label>
@@ -204,6 +228,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useNuxtApp } from '#app'
+import BackIcon from '~/components/icons/back.vue'
+import NextIcon from '~/components/icons/next.vue'
+import TypeWriter from '~/components/TypeWriter.vue'
 const { $device } = useNuxtApp()
 
 // Получаем реальные категории для каталога на главной
@@ -397,13 +424,52 @@ const heroImages = [
 const currentHero = ref(0)
 let intervalId: number | undefined
 
+const factoryImages = [
+  '/images/hero1.jpg',
+  '/images/hero2.png',
+  '/images/hero3.png',
+  '/images/hero4.png',
+]
+const currentFactorySlide = ref(0)
+let factoryIntervalId: number | undefined
+
+const prevSlide = () => {
+  currentFactorySlide.value = (currentFactorySlide.value - 1 + factoryImages.length) % factoryImages.length
+}
+
+const nextSlide = () => {
+  currentFactorySlide.value = (currentFactorySlide.value + 1) % factoryImages.length
+}
+
+// Pause auto-sliding when user interacts with controls
+const pauseAutoSlide = () => {
+  if (factoryIntervalId) {
+    clearInterval(factoryIntervalId)
+    factoryIntervalId = undefined
+  }
+}
+
+const resumeAutoSlide = () => {
+  if (!factoryIntervalId) {
+    factoryIntervalId = window.setInterval(() => {
+      currentFactorySlide.value = (currentFactorySlide.value + 1) % factoryImages.length
+    }, 4000)
+  }
+}
+
 onMounted(() => {
+  // Hero slider interval
   intervalId = window.setInterval(() => {
     currentHero.value = (currentHero.value + 1) % heroImages.length
-  }, 5000) // 5 секунд на каждый фон
+  }, 5000)
+
+  // Factory slider interval
+  resumeAutoSlide()
 })
+
 onBeforeUnmount(() => {
   if (intervalId) clearInterval(intervalId)
+  if (factoryIntervalId) clearInterval(factoryIntervalId)
 })
 </script>
 
@@ -507,29 +573,151 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
+  align-items: start;
+}
+
+.about__text {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.about__text h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
 }
 
 .about__list {
   list-style: disc;
   padding-left: 20px;
+  flex-grow: 1;
 }
 
 .about__list li {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .about__media {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  height: 100%;
 }
 
-.about__tour img {
+.factory-slider {
+  position: relative;
   width: 100%;
-  height: 200px;
+  height: 100%;
+  min-height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.factory-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.factory-slide.active {
+  opacity: 1;
+}
+
+.factory-slide img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 15px;
+}
+
+.factory-slider__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  color: white;
+  text-align: center;
+  z-index: 2;
+}
+
+.factory-slider__caption h3 {
+  margin: 0 0 12px 0;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.factory-slider__caption p {
+  margin: 0;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.factory-slider__controls {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 2;
+}
+
+.slider-control {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+  color: white;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+  
+  .arrow-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.factory-slider__dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 2;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  &.active {
+    background: white;
+    transform: scale(1.2);
+  }
 }
 
 .services {
@@ -688,91 +876,64 @@ onBeforeUnmount(() => {
 @media (max-width: 992px) {
   .about__content {
     grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .factory-slider {
+    min-height: 400px;
   }
   
-  .about__media {
-    grid-template-columns: 1fr;
+  .about__text h2,
+  .factory-slider__caption h3 {
+    font-size: 1.8rem;
+  }
+  
+  .factory-slider__caption p {
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 768px) {
-  .hero__title__btn {
-    flex-direction: column;
-  }
-  .hero,
-  .hero--mobile {
-    padding: 40px 0;
-  }
-  .hero__title,
-  .hero--mobile .hero__title {
-    font-size: 1.3rem;
-    max-width: 95vw;
-  }
-  .catalog .grid-3,
-  .catalog .grid-1 {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .catalog-card {
-    margin: 24px 0;
-    padding: 16px;
-  }
-  .catalog-card img {
-    height: 130px;
-  }
-  .about {
-    padding: 40px 0;
-  }
   .about__content {
     gap: 20px;
   }
+
+  .factory-slider {
+    min-height: 300px;
+  }
+  
+  .about__text h2,
+  .factory-slider__caption h3 {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+  }
+  
   .about__list li {
-    font-size: 14px;
-    margin-bottom: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
   }
-  .about__media {
-    gap: 10px;
-  }
-  .about__tour img {
-    height: 120px;
-    margin-bottom: 8px;
-  }
-  .about__tour h3 {
-    font-size: 1rem;
-    margin-bottom: 4px;
-  }
-  .services {
-    padding: 40px 0;
-  }
-  .grid.grid-4 {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .service-card img {
-    height: 100px;
-    margin-bottom: 8px;
-  }
-  .service-card h3 {
-    font-size: 1rem;
-  }
-  .calculator {
-    padding: 40px 0;
-  }
-  .calculator__form {
+  
+  .factory-slider__caption {
     padding: 20px;
-    gap: 16px;
   }
-  .input-with-select select,
-  .input-with-select input,
-  .region-search,
-  .phone-field {
-    font-size: 14px;
-    padding: 10px;
+  
+  .factory-slider__caption p {
+    font-size: 1rem;
   }
-  .phone-prefix {
-    font-size: 14px;
+  
+  .slider-control {
+    width: 40px;
+    height: 40px;
+    
+    .arrow-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .dot {
+    width: 10px;
+    height: 10px;
   }
 }
 </style>

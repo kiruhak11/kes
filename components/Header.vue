@@ -4,8 +4,8 @@
       <div class="container">
         <div v-if="!$device.isMobile" class="header__top-content">
           <div class="header__contacts">
-            <a href="mailto:sb@kvzr.ru" class="header__email">kotloenergosnab1@mail.ru</a>
-            <a href="tel:226337" class="header__phone">+7 (903) 948 72-73</a>
+            <a href="mailto:{{ contacts.email }}" class="header__email">{{ contacts.email }}</a>
+            <a href="tel:{{ contacts.phone[0] }}" class="header__phone">{{ contacts.phone[0] }}</a>
             <NuxtLink to="/contact" class="header__callback">Заказать звонок</NuxtLink>
           </div>
           <div class="form-group">
@@ -30,13 +30,24 @@
                     @click="selectProduct(product)"
                   >
                     <div class="product-info">
-                      <div class="product-main">
-                        <span class="product-name">{{ product.name }}</span>
-                        <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                      <div class="product-image">
+                        <img :src="product.image" :alt="product.name">
                       </div>
-                      <div class="product-specs" v-if="product.specs">
-                        <span v-if="product.specs.power" class="product-spec">{{ product.specs.power }}</span>
-                        <span v-if="product.specs.fuel" class="product-spec">{{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}</span>
+                      <div class="product-details">
+                        <div class="product-main">
+                          <span class="product-name">{{ product.name }}</span>
+                          <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                        </div>
+                        <div class="product-specs" v-if="product.specs">
+                          <span v-if="product.specs.power" class="product-spec">
+                            <span class="spec-icon">⚡</span>
+                            {{ product.specs.power }}
+                          </span>
+                          <span v-if="product.specs.fuel" class="product-spec">
+                            <span class="spec-icon">🔥</span>
+                            {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -84,13 +95,24 @@
                     @click="selectProduct(product)"
                   >
                     <div class="product-info">
-                      <div class="product-main">
-                        <span class="product-name">{{ product.name }}</span>
-                        <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                      <div class="product-image">
+                        <img :src="product.image" :alt="product.name">
                       </div>
-                      <div class="product-specs" v-if="product.specs">
-                        <span v-if="product.specs.power" class="product-spec">{{ product.specs.power }}</span>
-                        <span v-if="product.specs.fuel" class="product-spec">{{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}</span>
+                      <div class="product-details">
+                        <div class="product-main">
+                          <span class="product-name">{{ product.name }}</span>
+                          <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                        </div>
+                        <div class="product-specs" v-if="product.specs">
+                          <span v-if="product.specs.power" class="product-spec">
+                            <span class="spec-icon">⚡</span>
+                            {{ product.specs.power }}
+                          </span>
+                          <span v-if="product.specs.fuel" class="product-spec">
+                            <span class="spec-icon">🔥</span>
+                            {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -192,6 +214,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useNuxtApp, useRoute, useRouter } from '#app'
 import { useCartStore } from '~/stores/cart'
+import { contacts } from '~/data/contacts'
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -1001,7 +1024,7 @@ onBeforeUnmount(() => {
 /* Стили для поиска на десктопе */
 .search-container {
   position: relative;
-  width: 300px; /* Увеличиваем ширину */
+  width: 300px;
 }
 
 .search-input-wrapper {
@@ -1019,7 +1042,7 @@ onBeforeUnmount(() => {
   font-size: 13px;
   transition: all 0.3s ease;
   background: white;
-  height: 28px; /* Уменьшаем высоту */
+  height: 28px;
 }
 
 .search-icon {
@@ -1030,7 +1053,7 @@ onBeforeUnmount(() => {
   color: #666;
   font-size: 14px;
   pointer-events: none;
-  z-index: 1; /* Добавляем z-index чтобы иконка была поверх */
+  z-index: 1;
 }
 
 .search-input:focus {
@@ -1042,15 +1065,163 @@ onBeforeUnmount(() => {
 /* Стили для выпадающего списка */
 .search-results {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
   background: white;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-top: 4px;
   max-height: 400px;
   overflow-y: auto;
   z-index: 1000;
+  width: 400px;
+}
+
+.search-results-list {
+  padding: 8px;
+}
+
+.search-result-item {
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f8f8f8;
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+}
+
+.product-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f5f5f5;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.product-details {
+  flex: 1;
+  min-width: 0; /* Для корректной работы text-overflow */
+}
+
+.product-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.product-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e31e24;
+  white-space: nowrap;
+}
+
+.product-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.product-spec {
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .spec-icon {
+    font-size: 14px;
+  }
+}
+
+.no-results {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Стилизация скроллбара для десктопа */
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 768px) {
+  .search-results {
+    width: 100%;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    transform: none;
+    max-height: calc(100vh - 60px);
+  }
+
+  .product-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .product-name {
+    font-size: 13px;
+  }
+
+  .product-price {
+    font-size: 14px;
+  }
+
+  .product-spec {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
 }
 </style>

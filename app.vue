@@ -15,6 +15,7 @@ const { theme, setTheme } = useTheme();
 
 // Инициализируем отслеживание посещений
 const { trackVisit, error: trackingError } = useVisitTracking()
+import { contacts } from '~/data/contacts'
 
 // При монтировании на клиенте выставим сохранённую тему
 if (process.client) {
