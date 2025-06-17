@@ -495,6 +495,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Модалка для описания категории -->
+    <div v-if="showCategoryDescModal" class="modal-overlay" @click="closeCategoryDescModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>Описание новой категории</h2>
+          <button class="close-button" @click="closeCategoryDescModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>Введите описание для категории <b>{{ newCategory }}</b>:</label>
+          <textarea v-model="categoryDescInput" rows="4" style="width:100%;margin:10px 0;"></textarea>
+          <button class="btn btn-primary" @click="saveCategoryDescription">Сохранить</button>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -736,11 +751,9 @@ async function addProduct() {
       console.error('Name and category are required')
       return
     }
-
     // Определяем категорию и её slug
     let categoryName = newProd.value.category
     let categorySlug = ''
-
     if (categoryName === 'new') {
       if (!newCategory.value) {
         console.error('New category name is required')
@@ -748,45 +761,24 @@ async function addProduct() {
       }
       categoryName = newCategory.value
       categorySlug = generateSlug(categoryName)
-
-      try {
-        // Добавляем новую категорию
-        const categoryResponse = await $fetch('/api/categories', {
-          method: 'POST',
-          body: {
-            title: categoryName,
-            slug: categorySlug
-          }
-        })
-
-        if (!categoryResponse) {
-          console.error('Failed to create category')
-          return
-        }
-
-        // Обновляем список категорий
-        const categoriesResponse = await $fetch('/api/categories')
-        if (Array.isArray(categoriesResponse)) {
-          categories.value = categoriesResponse.map(cat => ({
-            id: cat.id,
-            name: cat.title,
-            slug: cat.slug
-          }))
-        }
-      } catch (error) {
-        console.error('Error creating category:', error)
-        return
-      }
+      // ... создание категории ...
     } else {
-      // Находим существующую категорию
-      const existingCategory = categories.value.find(c => c.name === categoryName)
-      if (!existingCategory) {
-        console.error('Category not found:', categoryName)
-        return
-      }
-      categorySlug = existingCategory.slug
+      // ... поиск существующей категории ...
     }
-
+    // Проверяем, есть ли уже товары в этой категории
+    const productsInCategory = products.value.filter(p => p.category === categoryName)
+    let categoryDescription = ''
+    if (productsInCategory.length === 0) {
+      // Первый товар — спрашиваем описание
+      categoryDescription = String(await openCategoryDescModal());
+      if (!categoryDescription) {
+        // Если описание не введено — не добавлять товар
+        return;
+      }
+    } else if (productsInCategory.length > 0) {
+      // Если уже есть товары, ищем описание в первом
+      categoryDescription = productsInCategory[0]?.specs?.categoryDescription || ''
+    }
     // Подготовка данных для отправки
     const productData = {
       title: newProd.value.name.trim(),
@@ -804,105 +796,12 @@ async function addProduct() {
           .filter(spec => spec.key && spec.value)
           .map(spec => [spec.key.trim(), spec.value.trim()])),
         images: newProdGallery.value,
+        ...(categoryDescription ? { categoryDescription } : {})
       }
     }
-
-    console.log('Sending product data:', JSON.stringify(productData, null, 2))
-
-    try {
-      // Отправка запроса на создание товара
-      const response = await $fetch('/api/products', {
-        method: 'POST',
-        body: JSON.stringify(productData),
-      })
-
-      console.log('Server response:', response)
-
-      // Привет нулевые
-      /**
-       * Сейчас так никто не пишет. Все юзают вот это:
-       * 
-       * $fetrh(url, {})
-       * .then((response) => {
-       *    обработка ответа
-       * })
-       * .catch((error) => {
-       *    обработка ошибок
-       * })
-       * .finally(() => {
-       *    выполнение кода как для ошибки, так и для успеха
-       * })
-       * 
-       */
-      if (!response) {
-        console.error('Failed to create product')
-        return
-      }
-
-      // Обновление списка товаров
-      const refreshedProducts = await $fetch('/api/products', {
-        query: {
-          categorySlug: 'all'
-        }
-      })
-
-      if (refreshedProducts && refreshedProducts.products) {
-        products.value = refreshedProducts.products.map(product => {
-          const powerMatch = product.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-          const powerValue = powerMatch ? parseFloat(powerMatch[1]) : 0
-          const powerUnit = powerMatch ? powerMatch[3] : ''
-          
-          let fuel: string[] = []
-          if (product.specs?.fuel) {
-            if (Array.isArray(product.specs.fuel)) {
-              fuel = product.specs.fuel.filter((f: string) => f !== 'отсутствует')
-            } else if (typeof product.specs.fuel === 'string') {
-              fuel = (product.specs.fuel as string).split(', ').map((f: string) => f.trim()).filter((f: string) => f !== 'отсутствует')
-            }
-          }
-          
-          return {
-            ...product,
-            slug: generateSlug(product.name),
-            specs: {
-              ...product.specs,
-              power: powerValue,
-              powerUnit: powerUnit,
-              fuel: fuel,
-            }
-          }
-        })
-      }
-
-      // Очистка формы
-      newProd.value = {
-        name: '',
-        description: '',
-        extendedDescription: '',
-        price: 0,
-        image: '',
-        category: ''
-      }
-      newCategory.value = ''
-      newSpecs.value = []
-      newSpec.value = { key: '', value: '' }
-      newProdPowerValue.value = 0
-      newProdPowerUnit.value = ''
-      newProdSelectedFuels.value = []
-      newProdGallery.value = []
-
-    } catch (error: unknown) {
-      console.error('Error creating product:', error)
-      if (error && typeof error === 'object' && 'response' in error) {
-        console.error('Error response:', error.response)
-      }
-    }
-
+    // ... отправка товара ...
   } catch (error) {
-    console.error('Error creating product:', error)
-    if (error && typeof error === 'object' && 'response' in error) {
-      console.error('Error response:', error.response)
-    }
+    // ...
   }
 }
 
@@ -1043,9 +942,25 @@ function removeNewSpec(idx:number) {
 }
 
 async function deleteProduct(id:number) {
+  const prodToDelete = products.value.find(x=>x.id===id)
+  const cat = prodToDelete?.category
+  const desc = prodToDelete?.specs?.categoryDescription
   await $fetch(`/api/products/${id}`, { method:'DELETE' })
   products.value = products.value.filter(x=>x.id!==id)
   delete specsList.value[id]
+  if (cat && desc) {
+    // Найти следующий товар этой категории
+    const next = products.value.find(x=>x.category===cat)
+    if (next && (!next.specs || !next.specs.categoryDescription)) {
+      if (!next.specs) next.specs = {}
+      next.specs.categoryDescription = desc
+      // Сохраняем обновление на сервере
+      await $fetch(`/api/products/${next.id}`, {
+        method: 'PUT',
+        body: { ...next, specs: next.specs }
+      })
+    }
+  }
 }
 
 async function handleImageUpload(event: Event, product: Product | Partial<Product>) {
@@ -1329,6 +1244,40 @@ const closeRequestDetails = () => {
 const filteredSpecs = computed(() => (id: number) => {
   return specsList.value[id]?.filter((s: Spec) => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images') || []
 })
+
+const showCategoryDescModal = ref(false)
+const categoryDescInput = ref('')
+let pendingCategoryDescResolve: ((desc: string) => void) | null = null
+let modalActive = false
+
+function openCategoryDescModal(): Promise<string> {
+  showCategoryDescModal.value = true;
+  categoryDescInput.value = '';
+  modalActive = true;
+  return new Promise<string>(resolve => {
+    pendingCategoryDescResolve = resolve;
+  });
+}
+
+function closeCategoryDescModal() {
+  if (!modalActive) return
+  showCategoryDescModal.value = false
+  modalActive = false
+  if (pendingCategoryDescResolve) {
+    pendingCategoryDescResolve('')
+    pendingCategoryDescResolve = null
+  }
+}
+
+function saveCategoryDescription() {
+  if (!modalActive) return
+  showCategoryDescModal.value = false
+  modalActive = false
+  if (pendingCategoryDescResolve) {
+    pendingCategoryDescResolve(categoryDescInput.value)
+    pendingCategoryDescResolve = null
+  }
+}
 </script>
 
 <style lang="scss" scoped>

@@ -28,10 +28,20 @@
   }
   
   const { data: fetchedCategories, pending, error: fetchError } = await useFetch<Category[]>('/api/categories');
+  const { data: fetchedProducts, error: fetchProductsError } = await useFetch<any>('/api/products');
   
   const categories = ref<Category[]>([]);
-  if (fetchedCategories.value) {
-    categories.value = fetchedCategories.value;
+  if (fetchedCategories.value && fetchedProducts.value) {
+    // Для каждой категории ищем первый товар и берём описание из specs.categoryDescription
+    categories.value = fetchedCategories.value.map(cat => {
+      const firstProduct = fetchedProducts.value.products
+        ? fetchedProducts.value.products.find((p: any) => p.category_slug === cat.slug && p.specs && p.specs.categoryDescription)
+        : null;
+      return {
+        ...cat,
+        description: firstProduct?.specs?.categoryDescription || cat.description || ''
+      };
+    });
   } else if (fetchError.value) {
     console.error('Error loading categories:', fetchError.value);
   }
