@@ -10,9 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
-const Header = defineAsyncComponent(() => import('~/components/Header.vue'))
-const Footer = defineAsyncComponent(() => import('~/components/Footer.vue'))
+import Header from '~/components/Header.vue'
+import Footer from '~/components/Footer.vue'
 </script>
 
 <style>

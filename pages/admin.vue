@@ -292,7 +292,7 @@
                 <table class="specs-table">
                   <tbody>
                   <tr
-                    v-for="(spec, idx) in specsList[p.id].filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')"
+                    v-for="(spec, idx) in filteredSpecs(p.id)"
                     :key="idx"
                   >
                     <td>
@@ -326,7 +326,7 @@
                 </table>
 
                 <h4>Дополнительные изображения</h4>
-                <input type="file" multiple accept="image/*" @change="e => handleEditGalleryUpload(e, p)" />
+                <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" />
                 <div class="gallery-previews">
                   <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
                     <img :src="gimg" class="img-preview" />
@@ -521,6 +521,11 @@ const transliterate = (text: string): string => {
   return text.split('').map(char => mapping[char] || char).join('');
 };
 
+interface Spec {
+  key: string;
+  value: string;
+}
+
 interface Category {
   id: number
   title: string
@@ -533,11 +538,6 @@ interface AdminCategory {
   id: number
   name: string
   slug: string
-}
-
-interface Spec {
-  key: string
-  value: string
 }
 
 interface Product {
@@ -1324,6 +1324,11 @@ const closeRequestDetails = () => {
   console.log('Closing request details')
   selectedRequest.value = null
 }
+
+// Add this computed property in the script section
+const filteredSpecs = computed(() => (id: number) => {
+  return specsList.value[id]?.filter((s: Spec) => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images') || []
+})
 </script>
 
 <style lang="scss" scoped>
