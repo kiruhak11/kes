@@ -1,29 +1,33 @@
-import { supabase } from '~/server/utils/supabase'
+import { defineEventHandler, createError } from 'h3'
+import { serverSupabaseClient } from '#supabase/server'
+import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
+    const client = await serverSupabaseClient<Database>(event)
+    
     // Получаем статистику посещений
     const today = new Date().toISOString().split('T')[0]
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
     // Посещения за сегодня
-    const { data: todayVisits, error: todayError } = await supabase
+    const { data: todayVisits, error: todayError } = await client
       .from('visits')
       .select('count')
       .eq('date', today)
       .single()
 
-    if (todayError && todayError.code !== 'PGRST116') {
+    if (todayError) {
       console.error('Error fetching today visits:', todayError)
       throw createError({
         statusCode: 500,
-        message: 'Failed to fetch today visits'
+        statusMessage: 'Failed to fetch today visits'
       })
     }
 
     // Посещения за неделю
-    const { data: weekVisits, error: weekError } = await supabase
+    const { data: weekVisits, error: weekError } = await client
       .from('visits')
       .select('count')
       .gte('date', weekAgo)
@@ -33,12 +37,12 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching week visits:', weekError)
       throw createError({
         statusCode: 500,
-        message: 'Failed to fetch week visits'
+        statusMessage: 'Failed to fetch week visits'
       })
     }
 
     // Посещения за месяц
-    const { data: monthVisits, error: monthError } = await supabase
+    const { data: monthVisits, error: monthError } = await client
       .from('visits')
       .select('count')
       .gte('date', monthAgo)
@@ -48,12 +52,12 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching month visits:', monthError)
       throw createError({
         statusCode: 500,
-        message: 'Failed to fetch month visits'
+        statusMessage: 'Failed to fetch month visits'
       })
     }
 
     // Всего посещений
-    const { data: totalVisits, error: totalError } = await supabase
+    const { data: totalVisits, error: totalError } = await client
       .from('visits')
       .select('count')
 
@@ -61,49 +65,44 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching total visits:', totalError)
       throw createError({
         statusCode: 500,
-        message: 'Failed to fetch total visits'
+        statusMessage: 'Failed to fetch total visits'
       })
     }
 
     // Статистика по заявкам
-    const { data: requests, error: requestsError } = await supabase
+    const { data: requests, error: requestsError } = await client
       .from('requests')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(100)
 
     if (requestsError) {
       console.error('Error fetching requests:', requestsError)
       throw createError({
         statusCode: 500,
-        message: 'Failed to fetch requests'
+        statusMessage: 'Failed to fetch requests'
       })
     }
 
-    // Считаем статистику по типам заявок
-    const requestStats = requests.reduce((acc: any, req: any) => {
-      acc[req.type] = (acc[req.type] || 0) + 1
-      acc[req.status] = (acc[req.status] || 0) + 1
-      return acc
-    }, {})
+    // Подсчет статистики
+    const todayCount = todayVisits?.count || 0
+    const weekCount = weekVisits?.reduce((sum, visit) => sum + (visit.count || 0), 0) || 0
+    const monthCount = monthVisits?.reduce((sum, visit) => sum + (visit.count || 0), 0) || 0
+    const totalCount = totalVisits?.reduce((sum, visit) => sum + (visit.count || 0), 0) || 0
 
     return {
       visits: {
-        today: todayVisits?.count || 0,
-        week: weekVisits?.reduce((sum: number, v: any) => sum + v.count, 0) || 0,
-        month: monthVisits?.reduce((sum: number, v: any) => sum + v.count, 0) || 0,
-        total: totalVisits?.reduce((sum: number, v: any) => sum + v.count, 0) || 0
+        today: todayCount,
+        week: weekCount,
+        month: monthCount,
+        total: totalCount
       },
-      requests: {
-        list: requests,
-        stats: requestStats
-      }
+      requests: requests || []
     }
-  } catch (error: any) {
-    console.error('Error fetching statistics:', error)
+  } catch (e: any) {
+    console.error('GET /api/stats error:', e)
     throw createError({
-      statusCode: 500,
-      message: error.message || 'Failed to fetch statistics'
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || 'Internal Server Error'
     })
   }
 }) 

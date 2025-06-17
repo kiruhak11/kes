@@ -453,7 +453,6 @@ onBeforeUnmount(() => {
 
 .section-title {
   text-align: center;
-  margin-bottom: 40px;
   font-size: 2rem;
 }
 
@@ -464,6 +463,7 @@ onBeforeUnmount(() => {
 .catalog-card {
   background: #fff;
   border-radius: 8px;
+  margin-top: 40px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px 20px 20px 20px;
   text-align: center;
