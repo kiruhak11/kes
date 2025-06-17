@@ -14,12 +14,9 @@ export default defineEventHandler(async (event) => {
       extendedDescription: body.extendedDescription,
       price: body.price,
       image: body.image,
-      category: body.category,
-      category_slug: body.category_slug,
-      specs: {
-        ...(body.specs || {}),
-        images: Array.isArray(body.specs?.images) ? body.specs.images : []
-      }
+      category_id: body.category_id,
+      specs: body.specs || null, // Если specs undefined, записываем null
+      additional_images: Array.isArray(body.additional_images) ? body.additional_images : null
     }
 
     console.log('Updating product with data:', updateData)

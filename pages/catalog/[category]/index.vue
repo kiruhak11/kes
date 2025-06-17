@@ -2,8 +2,8 @@
     <div class="category-page">
       <div class="container">
         <div class="category-header">
-          <h1 class="page-title">{{ category?.title || 'Категория' }}</h1>
-          <p class="category-description">{{ category?.description || '' }}</p>
+          <h1 class="page-title">{{ categoryInfo?.title || 'Категория' }}</h1>
+          <p class="category-description">{{ categoryInfo?.description || '' }}</p>
         </div>
   
         <div class="category-content">
@@ -21,7 +21,6 @@
                     <input type="number" v-model.number="filters.maxPower" placeholder="До" />
                     <select v-model="filters.powerUnit">
                       <option value="">Ед. изм.</option>
-
                       <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
                     </select>
                   </div>
@@ -45,7 +44,7 @@
                 v-for="product in paginatedProducts"
                 :key="product.id"
                 class="product-card"
-                @click="router.push(`/catalog/${generateCategorySlug(product.category || '')}/${generateProductSlug(product)}`)"
+                @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)"
               >
                 <div class="product-card__img-wrap">
                   <img :src="product.image" :alt="product.name" class="product-image" />
@@ -56,7 +55,7 @@
                     <span class="product-title-icon"><!-- иконка, если нужна --></span>
                   </div>
                   <div class="product-card__specs">
-                    <div v-for="([key, value], idx) in Object.entries(product.specs).filter(([k]) => k !== 'images').slice(0, 4)" :key="key" class="spec-item">
+                    <div v-for="([key, value], idx) in Object.entries(product.specs || {}).filter(([k]) => k !== 'images').slice(0, 4)" :key="key" class="spec-item">
                       <span class="spec-label">
                         {{ key === 'fuel' ? 'Топливо' : key === 'power' ? 'Мощность' : key }}
                       </span>
@@ -107,6 +106,8 @@
   <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { useCartStore } from '~/stores/cart'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useFetch } from '#app'
   
   const transliterate = (text: string): string => {
     const mapping: { [key: string]: string } = {
@@ -129,7 +130,8 @@
     extendedDescription: string
     price: number
     image: string
-    category: string
+    category_name: string
+    category_slug: string
     slug: string
     specs: {
       power?: string;
@@ -178,19 +180,7 @@
     allProducts.value = []
   } else if (fetchedAllProducts.value) {
     console.log('Fetched products:', fetchedAllProducts.value)
-    // Only map if we have valid data
-    allProducts.value = fetchedAllProducts.value.map(product => ({
-      ...product,
-      specs: {
-        ...product.specs,
-        power: product.specs?.power || 'отсутствует',
-        fuel: Array.isArray(product.specs?.fuel) 
-          ? product.specs.fuel 
-          : typeof product.specs?.fuel === 'string' 
-            ? product.specs.fuel.split(', ').map((f: string) => f.trim())
-            : ['отсутствует']
-      }
-    }))
+    allProducts.value = fetchedAllProducts.value
   } else {
     console.log('No products fetched')
     allProducts.value = []
@@ -205,21 +195,46 @@
     // No need to reload all products, just re-filter
   });
   
-  const category = computed<CategoryInfo | undefined>(() => {
-    const foundProduct = allProducts.value.find(p => transliterate(p.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value)
-    if (foundProduct) {
-      return {
-        title: foundProduct.category,
-        description: `Товары категории ${foundProduct.category}`,
-        slug: categorySlug.value
-      }
+  const categoryInfo = ref<CategoryInfo | undefined>(undefined)
+  const sliderImages = ref<string[]>([])
+  const sliderIndex = ref(0)
+
+  // Получаем инфу о категории
+  const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`)
+  console.log('Fetched category data:', fetchedCategory.value)
+  if (fetchedCategory.value && fetchedCategory.value.category) {
+    categoryInfo.value = {
+      title: fetchedCategory.value.category.title || '',
+      description: fetchedCategory.value.category.description || '',
+      slug: categorySlug.value
     }
-    return undefined
-  })
+    console.log('Category info set:', categoryInfo.value)
+  } else {
+    console.error('Failed to fetch category info:', categoryError.value)
+  }
+
+  // Обновляем слайдер при изменении продуктов
+  watch(() => allProducts.value, (newProducts) => {
+    // Собираем картинки из товаров
+    sliderImages.value = newProducts
+      .filter(product => product.image)
+      .map(product => product.image)
+
+    if (sliderImages.value.length === 0) {
+      sliderImages.value = ['/images/placeholders/category-placeholder.png']
+    }
+  }, { immediate: true })
+
+  function prevSlide() {
+    sliderIndex.value = (sliderIndex.value - 1 + sliderImages.value.length) % sliderImages.value.length
+  }
+  function nextSlide() {
+    sliderIndex.value = (sliderIndex.value + 1) % sliderImages.value.length
+  }
   
   const productsInCategory = computed<Product[]>(() => {
     return allProducts.value.filter(product => 
-      transliterate(product.category).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value
+      transliterate(product.category_name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value
     )
   })
   
@@ -233,65 +248,69 @@
   })
 
   const powerUnits = computed(() => {
-    const units = new Set<string>();
+    const units = new Set<string>()
     productsInCategory.value.forEach(product => {
-      const powerMatch = product.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/);
-      if (powerMatch && powerMatch[3]) {
-        units.add(powerMatch[3]);
+      const powerStr = product.specs?.power
+      if (powerStr && powerStr !== 'отсутствует') {
+        const match = powerStr.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+        if (match) {
+          units.add(match[3])
+        }
       }
-    });
-    return Array.from(units).sort();
-  });
+    })
+    return Array.from(units)
+  })
 
   const uniqueFuels = computed(() => {
-    const fuels = new Set<string>();
+    const fuels = new Set<string>()
     productsInCategory.value.forEach(product => {
       if (product.specs?.fuel) {
-        const productFuels = Array.isArray(product.specs.fuel) ? product.specs.fuel : String(product.specs.fuel).split(', ').map(f => f.trim());
-        productFuels.forEach(fuel => {
-          if (fuel && fuel !== 'отсутствует') {
-            fuels.add(fuel);
-          }
-        });
+        if (Array.isArray(product.specs.fuel)) {
+          product.specs.fuel.forEach(f => fuels.add(f))
+        }
       }
-    });
-    return Array.from(fuels).sort();
-  });
+    })
+    return Array.from(fuels)
+  })
 
   const filteredProducts = computed(() => {
-    let result = productsInCategory.value
-
-    // Применяем фильтры только если они установлены
-    if (filters.value.minPower || filters.value.maxPower || filters.value.powerUnit || filters.value.fuel.length > 0) {
-      result = result.filter(product => {
-        const productPower = product.specs?.power || 'отсутствует'
-        const productFuels = Array.isArray(product.specs?.fuel) ? product.specs.fuel : []
-
-        // Фильтрация по мощности
-        if (filters.value.minPower || filters.value.maxPower || filters.value.powerUnit) {
-          if (productPower === 'отсутствует') return false
-
-          const powerMatch = productPower.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-          if (!powerMatch) return false
-
-          const powerValue = parseFloat(powerMatch[1])
-          const powerUnit = powerMatch[3]
-
-          if (filters.value.powerUnit && filters.value.powerUnit !== powerUnit) return false
-          if (filters.value.minPower && powerValue < filters.value.minPower) return false
-          if (filters.value.maxPower && powerValue > filters.value.maxPower) return false
+    return productsInCategory.value.filter(product => {
+      // Power filter
+      if (filters.value.minPower || filters.value.maxPower) {
+        const powerStr = product.specs?.power
+        if (powerStr && powerStr !== 'отсутствует') {
+          const match = powerStr.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+          if (match) {
+            const powerValue = parseFloat(match[1])
+            const powerUnit = match[3]
+            
+            if (filters.value.powerUnit && powerUnit !== filters.value.powerUnit) {
+              return false
+            }
+            
+            if (filters.value.minPower && powerValue < filters.value.minPower) {
+              return false
+            }
+            
+            if (filters.value.maxPower && powerValue > filters.value.maxPower) {
+              return false
+            }
+          }
+        } else if (filters.value.minPower || filters.value.maxPower) {
+          return false
         }
+      }
 
-        // Фильтрация по топливу
-        if (filters.value.fuel.length > 0) {
-          if (!productFuels.some(fuel => filters.value.fuel.includes(fuel))) return false
+      // Fuel filter
+      if (filters.value.fuel && filters.value.fuel.length > 0) {
+        const productFuels = product.specs?.fuel || []
+        if (!filters.value.fuel.some(f => productFuels.includes(f))) {
+          return false
         }
+      }
 
-        return true
-      })
-    }
-
-    return result
+      return true
+    })
   })
   
   // Добавляем состояние для пагинации
@@ -335,15 +354,12 @@
   }
 
   const generateProductSlug = (product: Product) => {
-    const slug = transliterate(product.name || '').toLowerCase()
+    if (!product || !product.name) return '';
+    return transliterate(product.name)
+      .toLowerCase()
       .replace(/[^a-z0-9 -]/g, '')
       .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-    console.log('Generated product slug:', {
-      name: product.name,
-      slug: slug
-    })
-    return slug
+      .replace(/-+/g, '-');
   }
 
   const generateCategorySlug = (category: string) => {
@@ -368,8 +384,8 @@
       name: product.name,
       price: product.price,
       image: product.image,
-      category: product.category,
-      category_slug: product.category,
+      category: product.category_name,
+      category_slug: product.category_slug,
       slug: product.slug,
       quantity: 1
     });
@@ -786,4 +802,12 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  .category-slider { text-align: center; margin-bottom: 30px; }
+  .slider-wrapper { position: relative; display: inline-block; }
+  .slider-image { max-width: 400px; max-height: 250px; border-radius: 10px; }
+  .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: #fff; border: none; font-size: 2rem; cursor: pointer; padding: 0 10px; }
+  .slider-btn.prev { left: -40px; }
+  .slider-btn.next { right: -40px; }
+  .slider-placeholder { color: #aaa; font-size: 1.2rem; padding: 40px 0; }
   </style> 

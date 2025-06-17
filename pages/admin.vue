@@ -3,6 +3,7 @@
     <!-- Вкладки -->
     <div class="admin-tabs">
       <button :class="{active: adminTab==='catalog'}" @click="adminTab='catalog'">Каталог</button>
+      <button :class="{active: adminTab==='categories'}" @click="adminTab='categories'">Категории</button>
       <button :class="{active: adminTab==='stats'}" @click="adminTab='stats'">Статистика</button>
     </div>
 
@@ -102,84 +103,63 @@
             </div>
           </div>
 
-          <h3>Характеристики</h3>
-          <div class="filter-group">
-            <label>Мощность</label>
-            <div class="power-input-group">
-              <input type="number" v-model.number="newProdPowerValue" placeholder="Число" />
-              <select v-model="newProdPowerUnit">
-                <option value="">Ед. изм.</option>
-                <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="filter-group">
-            <label>Топливо</label>
-            <div class="fuel-dropdown-container">
-              <div class="fuel-dropdown-header" @click="toggleNewProdFuelDropdown">
-                {{ newProdSelectedFuels.length === 0 ? 'Выберите топливо' : newProdSelectedFuels.join(', ') }}
+          <h3>Дополнительные характеристики</h3>
+          <!-- Опциональные характеристики -->
+          <div class="optional-specs">
+            <div class="filter-group">
+              <label>Мощность (опционально)</label>
+              <div class="power-input-group">
+                <input type="number" v-model.number="newProdPowerValue" placeholder="Число" />
+                <select v-model="newProdPowerUnit">
+                  <option value="">Ед. изм.</option>
+                  <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
+                </select>
               </div>
-              <div v-if="showNewProdFuelDropdown" class="fuel-dropdown-content">
-                <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
-                  <input type="checkbox" :id="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'" :value="fuelOption" v-model="newProdSelectedFuels" />
-                  <label :for="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'">{{ fuelOption }}</label>
+            </div>
+            <div class="filter-group">
+              <label>Топливо (опционально)</label>
+              <div class="fuel-dropdown-container">
+                <div class="fuel-dropdown-header" @click="toggleNewProdFuelDropdown">
+                  {{ newProdSelectedFuels.length === 0 ? 'Выберите топливо' : newProdSelectedFuels.join(', ') }}
+                </div>
+                <div v-if="showNewProdFuelDropdown" class="fuel-dropdown-content">
+                  <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
+                    <input type="checkbox" :id="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'" :value="fuelOption" v-model="newProdSelectedFuels" />
+                    <label :for="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'">{{ fuelOption }}</label>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
           <table class="specs-table">
             <tbody>
-            <tr
-              v-for="(spec, idx) in newSpecs"
-              :key="idx"
-            >
-              <td>
-                <input
-                  v-model="spec.key"
-                  placeholder="Параметр"
-                />
-              </td>
-              <td>
-                <input
-                  v-model="spec.value"
-                  placeholder="Значение"
-                />
-              </td>
-              <td>
-                <button
-                  class="btn btn-danger btn-sm"
-                  @click.prevent="removeNewSpec(idx)"
-                >✕</button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <input
-                  v-model="newSpec.key"
-                  placeholder="Новая характеристика"
-                />
-              </td>
-              <td>
-                <input
-                  v-model="newSpec.value"
-                  placeholder="Значение"
-                />
-              </td>
-              <td>
-                <button
-                  class="btn btn-secondary btn-sm"
-                  @click.prevent="addNewSpec"
-                >Добавить</button>
-              </td>
-            </tr>
-          </tbody>
+              <tr v-for="(spec, idx) in newSpecs" :key="idx">
+                <td>
+                  <input v-model="spec.key" placeholder="Параметр" />
+                </td>
+                <td>
+                  <input v-model="spec.value" placeholder="Значение" />
+                </td>
+                <td>
+                  <button class="btn btn-danger btn-sm" @click.prevent="removeNewSpec(idx)">✕</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input v-model="newSpec.key" placeholder="Новая характеристика" />
+                </td>
+                <td>
+                  <input v-model="newSpec.value" placeholder="Значение" />
+                </td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" @click.prevent="addNewSpec">Добавить</button>
+                </td>
+              </tr>
+            </tbody>
           </table>
 
-          <button
-            class="btn btn-secondary"
-            @click="addProduct"
-            :disabled="!isFormValid"
-          >
+          <button class="btn btn-secondary" @click="addProduct" :disabled="!isFormValid">
             Добавить товар
           </button>
         </div>
@@ -197,7 +177,7 @@
               @click="toggle(p.id)"
             >
               <span class="prod-summary__id">{{ p.id }}</span>
-              <span class="prod-summary__category">{{ p.category }}</span>
+              <span class="prod-summary__category">{{ p.category_name }}</span>
               <span class="prod-summary__name">{{ p.name }}</span>
               <span class="prod-summary__price">{{ p.price }} ₽</span>
               <button
@@ -215,6 +195,7 @@
                 <label>
                   Категория:
                   <select v-model="p.category">
+                    <option value="">Выберите категорию</option>
                     <option v-for="cat in categories" :key="cat.id" :value="cat.name">
                       {{ cat.name }}
                     </option>
@@ -353,6 +334,131 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Категории -->
+    <div v-if="adminTab==='categories' && authorized">
+      <h1>Управление категориями</h1>
+      <div class="category-manager">
+        <button class="btn btn-primary" @click="showAddCategoryModal = true">
+          <i class="fas fa-plus"></i> Добавить категорию
+        </button>
+        
+        <div class="categories-grid">
+          <div v-for="cat in categories" :key="cat.id" class="category-card">
+            <div class="category-card__header">
+              <h3>{{ cat.name }}</h3>
+              <div class="category-card__actions">
+                <button class="btn btn-secondary btn-sm" @click="editCategory(cat)">
+                  <i class="fas fa-edit"></i> Редактировать
+                </button>
+                <button class="btn btn-danger btn-sm" @click="deleteCategory(cat.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="category-card__content">
+              <div class="category-info">
+                <p><strong>Slug:</strong> {{ cat.slug }}</p>
+                <p><strong>Описание:</strong></p>
+                <p class="category-description">{{ cat.description || 'Нет описания' }}</p>
+              </div>
+              <div class="category-stats">
+                <p><strong>Товаров в категории:</strong> {{ getCategoryProductCount(cat.id) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Модальное окно добавления категории -->
+      <BaseModal
+        v-if="showAddCategoryModal"
+        title="Добавить категорию"
+        @close="showAddCategoryModal = false"
+      >
+        <form @submit.prevent="addCategory" class="category-form">
+          <div class="form-group">
+            <label>Название категории:</label>
+            <input 
+              v-model="newCategory.name" 
+              placeholder="Введите название" 
+              required
+              class="form-control"
+            />
+          </div>
+          <div class="form-group">
+            <label>Описание:</label>
+            <textarea 
+              v-model="newCategory.description" 
+              placeholder="Введите описание категории"
+              class="form-control"
+              rows="4"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label>Slug (генерируется автоматически):</label>
+            <input 
+              v-model="newCategory.slug" 
+              placeholder="Генерируется автоматически" 
+              disabled
+              class="form-control"
+            />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="showAddCategoryModal = false">
+              Отмена
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Добавить
+            </button>
+          </div>
+        </form>
+      </BaseModal>
+
+      <!-- Модальное окно редактирования категории -->
+      <BaseModal
+        v-if="showEditCategoryModal"
+        title="Редактировать категорию"
+        @close="closeEditCategoryModal"
+      >
+        <form @submit.prevent="saveCategory" class="category-form">
+          <div class="form-group">
+            <label>Название:</label>
+            <input 
+              v-model="editingCategory.name" 
+              type="text" 
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Описание:</label>
+            <textarea 
+              v-model="editingCategory.description" 
+              class="form-control"
+              rows="4"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label>Slug:</label>
+            <input 
+              v-model="editingCategory.slug" 
+              type="text" 
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="closeEditCategoryModal">
+              Отмена
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Сохранить
+            </button>
+          </div>
+        </form>
+      </BaseModal>
     </div>
 
     <!-- Статистика -->
@@ -496,25 +602,31 @@
       </div>
     </div>
 
-    <!-- Модалка для описания категории -->
-    <div v-if="showCategoryDescModal" class="modal-overlay" @click="closeCategoryDescModal">
-      <div class="modal-content" @click.stop>
+    <!-- Модальное окно описания категории -->
+    <FrogModalWrapper
+      v-if="showCategoryDescriptionModal"
+      :desktop-position="FrogModalWrapperPosition.CENTER"
+      :mobile-position="FrogModalWrapperPosition.BOTTOM"
+      mobile-swipe-to-close
+      class="category-modal"
+      @close="showCategoryDescriptionModal = false"
+    >
+      <template #header>
         <div class="modal-header">
-          <h2>Описание новой категории</h2>
-          <button class="close-button" @click="closeCategoryDescModal">&times;</button>
+          <h2>Описание категории</h2>
         </div>
-        <div class="modal-body">
-          <label>Введите описание для категории <b>{{ newCategory }}</b>:</label>
-          <textarea v-model="categoryDescInput" rows="4" style="width:100%;margin:10px 0;"></textarea>
-          <button class="btn btn-primary" @click="saveCategoryDescription">Сохранить</button>
-        </div>
+      </template>
+
+      <div class="category-form">
+        <textarea v-model="newCategory.description" placeholder="Описание категории"></textarea>
+        <button @click="addCategory" class="btn btn-primary">Добавить</button>
       </div>
-    </div>
+    </FrogModalWrapper>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, h } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import Chart from 'chart.js/auto'
 import { useStats } from '~/composables/useStats'
@@ -550,9 +662,10 @@ interface Category {
 }
 
 interface AdminCategory {
-  id: number
+  id: string
   name: string
   slug: string
+  description?: string
 }
 
 interface Product {
@@ -600,7 +713,7 @@ const authorized = ref(false)
 const products = ref<Product[]>([])
 const categories = ref<AdminCategory[]>([])
 const specsList = ref<Record<number, {key: string, value: string}[]>>({})
-const newProd = ref<Partial<Product>>({
+const newProd = ref({
   name: '',
   description: '',
   extendedDescription: '',
@@ -608,7 +721,11 @@ const newProd = ref<Partial<Product>>({
   image: '',
   category: ''
 })
-const newCategory = ref('')
+const newCategory = ref({
+  name: '',
+  description: '',
+  slug: ''
+})
 const activeId = ref<number|null>(null)
 
 // Характеристики
@@ -616,9 +733,9 @@ const newSpecs = ref<Spec[]>([])
 const newSpec = ref<Spec>({ key:'', value:'' })
 
 // Новые реактивные переменные для мощности и топлива
-const newProdPowerValue = ref(0)
+const newProdPowerValue = ref()
 const newProdPowerUnit = ref('')
-const newProdSelectedFuels = ref<string[]>([])
+const newProdSelectedFuels = ref([])
 const showNewProdFuelDropdown = ref(false)
 
 // Новые реактивные переменные для редактирования
@@ -691,6 +808,7 @@ if (fetchedCategories.value) {
   categories.value = fetchedCategories.value.map(cat => ({
     id: cat.id,
     name: cat.title,
+    description: cat.description,
     slug: cat.slug
   })) as AdminCategory[]
 }
@@ -716,21 +834,27 @@ watch(products, (newProducts) => {
 
 // Валидация формы
 const isFormValid = computed(() => {
-  const baseValid = newProd.value.name && 
+  const valid = newProd.value.name && 
          newProd.value.description && 
-         typeof newProd.value.price === 'number' && newProd.value.price > 0 && 
-         newProd.value.category && 
-         (newProd.value.category !== 'new' || (newCategory.value && !categories.value.some(c => c.name === newCategory.value)))
-
-  const powerValid = !(newProdPowerValue.value > 0 && !newProdPowerUnit.value)
-
-  return baseValid && powerValid
+         newProd.value.price > 0 && 
+         (newProd.value.category && newProd.value.category !== 'new' || (newProd.value.category === 'new' && newCategory.value.name))
+  
+  console.log('Form validation:', {
+    name: !!newProd.value.name,
+    description: !!newProd.value.description,
+    price: newProd.value.price > 0,
+    category: newProd.value.category,
+    newCategory: newCategory.value.name,
+    isValid: valid
+  })
+  
+  return valid
 })
 
 function validateNewCategory() {
-  if (newCategory.value && categories.value.some(c => c.name === newCategory.value)) {
-    newProd.value.category = newCategory.value
-    newCategory.value = ''
+  if (newCategory.value.name && categories.value.some(c => c.name === newCategory.value.name)) {
+    newProd.value.category = newCategory.value.name
+    newCategory.value.name = ''
   }
 }
 
@@ -745,71 +869,162 @@ function generateSlug(text: string): string {
 
 // Обновляем функцию addProduct
 async function addProduct() {
+  console.log('Starting addProduct function')
+  console.log('Current newProd state:', newProd.value)
+  
   try {
-    // Проверяем обязательные поля
-    if (!newProd.value.name || !newProd.value.category) {
-      console.error('Name and category are required')
+    // Проверяем валидность формы
+    if (!isFormValid.value) {
+      console.error('Form validation failed')
       return
     }
-    // Определяем категорию и её slug
-    let categoryName = newProd.value.category
+
+    let categoryId = null
     let categorySlug = ''
-    if (categoryName === 'new') {
-      if (!newCategory.value) {
-        console.error('New category name is required')
-        return
+    let categoryName = ''
+
+    // Если выбрана новая категория, сначала создаем её
+    if (newProd.value.category === 'new') {
+      console.log('Creating new category:', newCategory.value.name)
+      const categoryResponse = await fetch('/api/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: newCategory.value.name,
+          description: newCategory.value.description,
+          slug: generateSlug(newCategory.value.name)
+        })
+      })
+
+      if (!categoryResponse.ok) {
+        const errorText = await categoryResponse.text()
+        console.error('Category creation error:', errorText)
+        throw new Error('Failed to create category: ' + errorText)
       }
-      categoryName = newCategory.value
-      categorySlug = generateSlug(categoryName)
-      // ... создание категории ...
+
+      const categoryData = await categoryResponse.json()
+      console.log('New category created:', categoryData)
+
+      categoryId = categoryData.id
+      categorySlug = categoryData.slug || generateSlug(newCategory.value.name)
+      categoryName = categoryData.name || newCategory.value.name
+
+      categories.value.push({
+        id: categoryId,
+        name: categoryName,
+        slug: categorySlug
+      })
     } else {
-      // ... поиск существующей категории ...
-    }
-    // Проверяем, есть ли уже товары в этой категории
-    const productsInCategory = products.value.filter(p => p.category === categoryName)
-    let categoryDescription = ''
-    if (productsInCategory.length === 0) {
-      // Первый товар — спрашиваем описание
-      categoryDescription = String(await openCategoryDescModal());
-      if (!categoryDescription) {
-        // Если описание не введено — не добавлять товар
-        return;
+      // Находим существующую категорию
+      const category = categories.value.find(c => c.name === newProd.value.category)
+      if (!category) {
+        throw new Error('Category not found')
       }
-    } else if (productsInCategory.length > 0) {
-      // Если уже есть товары, ищем описание в первом
-      categoryDescription = productsInCategory[0]?.specs?.categoryDescription || ''
+      categoryId = category.id
+      categoryName = category.name
+      categorySlug = category.slug
     }
-    // Подготовка данных для отправки
+
+    // Подготовка спецификаций
+    const specs: Record<string, any> = {}
+
+    // Добавляем характеристики, если они есть
+    newSpecs.value.forEach(spec => {
+      if (spec.key && spec.value) {
+        specs[spec.key] = spec.value
+      }
+    })
+
+    // Добавляем мощность только если оба значения указаны
+    if (newProdPowerValue.value && newProdPowerUnit.value) {
+      specs.power = `${newProdPowerValue.value} ${newProdPowerUnit.value}`
+    }
+
+    // Добавляем топливо только если оно выбрано
+    if (newProdSelectedFuels.value.length > 0) {
+      specs.fuel = newProdSelectedFuels.value
+    }
+
+    // Подготовка данных товара
     const productData = {
-      title: newProd.value.name.trim(),
-      description: (newProd.value.description || '').trim(),
-      extended_description: (newProd.value.extendedDescription || '').trim(),
-      price: Number(newProd.value.price) || 0,
+      name: newProd.value.name,
+      description: newProd.value.description,
+      extendedDescription: newProd.value.extendedDescription,
+      price: Number(newProd.value.price),
       image: newProd.value.image || '/placeholder.jpg',
-      category: categoryName,
+      category_id: categoryId,
+      category_name: categoryName,
       category_slug: categorySlug,
-      slug: generateSlug(newProd.value.name),
-      specs: {
-        power: newProdPowerValue.value > 0 ? `${newProdPowerValue.value} ${newProdPowerUnit.value}` : 'отсутствует',
-        fuel: newProdSelectedFuels.value.length > 0 ? newProdSelectedFuels.value.join(', ') : 'отсутствует',
-        ...Object.fromEntries(newSpecs.value
-          .filter(spec => spec.key && spec.value)
-          .map(spec => [spec.key.trim(), spec.value.trim()])),
-        images: newProdGallery.value,
-        ...(categoryDescription ? { categoryDescription } : {})
-      }
+      specs: Object.keys(specs).length > 0 ? specs : undefined, // Если specs пустой, не отправляем его
+      additional_images: newProdGallery.value.length > 0 ? newProdGallery.value : undefined
     }
-    // ... отправка товара ...
+
+    console.log('Sending product data to API:', productData)
+
+    // Отправляем запрос на создание товара
+    const response = await fetch('/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(productData)
+    })
+
+    console.log('API response status:', response.status)
+    const responseData = await response.json()
+    console.log('API response data:', responseData)
+
+    if (!response.ok) {
+      throw new Error(`Failed to create product: ${responseData.message || 'Unknown error'}`)
+    }
+
+    // Очищаем форму после успешного добавления
+    resetForm()
+    
+    // Обновляем список товаров
+    await refreshProducts()
+
+    // Показываем уведомление об успехе
+    alert('Товар успешно добавлен')
+
   } catch (error) {
-    // ...
+    console.error('Error adding product:', error)
+    alert(`Ошибка при добавлении товара: ${error.message}`)
   }
 }
 
-function toggle(id:number) {
+// Функция очистки формы
+const resetForm = () => {
+  newProd.value = {
+    name: '',
+    description: '',
+    extendedDescription: '',
+    price: 0,
+    image: '',
+    category: ''
+  }
+  newCategory.value = {
+    name: '',
+    description: '',
+    slug: ''
+  }
+  newSpecs.value = []
+  newProdPowerValue.value = undefined
+  newProdPowerUnit.value = ''
+  newProdSelectedFuels.value = []
+  newProdGallery.value = []
+}
+
+function toggle(id: number) {
   activeId.value = activeId.value === id ? null : id
   if (activeId.value === id) {
     const productToEdit = products.value.find(p => p.id === id)
     if (productToEdit) {
+      // Устанавливаем текущую категорию
+      productToEdit.category = productToEdit.category_name
+
       // Инициализируем значения для редактирования мощности
       const powerValue = productToEdit.specs?.power
       if (typeof powerValue === 'string' && powerValue !== 'отсутствует') {
@@ -829,9 +1044,9 @@ function toggle(id:number) {
       // Инициализируем значения для редактирования топлива
       if (productToEdit.specs?.fuel) {
         if (Array.isArray(productToEdit.specs.fuel)) {
-          editProdSelectedFuels.value = productToEdit.specs.fuel.filter((f: string) => f !== 'отсутствует')
+          editProdSelectedFuels.value = productToEdit.specs.fuel.filter(f => f !== 'отсутствует')
         } else if (typeof productToEdit.specs.fuel === 'string') {
-          editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter((f: string) => f !== 'отсутствует')
+          editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter(f => f !== 'отсутствует')
         } else {
           editProdSelectedFuels.value = []
         }
@@ -841,53 +1056,64 @@ function toggle(id:number) {
 
       // Обновляем specsList для редактируемого продукта, исключая power, powerUnit и fuel
       specsList.value[id] = Object.entries(productToEdit.specs || {})
-        .filter(([key]) => !['power', 'powerUnit', 'fuel'].includes(key))
+        .filter(([key]) => !['power', 'powerUnit', 'fuel', 'images'].includes(key))
         .map(([k,v]) => ({key: k, value: String(v)}))
       
-      showEditProdFuelDropdown.value = false;
+      showEditProdFuelDropdown.value = false
     }
   } else {
-    showEditProdFuelDropdown.value = false;
+    showEditProdFuelDropdown.value = false
   }
 }
 
 // Обновляем функцию updateWithSpecs
 async function updateWithSpecs(p: Product) {
   try {
-    let specs: Record<string, string | string[]> = {}
+    // Подготовка спецификаций
+    const specs: Record<string, any> = {}
 
-    // Добавляем мощность из новых полей ввода
-    let powerString = ''
+    // Добавляем мощность только если оба значения указаны
     if (editProdPowerValue.value > 0 && editProdPowerUnit.value) {
-      powerString = `${editProdPowerValue.value} ${editProdPowerUnit.value}`
-    } else {
-      powerString = 'отсутствует'
+      specs.power = `${editProdPowerValue.value} ${editProdPowerUnit.value}`
     }
-    specs.power = powerString
 
-    // Добавляем топливо из выбранных чекбоксов
-    specs.fuel = editProdSelectedFuels.value.length > 0 ? editProdSelectedFuels.value.join(', ') : 'отсутствует'
+    // Добавляем топливо только если оно выбрано
+    if (editProdSelectedFuels.value.length > 0) {
+      specs.fuel = editProdSelectedFuels.value
+    }
 
     // Добавляем остальные характеристики
     specsList.value[p.id]
       .filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')
-      .forEach(s => specs[s.key] = s.value)
+      .forEach(s => {
+        if (s.key && s.value) {
+          specs[s.key] = s.value
+        }
+      })
 
     // Добавляем изображения галереи, если есть
     if (p.specs && Array.isArray(p.specs.images)) {
       specs.images = p.specs.images
     }
 
-    const categorySlug = categories.value.find(c => c.name === p.category)?.slug
-    if (!categorySlug) {
-      console.error('Category slug not found for category:', p.category)
+    // Находим категорию
+    const category = categories.value.find(c => c.name === p.category)
+    if (!category) {
+      console.error('Category not found:', p.category)
       return
     }
 
-    const updateData = { 
-      ...p, 
-      specs,
-      category_slug: categorySlug
+    // Подготовка данных для обновления
+    const updateData = {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      extendedDescription: p.extendedDescription,
+      price: p.price,
+      image: p.image,
+      category_id: category.id,
+      specs: Object.keys(specs).length > 0 ? specs : null,
+      additional_images: Array.isArray(p.specs?.images) ? p.specs.images : null
     }
 
     console.log('Sending update data:', updateData)
@@ -1245,38 +1471,163 @@ const filteredSpecs = computed(() => (id: number) => {
   return specsList.value[id]?.filter((s: Spec) => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images') || []
 })
 
-const showCategoryDescModal = ref(false)
-const categoryDescInput = ref('')
-let pendingCategoryDescResolve: ((desc: string) => void) | null = null
-let modalActive = false
-
-function openCategoryDescModal(): Promise<string> {
-  showCategoryDescModal.value = true;
-  categoryDescInput.value = '';
-  modalActive = true;
-  return new Promise<string>(resolve => {
-    pendingCategoryDescResolve = resolve;
-  });
+const showCategoryDescriptionModal = ref(false)
+function confirmCategoryDescription() {
+  showCategoryDescriptionModal.value = false
+  // Продолжить создание категории и товара
 }
 
-function closeCategoryDescModal() {
-  if (!modalActive) return
-  showCategoryDescModal.value = false
-  modalActive = false
-  if (pendingCategoryDescResolve) {
-    pendingCategoryDescResolve('')
-    pendingCategoryDescResolve = null
+// Функции для работы с категориями
+const editingCategory = ref<any>(null)
+const showAddCategoryModal = ref(false)
+const showEditCategoryModal = ref(false)
+
+// Функция для генерации slug из названия
+watch(() => newCategory.value.name, (newName) => {
+  if (newName) {
+    newCategory.value.slug = transliterate(newName)
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+  }
+})
+
+// Добавление категории
+async function addCategory() {
+  try {
+    const response = await fetch('/api/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: newCategory.value.name,
+        description: newCategory.value.description,
+        slug: newCategory.value.slug
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to create category')
+    }
+
+    const data = await response.json()
+    categories.value.push({
+      id: data.id,
+      name: data.title,
+      description: data.description,
+      slug: data.slug
+    })
+
+    // Очищаем форму и закрываем модальное окно
+    newCategory.value = {
+      name: '',
+      description: '',
+      slug: ''
+    }
+    showAddCategoryModal.value = false
+  } catch (error) {
+    console.error('Error creating category:', error)
+    alert('Ошибка при создании категории')
   }
 }
 
-function saveCategoryDescription() {
-  if (!modalActive) return
-  showCategoryDescModal.value = false
-  modalActive = false
-  if (pendingCategoryDescResolve) {
-    pendingCategoryDescResolve(categoryDescInput.value)
-    pendingCategoryDescResolve = null
+// Редактирование категории
+function editCategory(category: AdminCategory) {
+  editingCategory.value = { ...category }
+  showEditCategoryModal.value = true
+}
+
+// Сохранение изменений категории
+async function saveCategory() {
+  try {
+    if (!editingCategory.value) {
+      throw new Error('No category being edited')
+    }
+
+    const response = await fetch(`/api/categories/${editingCategory.value.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: editingCategory.value.name,
+        description: editingCategory.value.description || '',
+        slug: editingCategory.value.slug
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.statusMessage || 'Failed to update category')
+    }
+
+    const updatedCategory = await response.json()
+
+    // Обновляем категорию в списке
+    const index = categories.value.findIndex(c => c.id === editingCategory.value.id)
+    if (index !== -1) {
+      categories.value[index] = {
+        id: updatedCategory.id,
+        name: updatedCategory.name,
+        slug: updatedCategory.slug,
+        description: updatedCategory.description
+      }
+    }
+
+    closeEditCategoryModal()
+    alert('Категория успешно обновлена')
+  } catch (error) {
+    console.error('Error updating category:', error)
+    alert(`Ошибка при обновлении категории: ${error.message}`)
   }
+}
+
+// Удаление категории
+async function deleteCategory(id: string) {
+  if (!confirm('Вы уверены, что хотите удалить эту категорию?')) {
+    return
+  }
+
+  try {
+    // Check if there are any products in this category
+    const productsInCategory = products.value.filter(p => p.category_id === id)
+    if (productsInCategory.length > 0) {
+      alert('Невозможно удалить категорию, содержащую товары. Сначала удалите или переместите товары из этой категории.')
+      return
+    }
+
+    const response = await fetch(`/api/categories/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to delete category')
+    }
+
+    // Удаляем категорию из списка только после успешного удаления на сервере
+    categories.value = categories.value.filter(c => c.id !== id)
+    alert('Категория успешно удалена')
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    alert(`Ошибка при удалении категории: ${error.message}`)
+  }
+}
+
+// Закрытие модального окна редактирования
+function closeEditCategoryModal() {
+  showEditCategoryModal.value = false
+  editingCategory.value = null
+}
+
+// Получение количества товаров в категории
+function getCategoryProductCount(categoryId: string): number {
+  return products.value.filter(product => product.category_id === categoryId).length
 }
 </script>
 
@@ -2050,6 +2401,236 @@ function saveCategoryDescription() {
   padding: 1rem;
   border-radius: 4px;
   margin-top: 0.5rem;
+}
+
+.category-modal {
+  background: var(--color-background);
+  border-radius: 8px;
+  padding: 20px;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--color-text);
+}
+
+.category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.category-form input,
+.category-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.category-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.category-form input:focus,
+.category-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.category-form button {
+  width: 100%;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.optional-specs {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+}
+
+.optional-specs .filter-group {
+  margin-bottom: 15px;
+}
+
+.optional-specs label {
+  color: #666;
+  font-style: italic;
+}
+
+.category-manager {
+  padding: 2rem;
+  background: var(--bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .category-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    &__header {
+      padding: 1rem;
+      background: var(--primary-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h3 {
+        margin: 0;
+        color: var(--primary);
+        font-size: 1.2rem;
+      }
+    }
+
+    &__actions {
+      display: flex;
+      gap: 0.5rem;
+
+      .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    &__content {
+      padding: 1rem;
+
+      .category-info {
+        margin-bottom: 1rem;
+
+        p {
+          margin: 0.5rem 0;
+        }
+
+        .category-description {
+          font-size: 0.9rem;
+          color: var(--text-light);
+          margin-top: 0.5rem;
+        }
+      }
+
+      .category-stats {
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+.category-form {
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.95rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+      }
+
+      &:disabled {
+        background: var(--bg-light);
+        cursor: not-allowed;
+      }
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
 }
 </style>
 

@@ -1,6 +1,14 @@
 import { defineEventHandler, createError } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
 import { getQuery } from 'h3'
+import type { Database } from '~/types/database.types'
+
+type Product = Database['public']['Tables']['products']['Row']
+type Category = Database['public']['Tables']['categories']['Row']
+
+interface ProductWithCategory extends Omit<Product, 'category'> {
+  category?: Category | null
+}
 
 interface ProductSpecs {
   power?: string
@@ -8,21 +16,29 @@ interface ProductSpecs {
   [key: string]: any
 }
 
-interface Product {
-  id: number
-  name: string | null
-  description: string | null
-  price: number | null
-  image: string | null
-  category: string | null
-  category_slug: string | null | undefined
-  specs: ProductSpecs
+function generateSlug(text: string): string {
+  // Транслитерация кириллицы
+  const translitMap: { [key: string]: string } = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
+    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+  }
+
+  return text
+    .toLowerCase()
+    .split('')
+    .map(char => translitMap[char] || char)
+    .join('')
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 export default defineEventHandler(async (event) => {
   try {
     console.log('Starting products fetch...')
-    const client = await serverSupabaseClient(event)
+    const client = await serverSupabaseClient<Database>(event)
     const query = getQuery(event)
     const categorySlug = query.categorySlug as string | undefined
     const productSlug = query.productSlug as string | undefined
@@ -31,22 +47,6 @@ export default defineEventHandler(async (event) => {
     const offset = (page - 1) * limit
 
     console.log('Query params:', { categorySlug, productSlug, page, limit, offset })
-
-    // Сначала проверим, есть ли вообще товары
-    const { count: totalCount, error: countError } = await client
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-
-    if (countError) {
-      console.error('Count error:', countError)
-      throw createError({ 
-        statusCode: 500, 
-        statusMessage: 'Failed to count products',
-        data: { error: countError.message }
-      })
-    }
-
-    console.log('Total products in database:', totalCount)
 
     // Build the base query
     let dbQuery = client
@@ -97,18 +97,20 @@ export default defineEventHandler(async (event) => {
     }
 
     // Transform the data to ensure consistent structure
-    const transformedProducts = products.map((product) => ({
-      ...product,
-      specs: {
-        ...(product.specs as Record<string, any> || {}),
-        power: (product.specs as any)?.power || 'отсутствует',
-        fuel: Array.isArray((product.specs as any)?.fuel) 
-          ? (product.specs as any).fuel 
-          : typeof (product.specs as any)?.fuel === 'string' 
-            ? (product.specs as any).fuel.split(', ').map((f: string) => f.trim())
-            : ['отсутствует']
+    const transformedProducts = products.map((product) => {
+      return {
+        ...product,
+        specs: {
+          ...(product.specs as Record<string, any> || {}),
+          power: (product.specs as any)?.power || 'отсутствует',
+          fuel: Array.isArray((product.specs as any)?.fuel) 
+            ? (product.specs as any).fuel 
+            : typeof (product.specs as any)?.fuel === 'string' 
+              ? (product.specs as any).fuel.split(', ').map((f: string) => f.trim())
+              : ['отсутствует']
+        }
       }
-    }))
+    })
 
     return {
       products: transformedProducts,

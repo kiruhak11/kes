@@ -2,6 +2,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Оборачиваем всё в наш дефолтный лейаут -->
   <NuxtLayout>
+    <FrogModal />
     <NuxtPage />
   </NuxtLayout>
 </template>
@@ -51,6 +52,15 @@ useSeoMeta({
   --bg-color: #fff;
   --bg-light: #f5f5f5;
   --border-color: #ddd;
+
+  /* Modal overlay */
+  --frog-modal-transition: visibility 0.2s, opacity 0.2s;
+  --frog-modal-overlay-opacity: 0.5;
+  --frog-modal-overlay-background: #0e151e;
+
+  /* Animation timing */
+  --frog-modal-animation-duration: 0.3s;
+  --frog-modal-animation-timing: ease-in-out;
 }
 
 * {

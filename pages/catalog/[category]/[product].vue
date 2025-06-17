@@ -8,23 +8,43 @@
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
           <div class="product-gallery">
-            <img :src="imageList[currentImageIndex]" :alt="product.name" class="main-image" />
-            <div v-if="imageList.length > 1" class="thumb-strip">
-              <img
-                v-for="(src, idx) in imageList"
-                :key="idx"
-                :src="src"
-                :alt="`thumb-${idx}`"
-                :class="['thumb', { active: idx === currentImageIndex }]"
-                @click="currentImageIndex = idx"
+            <!-- Основное изображение -->
+            <div class="main-image-container">
+              <button v-if="imageList.length > 1" class="gallery-nav prev" @click="prevImage">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <img 
+                :src="imageList[currentImageIndex]" 
+                :alt="product.name" 
+                class="main-image" 
               />
+              <button v-if="imageList.length > 1" class="gallery-nav next" @click="nextImage">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            
+            <!-- Миниатюры -->
+            <div v-if="imageList.length > 1" class="thumbnails-container">
+              <div class="thumbnails-scroll">
+                <button 
+                  v-for="(img, idx) in imageList" 
+                  :key="idx"
+                  :class="['thumbnail-btn', { active: idx === currentImageIndex }]"
+                  @click="currentImageIndex = idx"
+                >
+                  <img :src="img" :alt="`${product.name} - изображение ${idx + 1}`" />
+                </button>
+              </div>
             </div>
           </div>
+
           <div class="product-info-block">
             <h1 class="product-title">{{ product.name }}</h1>
             <p class="product-short-description">{{ product.description }}</p>
             <p class="product-price">{{ product.price.toLocaleString() }} &#8381;</p>
-            <button class="btn btn-primary add-to-cart-btn" @click="addToCart">Добавить в корзину</button>
+            <button class="btn btn-primary add-to-cart-btn" @click="addToCart">
+              Добавить в корзину
+            </button>
           </div>
         </div>
         <!-- Блок: описание и характеристики -->
@@ -33,7 +53,7 @@
             <h3 class="extended-description-title">Подробное описание:</h3>
             <p>{{ product.extendedDescription }}</p>
           </div>
-          <div class="product-specs">
+          <div v-if="displaySpecs.length > 0" class="product-specs">
             <h3 class="specs-title">Характеристики:</h3>
             <ul>
               <li v-for="([key, value], idx) in displaySpecs" :key="key">
@@ -220,18 +240,41 @@ const cartStore = useCartStore();
 
 const imageList = computed<string[]>(() => {
   if (!product.value) return []
-  const specImages = (product.value as any).specs?.images
-  const galleryArr = Array.isArray(specImages) ? specImages : []
-  const list = [product.value.image, ...galleryArr]
-  // remove duplicates
-  return Array.from(new Set(list.filter(Boolean)))
+  
+  // Основное изображение
+  const mainImage = product.value.image
+  
+  // Дополнительные изображения из specs.images
+  const additionalImages = Array.isArray(product.value.additional_images) 
+    ? product.value.additional_images 
+    : []
+  
+  // Объединяем все изображения, удаляем дубликаты и пустые значения
+  return [mainImage, ...additionalImages]
+    .filter(Boolean)
+    .filter((img, index, self) => self.indexOf(img) === index)
 })
 
+// Текущий индекс изображения
 const currentImageIndex = ref(0)
 
+// Сброс индекса при изменении продукта
 watch(product, () => {
   currentImageIndex.value = 0
 })
+
+// Функции навигации по галерее
+const nextImage = () => {
+  if (imageList.value.length > 1) {
+    currentImageIndex.value = (currentImageIndex.value + 1) % imageList.value.length
+  }
+}
+
+const prevImage = () => {
+  if (imageList.value.length > 1) {
+    currentImageIndex.value = (currentImageIndex.value - 1 + imageList.value.length) % imageList.value.length
+  }
+}
 
 const addToCart = () => {
   if (product.value) {
@@ -251,7 +294,10 @@ const addToCart = () => {
 
 const displaySpecs = computed(() => {
   if (!product.value || !product.value.specs) return []
-  return Object.entries(product.value.specs).filter(([k]) => k !== 'images')
+  // Фильтруем только технические поля, которые не нужно показывать
+  const excludedKeys = ['power', 'fuel', 'images', 'additional_images']
+  return Object.entries(product.value.specs)
+    .filter(([key]) => !excludedKeys.includes(key))
 })
 
 // Add related products logic
@@ -297,42 +343,130 @@ const relatedProducts = computed(() => {
   margin-bottom: 32px;
 }
 .product-gallery {
-  width: 320px;
-  min-width: 220px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.main-image {
-  width: 100%;
-  height: 320px;
-  object-fit: contain;
-  background: #f8f8f8;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
-  margin-bottom: 12px;
-}
-.thumb-strip {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-  overflow-x: auto;
-}
-.thumb {
-  width: 60px;
-  height: 48px;
-  object-fit: cover;
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  flex-shrink: 0;
-  transition: border-color 0.2s;
-}
-.thumb:hover {
-  border-color: var(--secondary, #aaa);
-}
-.thumb.active {
-  border-color: var(--primary, #007bff);
+  flex: 0 0 50%;
+  max-width: 50%;
+  padding: 1rem;
+
+  @media (max-width: 768px) {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .main-image-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 75%; 
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-light);
+
+    img.main-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity 0.3s ease;
+    }
+
+    .gallery-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 2;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      &.prev {
+        left: 1rem;
+      }
+
+      &.next {
+        right: 1rem;
+      }
+
+      i {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .thumbnails-container {
+    margin-top: 1rem;
+    width: 100%;
+    overflow: hidden;
+
+    .thumbnails-scroll {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) transparent;
+
+      &::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: var(--primary);
+        border-radius: 3px;
+      }
+    }
+
+    .thumbnail-btn {
+      flex: 0 0 80px;
+      height: 80px;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      background: none;
+      transition: all 0.2s ease;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.2s ease;
+      }
+
+      &:hover img {
+        opacity: 0.8;
+      }
+
+      &.active {
+        border-color: var(--primary);
+
+        img {
+          opacity: 1;
+        }
+      }
+    }
+  }
 }
 .product-info-block {
   flex: 1;
@@ -561,6 +695,10 @@ const relatedProducts = computed(() => {
   }
   .related-products-grid {
     grid-template-columns: 1fr;
+  }
+  .product-gallery {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 }
 @media (max-width: 480px) {

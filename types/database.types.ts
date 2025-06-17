@@ -6,43 +6,72 @@
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      products: {
+      categories: {
         Row: {
-          category: string | null
+          id: string
+          name: string
+          slug: string
           description: string | null
-          extendedDescription: string | null
-          id: number
-          image: string | null
-          name: string | null
-          price: number | null
-          specs: Json | null
-          category_slug?: string | null
         }
         Insert: {
-          category?: string | null
+          id?: string
+          name: string
+          slug: string
           description?: string | null
-          extendedDescription?: string | null
-          id?: number
-          image?: string | null
-          name?: string | null
-          price?: number | null
-          specs?: Json | null
-          category_slug?: string | null
         }
         Update: {
-          category?: string | null
+          id?: string
+          name?: string
+          slug?: string
           description?: string | null
-          extendedDescription?: string | null
-          id?: number
-          image?: string | null
-          name?: string | null
-          price?: number | null
-          specs?: Json | null
         }
         Relationships: []
+      }
+      products: {
+        Row: {
+          id: number
+          name: string | null
+          description: string | null
+          extendedDescription: string | null
+          price: number | null
+          image: string | null
+          specs: Json | null
+          category_id: string | null
+          additional_images: string[] | null
+        }
+        Insert: {
+          id?: number
+          name?: string | null
+          description?: string | null
+          extendedDescription?: string | null
+          price?: number | null
+          image?: string | null
+          specs?: Json | null
+          category_id?: string | null
+          additional_images?: string[] | null
+        }
+        Update: {
+          id?: number
+          name?: string | null
+          description?: string | null
+          extendedDescription?: string | null
+          price?: number | null
+          image?: string | null
+          specs?: Json | null
+          category_id?: string | null
+          additional_images?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
@@ -61,9 +90,9 @@ export type Database = {
           description: string
           price: number
           image: string
-          category: string
-          category_slug: string
           specs: Json
+          additional_images: string[]
+          category_id: string
         }[]
       }
       get_product_by_id: {
@@ -77,9 +106,9 @@ export type Database = {
           extended_description: string
           price: number
           image: string
-          category: string
-          category_slug: string
           specs: Json
+          additional_images: string[]
+          category_id: string
         }[]
       }
     }
@@ -202,3 +231,25 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+export interface Product {
+  id: number
+  name: string
+  description: string
+  extendedDescription?: string
+  price: number
+  image: string
+  category_id: string
+  category_name: string
+  category_slug: string
+  slug: string
+  specs?: Record<string, any>
+  additional_images?: string[]
+}
+
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  description?: string
+}

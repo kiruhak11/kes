@@ -90,7 +90,7 @@ if (fetchedCategories.value) {
             <div class="footer__nav-column">
               <h3 class="footer__nav-title">О заводе</h3>
               <ul class="footer__nav-list">
-                <li><NuxtLink to="/about/certificates">Сертификаты</NuxtLink></li>
+                <li><NuxtLink to="/certificates">Сертификаты</NuxtLink></li>
                 <li><NuxtLink to="/about/gallery">Фотогалерея</NuxtLink></li>
                 <li><NuxtLink to="/about/contacts">Контакты</NuxtLink></li>
                 <li><NuxtLink to="/contact">Оставить заявку</NuxtLink></li>

@@ -37,7 +37,12 @@ export default defineNuxtConfig({
       adminPassword: process.env.ADMIN_PASSWORD || 'admin'
     },
   },
-  modules: ['@nuxtjs/device', '@nuxtjs/supabase', '@pinia/nuxt'],
+  modules: [
+    '@nuxtjs/device',
+    '@nuxtjs/supabase',
+    '@pinia/nuxt',
+    'rubillex_frog-modal'
+  ],
   device: {
     // опционально: можно обновлять при ресайзе
     refreshOnResize: true

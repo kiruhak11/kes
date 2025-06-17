@@ -14,9 +14,8 @@ interface Product {
   extendedDescription?: string
   price: number
   image: string
-  category: string
-  category_slug: string
-  gallery?: string[]
+  category_id: string
+  additional_images?: string[]
   specs?: ProductSpecs
 }
 
@@ -35,7 +34,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Validate required fields
-    const requiredFields = ['title', 'description', 'price', 'category', 'category_slug']
+    const requiredFields = ['name', 'description', 'price', 'category_id']
     const missingFields = requiredFields.filter(field => !body[field])
     
     if (missingFields.length > 0) {
@@ -48,35 +47,16 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event)
 
-    // Проверяем уникальность slug
-    const { data: existingProduct } = await client
-      .from('products')
-      .select('id')
-      .eq('slug', body.slug)
-      .single()
-
-    if (existingProduct) {
-      throw createError({
-        statusCode: 422,
-        message: 'Product with this slug already exists'
-      })
-    }
-
     // Prepare product data
     const productData = {
-      name: body.title,
+      name: body.name,
       description: body.description,
-      extendedDescription: body.extended_description || '',
+      extendedDescription: body.extendedDescription || '',
       price: Number(body.price) || 0,
       image: body.image || '/placeholder.jpg',
-      category: body.category,
-      category_slug: body.category_slug,
-      specs: {
-        power: body.specs?.power || 'отсутствует',
-        fuel: body.specs?.fuel || 'отсутствует',
-        images: Array.isArray(body.specs?.images) ? body.specs.images : [],
-        ...(body.specs || {})
-      }
+      category_id: body.category_id,
+      additional_images: Array.isArray(body.additional_images) ? body.additional_images : [],
+      specs: body.specs || {}
     }
 
     console.log('Prepared product data:', productData)

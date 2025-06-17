@@ -4,25 +4,62 @@ import { serverSupabaseClient } from '#supabase/server'
 export default defineEventHandler(async (event) => {
   try {
     const client = await serverSupabaseClient(event)
-    const body = await readBody<{ title: string; slug: string }>(event)
+    const body = await readBody<{ title: string; description?: string; slug?: string }>(event)
 
-    if (!body.title || !body.slug) {
+    if (!body.title) {
       throw createError({ 
         statusCode: 400, 
-        statusMessage: 'Bad Request: title and slug are required' 
+        statusMessage: 'Bad Request: title is required' 
       })
     }
 
-    // Пока категории хранятся имплицитно через товары, нам не нужно ничего создавать.
-    // Просто возвращаем объект категории, чтобы фронтенд мог продолжить работу.
-    // Категория появится в выдаче, как только будет добавлен хотя бы один товар с этим category_slug.
+    // Убеждаемся, что у нас есть slug
+    const slug = body.slug || body.title.toLowerCase()
+      .replace(/[^a-z0-9а-яё]+/g, '-')  // Добавляем поддержку кириллицы
+      .replace(/(^-|-$)/g, '')
 
-    return {
-      title: body.title,
-      slug: body.slug
+    console.log('Creating category with data:', {
+      name: body.title,
+      description: body.description,
+      slug: slug
+    })
+
+    // Создаем новую категорию в базе данных
+    const { data: category, error } = await client
+      .from('categories')
+      .insert([
+        { 
+          name: body.title,
+          description: body.description || '',
+          slug: slug
+        }
+      ])
+      .select('*')  // Явно запрашиваем все поля
+      .single()
+
+    if (error) {
+      console.error('Error creating category:', error)
+      throw createError({ 
+        statusCode: 500, 
+        statusMessage: `Failed to create category: ${error.message}` 
+      })
     }
+
+    if (!category) {
+      throw createError({ 
+        statusCode: 500, 
+        statusMessage: 'Failed to create category: no data returned' 
+      })
+    }
+
+    console.log('Created category:', category)
+    return category
+
   } catch (e: any) {
     console.error('POST /api/categories error:', e)
-    throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
+    throw createError({ 
+      statusCode: e.statusCode || 500, 
+      statusMessage: e.message || 'Internal Server Error' 
+    })
   }
 }) 
