@@ -75,7 +75,7 @@ if (fetchedCategories.value) {
         </div>
         <div class="footer__bottom">
           <p class="footer__copyright">
-            © Котельный завод "РЭП" 2006—2025.
+            © Котельный завод "КЭС" 2006—2025.
           </p>
         </div>
       </div>
@@ -301,6 +301,9 @@ if (fetchedCategories.value) {
   }
 }
 @media (max-width: 768px) {
+  .footer {
+    padding: 10px 0 20px;
+  }
   .footer__content, .footer__nav, .footer__nav-column, .footer__contacts {
     display: none !important;
   }

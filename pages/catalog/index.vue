@@ -57,6 +57,7 @@
   .catalog-item {
     background: #fff;
     border-radius: 8px;
+    margin-top: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: visible;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -105,6 +106,7 @@
   }
   
   @media (max-width: 768px) {
+
     .catalog-grid {
       grid-template-columns: 1fr;
     }

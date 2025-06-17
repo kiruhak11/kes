@@ -14,10 +14,12 @@
       <div class="container">
         <div class="hero__content">
           <h1 class="hero__title">
-            <span v-if="!$device.isMobile">Котельный завод «РЭП» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
-            <span v-else>Котельный завод «РЭП»<br>Производство и монтаж котлов</span>
+            <span >Котельный завод «КЭС» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
           </h1>
-          <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
+          <div class="hero__title__btn">
+            <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
+            <NuxtLink to="/catalog" class="btn btn-primary">Перейти в Каталог</NuxtLink>
+          </div>
         </div>
       </div>
     </section>
@@ -405,7 +407,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .hero {
   position: relative;
   overflow: hidden;
@@ -438,6 +440,15 @@ onBeforeUnmount(() => {
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  
+}
+.hero__title__btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  gap: 24px;
+  flex-direction: row;
 }
 
 .section-title {
@@ -469,8 +480,6 @@ onBeforeUnmount(() => {
   height: 200px;
   object-fit: contain;
   border-radius: 8px;
-  background: #f7f7fa;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   z-index: 2;
   margin-bottom: 0;
 }
@@ -687,6 +696,9 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .hero__title__btn {
+    flex-direction: column;
+  }
   .hero,
   .hero--mobile {
     padding: 40px 0;
@@ -703,10 +715,11 @@ onBeforeUnmount(() => {
     gap: 20px;
   }
   .catalog-card {
+    margin: 24px 0;
     padding: 16px;
   }
   .catalog-card img {
-    height: 120px;
+    height: 130px;
   }
   .about {
     padding: 40px 0;

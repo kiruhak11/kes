@@ -2,18 +2,106 @@
   <header class="header">
     <div class="header__top">
       <div class="container">
-        <div class="header__top-content">
+        <div v-if="!$device.isMobile" class="header__top-content">
           <div class="header__contacts">
-            <a href="mailto:sb@kvzr.ru" class="header__email">kes-altai@mail.ru</a>
-            <a href="tel:226337" class="header__phone">226-337 | 226-338 | 226-938</a>
+            <a href="mailto:sb@kvzr.ru" class="header__email">kotloenergosnab1@mail.ru</a>
+            <a href="tel:226337" class="header__phone">+7 (903) 948 72-73</a>
             <NuxtLink to="/contact" class="header__callback">Заказать звонок</NuxtLink>
           </div>
-          <div class="header__user-actions" v-if="!$device.isMobile">
-            <a href="/certificates" class="header__link">Сертификаты</a>
-            <a href="/about" class="header__link">О компании</a>
-            <a href="/about/gallery" class="header__link">Фотогалерея</a>
-            <a href="/about/contacts" class="header__link">Контакты</a>
+          <div class="form-group">
+            <div class="search-container">
+              <div class="search-input-wrapper">
+                <input 
+                  type="text" 
+                  v-model="searchQuery" 
+                  placeholder="Поиск котлов..."
+                  class="search-input"
+                  @focus="handleSearchInput"
+                  @input="handleSearchInput"
+                >
+                <span class="search-icon"><IconsSearch/></span>
+              </div>
+              <div class="search-results" v-if="showSearchResults">
+                <div v-if="filteredProducts.length" class="search-results-list">
+                  <div 
+                    v-for="product in filteredProducts" 
+                    :key="product.id"
+                    class="search-result-item"
+                    @click="selectProduct(product)"
+                  >
+                    <div class="product-info">
+                      <div class="product-main">
+                        <span class="product-name">{{ product.name }}</span>
+                        <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                      </div>
+                      <div class="product-specs" v-if="product.specs">
+                        <span v-if="product.specs.power" class="product-spec">{{ product.specs.power }}</span>
+                        <span v-if="product.specs.fuel" class="product-spec">{{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="no-results">
+                  {{ searchQuery ? 'Ничего не найдено' : 'Введите название товара' }}
+                </div>
+              </div>
+            </div>
           </div>
+          <div class="header__user-actions">
+            <NuxtLink to="/catalog" class="header__nav-link">Каталог продукции</NuxtLink>
+            <NuxtLink to="/about/contacts" class="header__nav-link">Контакты</NuxtLink>
+            <div class="cart-container">
+              <NuxtLink to="/cart" class="cart-link">
+                <span class="cart-text">Корзина</span>
+                <div class="cart-icon-wrapper">
+                  <span class="cart-icon">🛒</span>
+                  <span class="cart-count">{{ cartStore.items.length }}</span>
+                </div>
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+        <div v-else class="header__top-content">
+          <div class="form-group mobile-search">
+            <div class="search-container">
+              <div class="search-input-wrapper">
+                <input 
+                  type="text" 
+                  v-model="searchQuery" 
+                  placeholder="Поиск котлов..."
+                  class="search-input"
+                  @focus="handleSearchInput"
+                  @input="handleSearchInput"
+                >
+                <span class="search-icon"><IconsSearch/></span>
+              </div>
+              <div class="search-results" v-if="showSearchResults">
+                <div v-if="filteredProducts.length" class="search-results-list">
+                  <div 
+                    v-for="product in filteredProducts" 
+                    :key="product.id"
+                    class="search-result-item"
+                    @click="selectProduct(product)"
+                  >
+                    <div class="product-info">
+                      <div class="product-main">
+                        <span class="product-name">{{ product.name }}</span>
+                        <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                      </div>
+                      <div class="product-specs" v-if="product.specs">
+                        <span v-if="product.specs.power" class="product-spec">{{ product.specs.power }}</span>
+                        <span v-if="product.specs.fuel" class="product-spec">{{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="no-results">
+                  {{ searchQuery ? 'Ничего не найдено' : 'Введите название товара' }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <NuxtLink to="/cart" class="mobile-cart-icon"><IconsCart/></NuxtLink>
         </div>
       </div>
     </div>
@@ -22,32 +110,77 @@
         <div class="header__main-content">
           <div class="header__logo">
             <NuxtLink to="/">
-              <img src="/images/logo.png" alt="Котельный завод РЭП" />
+              <img src="/images/logo.png" alt="Котельный завод КЭС" />
             </NuxtLink>
           </div>
           <div v-if="$device.isMobile">
-            <button class="burger-btn" @click="showMobileMenu = !showMobileMenu">☰</button>
-            <transition name="mobile-menu-fade">
+            <button 
+              class="burger-btn" 
+              :class="{ 'is-active': showMobileMenu }"
+              @click="showMobileMenu = !showMobileMenu"
+            >
+              <span class="burger-line"></span>
+              <span class="burger-line"></span>
+              <span class="burger-line"></span>
+            </button>
+            <transition name="slide-fade">
               <nav v-if="showMobileMenu" class="mobile-nav">
+                <div class="mobile-nav-header">
+                  <h3>Меню</h3>
+                  <button class="close-btn" @click="showMobileMenu = false">×</button>
+                </div>
                 <ul class="mobile-menu">
-                  <li><NuxtLink to="/catalog" @click="showMobileMenu = false">Каталог продукции</NuxtLink></li>
-                  <li><NuxtLink to="/about/contacts" @click="showMobileMenu = false">Контакты</NuxtLink></li>
-                  <li><NuxtLink to="/about" @click="showMobileMenu = false">О компании</NuxtLink></li>
-                  <li><NuxtLink to="/about/gallery" @click="showMobileMenu = false">Фотогалерея</NuxtLink></li>
-                  <li><NuxtLink to="/certificates" @click="showMobileMenu = false">Сертификаты</NuxtLink></li>
-                  <li><NuxtLink to="/cart" @click="showMobileMenu = false">Корзина {{ cartStore.totalItems }}</NuxtLink></li>
+                  <li>
+                    <NuxtLink to="/catalog" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon">📋</span>
+                      <span>Каталог продукции</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
+                    <NuxtLink to="/about/contacts" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon">📞</span>
+                      <span>Контакты</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
+                    <NuxtLink to="/about" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon">🏢</span>
+                      <span>О компании</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
+                    <NuxtLink to="/about/gallery" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon">🖼️</span>
+                      <span>Фотогалерея</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
+                    <NuxtLink to="/certificates" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon">📜</span>
+                      <span>Сертификаты</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
+                    <NuxtLink to="/cart" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon">🛒</span>
+                      <span>Корзина</span>
+                      <span class="cart-badge" v-if="cartStore.items.length">{{ cartStore.items.length }}</span>
+                    </NuxtLink>
+                  </li>
                 </ul>
               </nav>
             </transition>
-            <transition name="mobile-menu-fade">
-              <div v-if="showMobileMenu" class="mobile-menu-overlay"></div>
+            <transition name="fade">
+              <div v-if="showMobileMenu" class="mobile-menu-overlay" @click="showMobileMenu = false"></div>
             </transition>
           </div>
           <nav class="header__nav" v-else>
             <ul class="header__menu">
-              <li><NuxtLink to="/catalog">Каталог продукции</NuxtLink></li>
-              <li><NuxtLink to="/cart">Корзина {{ cartStore.totalItems }} {{ cartStore.totalItems === 1 ? 'товар' : cartStore.totalItems === 2 ? 'товара' : 'товаров' }} ({{ cartStore.totalPrice.toLocaleString() }} &#8381;)</NuxtLink></li>
-            </ul>
+            <a href="/questionnaire" class="header__link">Опросные листы</a>
+            <a href="/certificates" class="header__link">Сертификаты</a>
+            <a href="/about" class="header__link">О компании</a>
+            <a href="/about/gallery" class="header__link">Фотогалерея</a>
+              </ul>
           </nav>
         </div>
       </div>
@@ -56,31 +189,283 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useNuxtApp } from '#app'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { useNuxtApp, useRoute, useRouter } from '#app'
 import { useCartStore } from '~/stores/cart'
+
+const transliterate = (text: string): string => {
+  const mapping: { [key: string]: string } = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
+    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
+    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
+    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
+    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+  return text.split('').map(char => mapping[char] || char).join('');
+};
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription: string;
+  price: number;
+  image: string;
+  category: string;
+  category_slug: string;
+  slug: string;
+  specs?: Record<string, any>;
+}
+
+interface Boiler {
+  id: number;
+  name: string;
+  power?: string;
+  fuel?: string;
+  price: number;
+  slug: string;
+  category: string;
+}
 
 const { $device } = useNuxtApp()
 const showMobileMenu = ref(false)
 const cartStore = useCartStore()
+const searchQuery = ref('')
+const showSearchResults = ref(false)
 
-function closeMenuOnOutsideClick(e: MouseEvent) {
+const route = useRoute()
+const router = useRouter()
+const config = useRuntimeConfig()
+
+// Получаем список товаров из API
+const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/products`, {
+  transform: (response) => {
+    console.log('API Response:', response)
+    if (!response || !response.products) {
+      console.error('Invalid response format:', response)
+      return []
+    }
+    return response.products
+  }
+})
+
+// Инициализируем список товаров
+const products = ref<Product[]>([])
+
+// Обрабатываем ошибки загрузки
+if (fetchError.value) {
+  console.error('Error fetching products:', fetchError.value)
+  products.value = []
+} else if (fetchedProducts.value) {
+  console.log('Fetched products:', fetchedProducts.value)
+  products.value = fetchedProducts.value.map(product => ({
+    ...product,
+    specs: {
+      ...product.specs,
+      power: product.specs?.power || 'отсутствует',
+      fuel: Array.isArray(product.specs?.fuel) 
+        ? product.specs.fuel 
+        : typeof product.specs?.fuel === 'string' 
+          ? product.specs.fuel.split(', ').map((f: string) => f.trim())
+          : ['отсутствует']
+    }
+  }))
+} else {
+  console.log('No products fetched')
+  products.value = []
+}
+
+// Получаем список котлов
+const boilers = ref<Boiler[]>([])
+
+// Получаем подсказки на основе ввода
+const suggestions = computed(() => {
+  if (!searchQuery.value) return []
+  const query = searchQuery.value.toLowerCase()
+  const uniqueSuggestions = new Set<string>()
+  
+  products.value.forEach(product => {
+    if (product.name.toLowerCase().includes(query)) {
+      uniqueSuggestions.add(product.name)
+    }
+    if (product.description?.toLowerCase().includes(query)) {
+      uniqueSuggestions.add(product.description)
+    }
+  })
+  
+  return Array.from(uniqueSuggestions).slice(0, 5)
+})
+
+// Фильтруем товары по поисковому запросу
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) return []
+  const query = searchQuery.value.toLowerCase()
+  return products.value.filter(product => 
+    product.name.toLowerCase().includes(query) ||
+    product.description?.toLowerCase().includes(query) ||
+    product.specs?.power?.toLowerCase().includes(query) ||
+    product.specs?.fuel?.some((fuel: string) => fuel.toLowerCase().includes(query))
+  )
+})
+
+// Загружаем котлы из каталога
+const loadBoilers = async () => {
+  try {
+    const { data } = await useFetch<Boiler[]>('/api/catalog/boilers')
+    console.log('Загруженные котлы:', data.value) // Отладочная информация
+    if (data.value && Array.isArray(data.value)) {
+      boilers.value = data.value.map(boiler => ({
+        ...boiler,
+        category: boiler.fuel?.toLowerCase().includes('газ') 
+          ? 'gazovye-kotly' 
+          : 'tverdotoplivnye-kotly'
+      }))
+    }
+  } catch (error) {
+    console.error('Ошибка при загрузке котлов:', error)
+  }
+}
+
+// Фильтруем котлы по поисковому запросу
+const filteredBoilers = computed(() => {
+  if (!searchQuery.value) {
+    return boilers.value // Показываем все котлы, если поисковый запрос пустой
+  }
+  const query = searchQuery.value.toLowerCase()
+  const filtered = boilers.value.filter(boiler => 
+    boiler.name.toLowerCase().includes(query) ||
+    boiler.power?.toLowerCase().includes(query) ||
+    boiler.fuel?.toLowerCase().includes(query)
+  )
+  console.log('Отфильтрованные котлы:', filtered) // Отладочная информация
+  return filtered
+})
+
+// Обработчик выбора товара
+const selectProduct = (product: Product) => {
+  searchQuery.value = product.name
+  showSearchResults.value = false
+  
+  // Формируем URL для перехода к товару
+  const categorySlug = transliterate(product.category).toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    
+  const productSlug = transliterate(product.name).toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    
+  navigateTo(`/catalog/${categorySlug}/${productSlug}`)
+}
+
+// Обработчик выбора подсказки
+const selectSuggestion = (suggestion: string) => {
+  searchQuery.value = suggestion
+  showSearchResults.value = true
+}
+
+// Обработчик выбора котла
+const selectBoiler = (boiler: Boiler) => {
+  searchQuery.value = boiler.name
+  showSearchResults.value = false
+  
+  // Определяем категорию на основе типа топлива
+  const category = boiler.fuel?.toLowerCase().includes('газ') 
+    ? 'gazovye-kotly' 
+    : 'tverdotoplivnye-kotly'
+    
+  navigateTo(`/catalog/${category}/${boiler.slug}`)
+}
+
+// Обработчик ввода в поле поиска
+const handleSearchInput = () => {
+  showSearchResults.value = true
+  console.log('Текущий поисковый запрос:', searchQuery.value)
+}
+
+// Закрываем результаты поиска при клике вне
+function closeSearchOnOutsideClick(e: MouseEvent) {
   const target = e.target as HTMLElement
-  if (!target.closest('.header__mobile-menu') && !target.closest('.header__mobile-menu-toggle')) {
-    showMobileMenu.value = false
+  if (!target.closest('.search-container')) {
+    showSearchResults.value = false
   }
 }
 
 onMounted(() => {
-  document.addEventListener('click', closeMenuOnOutsideClick)
+  document.addEventListener('click', closeSearchOnOutsideClick)
+  loadBoilers() // Загружаем котлы при монтировании компонента
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', closeMenuOnOutsideClick)
+  document.removeEventListener('click', closeSearchOnOutsideClick)
 })
 </script>
 
 <style scoped>
+.form-group {
+    display: flex;
+    flex-direction: column;
+    
+    label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
+    }
+
+    input,
+    textarea {
+      padding: 0.75rem;
+      border: 1px solid var(--secondary);
+      border-radius: 0.5rem;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.2s;
+      font-size: 0.95rem;
+      width: 100%;
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+      }
+
+      &:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+  }
+.region-select {
+  position: relative;
+}
+
+.region-search {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+.line {
+  height: 2px;
+  background-color: black;
+}
+.header {
+  margin-top: 75px;
+  background-color: #f5f5f5;
+}
 .header__top {
   background: #f5f5f5;
   padding: 10px 0;
@@ -123,18 +508,108 @@ onBeforeUnmount(() => {
 
 .header__user-actions {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 24px;
 }
 
-.header__link {
+
+.header__nav-link {
   color: #333;
   text-decoration: none;
   font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.header__nav-link:hover {
+  color: #e31e24;
+}
+
+.cart-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.cart-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #333;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 85px;
+  height: 40px;
+}
+
+.cart-text {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+}
+
+.cart-link:hover .cart-text {
+  transform: translateX(-150%);
+  opacity: 0;
+}
+
+.cart-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(150%, -50%);
+  transition: all 0.3s ease;
+  min-width: 100%;
+  height: 100%;
+  opacity: 0;
+  gap: 8px;
+}
+
+.cart-link:hover .cart-icon-wrapper {
+  transform: translate(-50%, -50%);
+  opacity: 1;
+}
+
+.cart-icon {
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-count {
+  background: #e31e24;
+  color: white;
+  font-size: 12px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid #fff;
+  position: static;
+  transform: none;
 }
 
 .header__main {
-  padding: 20px 0;
-  margin-top: 70px;
+  padding: 12px 0;
 }
 
 .header__main-content {
@@ -144,6 +619,8 @@ onBeforeUnmount(() => {
 }
 
 .header__logo img {
+  align-items: center;
+  margin-top: 7px;
   height: 60px;
 }
 
@@ -203,33 +680,149 @@ onBeforeUnmount(() => {
 
 .burger-btn {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  font-size: 2rem;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 24px;
   background: none;
   border: none;
-  color: #e31e24;
   cursor: pointer;
+  padding: 0;
   z-index: 1200;
+  transition: all 0.3s ease;
+}
+
+.burger-line {
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  transition: all 0.3s ease;
+  transform-origin: left;
+}
+
+.burger-btn.is-active .burger-line:nth-child(1) {
+  transform: rotate(45deg);
+}
+
+.burger-btn.is-active .burger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.burger-btn.is-active .burger-line:nth-child(3) {
+  transform: rotate(-45deg);
 }
 
 .mobile-nav {
   position: fixed;
-  top: 60px;
+  top: 0;
   right: 0;
-  left: 0;
+  width: 85%;
+  max-width: 400px;
+  height: 100vh;
   background: #fff;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
   z-index: 1200;
-  padding: 24px 0 12px;
-  animation: mobileMenuSlideIn 0.25s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
 }
 
-@keyframes mobileMenuSlideIn {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+.mobile-nav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.mobile-nav-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.mobile-menu {
+  list-style: none;
+  margin: 0;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  color: #333;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.mobile-menu-item:hover {
+  background: #f8f8f8;
+  border-left-color: #e31e24;
+}
+
+.menu-icon {
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.cart-badge {
+  margin-left: auto;
+  background: #e31e24;
+  color: white;
+  font-size: 0.8rem;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+/* Анимации */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(100%);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .mobile-menu-overlay {
@@ -238,79 +831,170 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.5);
   z-index: 1100;
+  backdrop-filter: blur(2px);
 }
 
-.mobile-menu-fade-enter-active, .mobile-menu-fade-leave-active {
-  transition: opacity 0.2s;
-}
-.mobile-menu-fade-enter-from, .mobile-menu-fade-leave-to {
-  opacity: 0;
+/* Стилизация скроллбара в мобильном меню */
+.mobile-menu::-webkit-scrollbar {
+  width: 4px;
 }
 
-.mobile-menu {
-  list-style: none;
-  margin: 0;
-  padding: 0 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.mobile-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
-.mobile-menu a {
-  color: #222;
-  font-size: 1.1rem;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+.mobile-menu::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
 }
 
-.mobile-menu a:last-child {
-  border-bottom: none;
+.mobile-menu::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
+/* Стили для мобильной версии верхней секции */
 @media (max-width: 768px) {
-  .header__main-content {
-    flex-direction: row;
-    align-items: center;
+  .header__top-content {
+    display: flex;
     justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
   }
-  .header__nav {
+
+  .mobile-search {
+    flex: 5;
+    width: 83.33%; /* 5/6 от ширины */
+  }
+
+  .mobile-search .search-container {
+    width: 100%;
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 6px 32px 6px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 13px;
+    height: 32px;
+  }
+
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 55%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .mobile-cart-icon {
+    flex: 1;
+    width: 16.67%; /* 1/6 от ширины */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    text-decoration: none;
+    color: #333;
+  }
+
+  .search-results {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 10px;
+  }
+
+  /* Удаляем затемнение из поиска */
+  .search-results::before {
     display: none;
   }
-  .header__user-actions {
-    display: none;
+
+  .search-result-item {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
   }
-}
 
-.header__cart {
-  position: relative;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: var(--text);
-  padding: 0.5rem;
-}
+  .product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
-.cart-icon {
-  font-size: 1.2rem;
-}
+  .product-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
 
-.cart-count {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: var(--accent);
-  color: white;
-  font-size: 0.8rem;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
+  .product-name {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .product-price {
+    font-size: 14px;
+    font-weight: 500;
+    color: #e31e24;
+    white-space: nowrap;
+  }
+
+  .product-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .product-spec {
+    background: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .no-results {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+  }
+
+  /* Стилизация скроллбара для мобильных устройств */
+  .search-results::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .search-results::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+  }
+
+  .search-results::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
 }
 </style>
