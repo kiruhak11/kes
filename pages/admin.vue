@@ -820,12 +820,7 @@ if (fetchedProducts.value) {
       c.slug === product.category_slug
     )
     
-    console.log('Mapping product:', {
-      productName: product.name,
-      categoryId: product.category_id,
-      categorySlug: product.category_slug,
-      foundCategory: category?.name
-    })
+    
     
     return {
       ...product,
@@ -865,14 +860,7 @@ const isFormValid = computed(() => {
          newProd.value.price > 0 && 
          (newProd.value.category && newProd.value.category !== 'new' || (newProd.value.category === 'new' && newCategory.value.name))
   
-  console.log('Form validation:', {
-    name: !!newProd.value.name,
-    description: !!newProd.value.description,
-    price: newProd.value.price > 0,
-    category: newProd.value.category,
-    newCategory: newCategory.value.name,
-    isValid: valid
-  })
+
   
   return valid
 })
@@ -895,8 +883,6 @@ function generateSlug(text: string): string {
 const modalStore = useModalStore()
 // Обновляем функцию addProduct
 async function addProduct() {
-  console.log('Starting addProduct function')
-  console.log('Current newProd state:', newProd.value)
   
   try {
     // Проверяем валидность формы
@@ -911,7 +897,6 @@ async function addProduct() {
 
     // Если выбрана новая категория, сначала создаем её
     if (newProd.value.category === 'new') {
-      console.log('Creating new category:', newCategory.value.name)
       const categoryResponse = await fetch('/api/categories', {
         method: 'POST',
         headers: {
@@ -931,7 +916,6 @@ async function addProduct() {
       }
 
       const categoryData = await categoryResponse.json()
-      console.log('New category created:', categoryData)
 
       categoryId = categoryData.id
       categorySlug = categoryData.slug || generateSlug(newCategory.value.name)
@@ -987,7 +971,6 @@ async function addProduct() {
       additional_images: newProdGallery.value.length > 0 ? newProdGallery.value : undefined
     }
 
-    console.log('Sending product data to API:', productData)
 
     // Отправляем запрос на создание товара
     const response = await fetch('/api/products', {
@@ -998,9 +981,7 @@ async function addProduct() {
       body: JSON.stringify(productData)
     })
 
-    console.log('API response status:', response.status)
     const responseData = await response.json()
-    console.log('API response data:', responseData)
 
     if (!response.ok) {
       throw new Error(`Failed to create product: ${responseData.message || 'Unknown error'}`)
@@ -1143,8 +1124,7 @@ async function updateWithSpecs(p: Product) {
       specs: Object.keys(specs).length > 0 ? specs : null,
       additional_images: Array.isArray(p.specs?.images) ? p.specs.images : null
     }
-
-    console.log('Sending update data:', updateData)
+ 
 
     await $fetch(`/api/products/${p.id}`, {
       method: 'PUT',
@@ -1484,13 +1464,11 @@ const stats = ref<Stats>({
 
 const selectedRequest = ref<Request | null>(null)
 
-const showRequestDetails = (request: Request) => {
-  console.log('Opening request details:', request)
+const showRequestDetails = (request: Request) => { 
   selectedRequest.value = request
 }
 
-const closeRequestDetails = () => {
-  console.log('Closing request details')
+const closeRequestDetails = () => { 
   selectedRequest.value = null
 }
 
@@ -1656,39 +1634,17 @@ function closeEditCategoryModal() {
 
 // Получение количества товаров в категории
 function getCategoryProductCount(categoryId: string): number {
-  const category = categories.value.find(c => c.id === categoryId)
-  console.log('Getting count for category:', {
-    categoryId,
-    foundCategory: category,
-    allCategories: categories.value,
-    allProducts: products.value.map(p => ({
-      name: p.name,
-      category: p.category,
-      category_id: p.category_id,
-      category_slug: p.category_slug
-    }))
-  })
+  const category = categories.value.find(c => c.id === categoryId) 
   
   const count = products.value.filter(product => {
     const matches = category && (
       product.category === category.name ||
       product.category_id === categoryId ||
       product.category_slug === category.slug
-    )
-    console.log('Product match check:', {
-      productName: product.name,
-      productCategory: product.category,
-      productCategoryId: product.category_id,
-      productCategorySlug: product.category_slug,
-      categoryName: category?.name,
-      categoryId: categoryId,
-      categorySlug: category?.slug,
-      matches
-    })
+    ) 
     return matches
   }).length
-
-  console.log('Final count:', count)
+ 
   return count
 }
 </script>

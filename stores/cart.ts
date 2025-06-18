@@ -80,7 +80,7 @@ export const useCartStore = defineStore('cart', {
     clearCart(): void {
       this.items = []
       this.saveToStorage()
-    },
+  },
 
     saveToStorage(): void {
       if (process.client) {

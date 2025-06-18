@@ -11,10 +11,8 @@
             <i class="fas fa-phone"></i>
             <div class="contact-text">
               <p>Тел/факс:</p>
-              <a href="tel:+73852226337">(3852) 226-337</a>
-              <a href="tel:+73852226338">226-338</a>
-              <a href="tel:+73852226938">226-938</a>
-              <a href="tel:+73852226939">226-939</a>
+              <a :href="`tel:${contacts.phone}`">{{ contacts.phone }}</a>
+              
             </div>
           </div>
           
@@ -22,7 +20,7 @@
             <i class="fas fa-envelope"></i>
             <div class="contact-text">
               <p>E-mail:</p>
-              <a href="mailto:kes-altai@mail.ru">kes-altai@mail.ru</a>
+              <a :href="`mailto:${contacts.email}`">{{ contacts.email }}</a>
             </div>
           </div>
 
@@ -30,7 +28,7 @@
             <i class="fas fa-map-marker-alt"></i>
             <div class="contact-text">
               <p>Адрес:</p>
-              <span>656012, Алтайский край г. Барнаул, ул. Бриллиантовая 2Е</span>
+              <span>656012, Алтайский край {{ contacts.address }}</span>
             </div>
           </div>
         </div>
@@ -88,6 +86,8 @@
 </template>
 
 <script setup>
+import { contacts } from '~/data/contacts';
+
 definePageMeta({
   layout: 'default'
 })

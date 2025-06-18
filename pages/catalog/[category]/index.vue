@@ -47,7 +47,7 @@
                 @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)"
               >
                 <div class="product-card__img-wrap">
-                  <img :src="product.image" :alt="product.name" class="product-image" />
+                  <img :src="product.image ?? undefined" :alt="product.name ?? undefined" class="product-image" />
                 </div>
                 <div class="product-card__content">
                   <div class="product-card__title-row">
@@ -65,7 +65,7 @@
                   </div>
                   <div class="product-card__bottom">
                     <div class="product-card__price-block">
-                      <span class="product-price">{{ product.price.toLocaleString() }} <span class="currency">р.</span></span>
+                      <span class="product-price">{{ product.price?.toLocaleString() }} <span class="currency">р.</span></span>
                       <span class="product-price-note">Цена с НДС</span>
                     </div>
                     <button class="buy-btn" @click.stop="addToCart(product, $event)">
@@ -125,19 +125,22 @@
   
   interface Product {
     id: number
-    name: string
-    description: string
-    extendedDescription: string
-    price: number
-    image: string
-    category_name: string
-    category_slug: string
-    slug: string
-    specs: {
-      power?: string;
-      fuel?: string[];
-      [key: string]: any;
+    name: string | null
+    description: string | null
+    extendedDescription?: string | null
+    price: number | null
+    image: string | null
+    category_id: string | null
+    category_name?: string
+    category_slug?: string
+    category?: string
+    slug?: string
+    specs?: {
+      power?: any
+      fuel?: any
+      [key: string]: any
     }
+    additional_images?: string[] | null
   }
   
   interface CategoryInfo {
@@ -164,8 +167,7 @@
       page: currentPage.value,
       limit: itemsPerPage
     },
-    transform: (response) => {
-      console.log('API Response:', response)
+    transform: (response) => { 
       if (!response || !response.products) {
         console.error('Invalid response format:', response)
         return []
@@ -178,17 +180,15 @@
   if (fetchError.value) {
     console.error('Error fetching products:', fetchError.value)
     allProducts.value = []
-  } else if (fetchedAllProducts.value) {
-    console.log('Fetched products:', fetchedAllProducts.value)
+  } else if (fetchedAllProducts.value) { 
+    
     allProducts.value = fetchedAllProducts.value
-  } else {
-    console.log('No products fetched')
+  } else { 
     allProducts.value = []
   }
 
   const categorySlug = ref(route.params.category as string)
-  
-  // console.log('Category Slug:', categorySlug)
+   
   
   watch(() => route.params.category, (newCategorySlug) => {
     categorySlug.value = newCategorySlug as string;
@@ -199,26 +199,12 @@
   const sliderImages = ref<string[]>([])
   const sliderIndex = ref(0)
 
-  // Получаем инфу о категории
-  const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`)
-  console.log('Fetched category data:', fetchedCategory.value)
-  if (fetchedCategory.value && fetchedCategory.value.category) {
-    categoryInfo.value = {
-      title: fetchedCategory.value.category.title || '',
-      description: fetchedCategory.value.category.description || '',
-      slug: categorySlug.value
-    }
-    console.log('Category info set:', categoryInfo.value)
-  } else {
-    console.error('Failed to fetch category info:', categoryError.value)
-  }
-
   // Обновляем слайдер при изменении продуктов
   watch(() => allProducts.value, (newProducts) => {
     // Собираем картинки из товаров
     sliderImages.value = newProducts
-      .filter(product => product.image)
-      .map(product => product.image)
+      .filter(product => product.image !== null)
+      .map(product => product.image as string)
 
     if (sliderImages.value.length === 0) {
       sliderImages.value = ['/images/placeholders/category-placeholder.png']
@@ -233,12 +219,13 @@
   }
   
   const productsInCategory = computed<Product[]>(() => {
+    
     return allProducts.value.filter(product => 
+      {if (product.category_name = '') return;
       transliterate(product.category_name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value
-    )
   })
-  
-  // console.log('Products in Category:', productsInCategory.value)
+  })
+   
   
   const filters = ref({
     minPower: undefined as number | undefined,
@@ -366,11 +353,7 @@
     const slug = transliterate(category).toLowerCase()
       .replace(/[^a-z0-9 -]/g, '')
       .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-    console.log('Generated category slug:', {
-      category: category,
-      slug: slug
-    })
+      .replace(/-+/g, '-') 
     return slug
   }
 
@@ -378,17 +361,33 @@
 
   function addToCart(product: Product, e: Event) {
     e.stopPropagation();
+    if (!product.name || !product.price || !product.image) {
+      console.error('Invalid product data:', product);
+      return;
+    }
     // @ts-ignore
     cartStore.addItem({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
-      category: product.category_name,
-      category_slug: product.category_slug,
-      slug: product.slug,
+      category: product.category_name || 'Без категории',
+      category_slug: product.category_slug || generateCategorySlug(product.category_name || 'Без категории'),
+      slug: product.slug || generateProductSlug(product),
       quantity: 1
     });
+  }
+
+  // Получаем инфу о категории
+  const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`) 
+  if (fetchedCategory.value && fetchedCategory.value.category) {
+    categoryInfo.value = {
+      title: fetchedCategory.value.category.title || '',
+      description: fetchedCategory.value.category.description || '',
+      slug: categorySlug.value
+    } 
+  } else {
+    console.error('Failed to fetch category info:', categoryError.value)
   }
   </script>
   

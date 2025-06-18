@@ -39,8 +39,7 @@ export default {
       }
     },
     downloadFile(file) {
-      // Здесь будет логика скачивания файла
-      console.log('Скачивание файла:', file.name)
+      // Здесь будет логика скачивания файла 
     }
   },
   mounted() {

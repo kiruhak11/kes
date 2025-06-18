@@ -36,8 +36,7 @@ function generateSlug(text: string): string {
 }
 
 export default defineEventHandler(async (event) => {
-  try {
-    console.log('Starting products fetch...')
+  try { 
     const client = await serverSupabaseClient<Database>(event)
     const query = getQuery(event)
     const categorySlug = query.categorySlug as string | undefined
@@ -45,8 +44,7 @@ export default defineEventHandler(async (event) => {
     const page = parseInt(query.page as string) || 1
     const limit = parseInt(query.limit as string) || 10
     const offset = (page - 1) * limit
-
-    console.log('Query params:', { categorySlug, productSlug, page, limit, offset })
+ 
 
     // Build the base query
     let dbQuery = client
@@ -65,8 +63,7 @@ export default defineEventHandler(async (event) => {
         dbQuery = dbQuery.eq('id', productId)
       }
     }
-
-    console.log('Executing Supabase query...')
+ 
     // Add pagination and ordering
     const { data: products, error, count } = await dbQuery
       .order('id', { ascending: true })
@@ -80,9 +77,7 @@ export default defineEventHandler(async (event) => {
         data: { error: error.message }
       })
     }
-
-    console.log('Query successful, products count:', products?.length || 0)
-    console.log('First product sample:', products?.[0])
+ 
 
     if (!products || products.length === 0) {
       return {

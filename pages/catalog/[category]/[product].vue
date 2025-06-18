@@ -164,8 +164,7 @@ const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/produc
   query: computed(() => ({
     categorySlug: categorySlug.value
   })),
-  transform: (response) => {
-    console.log('API Response:', response)
+  transform: (response) => { 
     if (!response || typeof response !== 'object' || !('products' in response)) {
       console.error('Invalid response format:', response)
       return []
@@ -210,17 +209,10 @@ if (fetchError.value) {
 
 // Get the current product
 const currentProduct = computed(() => {
-  if (!products.value || products.value.length === 0) {
-    console.log('No products available')
+  if (!products.value || products.value.length === 0) { 
     return null
   }
-  
-  console.log('Searching for product with slug:', productSlug.value)
-  console.log('Available products:', products.value.map(p => ({
-    name: p.name,
-    slug: p.slug,
-    id: p.id
-  })))
+   
   
   // Find product by matching slug or generated slug from name
   const foundProduct = products.value.find(p => {
@@ -241,8 +233,7 @@ const currentProduct = computed(() => {
         slug: p.slug
       }))
     })
-  } else {
-    console.log('Found product:', foundProduct)
+  } else { 
   }
 
   return foundProduct || null
@@ -250,8 +241,7 @@ const currentProduct = computed(() => {
 
 // Handle product not found
 watch(currentProduct, (product) => {
-  if (!product && products.value.length > 0) {
-    console.log('Product not found, redirecting to category:', categorySlug.value)
+  if (!product && products.value.length > 0) { 
     router.push(`/catalog/${categorySlug.value}`)
   }
 }, { immediate: true })

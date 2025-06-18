@@ -73,8 +73,7 @@ async function submitForm() {
     const res = await $fetch("/api/contact", {
       method: "POST",
       body: payload,
-    });
-    console.log("Telegram response:", res);
+    }); 
     
     modalStore.showSuccess(`Сообщение "${message.value}" Успешно отправленно!`)
     name.value = '';

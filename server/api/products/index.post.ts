@@ -21,8 +21,7 @@ interface Product {
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody(event)
-    console.log('Received body:', body)
+    const body = await readBody(event) 
 
     // Validate request body
     if (!body || typeof body !== 'object') {
@@ -58,8 +57,7 @@ export default defineEventHandler(async (event) => {
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : [],
       specs: body.specs || {}
     }
-
-    console.log('Prepared product data:', productData)
+ 
 
     // Insert into database
     const { data, error } = await client
@@ -81,8 +79,7 @@ export default defineEventHandler(async (event) => {
         message: error.message
       })
     }
-
-    console.log('Successfully created product:', data)
+ 
     return data
   } catch (error: any) {
     console.error('Error in POST /api/products:', error)

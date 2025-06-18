@@ -17,13 +17,7 @@ export default defineEventHandler(async (event) => {
     const slug = body.slug || body.title.toLowerCase()
       .replace(/[^a-z0-9а-яё]+/g, '-')  // Добавляем поддержку кириллицы
       .replace(/(^-|-$)/g, '')
-
-    console.log('Creating category with data:', {
-      name: body.title,
-      description: body.description,
-      slug: slug
-    })
-
+ 
     // Создаем новую категорию в базе данных
     const { data: category, error } = await client
       .from('categories')
@@ -51,8 +45,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Failed to create category: no data returned' 
       })
     }
-
-    console.log('Created category:', category)
+ 
     return category
 
   } catch (e: any) {

@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   kes-site-node:
     container_name: kes-site-node
@@ -10,6 +12,13 @@ services:
       - "${PORT:-3001}:3001"
     networks:
       - app-network
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
 
 networks:
   app-network:

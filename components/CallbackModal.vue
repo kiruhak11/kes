@@ -1,7 +1,7 @@
 <template>
   <FrogModalWrapper
-    :desktop-position="FrogModalWrapperPosition.CENTER"
-    :mobile-position="FrogModalWrapperPosition.BOTTOM"
+    :desktop-position="'center'"
+    :mobile-position="'bottom'"
     mobile-swipe-to-close
     class="callback-modal"
   >
@@ -48,7 +48,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { FrogModalWrapper, FrogModalWrapperPosition } from 'rubillex_frog-modal'
+import FrogModalWrapper from 'rubillex_frog-modal'
+import { useModalStore } from '../stores/modal'
 
 const props = defineProps<{
   modelValue: boolean
@@ -64,28 +65,32 @@ const form = ref({
   message: ''
 })
 
+const modalStore = useModalStore()
+
 const submitForm = async () => {
   try {
-    const response = await fetch('/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(form.value)
-    })
+    const payload = {
+      text: `📞 Заказ звонка:
+- Имя: ${form.value.name}
+- Телефон: ${form.value.phone}
+- Сообщение: ${form.value.message || 'не указано'}`
+    };
 
-    if (response.ok) {
-      emit('update:modelValue', false)
-      form.value = {
-        name: '',
-        phone: '',
-        message: ''
-      }
-    } else {
-      console.error('Failed to submit form')
+    await $fetch('/api/contact', {
+      method: 'POST',
+      body: payload
+    });
+
+    emit('update:modelValue', false)
+    form.value = {
+      name: '',
+      phone: '',
+      message: ''
     }
+    modalStore.showSuccess('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.')
   } catch (error) {
     console.error('Error submitting form:', error)
+    modalStore.showError(`Ошибка при отправке заявки: ${error}`)
   }
 }
 </script>

@@ -18,8 +18,7 @@ export default defineEventHandler(async (event) => {
       specs: body.specs || null, // Если specs undefined, записываем null
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : null
     }
-
-    console.log('Updating product with data:', updateData)
+ 
 
     const { data, error } = await client.from('products')
       .update(updateData)
