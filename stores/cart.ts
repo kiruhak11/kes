@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-interface CartItem {
+export interface CartItem {
   id: number
   name: string
   price: number
@@ -11,9 +11,11 @@ interface CartItem {
   slug: string
 }
 
-interface CartState {
+export interface CartState {
   items: CartItem[]
 }
+
+const STORAGE_KEY = 'cart-items'
 
 export const useCartStore = defineStore('cart', {
   state: (): CartState => ({
@@ -21,13 +23,32 @@ export const useCartStore = defineStore('cart', {
   }),
 
   getters: {
-    totalItems: (state) => state.items.reduce((sum, item) => sum + item.quantity, 0),
-    totalPrice: (state) => state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    totalItems: (state: CartState): number => {
+      return state.items.reduce((sum: number, item: CartItem): number => sum + item.quantity, 0)
+    },
+    totalPrice: (state: CartState): number => {
+      return state.items.reduce((sum: number, item: CartItem): number => sum + item.price * item.quantity, 0)
+    }
   },
 
   actions: {
-    addItem(product: CartItem) {
-      const existingItem = this.items.find(item => item.id === product.id)
+    initializeStore() {
+      // Проверяем, что мы на клиенте и localStorage доступен
+      if (process.client) {
+        const savedItems = localStorage.getItem(STORAGE_KEY)
+        if (savedItems) {
+          try {
+            this.items = JSON.parse(savedItems)
+          } catch (e) {
+            console.error('Failed to parse cart items from localStorage:', e)
+            this.items = []
+          }
+        }
+      }
+    },
+
+    addItem(product: CartItem): void {
+      const existingItem = this.items.find((item: CartItem): boolean => item.id === product.id)
       
       if (existingItem) {
         existingItem.quantity++
@@ -37,26 +58,34 @@ export const useCartStore = defineStore('cart', {
           quantity: 1
         })
       }
+      this.saveToStorage()
     },
 
-    removeItem(productId: number) {
-      const index = this.items.findIndex(item => item.id === productId)
+    removeItem(productId: number): void {
+      const index = this.items.findIndex((item: CartItem): boolean => item.id === productId)
       if (index > -1) {
         this.items.splice(index, 1)
+        this.saveToStorage()
       }
     },
 
-    updateQuantity(productId: number, quantity: number) {
-      const item = this.items.find(item => item.id === productId)
+    updateQuantity(productId: number, quantity: number): void {
+      const item = this.items.find((item: CartItem): boolean => item.id === productId)
       if (item) {
         item.quantity = Math.max(1, quantity)
+        this.saveToStorage()
       }
     },
 
-    clearCart() {
+    clearCart(): void {
       this.items = []
-    }
-  },
+      this.saveToStorage()
+    },
 
-  persist: true
+    saveToStorage(): void {
+      if (process.client) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.items))
+      }
+    }
+  }
 }) 

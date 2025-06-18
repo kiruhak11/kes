@@ -39,11 +39,11 @@
                           <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
                         </div>
                         <div class="product-specs" v-if="product.specs">
-                          <span v-if="product.specs.power" class="product-spec">
+                          <span v-if="product.specs.power && product.specs.power !== 'отсутствует'" class="product-spec">
                             <span class="spec-icon">⚡</span>
                             {{ product.specs.power }}
                           </span>
-                          <span v-if="product.specs.fuel" class="product-spec">
+                          <span v-if="product.specs.fuel && (!Array.isArray(product.specs.fuel) || product.specs.fuel.length > 0) && product.specs.fuel !== 'отсутствует'" class="product-spec">
                             <span class="spec-icon">🔥</span>
                             {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
                           </span>
@@ -104,11 +104,11 @@
                           <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
                         </div>
                         <div class="product-specs" v-if="product.specs">
-                          <span v-if="product.specs.power" class="product-spec">
+                          <span v-if="product.specs.power && product.specs.power !== 'отсутствует'" class="product-spec">
                             <span class="spec-icon">⚡</span>
                             {{ product.specs.power }}
                           </span>
-                          <span v-if="product.specs.fuel" class="product-spec">
+                          <span v-if="product.specs.fuel && (!Array.isArray(product.specs.fuel) || product.specs.fuel.length > 0) && product.specs.fuel !== 'отсутствует'" class="product-spec">
                             <span class="spec-icon">🔥</span>
                             {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
                           </span>
@@ -231,16 +231,22 @@ const transliterate = (text: string): string => {
 };
 
 interface Product {
-  id: number;
-  name: string;
-  description: string;
-  extendedDescription: string;
-  price: number;
-  image: string;
-  category: string;
-  category_slug: string;
-  slug: string;
-  specs?: Record<string, any>;
+  id: number
+  name: string
+  description: string
+  extendedDescription?: string
+  price: number
+  image: string
+  category: string
+  category_name?: string
+  category_id?: string
+  category_slug?: string
+  slug: string
+  specs?: {
+    power?: string
+    fuel?: string | string[]
+    [key: string]: any
+  }
 }
 
 interface Boiler {
@@ -251,6 +257,25 @@ interface Boiler {
   price: number;
   slug: string;
   category: string;
+}
+
+interface ApiProduct {
+  id: number
+  name: string
+  description: string
+  extendedDescription: string | null
+  price: number
+  image: string
+  category: string
+  category_name?: string
+  category_id?: string
+  category_slug?: string
+  slug: string
+  specs?: {
+    power?: string
+    fuel?: string | string[]
+    [key: string]: any
+  }
 }
 
 const { $device } = useNuxtApp()
@@ -264,14 +289,13 @@ const router = useRouter()
 const config = useRuntimeConfig()
 
 // Получаем список товаров из API
-const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/products`, {
+const { data: fetchedProducts, error: fetchError } = await useFetch<{ products: ApiProduct[] }>('/api/products', {
   transform: (response) => {
-    console.log('API Response:', response)
     if (!response || !response.products) {
       console.error('Invalid response format:', response)
-      return []
+      return { products: [] }
     }
-    return response.products
+    return response
   }
 })
 
@@ -283,21 +307,28 @@ if (fetchError.value) {
   console.error('Error fetching products:', fetchError.value)
   products.value = []
 } else if (fetchedProducts.value) {
-  console.log('Fetched products:', fetchedProducts.value)
-  products.value = fetchedProducts.value.map(product => ({
-    ...product,
-    specs: {
-      ...product.specs,
-      power: product.specs?.power || 'отсутствует',
-      fuel: Array.isArray(product.specs?.fuel) 
-        ? product.specs.fuel 
-        : typeof product.specs?.fuel === 'string' 
-          ? product.specs.fuel.split(', ').map((f: string) => f.trim())
-          : ['отсутствует']
-    }
-  }))
+  products.value = fetchedProducts.value.products.map(product => {
+    const specs = product.specs || {}
+    return {
+      ...product,
+      name: product.name || '',
+      description: product.description || '',
+      price: product.price || 0,
+      image: product.image || '',
+      category: product.category || '',
+      slug: product.slug || '',
+      specs: {
+        ...specs,
+        power: specs.power && specs.power !== 'отсутствует' ? specs.power : undefined,
+        fuel: specs.fuel && specs.fuel !== 'отсутствует' 
+          ? (Array.isArray(specs.fuel) 
+              ? specs.fuel.filter(f => f !== 'отсутствует')
+              : specs.fuel.split(', ').map(f => f.trim()).filter(f => f !== 'отсутствует'))
+          : undefined
+      }
+    } as Product
+  })
 } else {
-  console.log('No products fetched')
   products.value = []
 }
 
@@ -326,19 +357,28 @@ const suggestions = computed(() => {
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return []
   const query = searchQuery.value.toLowerCase()
-  return products.value.filter(product => 
-    product.name.toLowerCase().includes(query) ||
-    product.description?.toLowerCase().includes(query) ||
-    product.specs?.power?.toLowerCase().includes(query) ||
-    product.specs?.fuel?.some((fuel: string) => fuel.toLowerCase().includes(query))
-  )
+  return products.value.filter(product => {
+    const nameMatch = product.name.toLowerCase().includes(query)
+    const descriptionMatch = product.description?.toLowerCase().includes(query) || false
+    const powerMatch = product.specs?.power?.toLowerCase().includes(query) || false
+    
+    let fuelMatch = false
+    if (product.specs?.fuel) {
+      if (Array.isArray(product.specs.fuel)) {
+        fuelMatch = product.specs.fuel.some(fuel => fuel.toLowerCase().includes(query))
+      } else {
+        fuelMatch = product.specs.fuel.toLowerCase().includes(query)
+      }
+    }
+    
+    return nameMatch || descriptionMatch || powerMatch || fuelMatch
+  })
 })
 
 // Загружаем котлы из каталога
 const loadBoilers = async () => {
   try {
     const { data } = await useFetch<Boiler[]>('/api/catalog/boilers')
-    console.log('Загруженные котлы:', data.value) // Отладочная информация
     if (data.value && Array.isArray(data.value)) {
       boilers.value = data.value.map(boiler => ({
         ...boiler,
@@ -363,7 +403,6 @@ const filteredBoilers = computed(() => {
     boiler.power?.toLowerCase().includes(query) ||
     boiler.fuel?.toLowerCase().includes(query)
   )
-  console.log('Отфильтрованные котлы:', filtered) // Отладочная информация
   return filtered
 })
 
@@ -372,17 +411,19 @@ const selectProduct = (product: Product) => {
   searchQuery.value = product.name
   showSearchResults.value = false
   
-  // Формируем URL для перехода к товару
-  const categorySlug = transliterate(product.category).toLowerCase()
+  // Используем category_slug если он есть, иначе генерируем из category
+  const categorySlug = product.category_slug || transliterate(product.category).toLowerCase()
     .replace(/[^a-z0-9 -]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    
-  const productSlug = transliterate(product.name).toLowerCase()
+  
+  // Используем существующий slug если он есть, иначе генерируем из имени
+  const productSlug = product.slug || transliterate(product.name).toLowerCase()
     .replace(/[^a-z0-9 -]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    
+  
+  // Переходим на страницу товара
   navigateTo(`/catalog/${categorySlug}/${productSlug}`)
 }
 
@@ -408,7 +449,6 @@ const selectBoiler = (boiler: Boiler) => {
 // Обработчик ввода в поле поиска
 const handleSearchInput = () => {
   showSearchResults.value = true
-  console.log('Текущий поисковый запрос:', searchQuery.value)
 }
 
 // Закрываем результаты поиска при клике вне

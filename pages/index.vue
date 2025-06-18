@@ -30,7 +30,11 @@
         <h2 class="section-title">Каталог продукции</h2>
         <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
           <div class="catalog-card" v-for="category in mainCategories" :key="category.slug">
-            <img :src="category.image" :alt="category.title" />
+            <img 
+              :src="category.images[0]" 
+              :alt="category.title"
+              @error="handleImageError"
+            />
             <h3>{{ category.title }}</h3>
             <p v-if="!$device.isMobile">{{ category.description }}</p>
             <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
@@ -232,12 +236,11 @@ import BackIcon from '~/components/icons/back.vue'
 import NextIcon from '~/components/icons/next.vue'
 import TypeWriter from '~/components/TypeWriter.vue'
 const { $device } = useNuxtApp()
-
 // Получаем реальные категории для каталога на главной
 interface Category {
   title: string;
   slug: string;
-  image: string;
+  images: string[];
   description: string;
 }
 const mainCategories = ref<Category[]>([]);
@@ -384,7 +387,7 @@ const formatPhoneNumber = (event: Event) => {
   
   phoneNumber.value = value
 }
-
+const modalStore = useModalStore();
 async function calculate() {
   const payload = {
     text: `📩 Новая заявка:
@@ -400,10 +403,15 @@ async function calculate() {
       method: "POST",
       body: payload,
     });
-    console.log("Telegram response:", res);
-    // тут можно очистить поля и показать уведомление пользователю
+    modalStore.showSuccess("Обращение успешно отправлено!")
+    phoneNumber.value = '';
+    regionSearch.value = '';
+    typeBuilding.value = '';
+    fuelType.value = '';
+    powerType.value = '';
   } catch (err) {
     console.error("Ошибка отправки:", err);
+    modalStore.showError(`Ошибка отправки: ${err}`)
   }
 }
 
@@ -471,6 +479,13 @@ onBeforeUnmount(() => {
   if (intervalId) clearInterval(intervalId)
   if (factoryIntervalId) clearInterval(factoryIntervalId)
 })
+
+function handleImageError(e: Event) {
+  const img = e.target as HTMLImageElement
+  if (img) {
+    img.src = '/images/placeholders/category-placeholder.png'
+  }
+}
 </script>
 
 <style lang="scss" scoped>

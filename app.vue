@@ -25,7 +25,6 @@ if (process.client) {
 
 // Отслеживаем посещение при загрузке приложения
 onMounted(() => {
-  console.log('App mounted, tracking visit...')
   trackVisit()
 })
 

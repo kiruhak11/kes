@@ -112,17 +112,36 @@ const transliterate = (text: string): string => {
   return text.split('').map(char => mapping[char] || char).join('');
 };
 
+interface ProductSpecs {
+  power?: string | number
+  fuel?: string | string[]
+  [key: string]: any
+}
+
+interface APIProduct {
+  id: number
+  name: string | null
+  price: number | null
+  image: string | null
+  description: string | null
+  extendedDescription: string | null
+  category_id: string | null
+  additional_images: string[] | null
+  specs: ProductSpecs
+}
+
 interface Product {
-  id: number;
-  name: string;
-  description: string;
-  extendedDescription: string;
-  price: number;
-  image: string;
-  category: string;
-  category_slug: string;
-  slug: string;
-  specs?: Record<string, any>;
+  id: number
+  name: string
+  description: string
+  extendedDescription: string
+  price: number
+  image: string
+  category: string
+  category_slug: string
+  slug: string
+  specs?: ProductSpecs
+  additional_images?: string[]
 }
 
 const route = useRoute()
@@ -164,8 +183,17 @@ if (fetchError.value) {
   products.value = []
 } else if (fetchedProducts.value) {
   // Only map if we have valid data
-  products.value = fetchedProducts.value.map(product => ({
-    ...product,
+  products.value = (fetchedProducts.value as APIProduct[]).map(product => ({
+    id: product.id,
+    name: product.name || '',
+    description: product.description || '',
+    extendedDescription: product.extendedDescription || '',
+    price: product.price || 0,
+    image: product.image || '',
+    category: '', // Will be filled from category data
+    category_slug: '', // Will be filled from category data
+    slug: '', // Will be generated
+    additional_images: product.additional_images || [],
     specs: {
       ...product.specs,
       power: product.specs?.power || 'отсутствует',
@@ -244,17 +272,13 @@ const imageList = computed<string[]>(() => {
   // Основное изображение
   const mainImage = product.value.image
   
-  // Дополнительные изображения из specs.images
-  const additionalImages = Array.isArray(product.value.additional_images) 
-    ? product.value.additional_images 
-    : []
+  // Дополнительные изображения
+  const additionalImages = product.value.additional_images || []
   
-  // Объединяем все изображения, удаляем дубликаты и пустые значения
-  return [mainImage, ...additionalImages]
-    .filter(Boolean)
-    .filter((img, index, self) => self.indexOf(img) === index)
+  // Объединяем основное изображение и дополнительные
+  return [mainImage, ...additionalImages].filter(Boolean)
 })
-
+const modalStore = useModalStore()
 // Текущий индекс изображения
 const currentImageIndex = ref(0)
 
@@ -263,49 +287,61 @@ watch(product, () => {
   currentImageIndex.value = 0
 })
 
-// Функции навигации по галерее
+// Навигация по галерее
 const nextImage = () => {
-  if (imageList.value.length > 1) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % imageList.value.length
+  if (currentImageIndex.value < imageList.value.length - 1) {
+    currentImageIndex.value++
+  } else {
+    currentImageIndex.value = 0
   }
 }
 
 const prevImage = () => {
-  if (imageList.value.length > 1) {
-    currentImageIndex.value = (currentImageIndex.value - 1 + imageList.value.length) % imageList.value.length
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  } else {
+    currentImageIndex.value = imageList.value.length - 1
   }
 }
 
 const addToCart = () => {
-  if (product.value) {
-    cartStore.addItem({
-      id: product.value.id,
-      name: product.value.name,
-      price: product.value.price,
-      image: product.value.image,
-      category: product.value.category,
-      category_slug: product.value.category_slug,
-      slug: product.value.slug,
-      quantity: 1
-    });
-    alert('Товар добавлен в корзину');
-  }
-};
+  if (!product.value) return
+  
+  cartStore.addItem({
+    id: product.value.id,
+    name: product.value.name,
+    price: product.value.price,
+    image: product.value.image,
+    quantity: 1,
+    category: product.value.category,
+    category_slug: product.value.category_slug,
+    slug: product.value.slug
+  })
+  modalStore.showSuccess('Товар добавлен в корзину');
+}
 
+// Отображаемые характеристики
 const displaySpecs = computed(() => {
-  if (!product.value || !product.value.specs) return []
-  // Фильтруем только технические поля, которые не нужно показывать
-  const excludedKeys = ['power', 'fuel', 'images', 'additional_images']
+  if (!product.value?.specs) return []
+  
   return Object.entries(product.value.specs)
-    .filter(([key]) => !excludedKeys.includes(key))
+    .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+    .map(([key, value]) => {
+      // Обработка массивов (например, для топлива)
+      if (Array.isArray(value)) {
+        return [key, value.join(', ')]
+      }
+      return [key, value]
+    })
 })
 
-// Add related products logic
+// Похожие товары
 const relatedProducts = computed(() => {
-  if (!products.value || products.value.length === 0) return []
-  const otherProducts = products.value.filter(p => p.id !== product.value?.id)
-  const shuffled = [...otherProducts].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, 3)
+  if (!product.value || !products.value) return []
+  
+  return products.value
+    .filter(p => p.id !== product.value?.id)
+    .slice(0, 4) // Показываем максимум 4 похожих товара
 })
 </script>
 

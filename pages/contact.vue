@@ -59,7 +59,7 @@ const message = ref("");
 
 const config = useRuntimeConfig();
 // config.telegramBotToken и config.telegramChatId нужно прописать в nuxt.config
-
+const modalStore = useModalStore();
 async function submitForm() {
   const payload = {
     text: `📩 Новая заявка:
@@ -75,9 +75,15 @@ async function submitForm() {
       body: payload,
     });
     console.log("Telegram response:", res);
-    // тут можно очистить поля и показать уведомление пользователю
+    
+    modalStore.showSuccess(`Сообщение "${message.value}" Успешно отправленно!`)
+    name.value = '';
+    phone.value = '';
+    email.value = '';
+    message.value = '';
   } catch (err) {
     console.error("Ошибка отправки:", err);
+    modalStore.showError(`Ошибка отправки ${err}`)
   }
 }
 </script>

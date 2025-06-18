@@ -7,16 +7,13 @@ export const useVisitTracking = () => {
   const trackVisit = async () => {
     // Проверяем, не отслеживали ли мы уже посещение в этой сессии
     if (isTracked.value) {
-      console.log('Visit already tracked in this session')
       return
     }
 
     try {
-      console.log('Attempting to track visit...')
       const response = await $fetch('/api/visits', {
         method: 'POST'
       })
-      console.log('Visit tracked successfully:', response)
       isTracked.value = true
       error.value = null
     } catch (e) {

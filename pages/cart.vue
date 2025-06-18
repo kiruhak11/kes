@@ -91,7 +91,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCartStore } from '~/stores/cart'
-
+const modalStore = useModalStore()
 const cartStore = useCartStore()
 const isSubmitting = ref(false)
 
@@ -143,10 +143,10 @@ ${orderItems.map(item => `- ${item.name} (${item.quantity} шт.) - ${item.total
       comment: ''
     }
 
-    alert('Спасибо за заказ! Мы свяжемся с вами в ближайшее время.')
+    modalStore.showSuccess('Спасибо за заказ! Мы свяжемся с вами в ближайшее время.')
   } catch (err) {
     console.error('Ошибка отправки заказа:', err)
-    alert('Произошла ошибка при отправке заказа. Пожалуйста, попробуйте позже.')
+    modalStore.showSuccess(`Произошла ошибка при отправке заказа: ${err}. Пожалуйста, попробуйте позже.`)
   } finally {
     isSubmitting.value = false
   }

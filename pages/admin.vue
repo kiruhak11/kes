@@ -372,7 +372,7 @@
       </div>
 
       <!-- Модальное окно добавления категории -->
-      <BaseModal
+      <CategoryForm
         v-if="showAddCategoryModal"
         title="Добавить категорию"
         @close="showAddCategoryModal = false"
@@ -414,10 +414,10 @@
             </button>
           </div>
         </form>
-      </BaseModal>
+      </CategoryForm>
 
       <!-- Модальное окно редактирования категории -->
-      <BaseModal
+      <CategoryForm
         v-if="showEditCategoryModal"
         title="Редактировать категорию"
         @close="closeEditCategoryModal"
@@ -458,7 +458,7 @@
             </button>
           </div>
         </form>
-      </BaseModal>
+      </CategoryForm>
     </div>
 
     <!-- Статистика -->
@@ -630,7 +630,8 @@ import { ref, onMounted, watch, h } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import Chart from 'chart.js/auto'
 import { useStats } from '~/composables/useStats'
-
+import { useModalStore } from '~/stores/modal'
+const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
 // Добавляем объявление переменной chart
 let chart: Chart | null = null
 
@@ -676,6 +677,9 @@ interface Product {
   price: number
   image: string
   category: string
+  category_name?: string
+  category_id?: string
+  category_slug?: string
   slug: string
   specs?: Record<string, any>
 }
@@ -761,6 +765,27 @@ const presetImages = [
 const newProdGallery = ref<string[]>([])
 
 // Move product and category loading to top-level script setup
+// First load categories
+const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<Category[]>('/api/categories')
+
+if (fetchedCategories.value) {
+  categories.value = fetchedCategories.value.map(cat => ({
+    id: String(cat.id),
+    name: cat.title,
+    description: cat.description,
+    slug: cat.slug
+  }))
+} else {
+  console.error('No categories data received')
+  categories.value = []
+}
+
+if (categoriesFetchError.value) {
+  console.error('Error fetching categories for admin:', categoriesFetchError.value)
+  categories.value = []
+}
+
+// Then load products
 const { data: fetchedProducts, error: productsFetchError, refresh: refreshProducts } = await useFetch<any>('/api/products', {
   query: {
     categorySlug: 'all'
@@ -789,8 +814,22 @@ if (fetchedProducts.value) {
       }
     }
     
+    // Find the category name from the category ID or slug
+    const category = categories.value.find(c => 
+      c.id === String(product.category_id) || 
+      c.slug === product.category_slug
+    )
+    
+    console.log('Mapping product:', {
+      productName: product.name,
+      categoryId: product.category_id,
+      categorySlug: product.category_slug,
+      foundCategory: category?.name
+    })
+    
     return {
       ...product,
+      category: category?.name || product.category || '',
       slug: generateSlug(product.name || ''),
       specs: {
         ...product.specs,
@@ -800,27 +839,14 @@ if (fetchedProducts.value) {
       }
     }
   })
-}
-
-const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<Category[]>('/api/categories')
-
-if (fetchedCategories.value) {
-  categories.value = fetchedCategories.value.map(cat => ({
-    id: cat.id,
-    name: cat.title,
-    description: cat.description,
-    slug: cat.slug
-  })) as AdminCategory[]
+} else {
+  console.error('No products data received')
+  products.value = []
 }
 
 if (productsFetchError.value) {
   console.error('Error fetching products for admin:', productsFetchError.value)
   products.value = []
-}
-
-if (categoriesFetchError.value) {
-  console.error('Error fetching categories for admin:', categoriesFetchError.value)
-  categories.value = []
 }
 
 // Update specsList after products are loaded
@@ -866,7 +892,7 @@ function generateSlug(text: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
 }
-
+const modalStore = useModalStore()
 // Обновляем функцию addProduct
 async function addProduct() {
   console.log('Starting addProduct function')
@@ -987,11 +1013,11 @@ async function addProduct() {
     await refreshProducts()
 
     // Показываем уведомление об успехе
-    alert('Товар успешно добавлен')
+    modalStore.openModal("Успех","Товар успешно добавлен")
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding product:', error)
-    alert(`Ошибка при добавлении товара: ${error.message}`)
+    modalStore.openModal("Ошибка",`Ошибка при добавлении товара: ${error.message || 'Неизвестная ошибка'}`)
   }
 }
 
@@ -1023,7 +1049,9 @@ function toggle(id: number) {
     const productToEdit = products.value.find(p => p.id === id)
     if (productToEdit) {
       // Устанавливаем текущую категорию
-      productToEdit.category = productToEdit.category_name
+      if (productToEdit.category_name) {
+        productToEdit.category = productToEdit.category_name
+      }
 
       // Инициализируем значения для редактирования мощности
       const powerValue = productToEdit.specs?.power
@@ -1529,7 +1557,7 @@ async function addCategory() {
     showAddCategoryModal.value = false
   } catch (error) {
     console.error('Error creating category:', error)
-    alert('Ошибка при создании категории')
+    modalStore.showError('Ошибка при создании категории')
   }
 }
 
@@ -1577,46 +1605,47 @@ async function saveCategory() {
     }
 
     closeEditCategoryModal()
-    alert('Категория успешно обновлена')
-  } catch (error) {
+    modalStore.showSuccess('Категория успешно обновлена')
+  } catch (error: any) {
     console.error('Error updating category:', error)
-    alert(`Ошибка при обновлении категории: ${error.message}`)
+    modalStore.showSuccess(`Ошибка при обновлении категории: ${error.message || 'Неизвестная ошибка'}`)
   }
 }
 
 // Удаление категории
 async function deleteCategory(id: string) {
-  if (!confirm('Вы уверены, что хотите удалить эту категорию?')) {
-    return
-  }
+  modalStore.openModal(
+    "Удаление",
+    'Вы уверены, что хотите удалить эту категорию?',
+    "Подтвердить",
+    async () => {
+      try {
+        const response = await fetch(`/api/categories/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
 
-  try {
-    // Check if there are any products in this category
-    const productsInCategory = products.value.filter(p => p.category_id === id)
-    if (productsInCategory.length > 0) {
-      alert('Невозможно удалить категорию, содержащую товары. Сначала удалите или переместите товары из этой категории.')
-      return
-    }
+        const data = await response.json()
 
-    const response = await fetch(`/api/categories/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
+        if (!response.ok) {
+          if (response.status === 400 && data.statusMessage?.includes('Cannot delete category that contains products')) {
+            modalStore.openModal("Ошибка",'Невозможно удалить категорию, содержащую товары. Сначала переместите или удалите все товары из этой категории.')
+            return
+          }
+          throw new Error(data.statusMessage || 'Failed to delete category')
+        }
+
+        // Удаляем категорию из списка только после успешного удаления на сервере
+        categories.value = categories.value.filter(cat => cat.id !== id)
+        modalStore.openModal("Успех",'Категория успешно удалена')
+      } catch (error: any) {
+        console.error('Error deleting category:', error)
+        modalStore.openModal("Ошибка",`Ошибка при удалении категории: ${error.message || 'Неизвестная ошибка'}`)
       }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to delete category')
     }
-
-    // Удаляем категорию из списка только после успешного удаления на сервере
-    categories.value = categories.value.filter(c => c.id !== id)
-    alert('Категория успешно удалена')
-  } catch (error) {
-    console.error('Error deleting category:', error)
-    alert(`Ошибка при удалении категории: ${error.message}`)
-  }
+  )
 }
 
 // Закрытие модального окна редактирования
@@ -1627,7 +1656,40 @@ function closeEditCategoryModal() {
 
 // Получение количества товаров в категории
 function getCategoryProductCount(categoryId: string): number {
-  return products.value.filter(product => product.category_id === categoryId).length
+  const category = categories.value.find(c => c.id === categoryId)
+  console.log('Getting count for category:', {
+    categoryId,
+    foundCategory: category,
+    allCategories: categories.value,
+    allProducts: products.value.map(p => ({
+      name: p.name,
+      category: p.category,
+      category_id: p.category_id,
+      category_slug: p.category_slug
+    }))
+  })
+  
+  const count = products.value.filter(product => {
+    const matches = category && (
+      product.category === category.name ||
+      product.category_id === categoryId ||
+      product.category_slug === category.slug
+    )
+    console.log('Product match check:', {
+      productName: product.name,
+      productCategory: product.category,
+      productCategoryId: product.category_id,
+      productCategorySlug: product.category_slug,
+      categoryName: category?.name,
+      categoryId: categoryId,
+      categorySlug: category?.slug,
+      matches
+    })
+    return matches
+  }).length
+
+  console.log('Final count:', count)
+  return count
 }
 </script>
 

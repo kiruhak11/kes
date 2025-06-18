@@ -43,10 +43,10 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'rubillex_frog-modal'
   ],
-  device: {
-    // опционально: можно обновлять при ресайзе
-    refreshOnResize: true
-  },
+  // device: {
+  //   // опционально: можно обновлять при ресайзе
+  //   refreshOnResize: true
+  // },
   // nitro: {
   //   routeRules: {
   //     '/api/products': { 

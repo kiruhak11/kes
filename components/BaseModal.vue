@@ -1,35 +1,70 @@
 <template>
-  <div class="modal-overlay" @click="$emit('close')">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h2>{{ title }}</h2>
-        <button class="close-button" @click="$emit('close')">&times;</button>
-      </div>
+
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 class="modal-title">{{ modalTitle }}</h2>
+        <button class="modal-close" @click="closeModal">×</button>
+      </header>
       <div class="modal-body">
-        <slot></slot>
+        <p>{{ modalText }}</p>
       </div>
+      <footer class="modal-footer">
+        <button class="full" @click="handleButtonClick">
+          {{ modalButtonText }}
+        </button>
+      </footer>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  title: string
-}>()
+const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
+const props = defineProps({
+  modalTitle: {
+    type: String,
+    default: "Заголовок",
+  },
+  modalText: {
+    type: String,
+    default: "Основной текст",
+  },
+  modalButtonText: { 
+    type: String,
+    default: "Закрыть",
+  },
+  onButtonClick: {
+    type: Function,
+    default: null,
+  },
+});
 
-defineEmits<{
-  (e: 'close'): void
-}>()
+
+const handleButtonClick = () => {
+  if (typeof props.onButtonClick === "function") {
+    props.onButtonClick();
+  }
+  closeModal();
+};
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
+.full {
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -37,46 +72,71 @@ defineEmits<{
 }
 
 .modal-content {
-  background: var(--bg);
-  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px #333;
   width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .modal-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
+  background: #f5f5f5;
+  color: #333;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-light);
+  border-bottom: 1px solid #333;
+}
 
-  h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--text);
-  }
+.modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
 
-  .close-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    color: var(--text-light);
-    transition: color 0.2s ease;
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.2s;
+  
+}
 
-    &:hover {
-      color: var(--text);
-    }
-  }
+.modal-close:hover {
+  color: #e31e24;
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 20px;
+  font-size: 1rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
-</style> 
+
+.modal-footer {
+  padding: 16px;
+  text-align: right;
+  border-top: 1px solid #333;
+}
+
+
+.modal-button:hover {
+  background: #0056b3;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>
