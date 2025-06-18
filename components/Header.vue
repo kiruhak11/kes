@@ -66,7 +66,8 @@
                 <span class="cart-text">Корзина</span>
                 <div class="cart-icon-wrapper">
                   <span class="cart-icon">🛒</span>
-                  <span class="cart-count">{{ cartStore.items.length }}</span>
+                  <span v-if="isHydrated" class="cart-count">{{ cartCount }}</span>
+                  <span v-else class="cart-count">0</span>
                 </div>
               </NuxtLink>
             </div>
@@ -186,7 +187,7 @@
                     <NuxtLink to="/cart" @click="showMobileMenu = false" class="mobile-menu-item">
                       <span class="menu-icon">🛒</span>
                       <span>Корзина</span>
-                      <span class="cart-badge" v-if="cartStore.items.length">{{ cartStore.items.length }}</span>
+                      <span class="cart-badge" v-if="cartStore.totalItems">{{ cartStore.totalItems }}</span>
                     </NuxtLink>
                   </li>
                 </ul>
@@ -215,6 +216,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useNuxtApp, useRoute, useRouter } from '#app'
 import { useCartStore } from '~/stores/cart'
 import { contacts } from '~/data/contacts'
+import type { Ref } from 'vue'
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -283,6 +285,8 @@ const showMobileMenu = ref(false)
 const cartStore = useCartStore()
 const searchQuery = ref('')
 const showSearchResults = ref(false)
+const cartCount: Ref<number> = ref(0)
+const isHydrated: Ref<boolean> = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -462,6 +466,8 @@ function closeSearchOnOutsideClick(e: MouseEvent) {
 onMounted(() => {
   document.addEventListener('click', closeSearchOnOutsideClick)
   loadBoilers() // Загружаем котлы при монтировании компонента
+  isHydrated.value = true
+  cartCount.value = cartStore.totalItems
 })
 
 onBeforeUnmount(() => {

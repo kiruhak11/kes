@@ -9,31 +9,41 @@
         <div class="category-content">
           <div class="category-sidebar">
             <div class="filter-section">
-              <h3 @click="isMobile ? toggleFilters() : null" :class="{ 'filter-toggle': isMobile }">
-                Фильтры
-                <span v-if="isMobile" class="filter-arrow">{{ filtersOpen ? '▲' : '▼' }}</span>
-              </h3>
-              <div v-show="!isMobile || filtersOpen">
-                <div class="filter-group">
-                  <label>Мощность</label>
-                  <div class="power-range-filter">
-                    <input type="number" v-model.number="filters.minPower" placeholder="От" />
-                    <input type="number" v-model.number="filters.maxPower" placeholder="До" />
-                    <select v-model="filters.powerUnit">
-                      <option value="">Ед. изм.</option>
-                      <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
-                    </select>
+              <h3>Фильтры</h3>
+              <div class="filters-content">
+                <div class="filter-group price-range">
+                  <div class="filter-header" @click="togglePriceFilter">
+                    <span>Цена</span>
+                    <span class="filter-arrow">{{ priceFilterOpen ? '▲' : '▼' }}</span>
+                  </div>
+                  <div v-show="priceFilterOpen" class="filter-body">
+                    <div class="price-inputs">
+                      <input type="number" v-model="priceRange.min" placeholder="От" />
+                      <span>-</span>
+                      <input type="number" v-model="priceRange.max" placeholder="До" />
+                    </div>
                   </div>
                 </div>
-                <div class="filter-group">
-                  <label>Топливо</label>
-                  <select v-model="filters.fuel" multiple class="multi-select-fuel">
-                    <option value="">Все</option>
-                    <option value="отсутствует">Отсутствует</option>
-                    <option v-for="fuel in uniqueFuels" :key="fuel" :value="fuel">{{ fuel }}</option>
-                  </select>
+                <div v-for="(spec, idx) in uniqueSpecs" :key="spec" class="filter-group">
+                  <div class="filter-header" @click="toggleSpecFilter(spec)">
+                    <span>{{ spec }}</span>
+                    <span class="filter-arrow">{{ openFilters[spec] ? '▲' : '▼' }}</span>
+                  </div>
+                  <div v-show="openFilters[spec]" class="filter-body">
+                    <template v-if="specOptions[spec] && specOptions[spec].length > 0">
+                      <select v-if="specOptions[spec].length <= 10" v-model="dynamicFilters[spec]" class="filter-select">
+                        <option value="" disabled>Выберите фильтр</option>
+                        <option v-for="option in specOptions[spec]" :key="option" :value="option">{{ option }}</option>
+                      </select>
+                      <input v-else type="text" v-model="dynamicFilters[spec]" placeholder="Введите значение" />
+                    </template>
+                    <button v-if="dynamicFilters[spec]" class="clear-filter" @click="clearFilter(spec)">Сбросить</button>
+                  </div>
                 </div>
-                <button class="btn btn-primary" @click="applyFilters">Применить</button>
+                <div class="filter-actions">
+                  <button class="btn btn-primary" @click="applyFilters">Применить</button>
+                  <button class="btn btn-secondary" @click="resetFilters">Сбросить все</button>
+                </div>
               </div>
             </div>
           </div>
@@ -44,41 +54,43 @@
                 v-for="product in paginatedProducts"
                 :key="product.id"
                 class="product-card"
-                @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)"
               >
-                <div class="product-card__img-wrap">
-                  <img :src="product.image ?? undefined" :alt="product.name ?? undefined" class="product-image" />
-                </div>
-                <div class="product-card__content">
-                  <div class="product-card__title-row">
-                    <h3 class="product-title">{{ product.name }}</h3>
-                    <span class="product-title-icon"><!-- иконка, если нужна --></span>
+                <div class="product-card__clickable" @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)">
+                  <div class="product-card__img-wrap">
+                    <img :src="product.image ?? undefined" :alt="product.name ?? undefined" class="product-image" />
                   </div>
-                  <div class="product-card__specs">
-                    <div v-for="([key, value], idx) in Object.entries(product.specs || {}).filter(([k]) => k !== 'images').slice(0, 4)" :key="key" class="spec-item">
-                      <span class="spec-label">
-                        {{ key === 'fuel' ? 'Топливо' : key === 'power' ? 'Мощность' : key }}
-                      </span>
-                      <span class="spec-dots"></span>
-                      <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+                  <div class="product-card__content">
+                    <div class="product-card__title-row">
+                      <h3 class="product-title">{{ product.name }}</h3>
+                      <span class="product-title-icon"><!-- иконка, если нужна --></span>
+                    </div>
+                    <div class="product-card__specs">
+                      <div v-for="([key, value], idx) in Object.entries(product.specs || {}).filter(([k]) => k !== 'images' && k !== 'power' && k !== 'fuel').slice(0, 4)" :key="key" class="spec-item">
+                        <span class="spec-label">{{ key }}</span>
+                        <span class="spec-dots"></span>
+                        <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+                      </div>
+                    </div>
+                    <div class="product-card__bottom">
+                      <div class="product-card__price-block">
+                        <span class="product-price">{{ product.price?.toLocaleString() }} <span class="currency">р.</span></span>
+                        <span class="product-price-note">Цена с НДС</span>
+                      </div>
+                      <button class="buy-btn" @click.stop="addToCart(product, $event)">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
+                        <span>Купить</span>
+                      </button>
                     </div>
                   </div>
-                  <div class="product-card__bottom">
-                    <div class="product-card__price-block">
-                      <span class="product-price">{{ product.price?.toLocaleString() }} <span class="currency">р.</span></span>
-                      <span class="product-price-note">Цена с НДС</span>
-                    </div>
-                    <button class="buy-btn" @click.stop="addToCart(product, $event)">
-                      <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
-                      <span>Купить</span>
-                    </button>
-                  </div>
-                  <button class="offer-btn" @click.stop>Заказать коммерческое предложение</button>
                 </div>
+                <button class="offer-btn" @click="openCommercialOfferModal(product)">Заказать коммерческое предложение</button>
               </div>
               <div v-if="filteredProducts.length === 0" class="no-products-message">
                 Нет товаров в данной категории.
               </div>
+            </div>
+            <div class="products-count" v-if="filteredProducts.length > 0">
+              Найдено товаров: {{ filteredProducts.length }}
             </div>
           </div>
         </div>
@@ -101,6 +113,12 @@
         </button>
       </div>
     </div>
+    <CommercialOfferModal
+    v-if="showCommercialOfferModal && selectedProduct"
+    :is-open="showCommercialOfferModal"
+    :product="selectedProduct"
+    @close="closeCommercialOfferModal"
+  />
   </template>
   
   <script setup lang="ts">
@@ -108,7 +126,44 @@
   import { useCartStore } from '~/stores/cart'
   import { useRoute, useRouter } from 'vue-router'
   import { useFetch } from '#app'
-  
+  import CommercialOfferModal from '~/components/CommercialOfferModal.vue'
+  const props = defineProps<{
+  product: {
+    id: number
+    name: string | null
+    description: string | null
+    extendedDescription?: string | null
+    price: number | null
+    image: string | null
+    category_id: string | null
+    category_name?: string
+    category_slug?: string
+    category?: string
+    slug?: string
+    specs?: {
+      [key: string]: any
+    }
+    additional_images?: string[] | null
+    images?: string[]
+  }
+}>()
+const showCommercialOfferModal = ref(false)
+const selectedProduct = ref<Product | null>(null)
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/images/placeholders/product-placeholder.png'
+}
+
+const openCommercialOfferModal = (product: Product) => {
+  selectedProduct.value = product
+  showCommercialOfferModal.value = true
+}
+
+const closeCommercialOfferModal = () => {
+  showCommercialOfferModal.value = false
+  selectedProduct.value = null
+}
   const transliterate = (text: string): string => {
     const mapping: { [key: string]: string } = {
       'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
@@ -136,11 +191,10 @@
     category?: string
     slug?: string
     specs?: {
-      power?: any
-      fuel?: any
       [key: string]: any
     }
     additional_images?: string[] | null
+    images?: string[]
   }
   
   interface CategoryInfo {
@@ -219,11 +273,15 @@
   }
   
   const productsInCategory = computed<Product[]>(() => {
-    
-    return allProducts.value.filter(product => 
-      {if (product.category_name = '') return;
-      transliterate(product.category_name).toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === categorySlug.value
-  })
+    return allProducts.value.filter(product => {
+      if (!product.category_name) return false;
+      const productCategorySlug = transliterate(product.category_name)
+        .toLowerCase()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+      return productCategorySlug === categorySlug.value;
+    });
   })
    
   
@@ -260,42 +318,80 @@
     return Array.from(fuels)
   })
 
+  // 1. Собираем все уникальные характеристики из specs
+  const uniqueSpecs = computed(() => {
+    const specsSet = new Set<string>()
+    productsInCategory.value.forEach(product => {
+      if (product.specs) {
+        Object.keys(product.specs).forEach(key => {
+          if (key !== 'images' && key !== 'power' && key !== 'fuel') specsSet.add(key)
+        })
+      }
+    })
+    return Array.from(specsSet)
+  })
+
+  // 2. Собираем возможные значения для каждой характеристики
+  const specOptions = computed(() => {
+    const options: Record<string, Set<any>> = {}
+    productsInCategory.value.forEach(product => {
+      if (product.specs) {
+        Object.entries(product.specs).forEach(([key, value]) => {
+          if (key !== 'images' && key !== 'power' && key !== 'fuel') {
+            if (!options[key]) options[key] = new Set()
+            if (Array.isArray(value)) {
+              value.forEach(v => options[key].add(v))
+            } else {
+              options[key].add(value)
+            }
+          }
+        })
+      }
+    })
+    // Преобразуем Set в массивы
+    return Object.fromEntries(Object.entries(options).map(([k, v]) => [k, Array.from(v)]))
+  })
+
+  // 3. Состояние фильтров по характеристикам
+  const dynamicFilters = ref<Record<string, any>>({})
+
+  const priceRange = ref({
+    min: undefined as number | undefined,
+    max: undefined as number | undefined
+  })
+
+  // Update the filteredProducts computed property
   const filteredProducts = computed(() => {
     return productsInCategory.value.filter(product => {
-      // Power filter
-      if (filters.value.minPower || filters.value.maxPower) {
-        const powerStr = product.specs?.power
-        if (powerStr && powerStr !== 'отсутствует') {
-          const match = powerStr.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-          if (match) {
-            const powerValue = parseFloat(match[1])
-            const powerUnit = match[3]
-            
-            if (filters.value.powerUnit && powerUnit !== filters.value.powerUnit) {
+      // Price range filter
+      if (priceRange.value.min !== undefined && product.price && product.price < priceRange.value.min) {
+        return false
+      }
+      if (priceRange.value.max !== undefined && product.price && product.price > priceRange.value.max) {
+        return false
+      }
+
+      // Dynamic filters
+      for (const key of uniqueSpecs.value) {
+        const filterValue = dynamicFilters.value[key]
+        if (filterValue === undefined || filterValue === '' || (Array.isArray(filterValue) && filterValue.length === 0)) continue
+        const productValue = product.specs?.[key]
+        if (Array.isArray(filterValue)) {
+          if (!Array.isArray(productValue) || !filterValue.some(v => productValue.includes(v))) {
+            return false
+          }
+        } else {
+          if (Array.isArray(productValue)) {
+            if (!productValue.includes(filterValue)) {
               return false
             }
-            
-            if (filters.value.minPower && powerValue < filters.value.minPower) {
-              return false
-            }
-            
-            if (filters.value.maxPower && powerValue > filters.value.maxPower) {
+          } else {
+            if (productValue != filterValue) {
               return false
             }
           }
-        } else if (filters.value.minPower || filters.value.maxPower) {
-          return false
         }
       }
-
-      // Fuel filter
-      if (filters.value.fuel && filters.value.fuel.length > 0) {
-        const productFuels = product.specs?.fuel || []
-        if (!filters.value.fuel.some(f => productFuels.includes(f))) {
-          return false
-        }
-      }
-
       return true
     })
   })
@@ -324,6 +420,19 @@
     // This function can be used for any additional side effects if needed in the future.
   }
 
+  function resetFilters() {
+    dynamicFilters.value = {}
+    priceRange.value = {
+      min: undefined,
+      max: undefined
+    }
+    // Закрываем все дропдауны
+    Object.keys(openFilters.value).forEach(key => {
+      openFilters.value[key] = false
+    })
+    priceFilterOpen.value = false
+  }
+
   const isMobile = ref(false)
   onMounted(() => {
     isMobile.value = window.innerWidth <= 768
@@ -332,12 +441,19 @@
     })
   })
 
-  const filtersOpen = ref(!isMobile.value)
-  watch(isMobile, (val) => {
-    filtersOpen.value = !val
-  })
-  function toggleFilters() {
-    filtersOpen.value = !filtersOpen.value
+  const openFilters = ref<Record<string, boolean>>({})
+  const priceFilterOpen = ref(false)
+
+  function toggleSpecFilter(spec: string) {
+    openFilters.value[spec] = !openFilters.value[spec]
+  }
+
+  function togglePriceFilter() {
+    priceFilterOpen.value = !priceFilterOpen.value
+  }
+
+  function clearFilter(spec: string) {
+    dynamicFilters.value[spec] = ''
   }
 
   const generateProductSlug = (product: Product) => {
@@ -382,13 +498,20 @@
   const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`) 
   if (fetchedCategory.value && fetchedCategory.value.category) {
     categoryInfo.value = {
-      title: fetchedCategory.value.category.title || '',
+      title: fetchedCategory.value.category.name || '',
       description: fetchedCategory.value.category.description || '',
       slug: categorySlug.value
     } 
   } else {
     console.error('Failed to fetch category info:', categoryError.value)
   }
+
+  // Инициализируем все фильтры пустыми значениями
+  onMounted(() => {
+    uniqueSpecs.value.forEach(spec => {
+      dynamicFilters.value[spec] = ''
+    })
+  })
   </script>
   
   <style scoped>
@@ -424,68 +547,210 @@
     overflow: hidden;
   }
   
-  .filter-section h3 {
-    margin-bottom: 20px;
-    font-size: 1.25rem;
-  }
-  .spec-dots {
-  flex: 1;
-  border-bottom: 1px dotted #999;
-  
-  margin: 0 10px;
-}
-  .filter-group {
-    margin-bottom: 20px;
-  }
-  
-  .filter-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-  
-  .power-range-filter {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  
-  .power-range-filter input[type="number"] {
-    flex: 1 1 calc(50% - 10px);
-    min-width: 0;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    box-sizing: border-box;
-  }
-  
-  .power-range-filter select {
-    flex-shrink: 0;
-    width: 80px;
-    min-width: 60px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    box-sizing: border-box;
-  }
-  
-  .filter-group select {
+  .filter-section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    padding: 20px;
+    margin-bottom: 24px;
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
+    box-sizing: border-box;
   }
 
-  .multi-select-fuel {
-    height: auto;
-    min-height: 100px;
-    padding: 10px;
+  .filter-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
   }
-  
+
+  .filter-group {
+    margin-bottom: 12px;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .filter-group:hover {
+    border-color: #e31e24;
+    box-shadow: 0 2px 8px rgba(227, 30, 36, 0.08);
+  }
+
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    color: #222;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .filter-header:hover {
+    background: #f0f0f0;
+  }
+
+  .filter-arrow {
+    font-size: 0.9em;
+    color: #e31e24;
+    transition: transform 0.2s ease;
+  }
+
+  .filter-body {
+    padding: 16px;
+    background: #fff;
+    border-top: 1px solid #eaeaea;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .price-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .price-inputs input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .price-inputs input:focus {
+    border-color: #e31e24;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.08);
+    background: #fff;
+  }
+
+  .price-inputs span {
+    color: #666;
+    font-weight: 500;
+  }
+
+  .filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: #f8f9fa;
+    color: #222;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .filter-select:focus {
+    border-color: #e31e24;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.08);
+    background-color: #fff;
+  }
+
+  .filter-select option:first-child {
+    color: #999;
+    font-style: italic;
+  }
+
+  .filter-select option {
+    color: #222;
+    padding: 8px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .clear-filter {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    color: #666;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-weight: 500;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .clear-filter:hover {
+    background: #e31e24;
+    color: #fff;
+    border-color: #e31e24;
+  }
+
+  .filter-actions {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .filter-actions .btn {
+    width: 100%;
+    padding: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .btn-primary {
+    background: linear-gradient(45deg, #e31e24, #ff4d4d);
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(227, 30, 36, 0.15);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 30, 36, 0.2);
+  }
+
+  .btn-secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #eaeaea;
+  }
+
+  .btn-secondary:hover {
+    background: #f0f0f0;
+    color: #222;
+    border-color: #ddd;
+  }
+
   .products-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -499,14 +764,20 @@
     overflow: visible;
     transition: transform 0.3s, box-shadow 0.3s;
     position: relative;
-    padding: 0 0 18px 0;
-    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    height: 100%;
   }
   
-  .product-card:hover {
+  .product-card__clickable {
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    flex: 1;
+    padding: 24px 24px 0;
+  }
+  
+  .product-card__clickable:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.13);
   }
@@ -530,7 +801,6 @@
   }
   
   .product-card__content {
-    padding: 0 24px 0 24px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -641,20 +911,50 @@
   
   .offer-btn {
     width: 100%;
-    margin-top: 10px;
-    background: #e31e24;
+    margin-top: 24px;
+    background: linear-gradient(45deg, #e31e24, #ff4d4d);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 14px 0;
+    padding: 16px 0;
     font-size: 1.1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 -2px 10px rgba(227, 30, 36, 0.1);
+  }
+  
+  .offer-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: 0.5s;
   }
   
   .offer-btn:hover {
-    background: #b71c1c;
+    background: linear-gradient(45deg, #ff4d4d, #e31e24);
+    transform: translateY(-2px);
+    box-shadow: 0 -2px 15px rgba(227, 30, 36, 0.2);
+  }
+  
+  .offer-btn:hover::before {
+    left: 100%;
+  }
+  
+  .offer-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 -2px 5px rgba(227, 30, 36, 0.1);
   }
   
   @media (max-width: 1200px) {
@@ -687,41 +987,47 @@
       padding: 10px;
       font-size: 14px;
     }
+    .filter-section {
+      padding: 16px;
+      width: 100%;
+    }
     .filter-section h3 {
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
     }
-    .filter-toggle {
-      user-select: none;
+    .filter-header {
+      padding: 12px;
     }
-    .filter-arrow {
-      font-size: 1.2em;
-      margin-left: 8px;
+    .filter-body {
+      padding: 12px;
     }
-    .filter-group {
-      margin-bottom: 10px;
+    .price-inputs {
+      gap: 8px;
     }
-    .power-range-filter input[type="number"],
-    .power-range-filter select,
-    .filter-group select {
-      padding: 6px;
-      font-size: 13px;
+    .price-inputs input,
+    .filter-select {
+      padding: 8px 10px;
+      font-size: 0.9rem;
     }
-    .multi-select-fuel {
-      min-height: 60px;
-      padding: 6px;
-      font-size: 13px;
+    .clear-filter {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+    .filter-actions {
+      margin-top: 16px;
+      gap: 8px;
+    }
+    .filter-actions .btn {
+      padding: 10px;
+      font-size: 0.9rem;
     }
     .products-grid {
       grid-template-columns: 1fr;
       gap: 14px;
     }
     .product-card {
-      padding: 0 0 12px 0;
+      padding: 12px 12px 0;
     }
     .product-card__img-wrap {
       height: 90px;
@@ -766,8 +1072,13 @@
       font-size: 1rem;
     }
     .offer-btn {
+      margin-top: 16px;
+      padding: 12px 0;
       font-size: 1rem;
-      padding: 10px 0;
+      box-shadow: 0 -1px 5px rgba(227, 30, 36, 0.1);
+    }
+    .offer-btn:hover {
+      box-shadow: 0 -1px 10px rgba(227, 30, 36, 0.15);
     }
     .no-products-message {
       font-size: 1rem;
@@ -809,4 +1120,18 @@
   .slider-btn.prev { left: -40px; }
   .slider-btn.next { right: -40px; }
   .slider-placeholder { color: #aaa; font-size: 1.2rem; padding: 40px 0; }
+
+  .filter-divider {
+    height: 1px;
+    background: linear-gradient(90deg, #eee, #f7f7f7 60%, #eee);
+    margin: 12px 0 6px 0;
+    border-radius: 1px;
+  }
+  .products-count {
+    font-size: 1.08rem;
+    color: #444;
+    margin: 0 0 18px 0;
+    font-weight: 500;
+    text-align: right;
+  }
   </style> 

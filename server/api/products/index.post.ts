@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
       description: body.description,
       extendedDescription: body.extendedDescription || '',
       price: Number(body.price) || 0,
-      image: body.image || '/placeholder.jpg',
+      image: body.image || '/images/placeholders/placeholder.png',
       category_id: body.category_id,
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : [],
       specs: body.specs || {}

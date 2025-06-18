@@ -6,626 +6,94 @@
       <button :class="{active: adminTab==='categories'}" @click="adminTab='categories'">Категории</button>
       <button :class="{active: adminTab==='stats'}" @click="adminTab='stats'">Статистика</button>
     </div>
-
-    <!-- Каталог -->
-    <div v-if="adminTab==='catalog'">
-      <!-- Вход в админ-панель -->
-      <div v-if="!authorized" class="login-box">
-        <h2>Вход в админ-панель</h2>
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Пароль"
-          @keyup.enter="login"
-        />
-        <button class="btn btn-primary" @click="login">
-          Войти
-        </button>
-        <p v-if="loginError" class="error">{{ loginError }}</p>
-      </div>
-
-      <!-- Управление каталогом -->
-      <div v-else class="catalog-manager">
-        <h1>Управление каталогом</h1>
-
-        <!-- Форма добавления нового товара -->
-        <div class="add-form">
-          <div class="category-select">
-            <label>Категория:</label>
-            <div class="category-input">
-              <select v-model="newProd.category">
-                <option value="">Выберите категорию</option>
-                <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-                  {{ cat.name }}
-                </option>
-                <option value="new">+ Добавить новую категорию</option>
-              </select>
-              <input
-                v-if="newProd.category === 'new'"
-                v-model="newCategory"
-                placeholder="Название новой категории"
-                @input="validateNewCategory"
-              />
-            </div>
-          </div>
-
-          <input
-            v-model="newProd.name"
-            placeholder="Название"
-          />
-          <textarea
-            v-model="newProd.description"
-            placeholder="Краткое описание"
-          ></textarea>
-          <textarea
-            v-model="newProd.extendedDescription"
-            placeholder="Расширенное описание"
-          ></textarea>
-          <input
-            v-model.number="newProd.price"
-            type="number"
-            placeholder="Цена"
-          />
-
-          <label>Изображение:</label>
-          <div class="image-upload">
-            <select v-model="newProd.image" class="image-select">
-              <option value="">Выберите изображение</option>
-              <option
-                v-for="img in presetImages"
-                :key="img"
-                :value="img"
-              >
-                {{ img.split('/').pop() }}
-              </option>
-              <option value="custom">Загрузить своё изображение</option>
-            </select>
-            <input
-              v-if="newProd.image === 'custom'"
-              type="file"
-              accept="image/*"
-              @change="(e: any) => handleImageUpload(e, newProd)"
-              class="image-input"
-            />
-          </div>
-          <img
-            v-if="newProd.image && newProd.image !== 'custom'"
-            :src="newProd.image"
-            class="img-preview"
-          />
-
-          <h4>Дополнительные изображения</h4>
-          <input type="file" multiple accept="image/*" @change="handleGalleryUpload" />
-          <div class="gallery-previews">
-            <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
-              <img :src="gimg" class="img-preview" />
-              <button class="btn btn-danger btn-sm" @click.prevent="removeGalleryImage(gidx)">✕</button>
-            </div>
-          </div>
-
-          <h3>Дополнительные характеристики</h3>
-          <!-- Опциональные характеристики -->
-          <div class="optional-specs">
-            <div class="filter-group">
-              <label>Мощность (опционально)</label>
-              <div class="power-input-group">
-                <input type="number" v-model.number="newProdPowerValue" placeholder="Число" />
-                <select v-model="newProdPowerUnit">
-                  <option value="">Ед. изм.</option>
-                  <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="filter-group">
-              <label>Топливо (опционально)</label>
-              <div class="fuel-dropdown-container">
-                <div class="fuel-dropdown-header" @click="toggleNewProdFuelDropdown">
-                  {{ newProdSelectedFuels.length === 0 ? 'Выберите топливо' : newProdSelectedFuels.join(', ') }}
-                </div>
-                <div v-if="showNewProdFuelDropdown" class="fuel-dropdown-content">
-                  <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
-                    <input type="checkbox" :id="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'" :value="fuelOption" v-model="newProdSelectedFuels" />
-                    <label :for="'new-fuel-' + fuelOption.replace(/\s/g, '-') + '-add'">{{ fuelOption }}</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <table class="specs-table">
-            <tbody>
-              <tr v-for="(spec, idx) in newSpecs" :key="idx">
-                <td>
-                  <input v-model="spec.key" placeholder="Параметр" />
-                </td>
-                <td>
-                  <input v-model="spec.value" placeholder="Значение" />
-                </td>
-                <td>
-                  <button class="btn btn-danger btn-sm" @click.prevent="removeNewSpec(idx)">✕</button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <input v-model="newSpec.key" placeholder="Новая характеристика" />
-                </td>
-                <td>
-                  <input v-model="newSpec.value" placeholder="Значение" />
-                </td>
-                <td>
-                  <button class="btn btn-secondary btn-sm" @click.prevent="addNewSpec">Добавить</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <button class="btn btn-secondary" @click="addProduct" :disabled="!isFormValid">
-            Добавить товар
-          </button>
-        </div>
-
-        <!-- Список товаров с аккордеоном -->
-        <div class="prod-list">
-          <div
-            v-for="p in products"
-            :key="p.id"
-            class="prod-item"
-          >
-            <!-- Сводная строка -->
-            <div
-              class="prod-summary"
-              @click="toggle(p.id)"
-            >
-              <span class="prod-summary__id">{{ p.id }}</span>
-              <span class="prod-summary__category">{{ p.category_name }}</span>
-              <span class="prod-summary__name">{{ p.name }}</span>
-              <span class="prod-summary__price">{{ p.price }} ₽</span>
-              <button
-                class="btn btn-danger btn-sm prod-summary__delete"
-                @click.stop="deleteProduct(p.id)"
-              >✕</button>
-            </div>
-
-            <!-- Детальная форма редактирования -->
-            <transition name="slide">
-              <div
-                v-if="activeId === p.id"
-                class="prod-details"
-              >
-                <label>
-                  Категория:
-                  <select v-model="p.category">
-                    <option value="">Выберите категорию</option>
-                    <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-                      {{ cat.name }}
-                    </option>
-                  </select>
-                </label>
-                <label>
-                  Название:
-                  <input v-model="p.name" />
-                </label>
-                <label>
-                  Краткое описание:
-                  <textarea v-model="p.description" rows="2"></textarea>
-                </label>
-                <label>
-                  Расширенное описание:
-                  <textarea v-model="p.extendedDescription" rows="3"></textarea>
-                </label>
-                <label>
-                  Цена:
-                  <input type="number" v-model.number="p.price" />
-                </label>
-
-                <label>Изображение:</label>
-                <div class="image-upload">
-                  <select v-model="p.image" class="image-select">
-                    <option value="">Выберите изображение</option>
-                    <option
-                      v-for="img in presetImages"
-                      :key="img"
-                      :value="img"
-                    >
-                      {{ img.split('/').pop() }}
-                    </option>
-                    <option value="custom">Загрузить своё изображение</option>
-                  </select>
-                  <input
-                    v-if="p.image === 'custom'"
-                    type="file"
-                    accept="image/*"
-                    @change="(e: any) => handleImageUpload(e, p)"
-                    class="image-input"
-                  />
-                </div>
-                <img
-                  v-if="p.image && p.image !== 'custom'"
-                  :src="p.image"
-                  class="img-preview"
-                />
-
-                <h3>Характеристики</h3>
-                <div class="filter-group">
-                  <label>Мощность</label>
-                  <div class="power-input-group">
-                    <input type="number" v-model.number="editProdPowerValue" placeholder="Число" />
-                    <select v-model="editProdPowerUnit">
-                      <option value="">Ед. изм.</option>
-                      <option v-for="unit in powerUnits" :key="unit" :value="unit">{{ unit }}</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="filter-group">
-                  <label>Топливо</label>
-                  <div class="fuel-dropdown-container">
-                    <div class="fuel-dropdown-header" @click="toggleEditProdFuelDropdown">
-                      {{ editProdSelectedFuels.length === 0 ? 'Выберите топливо' : editProdSelectedFuels.join(', ') }}
-                    </div>
-                    <div v-if="showEditProdFuelDropdown" class="fuel-dropdown-content">
-                      <div v-for="fuelOption in availableFuels" :key="fuelOption" class="fuel-option">
-                        <input type="checkbox" :id="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id" :value="fuelOption" v-model="editProdSelectedFuels" />
-                        <label :for="'fuel-' + fuelOption.replace(/\s/g, '-') + '-' + p.id">{{ fuelOption }}</label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <table class="specs-table">
-                  <tbody>
-                  <tr
-                    v-for="(spec, idx) in filteredSpecs(p.id)"
-                    :key="idx"
-                  >
-                    <td>
-                      <input
-                        v-model="spec.key"
-                        placeholder="Параметр"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        v-model="spec.value"
-                        placeholder="Значение"
-                      />
-                    </td>
-                    <td>
-                      <button
-                        class="btn btn-danger btn-sm"
-                        @click.prevent="removeSpec(p.id, idx)"
-                      >✕</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="3">
-                      <button
-                        class="btn btn-secondary btn-sm"
-                        @click.prevent="addSpec(p.id)"
-                      >Добавить характеристику</button>
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
-
-                <h4>Дополнительные изображения</h4>
-                <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" />
-                <div class="gallery-previews">
-                  <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
-                    <img :src="gimg" class="img-preview" />
-                    <button class="btn btn-danger btn-sm" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
-                  </div>
-                </div>
-
-                <div class="prod-details__actions">
-                  <button
-                    class="btn btn-primary"
-                    @click="updateWithSpecs(p)"
-                  >
-                    Сохранить
-                  </button>
-                  <button
-                    class="btn btn-secondary"
-                    @click="cancelEdit"
-                  >
-                    Отмена
-                  </button>
-                </div>
-              </div>
-            </transition>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Категории -->
-    <div v-if="adminTab==='categories' && authorized">
-      <h1>Управление категориями</h1>
-      <div class="category-manager">
-        <button class="btn btn-primary" @click="showAddCategoryModal = true">
-          <i class="fas fa-plus"></i> Добавить категорию
-        </button>
-        
-        <div class="categories-grid">
-          <div v-for="cat in categories" :key="cat.id" class="category-card">
-            <div class="category-card__header">
-              <h3>{{ cat.name }}</h3>
-              <div class="category-card__actions">
-                <button class="btn btn-secondary btn-sm" @click="editCategory(cat)">
-                  <i class="fas fa-edit"></i> Редактировать
-                </button>
-                <button class="btn btn-danger btn-sm" @click="deleteCategory(cat.id)">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </div>
-            <div class="category-card__content">
-              <div class="category-info">
-                <p><strong>Slug:</strong> {{ cat.slug }}</p>
-                <p><strong>Описание:</strong></p>
-                <p class="category-description">{{ cat.description || 'Нет описания' }}</p>
-              </div>
-              <div class="category-stats">
-                <p><strong>Товаров в категории:</strong> {{ getCategoryProductCount(cat.id) }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Модальное окно добавления категории -->
-      <CategoryForm
-        v-if="showAddCategoryModal"
-        title="Добавить категорию"
-        @close="showAddCategoryModal = false"
-      >
-        <form @submit.prevent="addCategory" class="category-form">
-          <div class="form-group">
-            <label>Название категории:</label>
-            <input 
-              v-model="newCategory.name" 
-              placeholder="Введите название" 
-              required
-              class="form-control"
-            />
-          </div>
-          <div class="form-group">
-            <label>Описание:</label>
-            <textarea 
-              v-model="newCategory.description" 
-              placeholder="Введите описание категории"
-              class="form-control"
-              rows="4"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label>Slug (генерируется автоматически):</label>
-            <input 
-              v-model="newCategory.slug" 
-              placeholder="Генерируется автоматически" 
-              disabled
-              class="form-control"
-            />
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="showAddCategoryModal = false">
-              Отмена
-            </button>
-            <button type="submit" class="btn btn-primary">
-              Добавить
-            </button>
-          </div>
-        </form>
-      </CategoryForm>
-
-      <!-- Модальное окно редактирования категории -->
-      <CategoryForm
-        v-if="showEditCategoryModal"
-        title="Редактировать категорию"
-        @close="closeEditCategoryModal"
-      >
-        <form @submit.prevent="saveCategory" class="category-form">
-          <div class="form-group">
-            <label>Название:</label>
-            <input 
-              v-model="editingCategory.name" 
-              type="text" 
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label>Описание:</label>
-            <textarea 
-              v-model="editingCategory.description" 
-              class="form-control"
-              rows="4"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label>Slug:</label>
-            <input 
-              v-model="editingCategory.slug" 
-              type="text" 
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="closeEditCategoryModal">
-              Отмена
-            </button>
-            <button type="submit" class="btn btn-primary">
-              Сохранить
-            </button>
-          </div>
-        </form>
-      </CategoryForm>
-    </div>
-
-    <!-- Статистика -->
-    <div v-if="adminTab==='stats' && authorized">
-      <h1>Статистика посещений и заявок</h1>
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Загрузка данных...</p>
-      </div>
-      <div v-else-if="error" class="error-state">
-        <p class="error-message">{{ error }}</p>
-        <button class="btn btn-primary" @click="fetchStats">Повторить</button>
-      </div>
-      <div v-else class="stats-section">
-        <!-- Статистика посещений -->
-        <div class="stats-overview">
-          <div class="stats-card">
-            <h3>Посещения сегодня</h3>
-            <div class="stats-value">{{ stats.visits.today }}</div>
-          </div>
-          <div class="stats-card">
-            <h3>За неделю</h3>
-            <div class="stats-value">{{ stats.visits.week }}</div>
-          </div>
-          <div class="stats-card">
-            <h3>За месяц</h3>
-            <div class="stats-value">{{ stats.visits.month }}</div>
-          </div>
-          <div class="stats-card">
-            <h3>Всего</h3>
-            <div class="stats-value">{{ stats.visits.total }}</div>
-          </div>
-        </div>
-
-        <!-- График посещений -->
-        <div class="stats-chart">
-          <canvas id="visitsChart"></canvas>
-        </div>
-
-        <!-- Статистика заявок -->
-        <div class="stats-requests">
-          <h2>Заявки</h2>
-          
-          <!-- Статистика по типам заявок -->
-          <div class="request-stats">
-            <div class="stats-card" v-for="(count, type) in stats.requests.stats" :key="type">
-              <h3>{{ type === 'order' ? 'Заказы' : 'Контакты' }}</h3>
-              <div class="stats-value">{{ count }}</div>
-            </div>
-          </div>
-
-          <!-- Таблица заявок -->
-          <div v-if="stats.requests.list.length === 0" class="no-data">
-            <p>Нет данных о заявках</p>
-          </div>
-          <div v-else class="table-container">
-            <table class="requests-table">
-              <thead>
-                <tr>
-                  <th>Дата</th>
-                  <th>Тип</th>
-                  <th>Телефон</th>
-                  <th>Регион</th>
-                  <th>Тип здания</th>
-                  <th>Топливо</th>
-                  <th>Тип мощности</th>
-                  <th>Статус</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr 
-                  v-for="request in stats.requests.list" 
-                  :key="request.id" 
-                  @click="showRequestDetails(request)" 
-                  class="clickable-row"
-                  style="cursor: pointer;"
-                >
-                  <td>{{ new Date(request.created_at).toLocaleDateString() }}</td>
-                  <td>{{ request.type === 'calculation' ? 'Заказ' : 'Консультация' }}</td>
-                  <td>{{ request.phone }}</td>
-                  <td>{{ request.region }}</td>
-                  <td>{{ request.type_building }}</td>
-                  <td>{{ request.fuel_type }}</td>
-                  <td>{{ request.power_type }}</td>
-                  <td>{{ request.status }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Модальное окно с деталями заявки -->
-    <div v-if="selectedRequest" class="modal-overlay" @click="closeRequestDetails">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>Детали заявки</h2>
-          <button class="close-button" @click="closeRequestDetails">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="request-details">
-            <div class="detail-row">
-              <span class="detail-label">Тип:</span>
-              <span class="detail-value">{{ selectedRequest.type === 'calculation' ? 'Заказ' : 'Консультация' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Телефон:</span>
-              <span class="detail-value">{{ selectedRequest.phone }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Регион:</span>
-              <span class="detail-value">{{ selectedRequest.region }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Тип здания:</span>
-              <span class="detail-value">{{ selectedRequest.type_building }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Топливо:</span>
-              <span class="detail-value">{{ selectedRequest.fuel_type }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Мощность:</span>
-              <span class="detail-value">{{ selectedRequest.power_type }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Статус:</span>
-              <span class="detail-value">{{ selectedRequest.status }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Дата:</span>
-              <span class="detail-value">{{ new Date(selectedRequest.created_at).toLocaleString() }}</span>
-            </div>
-            <div class="detail-row full-width">
-              <span class="detail-label">Текст заявки:</span>
-              <div class="detail-value text-content">{{ selectedRequest.raw_text }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Модальное окно описания категории -->
-    <FrogModalWrapper
-      v-if="showCategoryDescriptionModal"
-      :desktop-position="FrogModalWrapperPosition.CENTER"
-      :mobile-position="FrogModalWrapperPosition.BOTTOM"
-      mobile-swipe-to-close
-      class="category-modal"
-      @close="showCategoryDescriptionModal = false"
-    >
-      <template #header>
-        <div class="modal-header">
-          <h2>Описание категории</h2>
-        </div>
-      </template>
-
-      <div class="category-form">
-        <textarea v-model="newCategory.description" placeholder="Описание категории"></textarea>
-        <button @click="addCategory" class="btn btn-primary">Добавить</button>
-      </div>
-    </FrogModalWrapper>
+    <AdminCatalog v-if="adminTab==='catalog'"
+      :admin-tab="adminTab"
+      :authorized="authorized"
+      :password="password"
+      :login-error="loginError"
+      @update:password="val => password = val"
+      @login="login"
+      @logout="logout"
+      :products="products"
+      :categories="categories"
+      :specs-list="specsList"
+      :new-prod="newProd"
+      :new-category="newCategory"
+      :active-id="activeId"
+      :new-specs="newSpecs"
+      :new-spec="newSpec"
+      :new-prod-power-value="newProdPowerValue"
+      :new-prod-power-unit="newProdPowerUnit"
+      :new-prod-selected-fuels="newProdSelectedFuels"
+      :show-new-prod-fuel-dropdown="showNewProdFuelDropdown"
+      :power-units="powerUnits"
+      :available-fuels="availableFuels"
+      :preset-images="presetImages"
+      :new-prod-gallery="newProdGallery"
+      :is-form-valid="!!isFormValid"
+      :modal-store="modalStore"
+      :filtered-specs="filteredSpecs"
+      @add-product="addProduct"
+      @reset-form="resetForm"
+      @toggle="toggle"
+      @update-with-specs="updateWithSpecs"
+      @cancel-edit="cancelEdit"
+      @add-spec="addSpec"
+      @remove-spec="removeSpec"
+      @add-new-spec="addNewSpec"
+      @remove-new-spec="removeNewSpec"
+      @delete-product="deleteProduct"
+      @handle-image-upload="handleImageUpload"
+      @toggle-new-prod-fuel-dropdown="toggleNewProdFuelDropdown"
+      @handle-gallery-upload="handleGalleryUpload"
+      @remove-gallery-image="removeGalleryImage"
+      @remove-edit-gallery-image="removeEditGalleryImage"
+      @handle-edit-gallery-upload="handleEditGalleryUpload"
+      @update:new-category="val => newCategory = val"
+      @update:new-prod-power-value="val => newProdPowerValue = val"
+      @update:new-prod-power-unit="val => newProdPowerUnit = val"
+      @update:new-prod-selected-fuels="val => newProdSelectedFuels = val"
+      @update:new-prod="val => newProd = val"
+      @update:new-spec="val => newSpec = val"
+      @update:new-specs="val => newSpecs = val"
+    />
+    <AdminCategories v-if="adminTab==='categories' && authorized"
+      :categories="categories"
+      :products="products"
+      :new-category="newCategory"
+      :editing-category="editingCategory"
+      :show-add-category-modal="showAddCategoryModal"
+      :show-edit-category-modal="showEditCategoryModal"
+      :modal-store="modalStore"
+      @add-category="addCategory"
+      @edit-category="editCategory"
+      @save-category="saveCategory"
+      @delete-category="deleteCategory"
+      @close-edit-category-modal="closeEditCategoryModal"
+      @update:new-category="val => newCategory = val"
+      @update:editing-category="val => editingCategory = val"
+      @update:show-add-category-modal="val => showAddCategoryModal = val"
+      @update:show-edit-category-modal="val => showEditCategoryModal = val"
+      :get-category-product-count="getCategoryProductCount"
+    />
+    <AdminStats v-if="adminTab==='stats' && authorized"
+      :stats="stats"
+      :loading="loading"
+      :error="error || ''"
+      :visits="visits"
+      :requests="requests"
+      :selected-request="selectedRequest"
+      @fetch-stats="fetchStats"
+      @show-request-details="showRequestDetails"
+      @close-request-details="closeRequestDetails"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
+import AdminCatalog from '~/components/AdminCatalog.vue'
+import AdminCategories from '~/components/AdminCategories.vue'
+import AdminStats from '~/components/AdminStats.vue'
 import { ref, onMounted, watch, h } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import Chart from 'chart.js/auto'
@@ -652,6 +120,8 @@ const transliterate = (text: string): string => {
 interface Spec {
   key: string;
   value: string;
+  showKeySuggestions?: boolean;
+  showValueSuggestions?: boolean;
 }
 
 interface Category {
@@ -682,6 +152,7 @@ interface Product {
   category_slug?: string
   slug: string
   specs?: Record<string, any>
+  additional_images?: string[]
 }
 
 interface Request {
@@ -716,7 +187,7 @@ const loginError = ref<string | null>(null)
 const authorized = ref(false)
 const products = ref<Product[]>([])
 const categories = ref<AdminCategory[]>([])
-const specsList = ref<Record<number, {key: string, value: string}[]>>({})
+const specsList = ref<Record<number, Spec[]>>({})
 const newProd = ref({
   name: '',
   description: '',
@@ -741,12 +212,6 @@ const newProdPowerValue = ref()
 const newProdPowerUnit = ref('')
 const newProdSelectedFuels = ref([])
 const showNewProdFuelDropdown = ref(false)
-
-// Новые реактивные переменные для редактирования
-const editProdPowerValue = ref(0)
-const editProdPowerUnit = ref('')
-const editProdSelectedFuels = ref<string[]>([])
-const showEditProdFuelDropdown = ref(false)
 
 // Доступные единицы измерения мощности
 const powerUnits = ['МВт', 'кВт', 'Гкал/ч']
@@ -801,36 +266,33 @@ const { data: fetchedProducts, error: productsFetchError, refresh: refreshProduc
 
 if (fetchedProducts.value) {
   products.value = fetchedProducts.value.map((product: Product) => {
-    const powerMatch = product.specs?.power?.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-    const powerValue = powerMatch ? parseFloat(powerMatch[1]) : 0
-    const powerUnit = powerMatch ? powerMatch[3] : ''
-    
-    let fuel: string[] = []
-    if (product.specs?.fuel) {
-      if (Array.isArray(product.specs.fuel)) {
-        fuel = product.specs.fuel.filter((f: string) => f !== 'отсутствует')
-      } else if (typeof product.specs.fuel === 'string') {
-        fuel = (product.specs.fuel as string).split(', ').map((f: string) => f.trim()).filter((f: string) => f !== 'отсутствует')
-      }
-    }
-    
     // Find the category name from the category ID or slug
     const category = categories.value.find(c => 
       c.id === String(product.category_id) || 
       c.slug === product.category_slug
     )
     
+    // Сохраняем дополнительные изображения
+    const additionalImages = product.specs?.images || product.additional_images || []
     
+    // Создаем новый объект specs без старых полей power, fuel, powerUnit
+    const cleanSpecs: Record<string, any> = {}
+    if (product.specs) {
+      Object.entries(product.specs).forEach(([key, value]) => {
+        // Исключаем старые поля, которые больше не используются
+        if (!['power', 'fuel', 'powerUnit'].includes(key)) {
+          cleanSpecs[key] = value
+        }
+      })
+    }
     
     return {
       ...product,
       category: category?.name || product.category || '',
       slug: generateSlug(product.name || ''),
       specs: {
-        ...product.specs,
-        power: powerValue,
-        powerUnit: powerUnit,
-        fuel: fuel,
+        ...cleanSpecs,
+        images: additionalImages
       }
     }
   })
@@ -848,7 +310,25 @@ if (productsFetchError.value) {
 watch(products, (newProducts) => {
   if (Array.isArray(newProducts)) {
     newProducts.forEach(p => {
-      specsList.value[p.id] = Object.entries(p.specs || {}).map(([k,v]) => ({key: k, value: String(v)}))
+      // Инициализируем specsList только если его еще нет для этого продукта
+      if (!specsList.value[p.id]) {
+        specsList.value[p.id] = Object.entries(p.specs || {})
+          .filter(([key]) => key !== 'images') // Исключаем images, так как они обрабатываются отдельно
+          .map(([k,v]) => ({
+            key: k, 
+            value: String(v),
+            showKeySuggestions: false,
+            showValueSuggestions: false
+          }))
+      }
+      
+      // Убеждаемся, что поле images существует в specs
+      if (!p.specs) {
+        p.specs = {}
+      }
+      if (!Array.isArray(p.specs.images)) {
+        p.specs.images = []
+      }
     })
   }
 }, { immediate: true })
@@ -859,8 +339,6 @@ const isFormValid = computed(() => {
          newProd.value.description && 
          newProd.value.price > 0 && 
          (newProd.value.category && newProd.value.category !== 'new' || (newProd.value.category === 'new' && newCategory.value.name))
-  
-
   
   return valid
 })
@@ -883,7 +361,6 @@ function generateSlug(text: string): string {
 const modalStore = useModalStore()
 // Обновляем функцию addProduct
 async function addProduct() {
-  
   try {
     // Проверяем валидность формы
     if (!isFormValid.value) {
@@ -947,14 +424,14 @@ async function addProduct() {
       }
     })
 
-    // Добавляем мощность только если оба значения указаны
-    if (newProdPowerValue.value && newProdPowerUnit.value) {
-      specs.power = `${newProdPowerValue.value} ${newProdPowerUnit.value}`
-    }
-
     // Добавляем топливо только если оно выбрано
     if (newProdSelectedFuels.value.length > 0) {
       specs.fuel = newProdSelectedFuels.value
+    }
+
+    // Добавляем мощность только если оба значения указаны
+    if (newProdPowerValue.value && newProdPowerUnit.value) {
+      specs.power = `${newProdPowerValue.value} ${newProdPowerUnit.value}`
     }
 
     // Подготовка данных товара
@@ -963,7 +440,7 @@ async function addProduct() {
       description: newProd.value.description,
       extendedDescription: newProd.value.extendedDescription,
       price: Number(newProd.value.price),
-      image: newProd.value.image || '/placeholder.jpg',
+      image: newProd.value.image || '/images/placeholders/placeholder.png',
       category_id: categoryId,
       category_name: categoryName,
       category_slug: categorySlug,
@@ -1034,44 +511,24 @@ function toggle(id: number) {
         productToEdit.category = productToEdit.category_name
       }
 
-      // Инициализируем значения для редактирования мощности
-      const powerValue = productToEdit.specs?.power
-      if (typeof powerValue === 'string' && powerValue !== 'отсутствует') {
-        const powerMatch = powerValue.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-        if (powerMatch) {
-          editProdPowerValue.value = parseFloat(powerMatch[1])
-          editProdPowerUnit.value = powerMatch[3]
-        } else {
-          editProdPowerValue.value = 0
-          editProdPowerUnit.value = ''
-        }
-      } else {
-        editProdPowerValue.value = 0
-        editProdPowerUnit.value = ''
-      }
-
-      // Инициализируем значения для редактирования топлива
-      if (productToEdit.specs?.fuel) {
-        if (Array.isArray(productToEdit.specs.fuel)) {
-          editProdSelectedFuels.value = productToEdit.specs.fuel.filter(f => f !== 'отсутствует')
-        } else if (typeof productToEdit.specs.fuel === 'string') {
-          editProdSelectedFuels.value = productToEdit.specs.fuel.split(', ').filter(f => f !== 'отсутствует')
-        } else {
-          editProdSelectedFuels.value = []
-        }
-      } else {
-        editProdSelectedFuels.value = []
-      }
-
-      // Обновляем specsList для редактируемого продукта, исключая power, powerUnit и fuel
+      // Обновляем specsList для редактируемого продукта, включая все характеристики
       specsList.value[id] = Object.entries(productToEdit.specs || {})
-        .filter(([key]) => !['power', 'powerUnit', 'fuel', 'images'].includes(key))
-        .map(([k,v]) => ({key: k, value: String(v)}))
+        .filter(([key]) => key !== 'images') // Исключаем только images, так как они обрабатываются отдельно
+        .map(([k,v]) => ({
+          key: k, 
+          value: String(v),
+          showKeySuggestions: false,
+          showValueSuggestions: false
+        }))
       
-      showEditProdFuelDropdown.value = false
+      // Убеждаемся, что поле images существует в specs
+      if (!productToEdit.specs) {
+        productToEdit.specs = {}
+      }
+      if (!Array.isArray(productToEdit.specs.images)) {
+        productToEdit.specs.images = []
+      }
     }
-  } else {
-    showEditProdFuelDropdown.value = false
   }
 }
 
@@ -1081,29 +538,25 @@ async function updateWithSpecs(p: Product) {
     // Подготовка спецификаций
     const specs: Record<string, any> = {}
 
-    // Добавляем мощность только если оба значения указаны
-    if (editProdPowerValue.value > 0 && editProdPowerUnit.value) {
-      specs.power = `${editProdPowerValue.value} ${editProdPowerUnit.value}`
-    }
-
-    // Добавляем топливо только если оно выбрано
-    if (editProdSelectedFuels.value.length > 0) {
-      specs.fuel = editProdSelectedFuels.value
-    }
-
-    // Добавляем остальные характеристики
-    specsList.value[p.id]
-      .filter(s => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images')
-      .forEach(s => {
-        if (s.key && s.value) {
-          specs[s.key] = s.value
-        }
-      })
+    // Добавляем все характеристики из specsList
+    specsList.value[p.id]?.forEach(s => {
+      if (s.key && s.value) {
+        specs[s.key] = s.value
+      }
+    })
 
     // Добавляем изображения галереи, если есть
     if (p.specs && Array.isArray(p.specs.images)) {
       specs.images = p.specs.images
     }
+
+    // Очищаем старые поля из specs перед отправкой
+    const cleanSpecs: Record<string, any> = {}
+    Object.entries(specs).forEach(([key, value]) => {
+      if (!['power', 'fuel', 'powerUnit'].includes(key)) {
+        cleanSpecs[key] = value
+      }
+    })
 
     // Находим категорию
     const category = categories.value.find(c => c.name === p.category)
@@ -1121,7 +574,7 @@ async function updateWithSpecs(p: Product) {
       price: p.price,
       image: p.image,
       category_id: category.id,
-      specs: Object.keys(specs).length > 0 ? specs : null,
+      specs: Object.keys(cleanSpecs).length > 0 ? cleanSpecs : null,
       additional_images: Array.isArray(p.specs?.images) ? p.specs.images : null
     }
  
@@ -1131,8 +584,20 @@ async function updateWithSpecs(p: Product) {
       body: updateData
     })
 
-    // Обновляем список товаров после успешного обновления
-    await refreshProducts()
+    // Обновляем данные локально вместо перезагрузки
+    const productIndex = products.value.findIndex(prod => prod.id === p.id)
+    if (productIndex !== -1) {
+      products.value[productIndex] = {
+        ...products.value[productIndex],
+        name: p.name,
+        description: p.description,
+        extendedDescription: p.extendedDescription,
+        price: p.price,
+        image: p.image,
+        category: p.category,
+        specs: cleanSpecs
+      }
+    }
 
     activeId.value = null
   } catch (error) {
@@ -1142,30 +607,29 @@ async function updateWithSpecs(p: Product) {
 
 function cancelEdit() {
   activeId.value = null
-  // Сбрасываем значения для редактирования мощности и топлива при отмене
-  editProdPowerValue.value = 0
-  editProdPowerUnit.value = ''
-  editProdSelectedFuels.value = []
-  showEditProdFuelDropdown.value = false
 }
 
 function addSpec(id:number) {
-  specsList.value[id].push({ key:'', value:'' })
+  specsList.value[id].push({ 
+    key:'', 
+    value:'',
+    showKeySuggestions: false,
+    showValueSuggestions: false
+  })
 }
 
 function removeSpec(id:number, idx:number) {
-  // Удаляем характеристику по индексу, но пропускаем power и fuel, так как они управляются отдельными полями
-  const originalIndex = products.value.find(prod => prod.id === id)?.specs ? Object.keys(products.value.find(prod => prod.id === id)?.specs || {}).indexOf(specsList.value[id][idx].key) : -1;
-  if (originalIndex !== -1 && (specsList.value[id][idx].key === 'power' || specsList.value[id][idx].key === 'fuel')) {
-    // Do nothing, these are managed by separate fields
-    return;
-  }
   specsList.value[id].splice(idx,1)
 }
 
 function addNewSpec() {
   if (newSpec.value.key && newSpec.value.value) {
-    newSpecs.value.push({ key:newSpec.value.key, value:newSpec.value.value })
+    newSpecs.value.push({ 
+      key:newSpec.value.key, 
+      value:newSpec.value.value,
+      showKeySuggestions: false,
+      showValueSuggestions: false
+    })
     newSpec.value.key = ''
     newSpec.value.value = ''
   }
@@ -1224,10 +688,6 @@ async function handleImageUpload(event: Event, product: Product | Partial<Produc
 
 function toggleNewProdFuelDropdown() {
   showNewProdFuelDropdown.value = !showNewProdFuelDropdown.value;
-}
-
-function toggleEditProdFuelDropdown() {
-  showEditProdFuelDropdown.value = !showEditProdFuelDropdown.value;
 }
 
 // Возвращаем оригинальную функцию входа
@@ -1474,7 +934,7 @@ const closeRequestDetails = () => {
 
 // Add this computed property in the script section
 const filteredSpecs = computed(() => (id: number) => {
-  return specsList.value[id]?.filter((s: Spec) => s.key !== 'power' && s.key !== 'fuel' && s.key !== 'images') || []
+  return specsList.value[id] || []
 })
 
 const showCategoryDescriptionModal = ref(false)

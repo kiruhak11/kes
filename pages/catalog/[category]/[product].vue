@@ -14,7 +14,7 @@
                 <i class="fas fa-chevron-left"></i>
               </button>
               <img 
-                :src="imageList[currentImageIndex]" 
+                :src="imageList[currentImageIndex] || '/images/placeholders/placeholder.png'" 
                 :alt="product.name" 
                 class="main-image" 
               />
@@ -76,11 +76,16 @@
         <div class="related-products-section">
           <h2 class="section-title">Вам также может понравиться</h2>
           <div class="related-products-grid">
-            <div v-for="relatedProduct in relatedProducts" :key="relatedProduct.id" class="product-card">
+            <div 
+              v-for="relatedProduct in relatedProducts" 
+              :key="relatedProduct.id" 
+              class="product-card"
+              @click="router.push(`/catalog/${relatedProduct.category_slug || categorySlug}/${generateProductSlug(relatedProduct)}`)"
+            >
               <img :src="relatedProduct.image" :alt="relatedProduct.name" />
               <div class="product-card__content">
                 <h3>{{ relatedProduct.name }}</h3>
-                <div class="related-category">{{ relatedProduct.category }}</div>
+                <div class="related-category">{{ relatedProduct.description.slice(0, 32) + '...' }}</div>
                 <div class="related-price">{{ relatedProduct.price.toLocaleString() }} &#8381;</div>
               </div>
             </div>
@@ -113,8 +118,6 @@ const transliterate = (text: string): string => {
 };
 
 interface ProductSpecs {
-  power?: string | number
-  fuel?: string | string[]
   [key: string]: any
 }
 
@@ -193,15 +196,7 @@ if (fetchError.value) {
     category_slug: '', // Will be filled from category data
     slug: '', // Will be generated
     additional_images: product.additional_images || [],
-    specs: {
-      ...product.specs,
-      power: product.specs?.power || 'отсутствует',
-      fuel: Array.isArray(product.specs?.fuel) 
-        ? product.specs.fuel 
-        : typeof product.specs?.fuel === 'string' 
-          ? product.specs.fuel.split(', ').map((f: string) => f.trim())
-          : ['отсутствует']
-    }
+    specs: product.specs || {}
   }))
 } else {
   products.value = []
@@ -315,7 +310,14 @@ const displaySpecs = computed(() => {
   if (!product.value?.specs) return []
   
   return Object.entries(product.value.specs)
-    .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+    .filter(([key, value]) => 
+      value !== null && 
+      value !== undefined && 
+      value !== '' && 
+      key !== 'images' && 
+      key !== 'power' && 
+      key !== 'fuel'
+    )
     .map(([key, value]) => {
       // Обработка массивов (например, для топлива)
       if (Array.isArray(value)) {
@@ -329,10 +331,22 @@ const displaySpecs = computed(() => {
 const relatedProducts = computed(() => {
   if (!product.value || !products.value) return []
   
-  return products.value
-    .filter(p => p.id !== product.value?.id)
-    .slice(0, 4) // Показываем максимум 4 похожих товара
+  // Фильтруем товары, исключая текущий
+  const filteredProducts = products.value.filter(p => p.id !== product.value?.id)
+  
+  // Перемешиваем массив и берем первые 3 элемента
+  const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, 3)
 })
+
+const generateProductSlug = (product: Product): string => {
+  if (!product || !product.name) return ''
+  return transliterate(product.name)
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
 </script>
 
 <style scoped>
@@ -630,7 +644,7 @@ const relatedProducts = computed(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 32px;
-  margin-top: 24px;
+  margin-top: 80px;
 }
 .product-card {
   background: #fff;
@@ -639,11 +653,11 @@ const relatedProducts = computed(() => {
   overflow: visible;
   transition: transform 0.25s, box-shadow 0.25s;
   position: relative;
-  padding-top: 60px;
-  min-height: 340px;
+  min-height: 240px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  cursor: pointer;
 }
 .product-card:hover {
   transform: translateY(-7px) scale(1.03);
@@ -651,16 +665,15 @@ const relatedProducts = computed(() => {
 }
 .product-card img {
   position: absolute;
-  top: -40px;
+  top: -25px;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
   z-index: 2;
   border-radius: 8px;
-  background: #f7f7fa;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  background: transparent;
 }
 .product-card__content {
   padding: 32px 16px 16px 16px;

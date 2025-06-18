@@ -49,11 +49,18 @@ export default defineEventHandler(async (event) => {
     // Build the base query
     let dbQuery = client
       .from('products')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        categories!products_category_id_fkey (
+          id,
+          name,
+          slug
+        )
+      `, { count: 'exact' })
 
     // Add category filter if not 'all'
     if (categorySlug && categorySlug !== 'all') {
-      dbQuery = dbQuery.eq('category_slug', categorySlug)
+      dbQuery = dbQuery.eq('categories.slug', categorySlug)
     }
 
     // Add product filter if provided and valid
@@ -93,8 +100,11 @@ export default defineEventHandler(async (event) => {
 
     // Transform the data to ensure consistent structure
     const transformedProducts = products.map((product) => {
+      const category = product.categories
       return {
         ...product,
+        category_name: category?.name,
+        category_slug: category?.slug,
         specs: {
           ...(product.specs as Record<string, any> || {}),
           power: (product.specs as any)?.power || 'отсутствует',
