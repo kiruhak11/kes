@@ -9,7 +9,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "scp -r .output/* j53779400@c64869e17b97.hosting.myjino.ru:~/domains/kes.kiruhak11.ru/ && ssh j53779400@c64869e17b97.hosting.myjino.ru \"chmod -R 0777 ~/domains/kes.kiruhak11.ru && mkdir -p ~/domains/kes.kiruhak11.ru/tmp && touch ~/domains/kes.kiruhak11.ru/tmp/restart.txt\""
+    "deploy": "ssh root@edc78826a428.vps.myjino.ru -p 49174 \"cd /var/www/html/kes && docker compose down && docker system prune -a --volumes -f && git pull && docker compose up -d --build\""
   },
   "dependencies": {
     "@nuxt/image": "^1.10.0",
