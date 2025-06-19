@@ -1,14 +1,12 @@
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import { defineEventHandler, getRequestURL, createError } from 'h3'
+import { defineEventHandler, getRouterParam, createError } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
-    const url = getRequestURL(event)
-    const pathSegments = url.pathname.split('/')
-    const fileName = pathSegments[pathSegments.length - 1] // Получаем последний сегмент пути
+    const fileName = getRouterParam(event, 'fileName')
     
-    if (!fileName || fileName === 'uploads') {
+    if (!fileName) {
       throw createError({
         statusCode: 400,
         message: 'File name is required'

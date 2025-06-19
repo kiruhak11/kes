@@ -26,7 +26,28 @@
       <div v-if="uploadResult" class="result">
         <h3>Результат загрузки:</h3>
         <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
-        <img v-if="uploadResult.path" :src="uploadResult.path" style="max-width: 200px; margin-top: 10px;" />
+        <div v-if="uploadResult.path" class="image-test">
+          <h4>Тест отображения изображения:</h4>
+          <img :src="uploadResult.path" style="max-width: 200px; margin: 10px 0; border: 1px solid #ccc;" />
+          <p>Путь: {{ uploadResult.path }}</p>
+          <button @click="testImageAccess(uploadResult.path)">Проверить доступ к файлу</button>
+          <div v-if="imageTestResult" class="result">
+            <h5>Результат проверки:</h5>
+            <pre>{{ JSON.stringify(imageTestResult, null, 2) }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>4. Тест существующих файлов</h2>
+      <div v-if="filesResult && filesResult.files">
+        <div v-for="file in filesResult.files" :key="file.name" class="file-test">
+          <h4>{{ file.name }}</h4>
+          <p>Путь: {{ file.path }}</p>
+          <img :src="file.path" style="max-width: 150px; margin: 5px 0; border: 1px solid #ccc;" />
+          <button @click="testImageAccess(file.path)">Проверить доступ</button>
+        </div>
       </div>
     </div>
   </div>
@@ -40,6 +61,7 @@ const fixingPaths = ref(false)
 const filesResult = ref(null)
 const fixResult = ref(null)
 const uploadResult = ref(null)
+const imageTestResult = ref(null)
 
 const testFiles = async () => {
   loading.value = true
@@ -88,9 +110,40 @@ const testUpload = async (event) => {
     })
     
     uploadResult.value = response.files[0]
+    imageTestResult.value = null
   } catch (error) {
     console.error('Error uploading file:', error)
     uploadResult.value = { error: error.message }
+  }
+}
+
+const testImageAccess = async (imagePath) => {
+  try {
+    // Извлекаем имя файла из пути
+    const fileName = imagePath.split('/').pop()
+    const testPath = `/api/test-upload/${fileName}`
+    
+    const response = await fetch(testPath)
+    const result = {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      url: testPath
+    }
+    
+    if (response.ok) {
+      result.success = 'Файл доступен'
+    } else {
+      const errorText = await response.text()
+      result.error = errorText
+    }
+    
+    imageTestResult.value = result
+  } catch (error) {
+    imageTestResult.value = {
+      error: error.message,
+      url: imagePath
+    }
   }
 }
 
@@ -125,6 +178,20 @@ const fileToDataUrl = (file) => {
   border-radius: 4px;
 }
 
+.file-test {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.image-test {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
 pre {
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -137,6 +204,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  margin: 0.5rem 0.5rem 0.5rem 0;
 }
 
 button:disabled {

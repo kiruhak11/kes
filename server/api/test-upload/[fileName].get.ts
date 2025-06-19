@@ -1,30 +1,31 @@
-import { readFile } from 'fs/promises'
+import { readFile, access } from 'fs/promises'
 import { join } from 'path'
-import { defineEventHandler, getRequestURL, createError } from 'h3'
+import { defineEventHandler, getRouterParam, createError } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
-    const url = getRequestURL(event)
-    const pathSegments = url.pathname.split('/')
-    const fileName = pathSegments[pathSegments.length - 1] // Получаем последний сегмент пути
+    const fileName = getRouterParam(event, 'fileName')
     
-    if (!fileName || fileName === 'uploads') {
+    if (!fileName) {
       throw createError({
         statusCode: 400,
         message: 'File name is required'
       })
     }
 
-    // Проверяем, что путь безопасный (только имя файла)
-    if (fileName.includes('/') || fileName.includes('\\')) {
+    const filePath = join(process.cwd(), 'public', 'uploads', fileName)
+    
+    // Проверяем существование файла
+    try {
+      await access(filePath)
+    } catch (accessError) {
+      console.error('File access error:', filePath, accessError)
       throw createError({
-        statusCode: 400,
-        message: 'Invalid file name'
+        statusCode: 404,
+        message: `File not found: ${fileName}`
       })
     }
 
-    const filePath = join(process.cwd(), 'public', 'uploads', fileName)
-    
     try {
       const fileBuffer = await readFile(filePath)
       
@@ -39,15 +40,15 @@ export default defineEventHandler(async (event) => {
       else if (ext === 'svg') mimeType = 'image/svg+xml'
       
       setHeader(event, 'Content-Type', mimeType)
-      setHeader(event, 'Cache-Control', 'public, max-age=31536000') // 1 год
+      setHeader(event, 'Cache-Control', 'public, max-age=31536000')
       
       return fileBuffer
       
     } catch (fileError) {
-      console.error('File not found:', filePath, fileError)
+      console.error('File read error:', filePath, fileError)
       throw createError({
-        statusCode: 404,
-        message: 'File not found'
+        statusCode: 500,
+        message: 'Error reading file'
       })
     }
 
