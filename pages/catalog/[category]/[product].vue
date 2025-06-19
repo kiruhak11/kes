@@ -102,6 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useCartStore } from '~/stores/cart';
+import { useModalStore } from '~/stores/modal';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {

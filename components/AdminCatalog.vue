@@ -419,6 +419,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useFileStorage } from '~/composables/useFileStorage'
 
 interface Spec {
   key: string;

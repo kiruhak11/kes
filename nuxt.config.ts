@@ -41,8 +41,13 @@ export default defineNuxtConfig({
     '@nuxtjs/device',
     '@nuxtjs/supabase',
     '@pinia/nuxt',
-    'rubillex_frog-modal'
+    'rubillex_frog-modal',
+    "nuxt-file-storage"
   ],
+  fileStorage: {
+    // Используем переменную окружения для пути к хранилищу файлов
+    mount: process.env.FILE_STORAGE_MOUNT || './public/uploads'
+  },
   // device: {
   //   // опционально: можно обновлять при ресайзе
   //   refreshOnResize: true

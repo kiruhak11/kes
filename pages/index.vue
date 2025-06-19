@@ -230,8 +230,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useNuxtApp } from '#app'
+import { useModalStore } from '~/stores/modal'
 import BackIcon from '~/components/icons/back.vue'
 import NextIcon from '~/components/icons/next.vue'
 import TypeWriter from '~/components/TypeWriter.vue'

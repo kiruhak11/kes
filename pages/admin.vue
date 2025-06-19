@@ -99,6 +99,7 @@ import { createClient } from '@supabase/supabase-js'
 import Chart from 'chart.js/auto'
 import { useStats } from '~/composables/useStats'
 import { useModalStore } from '~/stores/modal'
+import { useFileStorage } from '~/composables/useFileStorage'
 const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
 // Добавляем объявление переменной chart
 let chart: Chart | null = null
@@ -661,26 +662,18 @@ async function deleteProduct(id:number) {
   }
 }
 
+// Импортируем новый composable для работы с файлами
+const { uploadSingleFile, uploadFiles } = useFileStorage()
+
 async function handleImageUpload(event: Event, product: Product | Partial<Product>) {
   const input = event.target as HTMLInputElement
   if (!input.files || !input.files[0]) return
 
   const file = input.files[0]
-  const formData = new FormData()
-  formData.append('file', file)
 
   try {
-    const response = await $fetch('/api/upload/image', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
-
-    if (response && response.path) {
-      product.image = response.path
-    }
+    const filePath = await uploadSingleFile(file)
+    product.image = filePath
   } catch (error) {
     console.error('Error uploading image:', error)
   }
@@ -705,29 +698,20 @@ function logout() {
   loginError.value = null
 }
 
-// Existing handleImageUpload remains. I'll add new function:
+// Обновленная функция загрузки галереи
 async function handleGalleryUpload(event: Event) {
   const input = event.target as HTMLInputElement
   if (!input.files || input.files.length === 0) return
+  
   const files = Array.from(input.files)
-  for (const file of files) {
-    const formData = new FormData()
-    formData.append('file', file)
-    try {
-      const response = await $fetch('/api/upload/image', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-      if (response && response.path) {
-        newProdGallery.value.push(response.path)
-      }
-    } catch (error) {
-      console.error('Error uploading gallery image:', error)
-    }
+  
+  try {
+    const filePaths = await uploadFiles(files)
+    newProdGallery.value.push(...filePaths)
+  } catch (error) {
+    console.error('Error uploading gallery images:', error)
   }
+  
   // clear input value for same file re-upload capability
   input.value = ''
 }
@@ -743,28 +727,22 @@ function removeEditGalleryImage(p: Product, idx: number) {
   }
 }
 
+// Обновленная функция загрузки галереи для редактирования
 async function handleEditGalleryUpload(event: Event, p: Product) {
   const input = event.target as HTMLInputElement
   if (!input.files || input.files.length === 0) return
+  
   const files = Array.from(input.files)
   if (!p.specs) p.specs = {}
   if (!Array.isArray(p.specs.images)) p.specs.images = []
-  for (const file of files) {
-    const formData = new FormData()
-    formData.append('file', file)
-    try {
-      const response = await $fetch('/api/upload/image', {
-        method: 'POST',
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-      })
-      if (response && response.path) {
-        p.specs.images.push(response.path)
-      }
-    } catch (error) {
-      console.error('Error uploading gallery image:', error)
-    }
+  
+  try {
+    const filePaths = await uploadFiles(files)
+    p.specs.images.push(...filePaths)
+  } catch (error) {
+    console.error('Error uploading gallery images:', error)
   }
+  
   input.value = ''
 }
 
