@@ -16,7 +16,7 @@
           <h1 class="hero__title">
             <span >Котельный завод «КЭС» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
           </h1>
-          <div class="hero__title__btn">
+          <div class="hero__title__bt">
             <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
             <NuxtLink to="/catalog" class="btn btn-primary">Перейти в Каталог</NuxtLink>
           </div>
@@ -524,7 +524,7 @@ function handleImageError(e: Event) {
   margin-right: auto;
   
 }
-.hero__title__btn {
+.hero__title__bt {
   display: flex;
   justify-content: center;
   align-items: center;

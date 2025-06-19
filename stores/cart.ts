@@ -38,7 +38,13 @@ export const useCartStore = defineStore('cart', {
         const savedItems = localStorage.getItem(STORAGE_KEY)
         if (savedItems) {
           try {
-            this.items = JSON.parse(savedItems)
+            const parsed = JSON.parse(savedItems)
+            // Проверяем, что это массив объектов с нужными полями
+            if (Array.isArray(parsed) && parsed.every(item => typeof item === 'object' && item !== null && 'id' in item && 'quantity' in item)) {
+              this.items = parsed
+            } else {
+              this.items = []
+            }
           } catch (e) {
             console.error('Failed to parse cart items from localStorage:', e)
             this.items = []
@@ -48,13 +54,15 @@ export const useCartStore = defineStore('cart', {
     },
 
     addItem(product: CartItem): void {
-      const existingItem = this.items.find((item: CartItem): boolean => item.id === product.id)
+      // Делаем глубокую копию, чтобы убрать реактивность
+      const plainProduct = JSON.parse(JSON.stringify(product))
+      const existingItem = this.items.find((item: CartItem): boolean => item.id === plainProduct.id)
       
       if (existingItem) {
         existingItem.quantity++
       } else {
         this.items.push({
-          ...product,
+          ...plainProduct,
           quantity: 1
         })
       }
@@ -80,7 +88,7 @@ export const useCartStore = defineStore('cart', {
     clearCart(): void {
       this.items = []
       this.saveToStorage()
-  },
+    },
 
     saveToStorage(): void {
       if (process.client) {

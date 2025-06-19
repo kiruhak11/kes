@@ -88,3 +88,29 @@ html,
 body {
   overflow-x: hidden;
 }
+
+// === Металлический эффект для всех кнопок ===
+button, .btn, [class*="btn"] {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+button:hover, .btn:hover, [class*="btn"]:hover {
+  box-shadow: 0 4px 24px rgba(180, 180, 200, 0.25), 0 1.5px 0 0 #fff inset;
+}
+button::after, .btn::after, [class*="btn"]::after {
+  content: '';
+  position: absolute;
+  left: -75%;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.15) 100%);
+  transform: skewX(-25deg);
+  transition: left 0.5s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+  z-index: 2;
+}
+button:hover::after, .btn:hover::after, [class*="btn"]:hover::after {
+  left: 120%;
+}

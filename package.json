@@ -8,8 +8,7 @@
     "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "deploy": "ssh root@edc78826a428.vps.myjino.ru -p 49174 \"cd /var/www/html/kes && mkdir -p public/uploads && docker compose down && docker system prune -a --volumes -f && git fetch origin && git reset --hard origin/main && docker compose up -d --build\""
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@nuxt/image": "^1.10.0",

@@ -10,13 +10,9 @@
         <div class="product-details">
           <h2>{{ product.name || 'Без названия' }}</h2>
           <div class="product-specs">
-            <div v-if="product.specs?.power" class="spec-item">
-              <span class="spec-label">Мощность:</span>
-              <span class="spec-value">{{ product.specs.power }}</span>
-            </div>
-            <div v-if="product.specs?.fuel?.length" class="spec-item">
-              <span class="spec-label">Топливо:</span>
-              <span class="spec-value">{{ product.specs.fuel.join(', ') }}</span>
+            <div v-for="spec in product.specs" :key="spec.key">
+              <span class="spec-label">{{ spec.key }}:</span>
+              <span class="spec-value">{{ spec.value }}</span>
             </div>
           </div>
           <p class="product-description">{{ product.description || product.extendedDescription || 'Описание отсутствует' }}</p>
@@ -175,9 +171,10 @@ Email: ${formData.value.email}
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;

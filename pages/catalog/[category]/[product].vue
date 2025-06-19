@@ -40,38 +40,185 @@
 
           <div class="product-info-block">
             <h1 class="product-title">{{ product.name }}</h1>
-            <p class="product-short-description">{{ product.description }}</p>
-            <p class="product-price">{{ product.price.toLocaleString() }} &#8381;</p>
-            <button class="btn btn-primary add-to-cart-btn" @click="addToCart">
-              Добавить в корзину
-            </button>
+            <div class="product-main-row">
+              <div class="product-main-description">
+                <p class="product-short-description">{{ product.description }}</p>
+              </div>
+              <div class="product-main-specs">
+                <div v-for="([key, value], idx) in Object.entries(product.specs || {}).filter(([k]) => k !== 'images' && k !== 'power' && k !== 'fuel').slice(0, 4)" :key="key" class="spec-item">
+                  <span class="spec-label">{{ capitalize(key) }}</span>
+                  <span class="spec-dots"></span>
+                  <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="product-main-actions">
+              <div class="cart-action-wrap">
+                <div class="product-card__price-block">
+                  <span class="product-price">{{ product.price.toLocaleString() }} <span class="currency">₽</span></span>
+                  <span class="product-price-note">Цена с НДС</span>
+                </div>
+                <button v-if="!cartCount" class="buy-btn" @click="addToCart">
+                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
+                  <span>Положить в корзину</span>
+                </button>
+                <div v-else class="cart-counter">
+                  <button class="cart-minus" @click="decrementCart">-</button>
+                  <span class="cart-qty">{{ cartCount }}</span>
+                  <button class="cart-plus" @click="incrementCart">+</button>
+                </div>
+              </div>
+              <div class="product-main-actions-right">
+                <button class="offer-btn" @click="openCommercialOfferModal(product)">
+                  Заказать коммерческое предложение
+                </button>
+                <a :href="`tel:${contacts.phone[0]}`" class="offer-btn">Уточнить наличие</a>
+              </div>
+            </div>
           </div>
         </div>
-        <!-- Блок: описание и характеристики -->
-        <div class="product-middle-row">
-          <div class="product-extended-description">
-            <h3 class="extended-description-title">Подробное описание:</h3>
+        <hr class="section-divider" />
+        <!-- Вкладки -->
+        <div class="product-tabs">
+          <button
+            v-for="tab in productTabs"
+            :key="tab.key"
+            :class="['tab-btn', { active: activeTab === tab.key }]"
+            @click="activeTab = tab.key"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+        <div class="tab-content">
+          <div v-if="activeTab === 'description'" class="section-block">
+            <h2 class="section-title">Описание товара</h2>
             <p>{{ product.extendedDescription }}</p>
           </div>
-          <div v-if="displaySpecs.length > 0" class="product-specs">
-            <h3 class="specs-title">Характеристики:</h3>
-            <ul>
-              <li v-for="([key, value], idx) in displaySpecs" :key="key">
-                <span class="spec-label">{{ capitalize(key) }}:</span>
+          <div v-if="activeTab === 'specs'" class="section-block">
+            <h2 class="section-title">Технические характеристики</h2>
+            <ul class="specs-list">
+              <li v-for="([key, value], idx) in displaySpecs" :key="key" class="spec-item">
+                <span class="spec-label">{{ capitalize(key) }}</span>
                 <span class="spec-dots"></span>
                 <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
               </li>
             </ul>
           </div>
-        </div>
-        <!-- Маркетинговый блок -->
-        <div class="marketing-section">
-          <div class="marketing-card">
-            <h3>Специальное предложение!</h3>
-            <p>Позвоните сейчас и получите выгодное предложение!</p>
-            <a :href="`tel:${contacts.phone[0]}`" class="marketing-phone">{{ contacts.phone[0] }}</a>
+          <div v-if="activeTab === 'delivery'" class="section-block">
+            <h2 class="section-title">Комплект поставки</h2>
+            <ul class="delivery-list">
+              <li>Котел в сборе</li>
+              <li>Паспорт и инструкция</li>
+              <li>Упаковка</li>
+              <li>Сопроводительные документы</li>
+            </ul>
+          </div>
+          <div v-if="activeTab === 'scheme'" class="section-block">
+            <h2 class="section-title">Схема подключения</h2>
+            <div class="scheme-placeholder">
+              <span class="scheme-icon">🔧</span>
+              <span>Схема подключения появится здесь</span>
+            </div>
+          </div>
+          <div v-if="activeTab === 'certificates'" class="section-block certificates-block">
+            <h2 class="section-title">Сертификаты и гарантии</h2>
+            <div class="cert-gallery-slider-wrap">
+              <div class="cert-gallery-scroll">
+                <div class="cert-gallery-track">
+                  <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
+                    <div class="cert-gallery-img-wrap">
+                      <img :src="certificate.image" :alt="certificate.title" />
+                    </div>
+                    <div class="cert-gallery-title">{{ certificate.title }}</div>
+                    <button class="cert-gallery-btn" @click="openCertificateModal(certificate)">Просмотреть</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cert-gallery-controls">
+              <div class="cert-gallery-arrow cert-gallery-arrow-left" :class="{ disabled: galleryActiveIndex === 0 }" @click="scrollGalleryBy(-1)">
+                <svg width="32" height="32" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="cert-gallery-dots">
+                <span v-for="(c, idx) in certificates" :key="idx" :class="['cert-gallery-dot', { active: idx === galleryActiveIndex }]" @click="scrollToGalleryCard(idx)"></span>
+              </div>
+              <div class="cert-gallery-arrow cert-gallery-arrow-right" :class="{ disabled: galleryActiveIndex === certificates.length - 1 }" @click="scrollGalleryBy(1)">
+                <svg width="32" height="32" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+          <div v-if="activeTab === 'reviews'" class="section-block reviews-block">
+            <h2 class="section-title">Отзывы о продукции</h2>
+            <div class="review-card">
+              <div class="review-author">Иван Петров</div>
+              <div class="review-text">Отличный котел, быстро доставили и помогли с установкой!</div>
+            </div>
+            <div class="review-card">
+              <div class="review-author">ООО "ТеплоСервис"</div>
+              <div class="review-text">Работаем с этим заводом не первый год, всегда всё на высшем уровне.</div>
+            </div>
           </div>
         </div>
+        <hr class="section-divider" />
+        <!-- О заводе -->
+        <div class="about-factory-section">
+          <div class="factory-menu">
+            <button v-for="tab in factoryTabs" :key="tab.key" :class="['factory-tab-btn', { active: activeFactoryTab === tab.key }]" @click="activeFactoryTab = tab.key">
+              {{ tab.label }}
+            </button>
+          </div>
+          <div class="factory-content">
+            <div v-if="activeFactoryTab === 'certificates'">
+              <section class="certificates-gallery-section">
+                <h2 class="certificates-gallery-title">Сертификаты и гарантии</h2>
+                <p class="certificates-gallery-desc">Вся продукция сертифицирована и сопровождается гарантией завода-изготовителя.</p>
+                <div class="cert-gallery-slider-wrap">
+                  <div class="cert-gallery-scroll">
+                    <div class="cert-gallery-track">
+                      <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
+                        <div class="cert-gallery-img-wrap">
+                          <img :src="certificate.image" :alt="certificate.title" />
+                        </div>
+                        <div class="cert-gallery-title">{{ certificate.title }}</div>
+                        <button class="cert-gallery-btn" @click="openCertificateModal(certificate)">Просмотреть</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cert-gallery-controls">
+                  <div class="cert-gallery-arrow cert-gallery-arrow-left" :class="{ disabled: galleryActiveIndex === 0 }" @click="scrollGalleryBy(-1)">
+                    <svg width="32" height="32" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                  <div class="cert-gallery-dots">
+                    <span v-for="(c, idx) in certificates" :key="idx" :class="['cert-gallery-dot', { active: idx === galleryActiveIndex }]" @click="scrollToGalleryCard(idx)"></span>
+                  </div>
+                  <div class="cert-gallery-arrow cert-gallery-arrow-right" :class="{ disabled: galleryActiveIndex === certificates.length - 1 }" @click="scrollGalleryBy(1)">
+                    <svg width="32" height="32" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <div v-else-if="activeFactoryTab === 'about'">
+              <div class="factory-about-block">
+                <h3>О заводе</h3>
+                <p>Наш завод — один из лидеров отрасли, производящий современные котлы и оборудование для промышленности и ЖКХ. Мы гордимся своей историей, инновациями и командой профессионалов.</p>
+              </div>
+            </div>
+            <div v-else-if="activeFactoryTab === 'production'">
+              <div class="factory-production-block">
+                <h3>Производство</h3>
+                <p>Современные производственные линии, строгий контроль качества, автоматизация и экологичность — всё это позволяет нам выпускать продукцию мирового уровня.</p>
+              </div>
+            </div>
+            <div v-else-if="activeFactoryTab === 'team'">
+              <div class="factory-team-block">
+                <h3>Наша команда</h3>
+                <p>В нашем коллективе работают инженеры, технологи, менеджеры и рабочие с многолетним опытом. Мы ценим каждого сотрудника и вместе достигаем новых высот!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="section-divider" />
         <!-- Похожие товары -->
         <div class="related-products-section">
           <h2 class="section-title">Вам также может понравиться</h2>
@@ -95,15 +242,29 @@
       <div v-else class="no-product-message">
         Товар не найден.
       </div>
+      <CommercialOfferModal
+        v-if="showCommercialOfferModal && selectedProduct"
+        :is-open="showCommercialOfferModal"
+        :product="selectedProduct"
+        @close="closeCommercialOfferModal"
+      />
+      <div v-if="selectedCertificate" class="cert-modal" @click="closeCertificateModal">
+        <div class="cert-modal-content" @click.stop>
+          <button class="cert-modal-close" @click="closeCertificateModal">&times;</button>
+          <div class="cert-modal-title">{{ selectedCertificate.title }}</div>
+          <img :src="selectedCertificate.image" :alt="selectedCertificate.title" class="cert-modal-img" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, watchEffect } from 'vue';
 import { useCartStore } from '~/stores/cart';
 import { contacts } from '~/data/contacts';
 import { useModalStore } from '~/stores/modal';
+import CommercialOfferModal from '~/components/CommercialOfferModal.vue';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -147,6 +308,12 @@ interface Product {
   slug: string
   specs?: ProductSpecs
   additional_images?: string[]
+}
+
+interface Certificate {
+  id: number;
+  title: string;
+  image: string;
 }
 
 const route = useRoute()
@@ -252,19 +419,6 @@ const capitalize = (s: string) => {
 }
 
 const cartStore = useCartStore();
-
-const imageList = computed<string[]>(() => {
-  if (!product.value) return []
-  
-  // Основное изображение
-  const mainImage = product.value.image
-  
-  // Дополнительные изображения
-  const additionalImages = product.value.additional_images || []
-  
-  // Объединяем основное изображение и дополнительные
-  return [mainImage, ...additionalImages].filter(Boolean)
-})
 const modalStore = useModalStore()
 // Текущий индекс изображения
 const currentImageIndex = ref(0)
@@ -292,18 +446,20 @@ const prevImage = () => {
 }
 
 const addToCart = () => {
-  if (!product.value) return
-  
-  cartStore.addItem({
+  if (!product.value) return;
+
+  const cartItem = {
     id: product.value.id,
     name: product.value.name,
     price: product.value.price,
     image: product.value.image,
     quantity: 1,
-    category: product.value.category,
-    category_slug: product.value.category_slug,
-    slug: product.value.slug
-  })
+    category: product.value.category || 'Без категории',
+    category_slug: product.value.category_slug || categorySlug.value || 'unknown',
+    slug: product.value.slug || generateProductSlug(product.value)
+  };
+
+  cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
   modalStore.showSuccess('Товар добавлен в корзину');
 }
 
@@ -349,9 +505,136 @@ const generateProductSlug = (product: Product): string => {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
 }
+
+const productTabs = [
+  { key: 'description', label: 'Описание товара' },
+  { key: 'specs', label: 'Технические характеристики' },
+  { key: 'delivery', label: 'Комплект поставки' },
+  { key: 'scheme', label: 'Схема подключения' },
+  { key: 'certificates', label: 'Сертификаты и гарантии' },
+  { key: 'reviews', label: 'Отзывы' },
+];
+const activeTab = ref('description');
+
+const showCommercialOfferModal = ref(false);
+const selectedProduct = ref<any>(null);
+const openCommercialOfferModal = (product: any) => {
+  selectedProduct.value = product;
+  showCommercialOfferModal.value = true;
+};
+const closeCommercialOfferModal = () => {
+  showCommercialOfferModal.value = false;
+  selectedProduct.value = null;
+};
+
+const factoryTabs = [
+  { key: 'certificates', label: 'Сертификаты' },
+  { key: 'about', label: 'О заводе' },
+  { key: 'production', label: 'Производство' },
+  { key: 'team', label: 'Команда' },
+];
+const activeFactoryTab = ref('certificates');
+
+const certificates = [
+  { id: 1, title: 'Котлы угольные', image: '/certificates/sert_kotl_ugoln.png' },
+  { id: 2, title: 'Котлы газовые', image: '/certificates/sert_kotl_gaz.png' },
+  { id: 3, title: 'Котлы на мазуте', image: '/certificates/sert_kotl_maz.png' },
+  { id: 4, title: 'Котлы дизельные', image: '/certificates/sert_kotl_diz.png' },
+  { id: 5, title: 'Сертификат соответствия КМТ', image: '/certificates/sert_sootv_MKT.png' },
+  { id: 6, title: 'Котлы газовые и мазутные', image: '/certificates/sert_kotl_gaz_maz.png' },
+];
+const selectedCertificate = ref<Certificate | null>(null);
+const openCertificateModal = (certificate: Certificate) => { selectedCertificate.value = certificate; };
+const closeCertificateModal = () => { selectedCertificate.value = null; };
+
+const galleryActiveIndex = ref(0);
+function scrollToGalleryCard(idx: number) {
+  const scrollContainer = document.querySelector('.cert-gallery-scroll');
+  const track = document.querySelector('.cert-gallery-track');
+  if (scrollContainer && track) {
+    const maxScroll = track.scrollWidth - scrollContainer.clientWidth;
+    const dotsCount = certificates.length;
+    let scrollLeft = 0;
+    if (dotsCount > 1) {
+      scrollLeft = (maxScroll * idx) / (dotsCount - 1);
+    }
+    scrollContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    galleryActiveIndex.value = idx;
+  }
+}
+
+const imageList = computed<string[]>(() => {
+  if (!product.value) return []
+  // Основное изображение
+  const mainImage = product.value.image
+  // Дополнительные изображения
+  const additionalImages = product.value.additional_images || []
+  // Объединяем основное изображение и дополнительные
+  return [mainImage, ...additionalImages].filter(Boolean)
+})
+
+const cartItem = computed(() => cartStore.items.find((item: any) => item.id === product.value?.id));
+const cartCount = computed(() => cartItem.value ? cartItem.value.quantity : 0);
+const incrementCart = () => {
+  if (product.value) {
+    const cartItem = {
+      id: product.value.id,
+      name: product.value.name,
+      price: product.value.price,
+      image: product.value.image,
+      quantity: 1,
+      category: product.value.category || 'Без категории',
+      category_slug: product.value.category_slug || categorySlug.value || 'unknown',
+      slug: product.value.slug || generateProductSlug(product.value)
+    };
+    cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
+  }
+};
+const decrementCart = () => {
+  if (product.value && cartItem.value && cartItem.value.quantity > 0) {
+    cartStore.removeItem(product.value.id);
+  }
+};
+
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    const track = document.querySelector('.cert-gallery-track');
+    if (track) {
+      track.addEventListener('scroll', () => {
+        const cards = Array.from(track.children) as HTMLElement[];
+        let minDiff = Infinity;
+        let activeIdx = 0;
+        cards.forEach((card, idx) => {
+          const diff = Math.abs((track.scrollLeft || 0) - card.offsetLeft);
+          if (diff < minDiff) {
+            minDiff = diff;
+            activeIdx = idx;
+          }
+        });
+        galleryActiveIndex.value = activeIdx;
+      });
+    }
+  }, 500);
+}
+
+function scrollGalleryBy(delta: number) {
+  let newIdx = galleryActiveIndex.value + delta;
+  newIdx = Math.max(0, Math.min(certificates.length - 1, newIdx));
+  scrollToGalleryCard(newIdx);
+}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.product-main-actions-right {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
 .product-detail-page {
   padding: 40px 0;
   background: #fafbfc;
@@ -528,80 +811,137 @@ const generateProductSlug = (product: Product): string => {
   margin-bottom: 0;
   line-height: 1.5;
 }
-.product-price {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #007bff;
-  margin-bottom: 0;
-}
-.add-to-cart-btn {
-  display: inline-block;
-  padding: 14px 32px;
-  background-color: #28a745;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-top: 10px;
-}
-.add-to-cart-btn:hover {
-  background-color: #218838;
-}
-.product-middle-row {
+.product-main-row {
   display: flex;
-  gap: 40px;
-  margin-bottom: 32px;
+  flex-direction: column;
+  gap: 32px;
+  align-items: flex-start;
+  margin-top: 12px;
 }
-.product-extended-description {
+.product-main-description {
   flex: 2;
-  background: #f7f7fa;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 0;
+  font-size: 1.08rem;
+  color: #444;
+  line-height: 1.6;
 }
-.extended-description-title {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-  color: #333;
-}
-.product-specs {
+.product-main-specs {
   flex: 1;
-  background: #f7f7fa;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
 }
-.specs-title {
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-  color: #333;
+.product-main-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
 }
-.product-specs ul {
-  list-style: none;
-  padding: 0;
+.product-card__price-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #f7f7f7;
+  border-radius: 12px;
+  padding: 12px 24px;
+  flex: 1 1 50%;
+  min-width: 0;
+  box-shadow: 0 2px 12px rgba(227,30,36,0.04);
   margin: 0;
+  justify-content: center;
 }
-.product-specs li {
+.product-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #e31e24;
+  line-height: 1;
+}
+.currency {
+  font-size: 1.2rem;
+}
+.product-price-note {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 2px;
+}
+.buy-btn {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1.5px solid #e31e24;
+  background: #fff;
+  color: #e31e24;
+  font-size: 1.18rem;
+  font-weight: 600;
+  height: 54px;
+  box-shadow: 0 2px 16px rgba(227,30,36,0.07);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 12px;
+}
+.buy-btn svg {
+  margin-right: 8px;
+  width: 28px;
+  height: 28px;
+}
+.buy-btn:hover {
+  background: #fff6f6;
+  color: #e31e24;
+  border-color: #e31e24;
+  box-shadow: 0 4px 24px rgba(227,30,36,0.13);
+}
+.buy-btn::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: -60%;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.38) 50%, rgba(255,255,255,0.12) 100%);
+  transform: skewX(-25deg);
+  transition: left 0.4s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+.buy-btn:hover::after {
+  left: 110%;
+}
+.cart-action-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  min-width: 0;
+  gap: 12px;
+  flex: 1 1 50%;
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+.offer-btn {
+  background: linear-gradient(45deg, #e31e24, #ff4d4d);
+  color: #fff;
+  border: none;
+  padding: 6px 22px;
   font-size: 1rem;
+  text-align: center;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.10);
+  transition: all 0.3s;
 }
-.spec-label {
-  white-space: nowrap;
-  font-weight: 500;
-}
-.spec-dots {
-  flex: 1;
-  border-bottom: 1px dotted #bbb;
-  margin: 0 8px;
-  height: 1px;
-}
-.spec-value {
-  white-space: nowrap;
+.offer-btn:hover {
+  background: linear-gradient(45deg, #ff4d4d, #e31e24);
 }
 .marketing-section {
   margin: 0 auto 32px auto;
@@ -741,6 +1081,29 @@ const generateProductSlug = (product: Product): string => {
     flex: 0 0 100%;
     max-width: 100%;
   }
+  .product-main-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .product-main-specs {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .buy-btn, .cart-counter {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .product-main-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+  .cart-action-wrap, .product-card__price-block {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
 }
 @media (max-width: 480px) {
   .product-title {
@@ -765,6 +1128,557 @@ const generateProductSlug = (product: Product): string => {
   }
   .product-card__content {
     padding: 16px 6px 8px 6px;
+  }
+}
+.btn-red {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 14px 32px;
+  transition: background 0.3s, transform 0.2s;
+}
+.btn-red:hover {
+  background: #ff6b6b;
+  color: #fff;
+  transform: scale(1.04);
+}
+.section-divider {
+  border: none;
+  border-top: 2px solid #eee;
+  margin: 36px 0 24px 0;
+}
+.section-block {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 32px 24px;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+  color: #ff6b6b;
+  font-weight: 700;
+}
+.specs-list {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  margin: 0;
+}
+.delivery-list {
+  list-style: disc inside;
+  color: #333;
+  font-size: 1.05rem;
+  margin-left: 1.2em;
+}
+.scheme-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7fa;
+  border-radius: 8px;
+  min-height: 120px;
+  color: #aaa;
+  font-size: 1.1rem;
+  margin: 0 auto;
+  max-width: 420px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  gap: 8px;
+}
+.scheme-icon {
+  font-size: 2.2rem;
+  margin-bottom: 6px;
+}
+.certificates-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7fa;
+  border-radius: 8px;
+  min-height: 90px;
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-bottom: 18px;
+  gap: 8px;
+}
+.cert-icon {
+  font-size: 2rem;
+  margin-bottom: 4px;
+}
+.certificates-block {
+  text-align: center;
+}
+.certificates-row {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.certificates-row img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f7f7fa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.reviews-block {
+  background: #f7f7fa;
+}
+.review-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 18px 16px;
+  margin-bottom: 12px;
+}
+.review-author {
+  font-weight: bold;
+  color: #ff6b6b;
+  margin-bottom: 6px;
+}
+.review-text {
+  color: #333;
+}
+.contacts-block {
+  background: #fff0f0;
+}
+.contacts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.contacts-info {
+  font-size: 1.1rem;
+  color: #333;
+}
+.contacts-phone, .contacts-email {
+  color: #ff6b6b;
+  text-decoration: underline;
+}
+.order-call-btn {
+  margin-left: 24px;
+}
+.product-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid #eee;
+  background: #fafbfc;
+  padding: 0 0 0.5rem 0;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 1.08rem;
+  font-weight: 500;
+  color: #888;
+  padding: 10px 22px 10px 22px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+}
+.tab-btn.active {
+  background: #fff;
+  color: #ff6b6b;
+  border-bottom: 2px solid #ff6b6b;
+  font-weight: 700;
+  z-index: 2;
+}
+.tab-btn:not(.active):hover {
+  background: #f7f7fa;
+  color: #222;
+}
+.tab-content {
+  margin-top: 0;
+}
+.spec-item {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.spec-label {
+  color: #222;
+  min-width: 120px;
+  font-weight: 600;
+}
+.spec-dots {
+  flex: 1;
+  border-bottom: 1px dotted #bbb;
+  margin: 0 8px;
+  height: 1px;
+}
+.spec-value {
+  font-weight: 500;
+  color: #333;
+}
+.cart-counter {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1.5px solid #e31e24;
+  background: #fff;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  box-shadow: 0 2px 16px rgba(227,30,36,0.07);
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
+}
+.cart-minus, .cart-plus {
+  background: transparent;
+  border: none;
+  color: #e31e24;
+  font-size: 2rem;
+  font-weight: 700;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  border-radius: 0;
+}
+.cart-minus:hover, .cart-plus:hover {
+  background: #fff6f6;
+  color: #b71c1c;
+}
+.cart-qty {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #e31e24;
+  letter-spacing: 0.04em;
+}
+.about-factory-section {
+  display: flex;
+  gap: 32px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  margin: 48px 0;
+  padding: 32px 24px;
+  min-height: unset !important;
+  height: auto !important;
+}
+.factory-menu {
+  flex: 0 0 18%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 2px solid #f0f0f0;
+  padding-right: 18px;
+}
+.factory-tab-btn {
+  background: none;
+  border: none;
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #888;
+  padding: 14px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+}
+.factory-tab-btn.active {
+  background: #f7f7fa;
+  color: #e31e24;
+}
+.factory-content {
+  flex: 1 1 82%;
+  padding-left: 32px;
+  min-width: 0;
+  overflow: visible;
+}
+.certificates-gallery-section {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  padding-bottom: 0;
+  padding-top: 0;
+  margin-bottom: 0;
+}
+.certificates-gallery-title {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+.certificates-gallery-desc {
+  margin-bottom: 16px;
+}
+.cert-gallery-slider-wrap {
+  width: 100%;
+  max-width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+  padding-bottom: 0;
+  margin-top: 0 !important;
+  margin-bottom: 0;
+}
+.cert-gallery-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 18px;
+  user-select: none;
+  height: 48px;
+}
+.cert-gallery-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: static;
+  background: #fff;
+  border: 2px solid #e31e24;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(227,30,36,0.07);
+  font-size: 1.2rem;
+  transition: background 0.2s, border 0.2s, opacity 0.2s;
+  opacity: 0.92;
+  pointer-events: auto;
+  margin: 0;
+}
+.cert-gallery-arrow.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.cert-gallery-arrow:hover:not(.disabled) {
+  background: #fff6f6;
+  border-color: #ff6b6b;
+}
+@media (max-width: 900px) {
+  .cert-gallery-arrow {
+    width: 32px;
+    height: 32px;
+  }
+  .cert-gallery-controls {
+    gap: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .cert-gallery-arrow {
+    width: 24px;
+    height: 24px;
+  }
+  .cert-gallery-controls {
+    gap: 6px;
+  }
+}
+.cert-gallery-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  scrollbar-width: none;
+  overflow-y: visible;
+}
+.cert-gallery-scroll::-webkit-scrollbar {
+  display: none;
+}
+.cert-gallery-track {
+  display: flex;
+  gap: 28px;
+  margin-top: 64px;
+  width: max-content;
+  min-width: 100%;
+  padding-bottom: 0;
+  overflow: visible;
+}
+.cert-gallery-card {
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 6px 32px rgba(227,30,36,0.10);
+  min-width: 240px;
+  max-width: 260px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 32px 12px 16px 12px;
+  position: relative;
+  transition: box-shadow 0.25s, transform 0.25s, opacity 0.25s;
+  opacity: 0.98;
+  border: 1.5px solid #f3eaea;
+  z-index: 10;
+}
+.cert-gallery-card:hover {
+  box-shadow: 0 16px 48px 0 rgba(227,30,36,0.18), 0 2px 12px 0 rgba(0,0,0,0.10);
+  transform: translateY(-10px) scale(1.04);
+  opacity: 1;
+  border-color: #ffeaea;
+  z-index: 10;
+}
+.cert-gallery-img-wrap {
+  position: absolute;
+  top: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 72px;
+  background: #fff6f6;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(227,30,36,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  border: 2px solid #e31e24;
+  z-index: 20;
+}
+.cert-gallery-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cert-gallery-title {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 10px;
+  margin-top: 44px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: normal;
+  max-height: 2.6em;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cert-gallery-btn {
+  background: linear-gradient(45deg, #e31e24, #ff4d4d);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 18px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.10);
+  transition: all 0.3s;
+  margin-top: auto;
+}
+.cert-gallery-btn:hover {
+  background: linear-gradient(45deg, #ff4d4d, #e31e24);
+}
+.cert-gallery-dots {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+}
+.cert-gallery-dot {
+  width: 18px;
+  height: 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 2px solid #e31e24;
+  box-shadow: 0 2px 8px rgba(227,30,36,0.10);
+  transition: background 0.35s, transform 0.35s, border 0.35s, width 0.35s, box-shadow 0.35s;
+  cursor: pointer;
+  opacity: 0.7;
+  position: relative;
+  margin: 0;
+  vertical-align: middle;
+}
+.cert-gallery-dot:hover {
+  opacity: 1;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 12px #e31e24;
+}
+.cert-gallery-dot.active {
+  width: 36px;
+  background: linear-gradient(90deg, #e31e24 60%, #ff6b6b 100%);
+  border-color: #ff6b6b;
+  box-shadow: 0 0 16px #e31e24, 0 2px 8px rgba(227,30,36,0.13);
+  opacity: 1;
+  transform: scale(1.18);
+}
+.cert-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.cert-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 24px 24px 24px;
+  max-width: 96vw;
+  max-height: 90vh;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cert-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 2.2rem;
+  color: #e31e24;
+  cursor: pointer;
+  z-index: 2;
+}
+.cert-modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #e31e24;
+  text-align: center;
+}
+.cert-modal-img {
+  max-width: 80vw;
+  max-height: 60vh;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(227,30,36,0.13);
+  background: #fff6f6;
+  border: 2px solid #e31e24;
+}
+@media (max-width: 600px) {
+  .cert-modal-content {
+    padding: 12px 4px 8px 4px;
+  }
+  .cert-modal-title {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  .cert-modal-img {
+    max-width: 96vw;
+    max-height: 40vh;
   }
 }
 </style> 

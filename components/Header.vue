@@ -59,7 +59,7 @@
             </div>
           </div>
           <div class="header__user-actions">
-            <NuxtLink to="/catalog" class="header__nav-link">Каталог продукции</NuxtLink>
+            <NuxtLink to="/catalog" class="header__nav-link catalog-link">Каталог продукции</NuxtLink>
             <NuxtLink to="/about/contacts" class="header__nav-link">Контакты</NuxtLink>
             <div class="cart-container">
               <NuxtLink to="/cart" class="cart-link">
@@ -570,7 +570,7 @@ onBeforeUnmount(() => {
   color: #fff;
   border: none;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 14px;
 }
@@ -594,7 +594,18 @@ onBeforeUnmount(() => {
 .header__nav-link:hover {
   color: #e31e24;
 }
-
+.catalog-link {
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1.5px solid #e31e24;
+  box-shadow: 0 2px 16px rgba(227,30,36,0.07);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+}
 .cart-container {
   position: relative;
   overflow: hidden;
