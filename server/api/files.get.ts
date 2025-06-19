@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
       const fileName = filePath.split('/').pop()
       return {
         name: fileName,
-        path: `/uploads/${fileName}`,
+        path: `/api/uploads/${fileName}`,
         fullPath: filePath
       }
     })

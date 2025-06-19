@@ -10,6 +10,8 @@ services:
     restart: always   
     ports:
       - "${PORT:-3001}:3001"
+    volumes:
+      - ./public/uploads:/app/public/uploads
     networks:
       - app-network
     environment:
@@ -19,6 +21,7 @@ services:
       - SUPABASE_KEY=${SUPABASE_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - FILE_STORAGE_MOUNT=/app/public/uploads
 
 networks:
   app-network:

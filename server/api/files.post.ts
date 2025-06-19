@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
       )
 
       uploadedFiles.push({
-        path: `/uploads/${fileName}`,
+        path: `/api/uploads/${fileName}`,
         originalName: file.name,
         size: file.size,
         type: file.type

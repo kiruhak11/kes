@@ -47,28 +47,5 @@ export default defineNuxtConfig({
   fileStorage: {
     // Используем переменную окружения для пути к хранилищу файлов
     mount: process.env.FILE_STORAGE_MOUNT || './public/uploads'
-  },
-  // device: {
-  //   // опционально: можно обновлять при ресайзе
-  //   refreshOnResize: true
-  // },
-  // nitro: {
-  //   routeRules: {
-  //     '/api/products': { 
-  //       // cache: {
-  //       //   maxAge: 60 * 5 // 5 minutes
-  //       // }
-  //     },
-  //     '/api/products/**': { 
-  //       cache: {
-  //         maxAge: 60 * 5 // 5 minutes
-  //       }
-  //     },
-  //     '/api/categories': { 
-  //       cache: {
-  //         maxAge: 60 * 30 // 30 minutes
-  //       }
-  //     }
-  //   }
-  // }
+  }
 });

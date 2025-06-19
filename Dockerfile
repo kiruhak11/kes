@@ -31,5 +31,8 @@ ENV PORT=$PORT
 
 COPY --from=build /app /app
 
+# Создаем папку для загрузок
+RUN mkdir -p /app/public/uploads && chmod 755 /app/public/uploads
+
 # Применение миграций при запуске контейнера
 CMD ["sh", "-c", "node .output/server/index.mjs"] 
