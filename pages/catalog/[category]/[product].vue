@@ -68,8 +68,8 @@
         <div class="marketing-section">
           <div class="marketing-card">
             <h3>Специальное предложение!</h3>
-            <p>Позвоните сейчас и получите скидку на этот товар!</p>
-            <a href="tel:+79001234567" class="marketing-phone">+7 (900) 123-45-67</a>
+            <p>Позвоните сейчас и получите выгодное предложение!</p>
+            <a :href="`tel:${contacts.phone[0]}`" class="marketing-phone">{{ contacts.phone[0] }}</a>
           </div>
         </div>
         <!-- Похожие товары -->
@@ -102,6 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useCartStore } from '~/stores/cart';
+import { contacts } from '~/data/contacts';
 import { useModalStore } from '~/stores/modal';
 
 const transliterate = (text: string): string => {
