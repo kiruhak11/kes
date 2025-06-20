@@ -10,7 +10,7 @@
         <div class="product-details">
           <h2>{{ product.name || 'Без названия' }}</h2>
           <div class="product-specs">
-            <div v-for="spec in product.specs" :key="spec.key">
+            <div v-for="spec in (Array.isArray(product.specs) ? product.specs.slice(0, 4) : product.specs ? Object.entries(product.specs).slice(0, 4).map(([key, value]) => ({ key, value })) : [])" :key="spec.key">
               <span class="spec-label">{{ spec.key }}:</span>
               <span class="spec-value">{{ spec.value }}</span>
             </div>

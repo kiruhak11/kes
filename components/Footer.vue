@@ -67,7 +67,7 @@ if (fetchedCategories.value) {
         <nav class="footer__mobile-nav">
           <NuxtLink to="/catalog">Каталог</NuxtLink>
           <NuxtLink to="/about">О нас</NuxtLink>
-          <NuxtLink to="/services">Услуги</NuxtLink>
+          <NuxtLink to="/contact">Услуги</NuxtLink>
           <NuxtLink to="/contacts">Контакты</NuxtLink>
         </nav>
         <div class="footer__phones">
@@ -117,7 +117,7 @@ if (fetchedCategories.value) {
                 <a v-for="phone in contacts.phone" :key="phone" href="tel:{{ phone }}">{{ phone }}</a>
               </div>
               <a href="mailto:{{ contacts.email }}" class="footer__email">{{ contacts.email }}</a>
-              <button class="footer__callback">Заказать звонок</button>
+              <NuxtLink to="/contact" class="btn footer__callback">Заказать звонок</NuxtLink>
         
             </div>
           </div>

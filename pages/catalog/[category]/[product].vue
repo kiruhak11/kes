@@ -1,9 +1,16 @@
 <template>
   <div class="product-detail-page">
     <div class="container">
-      <NuxtLink :to="`/catalog/${categorySlug}`" class="back-link">
-        &larr; Назад к категории
-      </NuxtLink>
+      <nav class="breadcrumbs">
+        <NuxtLink to="/">Главная</NuxtLink>
+        <span class="breadcrumbs-separator">→</span>
+        <NuxtLink to="/catalog">Каталог</NuxtLink>
+        <span class="breadcrumbs-separator">→</span>
+        <NuxtLink :to="`/catalog/${categorySlug}`">{{ categoryInfo?.title || 'Категория' }}</NuxtLink>
+        <span class="breadcrumbs-separator">→</span>
+        <span>{{ product?.name || 'Товар' }}</span>
+      </nav>
+
       <div v-if="product" class="product-detail-card">
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
@@ -265,6 +272,8 @@ import { useCartStore } from '~/stores/cart';
 import { contacts } from '~/data/contacts';
 import { useModalStore } from '~/stores/modal';
 import CommercialOfferModal from '~/components/CommercialOfferModal.vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useFetch } from '#app';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -621,6 +630,20 @@ function scrollGalleryBy(delta: number) {
   let newIdx = galleryActiveIndex.value + delta;
   newIdx = Math.max(0, Math.min(certificates.length - 1, newIdx));
   scrollToGalleryCard(newIdx);
+}
+
+const categoryInfo = ref<{ title: string; description: string; slug: string } | undefined>(undefined);
+
+// Получаем инфу о категории
+const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`)
+if (fetchedCategory.value && fetchedCategory.value.category) {
+  categoryInfo.value = {
+    title: fetchedCategory.value.category.name || '',
+    description: fetchedCategory.value.category.description || '',
+    slug: categorySlug.value
+  }
+} else {
+  console.error('Failed to fetch category info:', categoryError.value)
 }
 </script>
 
@@ -1093,6 +1116,7 @@ function scrollGalleryBy(delta: number) {
     width: 100%;
     min-width: 0;
     max-width: 100%;
+    font-size: 0.9rem;
   }
   .product-main-actions {
     flex-direction: column;
@@ -1103,6 +1127,60 @@ function scrollGalleryBy(delta: number) {
     width: 100%;
     min-width: 0;
     flex: 1 1 100%;
+  }
+
+  /* Оптимизация вкладок для мобильных */
+  .product-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fafbfc;
+    padding: 8px 0;
+    margin: 0 -4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    border-bottom: 2px solid #eee;
+  }
+  .product-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+  }
+
+  /* Оптимизация блока "О заводе" для мобильных */
+  .about-factory-section {
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px 12px;
+  }
+  .factory-menu {
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 2px solid #f0f0f0;
+    padding-right: 0;
+    padding-bottom: 12px;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .factory-menu::-webkit-scrollbar {
+    display: none;
+  }
+  .factory-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+  }
+  .factory-content {
+    padding-left: 0;
+    padding-top: 12px;
   }
 }
 @media (max-width: 480px) {
@@ -1570,6 +1648,7 @@ function scrollGalleryBy(delta: number) {
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 .cert-gallery-btn {
@@ -1680,5 +1759,24 @@ function scrollGalleryBy(delta: number) {
     max-width: 96vw;
     max-height: 40vh;
   }
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 24px;
+  gap: 8px;
+}
+.breadcrumbs-separator {
+  color: #aaa;
+  margin: 0 4px;
+}
+.breadcrumbs a {
+  color: #e31e24;
+  text-decoration: none;
+  transition: text-decoration 0.2s;
+}
+.breadcrumbs a:hover {
+  text-decoration: underline;
 }
 </style> 

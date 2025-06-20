@@ -1,6 +1,13 @@
 <template>
     <div class="category-page">
       <div class="container">
+        <nav class="breadcrumbs">
+          <NuxtLink to="/">Главная</NuxtLink>
+          <span class="breadcrumbs-separator">→</span>
+          <NuxtLink to="/catalog">Каталог</NuxtLink>
+          <span class="breadcrumbs-separator">→</span>
+          <span>{{ categoryInfo?.title || 'Категория' }}</span>
+        </nav>
         <div class="category-header">
           <h1 class="page-title">{{ categoryInfo?.title || 'Категория' }}</h1>
           <p class="category-description">{{ categoryInfo?.description || '' }}</p>
@@ -974,6 +981,12 @@ const closeCommercialOfferModal = () => {
   }
   
   @media (max-width: 768px) {
+    .spec-label {
+      font-size: 0.7rem;
+    }
+    .spec-value {
+      font-size: 0.7rem;
+    }
     .category-page {
       padding: 20px 0;
     }
@@ -1024,18 +1037,18 @@ const closeCommercialOfferModal = () => {
     }
     .products-grid {
       grid-template-columns: 1fr;
-      gap: 14px;
+      gap: 64px;
     }
     .product-card {
-      padding: 12px 12px 0;
+      margin: 12px 12px 0;
     }
     .product-card__img-wrap {
       height: 90px;
     }
     .product-image {
-      width: 130px;
-      height: 90px;
-      margin-top: -25px;
+      width: 150px;
+      height: 150px;
+      margin-top: -75px;
     }
     .product-card__content {
       padding: 0 10px 0 10px;
@@ -1133,5 +1146,25 @@ const closeCommercialOfferModal = () => {
     margin: 0 0 18px 0;
     font-weight: 500;
     text-align: right;
+  }
+
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    margin-bottom: 24px;
+    gap: 8px;
+  }
+  .breadcrumbs-separator {
+    color: #aaa;
+    margin: 0 4px;
+  }
+  .breadcrumbs a {
+    color: #e31e24;
+    text-decoration: none;
+    transition: text-decoration 0.2s;
+  }
+  .breadcrumbs a:hover {
+    text-decoration: underline;
   }
   </style> 

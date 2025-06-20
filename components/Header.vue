@@ -1,8 +1,8 @@
 <template>
   <header class="header">
-    <div class="header__top">
+    <div v-if="!$device.isMobile" class="header__top">
       <div class="container">
-        <div v-if="!$device.isMobile" class="header__top-content">
+        <div  class="header__top-content">
           <div class="header__contacts">
             <a href="mailto:{{ contacts.email }}" class="header__email">{{ contacts.email }}</a>
             <a href="tel:{{ contacts.phone[0] }}" class="header__phone">{{ contacts.phone[0] }}</a>
@@ -73,59 +73,6 @@
             </div>
           </div>
         </div>
-        <div v-else class="header__top-content">
-          <div class="form-group mobile-search">
-            <div class="search-container">
-              <div class="search-input-wrapper">
-                <input 
-                  type="text" 
-                  v-model="searchQuery" 
-                  placeholder="Поиск котлов..."
-                  class="search-input"
-                  @focus="handleSearchInput"
-                  @input="handleSearchInput"
-                >
-                <span class="search-icon"><IconsSearch/></span>
-              </div>
-              <div class="search-results" v-if="showSearchResults">
-                <div v-if="filteredProducts.length" class="search-results-list">
-                  <div 
-                    v-for="product in filteredProducts" 
-                    :key="product.id"
-                    class="search-result-item"
-                    @click="selectProduct(product)"
-                  >
-                    <div class="product-info">
-                      <div class="product-image">
-                        <img :src="product.image" :alt="product.name">
-                      </div>
-                      <div class="product-details">
-                        <div class="product-main">
-                          <span class="product-name">{{ product.name }}</span>
-                          <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
-                        </div>
-                        <div class="product-specs" v-if="product.specs">
-                          <span v-if="product.specs.power && product.specs.power !== 'отсутствует'" class="product-spec">
-                            <span class="spec-icon">⚡</span>
-                            {{ product.specs.power }}
-                          </span>
-                          <span v-if="product.specs.fuel && (!Array.isArray(product.specs.fuel) || product.specs.fuel.length > 0) && product.specs.fuel !== 'отсутствует'" class="product-spec">
-                            <span class="spec-icon">🔥</span>
-                            {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-results">
-                  {{ searchQuery ? 'Ничего не найдено' : 'Введите название товара' }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <NuxtLink to="/cart" class="mobile-cart-icon"><IconsCart/></NuxtLink>
-        </div>
       </div>
     </div>
     <div class="header__main">
@@ -136,15 +83,21 @@
               <img src="/images/logo.png" alt="Котельный завод КЭС" />
             </NuxtLink>
           </div>
-          <div v-if="$device.isMobile">
+          <div v-if="$device.isMobile" class="mobile-header-actions">
+            <button class="mobile-search-btn" @click="showMobileSearch = true">
+              <IconsSearch />
+            </button>
             <button 
               class="burger-btn" 
               :class="{ 'is-active': showMobileMenu }"
               @click="showMobileMenu = !showMobileMenu"
             >
-              <span class="burger-line"></span>
-              <span class="burger-line"></span>
-              <span class="burger-line"></span>
+            <label class="burger" for="burger">
+              <input type="checkbox" id="burger" @click="showMobileMenu = !showMobileMenu">
+              <span></span>
+              <span></span>
+              <span></span>
+            </label>
             </button>
             <transition name="slide-fade">
               <nav v-if="showMobileMenu" class="mobile-nav">
@@ -195,6 +148,60 @@
             </transition>
             <transition name="fade">
               <div v-if="showMobileMenu" class="mobile-menu-overlay" @click="showMobileMenu = false"></div>
+            </transition>
+            <transition name="fade">
+              <div v-if="showMobileSearch" class="mobile-search-modal">
+                <div class="mobile-search-header">
+                  <button class="close-btn" @click="showMobileSearch = false">×</button>
+                  <div class="mobile-search-bar">
+                    <input 
+                      type="text" 
+                      v-model="searchQuery" 
+                      placeholder="Поиск котлов..."
+                      class="search-input"
+                      @focus="handleSearchInput"
+                      @input="handleSearchInput"
+                      autofocus
+                    >
+                    <span class="search-icon"><IconsSearch/></span>
+                  </div>
+                </div>
+                <div class="search-results-mobile" v-if="showSearchResults">
+                  <div v-if="filteredProducts.length" class="search-results-list">
+                    <div 
+                      v-for="product in filteredProducts" 
+                      :key="product.id"
+                      class="search-result-item"
+                      @click="selectProduct(product)"
+                    >
+                      <div class="product-info">
+                        <div class="product-image">
+                          <img :src="product.image" :alt="product.name">
+                        </div>
+                        <div class="product-details">
+                          <div class="product-main">
+                            <span class="product-name">{{ product.name }}</span>
+                            <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                          </div>
+                          <div class="product-specs" v-if="product.specs">
+                            <span v-if="product.specs.power && product.specs.power !== 'отсутствует'" class="product-spec">
+                              <span class="spec-icon">⚡</span>
+                              {{ product.specs.power }}
+                            </span>
+                            <span v-if="product.specs.fuel && (!Array.isArray(product.specs.fuel) || product.specs.fuel.length > 0) && product.specs.fuel !== 'отсутствует'" class="product-spec">
+                              <span class="spec-icon">🔥</span>
+                              {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="no-results">
+                    {{ searchQuery ? 'Ничего не найдено' : 'Введите название товара' }}
+                  </div>
+                </div>
+              </div>
             </transition>
           </div>
           <nav class="header__nav" v-else>
@@ -287,6 +294,7 @@ const searchQuery = ref('')
 const showSearchResults = ref(false)
 const cartCount: Ref<number> = ref(0)
 const isHydrated: Ref<boolean> = ref(false)
+const showMobileSearch = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -414,7 +422,7 @@ const filteredBoilers = computed(() => {
 const selectProduct = (product: Product) => {
   searchQuery.value = product.name
   showSearchResults.value = false
-  
+  showMobileSearch.value = false
   // Используем category_slug если он есть, иначе генерируем из category
   const categorySlug = product.category_slug || transliterate(product.category).toLowerCase()
     .replace(/[^a-z0-9 -]/g, '')
@@ -534,7 +542,11 @@ onBeforeUnmount(() => {
 .header {
   margin-top: 75px;
   background-color: #f5f5f5;
+  @media (max-width: 768px) {
+    margin-top: 0;
+  }
 }
+
 .header__top {
   background: #f5f5f5;
   padding: 10px 0;
@@ -759,37 +771,59 @@ onBeforeUnmount(() => {
 }
 
 .burger-btn {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  width: 30px;
-  height: 24px;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
   z-index: 1200;
-  transition: all 0.3s ease;
+  padding: 0;
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .burger-line {
-  width: 100%;
-  height: 2px;
-  background-color: #333;
-  transition: all 0.3s ease;
-  transform-origin: left;
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: 2.5px;
+  background-color: rgba(51,51,51,0.85);
+  border-radius: 6px;
+  box-shadow: 0 1.5px 6px rgba(227,30,36,0.08);
+  transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+.burger-line:nth-child(1) {
+  top: 6px;
+}
+.burger-line:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.burger-line:nth-child(3) {
+  bottom: 6px;
 }
 
+.burger-btn.is-active {
+  box-shadow: 0 2px 16px rgba(227,30,36,0.13);
+}
+.burger-btn.is-active .burger-line {
+  background-color: #e31e24;
+  box-shadow: 0 2px 8px rgba(227,30,36,0.18);
+}
 .burger-btn.is-active .burger-line:nth-child(1) {
-  transform: rotate(45deg);
+  transform: translateY(12px) scaleX(0.95) rotate(45deg);
 }
-
 .burger-btn.is-active .burger-line:nth-child(2) {
   opacity: 0;
+  transform: scaleX(0.5);
 }
-
 .burger-btn.is-active .burger-line:nth-child(3) {
-  transform: rotate(-45deg);
+  transform: translateY(-12px) scaleX(0.95) rotate(-45deg);
 }
 
 .mobile-nav {
@@ -1090,7 +1124,25 @@ onBeforeUnmount(() => {
   align-items: center;
   width: 100%;
 }
+.burger-line {
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  transition: all 0.3s ease;
+  transform-origin: left;
+}
 
+.burger-btn.is-active .burger-line:nth-child(1) {
+  transform: rotate(45deg);
+}
+
+.burger-btn.is-active .burger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.burger-btn.is-active .burger-line:nth-child(3) {
+  transform: rotate(-45deg);
+}
 .search-input {
   width: 100%;
   padding: 6px 32px 6px 12px;
@@ -1281,4 +1333,228 @@ onBeforeUnmount(() => {
     padding: 3px 6px;
   }
 }
+
+.mobile-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-search-btn, .burger-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+}
+
+.mobile-search-btn {
+  font-size: 22px;
+}
+
+.mobile-search-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-search-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.mobile-search-bar {
+  position: relative;
+  flex-grow: 1;
+}
+
+.mobile-search-modal .search-input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background: #f9f9f9;
+  height: 44px;
+}
+
+.mobile-search-modal .search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #e31e24;
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.mobile-search-modal .close-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #888;
+  cursor: pointer;
+  padding: 0 12px 0 0;
+}
+
+.search-results-mobile {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.search-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-result-item {
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(227,30,36,0.07);
+  padding: 16px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+}
+
+.search-result-item:hover {
+  background: #f9f9f9;
+  box-shadow: 0 4px 16px rgba(227,30,36,0.13);
+  border-color: #e31e24;
+}
+
+.search-result-item .product-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.search-result-item .product-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+
+.search-result-item .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-result-item .product-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-result-item .product-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.search-result-item .product-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result-item .product-price {
+  font-size: 17px;
+  font-weight: 700;
+  color: #e31e24;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.search-result-item .product-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.search-result-item .product-spec {
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.burger {
+  position: relative;
+  width: 40px;
+  height: 30px;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+
+.burger input {
+  display: none;
+}
+
+.burger span {
+  display: block;
+  position: absolute;
+  height: 4px;
+  width: 80%;
+  background: black;
+  border-radius: 9px;
+  opacity: 1;
+  left: 0;
+  transform: rotate(0deg);
+  transition: .25s ease-in-out;
+}
+
+.burger span:nth-of-type(1) {
+  top: 0px;
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(2) {
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(3) {
+  top: 100%;
+  transform-origin: left center;
+  transform: translateY(-100%);
+}
+
+
 </style>

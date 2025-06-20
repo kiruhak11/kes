@@ -30,6 +30,7 @@
         <h2 class="section-title">Каталог продукции</h2>
         <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
           <div class="catalog-card" v-for="category in mainCategories" :key="category.slug">
+            <NuxtLink :to="`/catalog/${category.slug}`">
             <img 
               :src="category.images[0]" 
               :alt="category.title"
@@ -38,6 +39,7 @@
             <h3>{{ category.title }}</h3>
             <p v-if="!$device.isMobile">{{ category.description }}</p>
             <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
+          </NuxtLink>
           </div>
         </div>
         <div class="text-center">
@@ -522,7 +524,9 @@ function handleImageError(e: Event) {
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
-  
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 }
 .hero__title__bt {
   display: flex;
@@ -531,6 +535,10 @@ function handleImageError(e: Event) {
   margin: 0 auto;
   gap: 24px;
   flex-direction: row;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
 
 .section-title {
@@ -880,6 +888,7 @@ function handleImageError(e: Event) {
   font-weight: 500;
   color: white;
   border: none;
+  min-width: 250px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;

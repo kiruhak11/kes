@@ -1,10 +1,17 @@
 <template>
     <div class="catalog-page">
       <div class="container">
+        <nav class="breadcrumbs">
+          <NuxtLink to="/">Главная</NuxtLink>
+          <span class="breadcrumbs-separator">→</span>
+          <span>Каталог</span>
+        </nav>
         <h1 class="page-title">Каталог продукции</h1>
         
         <div class="catalog-grid">
           <div v-for="category in categories" :key="category.slug" class="catalog-item">
+            
+            <NuxtLink :to="`/catalog/${category.slug}`">
             <div class="catalog-item__image-container">
               <transition-group name="fade">
                 <img 
@@ -17,11 +24,12 @@
                 />
               </transition-group>
             </div>
-            <div class="catalog-item__content">
+            <div :to="`/catalog/${category.slug}`" class="catalog-item__content">
               <h2>{{ category.title }}</h2>
               <p>{{ category.description }}</p>
               <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
             </div>
+          </NuxtLink>
           </div>
         </div>
       </div>
@@ -185,6 +193,7 @@
   @media (max-width: 768px) {
     .catalog-grid {
       grid-template-columns: 1fr;
+      gap: 64px;
     }
     
     .page-title {
@@ -200,6 +209,26 @@
     .catalog-item__content {
       padding-top: 90px;
     }
+  }
+
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    margin-bottom: 24px;
+    gap: 8px;
+  }
+  .breadcrumbs-separator {
+    color: #aaa;
+    margin: 0 4px;
+  }
+  .breadcrumbs a {
+    color: #e31e24;
+    text-decoration: none;
+    transition: text-decoration 0.2s;
+  }
+  .breadcrumbs a:hover {
+    text-decoration: underline;
   }
   </style>
     
