@@ -41,6 +41,8 @@ export interface Database {
           specs: Json | null
           category_id: string | null
           additional_images: string[] | null
+          delivery_set: string | null
+          connection_scheme: string | null
         }
         Insert: {
           id?: number
@@ -52,6 +54,8 @@ export interface Database {
           specs?: Json | null
           category_id?: string | null
           additional_images?: string[] | null
+          delivery_set?: string | null
+          connection_scheme?: string | null
         }
         Update: {
           id?: number
@@ -63,6 +67,8 @@ export interface Database {
           specs?: Json | null
           category_id?: string | null
           additional_images?: string[] | null
+          delivery_set?: string | null
+          connection_scheme?: string | null
         }
         Relationships: [
           {
@@ -245,6 +251,8 @@ export interface Product {
   slug: string
   specs?: Record<string, any>
   additional_images?: string[]
+  delivery_set?: string
+  connection_scheme?: string
 }
 
 export interface Category {

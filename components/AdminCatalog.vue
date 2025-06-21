@@ -53,6 +53,25 @@
           v-model="newProdLocal.extendedDescription"
           placeholder="Расширенное описание"
         ></textarea>
+
+        <textarea
+          v-model="newProdLocal.delivery_set"
+          placeholder="Комплект поставки"
+        ></textarea>
+
+        <label>Схема подключения:</label>
+        <input
+          type="file"
+          accept="image/*"
+          @change="(e) => handleConnectionSchemeUpload(e, newProdLocal)"
+        />
+        <img
+          v-if="newProdLocal.connection_scheme"
+          :src="newProdLocal.connection_scheme"
+          class="img-preview"
+          alt="Предпросмотр схемы"
+        />
+
         <input
           v-model.number="newProdLocal.price"
           type="number"
@@ -319,6 +338,24 @@
                 class="img-preview"
               />
 
+              <textarea
+                v-model="p.delivery_set"
+                placeholder="Комплект поставки"
+              ></textarea>
+
+              <label>Схема подключения:</label>
+              <input
+                type="file"
+                accept="image/*"
+                @change="(e) => handleConnectionSchemeUpload(e, p)"
+              />
+              <img
+                v-if="p.connection_scheme"
+                :src="p.connection_scheme"
+                class="img-preview"
+                alt="Предпросмотр схемы"
+              />
+
               <h3>Характеристики</h3>
               <table class="specs-table">
                 <tbody>
@@ -448,6 +485,8 @@ interface Product {
   category_slug?: string
   slug: string
   specs?: Record<string, any>
+  connection_scheme?: string
+  delivery_set?: string
 }
 
 // Props
@@ -497,6 +536,7 @@ const emit = defineEmits<{
   (e: 'removeGalleryImage', idx: number): void
   (e: 'removeEditGalleryImage', product: Product, idx: number): void
   (e: 'handleEditGalleryUpload', event: Event, product: Product): void
+  (e: 'handleConnectionSchemeUpload', event: Event, product: Product): void
   (e: 'update:password', val: string): void
   (e: 'update:newCategory', val: any): void
   (e: 'update:newProdPowerValue', val: any): void
@@ -896,6 +936,7 @@ const handleGalleryUpload = (event: Event) => emit('handleGalleryUpload', event)
 const removeGalleryImage = (idx: number) => emit('removeGalleryImage', idx)
 const removeEditGalleryImage = (product: Product, idx: number) => emit('removeEditGalleryImage', product, idx)
 const handleEditGalleryUpload = (event: Event, product: Product) => emit('handleEditGalleryUpload', event, product)
+const handleConnectionSchemeUpload = (event: Event, product: Product) => emit('handleConnectionSchemeUpload', event, product)
 
 function onPasswordInput(e: Event) {
   const target = e.target as HTMLInputElement | null

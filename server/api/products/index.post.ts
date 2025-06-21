@@ -17,6 +17,8 @@ interface Product {
   category_id: string
   additional_images?: string[]
   specs?: ProductSpecs
+  delivery_set?: string
+  connection_scheme?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -55,7 +57,9 @@ export default defineEventHandler(async (event) => {
       image: body.image || '/images/placeholders/placeholder.png',
       category_id: body.category_id,
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : [],
-      specs: body.specs || {}
+      specs: body.specs || {},
+      delivery_set: body.delivery_set || null,
+      connection_scheme: body.connection_scheme || null
     }
  
 

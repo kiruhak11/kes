@@ -44,6 +44,7 @@
       @remove-new-spec="removeNewSpec"
       @delete-product="deleteProduct"
       @handle-image-upload="handleImageUpload"
+      @handle-connection-scheme-upload="handleConnectionSchemeUpload"
       @toggle-new-prod-fuel-dropdown="toggleNewProdFuelDropdown"
       @handle-gallery-upload="handleGalleryUpload"
       @remove-gallery-image="removeGalleryImage"
@@ -154,6 +155,8 @@ interface Product {
   slug: string
   specs?: Record<string, any>
   additional_images?: string[]
+  delivery_set?: string
+  connection_scheme?: string
 }
 
 interface Request {
@@ -195,7 +198,9 @@ const newProd = ref({
   extendedDescription: '',
   price: 0,
   image: '',
-  category: ''
+  category: '',
+  delivery_set: '',
+  connection_scheme: ''
 })
 const newCategory = ref({
   name: '',
@@ -446,7 +451,9 @@ async function addProduct() {
       category_name: categoryName,
       category_slug: categorySlug,
       specs: Object.keys(specs).length > 0 ? specs : undefined, // Если specs пустой, не отправляем его
-      additional_images: newProdGallery.value.length > 0 ? newProdGallery.value : undefined
+      additional_images: newProdGallery.value.length > 0 ? newProdGallery.value : undefined,
+      delivery_set: newProd.value.delivery_set || undefined,
+      connection_scheme: newProd.value.connection_scheme || undefined
     }
 
 
@@ -488,7 +495,9 @@ const resetForm = () => {
     extendedDescription: '',
     price: 0,
     image: '',
-    category: ''
+    category: '',
+    delivery_set: '',
+    connection_scheme: ''
   }
   newCategory.value = {
     name: '',
@@ -576,7 +585,9 @@ async function updateWithSpecs(p: Product) {
       image: p.image,
       category_id: category.id,
       specs: Object.keys(cleanSpecs).length > 0 ? cleanSpecs : null,
-      additional_images: Array.isArray(p.specs?.images) ? p.specs.images : null
+      additional_images: Array.isArray(p.specs?.images) ? p.specs.images : null,
+      delivery_set: p.delivery_set || null,
+      connection_scheme: p.connection_scheme || null
     }
  
 
@@ -596,7 +607,9 @@ async function updateWithSpecs(p: Product) {
         price: p.price,
         image: p.image,
         category: p.category,
-        specs: cleanSpecs
+        specs: cleanSpecs,
+        delivery_set: p.delivery_set,
+        connection_scheme: p.connection_scheme
       }
     }
 
@@ -676,6 +689,20 @@ async function handleImageUpload(event: Event, product: Product | Partial<Produc
     product.image = filePath
   } catch (error) {
     console.error('Error uploading image:', error)
+  }
+}
+
+async function handleConnectionSchemeUpload(event: Event, product: Product | Partial<Product>) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || !input.files[0]) return;
+
+  const file = input.files[0];
+
+  try {
+    const filePath = await uploadSingleFile(file);
+    product.connection_scheme = filePath;
+  } catch (error) {
+    console.error('Error uploading connection scheme image:', error);
   }
 }
 

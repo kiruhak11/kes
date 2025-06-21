@@ -113,19 +113,15 @@
           </div>
           <div v-if="activeTab === 'delivery'" class="section-block">
             <h2 class="section-title">Комплект поставки</h2>
-            <ul class="delivery-list">
-              <li>Котел в сборе</li>
-              <li>Паспорт и инструкция</li>
-              <li>Упаковка</li>
-              <li>Сопроводительные документы</li>
-            </ul>
+            <div v-if="product.delivery_set" class="delivery-set-content" v-html="product.delivery_set.replace(/\\n/g, '<br>')"></div>
+            <div v-else class="no-data-message">Информация о комплекте поставки уточняется.</div>
           </div>
           <div v-if="activeTab === 'scheme'" class="section-block">
             <h2 class="section-title">Схема подключения</h2>
-            <div class="scheme-placeholder">
-              <span class="scheme-icon">🔧</span>
-              <span>Схема подключения появится здесь</span>
+            <div v-if="product.connection_scheme" class="scheme-image-container">
+              <img :src="product.connection_scheme" alt="Схема подключения" class="scheme-image">
             </div>
+            <div v-else class="no-data-message">Схема подключения уточняется.</div>
           </div>
           <div v-if="activeTab === 'certificates'" class="section-block certificates-block">
             <h2 class="section-title">Сертификаты и гарантии</h2>
@@ -303,6 +299,8 @@ interface APIProduct {
   category_id: string | null
   additional_images: string[] | null
   specs: ProductSpecs
+  delivery_set: string | null
+  connection_scheme: string | null
 }
 
 interface Product {
@@ -317,6 +315,8 @@ interface Product {
   slug: string
   specs?: ProductSpecs
   additional_images?: string[]
+  delivery_set?: string
+  connection_scheme?: string
 }
 
 interface Certificate {
@@ -374,7 +374,9 @@ if (fetchError.value) {
     category_slug: '', // Will be filled from category data
     slug: '', // Will be generated
     additional_images: product.additional_images || [],
-    specs: product.specs || {}
+    specs: product.specs || {},
+    delivery_set: product.delivery_set || '',
+    connection_scheme: product.connection_scheme || ''
   }))
 } else {
   products.value = []
@@ -1073,6 +1075,25 @@ if (fetchedCategory.value && fetchedCategory.value.category) {
   font-size: 1.5rem;
   color: #999;
   padding: 50px 0;
+}
+.delivery-set-content {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.scheme-image-container {
+  text-align: center;
+}
+.scheme-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+.no-data-message {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #999;
+  padding: 40px 0;
 }
 @media (max-width: 1024px) {
   .product-top-row, .product-middle-row {
