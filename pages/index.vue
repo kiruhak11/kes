@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <!-- Hero Section -->
-    <section class="hero" :class="{ 'hero--mobile': $device.isMobile }">
+    <section class="hero" :class="{ 'hero--mobile': $device.isMobile }" v-scroll-reveal="'fade-in'">
       <div
         v-for="(img, idx) in heroImages"
         :key="img"
@@ -25,11 +25,11 @@
     </section>
 
     <!-- Catalog Section -->
-    <section class="catalog">
+    <section class="catalog" v-scroll-reveal="'fade-in-up'">
       <div class="container">
         <h2 class="section-title">Каталог продукции</h2>
         <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
-          <div class="catalog-card" v-for="category in mainCategories" :key="category.slug">
+          <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
             <NuxtLink :to="`/catalog/${category.slug}`">
             <img 
               :src="category.images[0]" 
@@ -49,13 +49,13 @@
     </section>
 
     <!-- About Section -->
-    <section class="about">
+    <section class="about" v-scroll-reveal="'slide-in-left'">
       <div class="container">
         <div class="about__content">
           <div class="about__text">
             <h2>О заводе</h2>
             <ul class="about__list">
-              <li>Наше оборудование успешно работает практически во всех регионах России от Крыма до Камчатки, на территории соседних государств Казахстана, Белоруссии, Монголии, Литвы, Узбекистана.</li>
+              <li>Наше оборудование успешно работает практически во всех регионах России от Крыма до Камчатки.</li>
               <li>Разработки проектного отдела завода имеют патенты. Оборудование производится по типовым проектам и по техническим заданиям.</li>
               <li>Вся продукция завода сертифицирована.</li>
               <li>Аттестованная технология сварки позволяет выпускать поднадзорную продукцию.</li>
@@ -64,7 +64,7 @@
               <li>Завод производит пуско-наладку котельных.</li>
             </ul>
           </div>
-          <div class="about__media">
+          <div class="about__media" v-scroll-reveal="'slide-in-right'">
             <div class="factory-slider">
               <div 
                 v-for="(img, idx) in factoryImages" 
@@ -102,32 +102,25 @@
     </section>
 
     <!-- Services Section -->
-    <section class="services">
+    <section class="services" v-scroll-reveal="'fade-in-up'">
       <div class="container">
         <h2 class="section-title">Услуги завода</h2>
         <div class="grid grid-4">
-          <div class="service-card">
-            <img src="/images/services/installation.jpg" alt="Монтаж котельной" />
-            <h3>Монтаж | Демонтаж <br>котлов</h3>
-          </div>
-          <div class="service-card">
-            <img src="/images/services/design.jpg" alt="Проектирование котельной" />
-            <h3>Проектирование котельной</h3>
-          </div>
-          <div class="service-card">
-            <img src="/images/services/startup.jpg" alt="Пуско-наладка котельной" />
-            <h3>Пуско-наладка котельной</h3>
-          </div>
-          <div class="service-card">
-            <img src="/images/services/turnkey.jpg" alt="Котельная под ключ" />
-            <h3>Котельная под ключ</h3>
+          <div
+            class="service-card"
+            v-for="(service, idx) in services"
+            :key="service.title"
+            v-scroll-reveal="service.animation"
+          >
+            <img :src="service.img" :alt="service.title" />
+            <h3 v-html="service.title"></h3>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Calculator Section -->
-    <section class="calculator">
+    <section class="calculator" v-scroll-reveal="'fade-in-up'">
       <div class="container">
         <h2 class="section-title">
           <TypeWriter />
@@ -233,7 +226,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useNuxtApp } from '#app'
 import { useModalStore } from '~/stores/modal'
 import BackIcon from '~/components/icons/back.vue'
 import NextIcon from '~/components/icons/next.vue'
@@ -489,6 +481,29 @@ function handleImageError(e: Event) {
     img.src = '/images/placeholders/category-placeholder.png'
   }
 }
+
+const services = [
+  {
+    img: '/images/services/installation.jpg',
+    title: 'Монтаж | Демонтаж <br>котлов',
+    animation: 'slide-in-left',
+  },
+  {
+    img: '/images/services/design.jpg',
+    title: 'Проектирование котельной',
+    animation: 'fade-in-up',
+  },
+  {
+    img: '/images/services/startup.jpg',
+    title: 'Пуско-наладка котельной',
+    animation: 'zoom-in',
+  },
+  {
+    img: '/images/services/turnkey.jpg',
+    title: 'Котельная под ключ',
+    animation: 'slide-in-right',
+  },
+];
 </script>
 
 <style lang="scss" scoped>

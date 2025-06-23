@@ -52,7 +52,7 @@
                 <p class="product-short-description">{{ product.description }}</p>
               </div>
               <div class="product-main-specs">
-                <div v-for="([key, value], idx) in Object.entries(product.specs || {}).filter(([k]) => k !== 'images' && k !== 'power' && k !== 'fuel').slice(0, 4)" :key="key" class="spec-item">
+                <div v-for="([key, value], idx) in displaySpecs.slice(0, 4)" :key="key" class="spec-item">
                   <span class="spec-label">{{ capitalize(key) }}</span>
                   <span class="spec-dots"></span>
                   <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
@@ -269,7 +269,6 @@ import { contacts } from '~/data/contacts';
 import { useModalStore } from '~/stores/modal';
 import CommercialOfferModal from '~/components/CommercialOfferModal.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useFetch } from '#app';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -331,7 +330,7 @@ const config = useRuntimeConfig()
 
 // Get category and product slugs from route
 const categorySlug = computed(() => {
-  const slug = route.params.category
+  const slug = route.params.category as string | undefined
   return typeof slug === 'string' ? slug : Array.isArray(slug) ? slug[0] : ''
 })
 
@@ -466,7 +465,7 @@ const addToCart = () => {
     image: product.value.image,
     quantity: 1,
     category: product.value.category || 'Без категории',
-    category_slug: product.value.category_slug || categorySlug.value || 'unknown',
+    category_slug: product.value.category_slug || (route.params.category as string) || 'unknown',
     slug: product.value.slug || generateProductSlug(product.value)
   };
 
@@ -547,12 +546,31 @@ const factoryTabs = [
 const activeFactoryTab = ref('certificates');
 
 const certificates = [
-  { id: 1, title: 'Котлы угольные', image: '/certificates/sert_kotl_ugoln.png' },
-  { id: 2, title: 'Котлы газовые', image: '/certificates/sert_kotl_gaz.png' },
-  { id: 3, title: 'Котлы на мазуте', image: '/certificates/sert_kotl_maz.png' },
-  { id: 4, title: 'Котлы дизельные', image: '/certificates/sert_kotl_diz.png' },
-  { id: 5, title: 'Сертификат соответствия КМТ', image: '/certificates/sert_sootv_MKT.png' },
-  { id: 6, title: 'Котлы газовые и мазутные', image: '/certificates/sert_kotl_gaz_maz.png' },
+{
+    id: 1,
+    title: 'Сертификат на газовые котлы',
+    image: '/certificates/dek_gaz.png'
+  },
+  {
+    id: 2,
+    title: 'Сертификат на водогрейные котлы на твердом и жидком топливе',
+    image: '/certificates/dek_kotly.png'
+  },
+  {
+    id: 3,
+    title: 'Декларация о соответствии тягодутьевые машины',
+    image: '/certificates/dek_tyag.png'
+  },
+  {
+    id: 4,
+    title: 'Декларация о соответствии оборудование пылеулавливающее',
+    image: '/certificates/dek_pil.png'
+  },
+  {
+    id: 5,
+    title: 'Декларация о соответствии блочно-модульной котельной',
+    image: '/certificates/dek_mod.png'
+  }
 ];
 const selectedCertificate = ref<Certificate | null>(null);
 const openCertificateModal = (certificate: Certificate) => { selectedCertificate.value = certificate; };
@@ -595,7 +613,7 @@ const incrementCart = () => {
       image: product.value.image,
       quantity: 1,
       category: product.value.category || 'Без категории',
-      category_slug: product.value.category_slug || categorySlug.value || 'unknown',
+      category_slug: product.value.category_slug || (route.params.category as string) || 'unknown',
       slug: product.value.slug || generateProductSlug(product.value)
     };
     cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
@@ -638,10 +656,10 @@ const categoryInfo = ref<{ title: string; description: string; slug: string } | 
 
 // Получаем инфу о категории
 const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`)
-if (fetchedCategory.value && fetchedCategory.value.category) {
+if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
   categoryInfo.value = {
-    title: fetchedCategory.value.category.name || '',
-    description: fetchedCategory.value.category.description || '',
+    title: (fetchedCategory.value as any).category.name || '',
+    description: (fetchedCategory.value as any).category.description || '',
     slug: categorySlug.value
   }
 } else {
@@ -1266,8 +1284,8 @@ if (fetchedCategory.value && fetchedCategory.value.category) {
 .specs-list {
   list-style: none;
   padding: 0;
-  width: 100%;
-  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
 }
 .delivery-list {
   list-style: disc inside;
@@ -1403,24 +1421,35 @@ if (fetchedCategory.value && fetchedCategory.value.category) {
 }
 .spec-item {
   display: flex;
-  align-items: center;
-  font-size: 1rem;
-  margin-bottom: 4px;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  gap: 1rem;
 }
 .spec-label {
-  color: #222;
-  min-width: 120px;
-  font-weight: 600;
+  color: var(--text-light);
+  white-space: nowrap;
 }
 .spec-dots {
-  flex: 1;
-  border-bottom: 1px dotted #bbb;
-  margin: 0 8px;
-  height: 1px;
+  flex-grow: 1;
+  border-bottom: 2px dotted #e0e0e0;
+  position: relative;
 }
 .spec-value {
   font-weight: 500;
-  color: #333;
+  text-align: right;
+  white-space: nowrap;
+}
+.product-brief-specs {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+
+  .spec-item {
+    padding: 0.2rem 0;
+    font-size: 0.9rem;
+    border-bottom: none;
+  }
 }
 .cart-counter {
   width: 100%;

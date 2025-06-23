@@ -11,7 +11,7 @@
             <i class="fas fa-phone"></i>
             <div class="contact-text">
               <p>Тел/факс:</p>
-              <a :href="`tel:${contacts.phone}`">{{ contacts.phone }}</a>
+              <a :href="`tel:${contacts.phone[0]}`">{{ contacts.phone[0] }}</a>
               
             </div>
           </div>
@@ -56,30 +56,29 @@
               <p>БИК 040173604</p>
             </div>
 
-            <div class="bank-details">
-              <p><strong>Банк «ЛЕВОБЕРЕЖНЫЙ» (ПАО)</strong></p>
-              <p>г. Новосибирск</p>
-              <p>Р/С 40702810009520000562</p>
-              <p>К/С 30101810100000000850</p>
-              <p>БИК 045004850</p>
-            </div>
           </div>
         </div>
       </div>
 
       <!-- Карта -->
       <div class="contact-card map-container">
-        <h2>Как нас найти</h2>
-        <div class="map">
-          <iframe 
-            src="https://static-maps.yandex.ru/v1?ll=53.388598,83.762407&z=16&l=map&pt=53.388598,83.762407,pm2rdm&apikey=fb86c542-071d-40a4-86e8-2a7f52e79259" 
-            width="100%" 
-            height="450" 
-            style="border:0;" 
-            allowfullscreen="" 
+        <h2 class="map-title"><span class="map-icon">📍</span> Как нас найти</h2>
+        <div class="map animated-map">
+          <iframe
+            src="https://www.google.com/maps?q=Бриллиантовая+2Е,+Барнаул&output=embed"
+            width="100%"
+            height="400"
+            style="border:0; border-radius:16px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);"
+            allowfullscreen=""
             loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="КотлоЭнергоСнаб на Google Maps"
           ></iframe>
+          
         </div>
+        <div style="text-align:center; margin-top:1rem;">
+            <a href="https://www.google.com/maps/search/?api=1&query=Бриллиантовая+2Е,+Барнаул" target="_blank" rel="noopener" class="map-btn">Открыть в Google Картах</a>
+          </div>
       </div>
     </div>
   </div>
@@ -202,6 +201,44 @@ definePageMeta({
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.map-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #007bff;
+  gap: 0.5em;
+}
+.map-icon {
+  font-size: 1.6em;
+  color: #e31e24;
+}
+.animated-map {
+  animation: fadeInMap 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes fadeInMap {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.map-btn {
+  display: inline-block;
+  background: #007bff;
+  color: #fff !important;
+  padding: 0.7em 1.5em;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1em;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.12);
+  transition: background 0.2s, box-shadow 0.2s;
+  margin-top: 0.5em;
+}
+.map-btn:hover {
+  background: #0056b3;
+  box-shadow: 0 4px 16px rgba(0,86,179,0.18);
+}
 @media (max-width: 768px) {
   .contacts-grid {
     grid-template-columns: 1fr;
@@ -213,6 +250,14 @@ definePageMeta({
 
   .page-title {
     font-size: 2rem;
+  }
+}
+@media (max-width: 600px) {
+  .map iframe {
+    height: 220px !important;
+  }
+  .map-title {
+    font-size: 1.1rem;
   }
 }
 </style> 

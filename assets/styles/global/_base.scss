@@ -114,3 +114,29 @@ button::after, .btn::after, [class*="btn"]::after {
 button:hover::after, .btn:hover::after, [class*="btn"]:hover::after {
   left: 120%;
 }
+
+// === Scroll Reveal Animations ===
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
+  will-change: opacity, transform;
+}
+.scroll-reveal-animate {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+
+.scroll-reveal--fade-in {
+  transform: none;
+}
+.scroll-reveal--zoom-in {
+  transform: scale(0.85);
+}
+.scroll-reveal--slide-in-left {
+  transform: translateX(-40px);
+}
+.scroll-reveal--slide-in-right {
+  transform: translateX(40px);
+}

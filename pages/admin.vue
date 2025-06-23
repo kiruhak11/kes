@@ -66,10 +66,12 @@
       :show-add-category-modal="showAddCategoryModal"
       :show-edit-category-modal="showEditCategoryModal"
       :modal-store="modalStore"
+      :is-deleting="isDeletingEmptyCategories"
       @add-category="addCategory"
       @edit-category="editCategory"
       @save-category="saveCategory"
       @delete-category="deleteCategory"
+      @delete-empty-categories="deleteEmptyCategories"
       @close-edit-category-modal="closeEditCategoryModal"
       @update:new-category="val => newCategory = val"
       @update:editing-category="val => editingCategory = val"
@@ -952,6 +954,7 @@ function confirmCategoryDescription() {
 const editingCategory = ref<any>(null)
 const showAddCategoryModal = ref(false)
 const showEditCategoryModal = ref(false)
+const isDeletingEmptyCategories = ref(false)
 
 // Функция для генерации slug из названия
 watch(() => newCategory.value.name, (newName) => {
@@ -1086,6 +1089,52 @@ async function deleteCategory(id: string) {
       } catch (error: any) {
         console.error('Error deleting category:', error)
         modalStore.openModal("Ошибка",`Ошибка при удалении категории: ${error.message || 'Неизвестная ошибка'}`)
+      }
+    }
+  )
+}
+
+// Удаление всех пустых категорий
+async function deleteEmptyCategories() {
+  modalStore.openModal(
+    "Удаление пустых категорий",
+    'Вы уверены, что хотите удалить все пустые категории? Это действие нельзя отменить.',
+    "Подтвердить",
+    async () => {
+      try {
+        isDeletingEmptyCategories.value = true
+        
+        const response = await fetch('/api/categories/delete-empty', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.statusMessage || 'Failed to delete empty categories')
+        }
+
+        // Обновляем список категорий, удаляя те, которые были удалены
+        if (data.deletedCategories && data.deletedCategories.length > 0) {
+          const deletedIds = data.deletedCategories.map((cat: any) => cat.id)
+          categories.value = categories.value.filter(cat => !deletedIds.includes(cat.id))
+        }
+
+        modalStore.openModal(
+          "Успех", 
+          `Успешно удалено ${data.deletedCount} пустых категорий`
+        )
+      } catch (error: any) {
+        console.error('Error deleting empty categories:', error)
+        modalStore.openModal(
+          "Ошибка",
+          `Ошибка при удалении пустых категорий: ${error.message || 'Неизвестная ошибка'}`
+        )
+      } finally {
+        isDeletingEmptyCategories.value = false
       }
     }
   )
@@ -2116,4 +2165,3 @@ function getCategoryProductCount(categoryId: string): number {
   }
 }
 </style>
-

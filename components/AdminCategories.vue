@@ -3,9 +3,15 @@
   <div>
     <h1>Управление категориями</h1>
     <div class="category-manager">
-      <button class="btn btn-primary" @click="showAddCategoryModal = true">
-        <i class="fas fa-plus"></i> Добавить категорию
-      </button>
+      <div class="category-actions">
+        <button class="btn btn-primary" @click="showAddCategoryModal = true">
+          <i class="fas fa-plus"></i> Добавить категорию
+        </button>
+        <button class="btn btn-warning" @click="deleteEmptyCategories" :disabled="isDeleting">
+          <i class="fas fa-trash-alt"></i> 
+          {{ isDeleting ? 'Удаление...' : 'Удалить все пустые категории' }}
+        </button>
+      </div>
       <div class="categories-grid">
         <div v-for="cat in categories" :key="cat.id" class="category-card">
           <div class="category-card__header">
@@ -90,7 +96,7 @@
           <button class="close-button" @click="closeEditCategoryModal">&times;</button>
         </div>
         <div class="modal-body">
-          <form @submit.prevent="saveCategory" class="category-form">
+          <form v-if="editingCategoryLocal" @submit.prevent="saveCategory" class="category-form">
             <div class="form-group">
               <label>Название:</label>
               <input 
@@ -164,7 +170,7 @@ const props = defineProps({
     required: true
   },
   editingCategory: {
-    type: Object as PropType<Record<string, any>>,
+    type: Object as PropType<Record<string, any> | null>,
     required: true
   },
   showAddCategoryModal: Boolean,
@@ -172,7 +178,8 @@ const props = defineProps({
   getCategoryProductCount: {
     type: Function as PropType<(id: string) => number>,
     required: true
-  }
+  },
+  isDeleting: Boolean
 })
 
 const emit = defineEmits<{
@@ -180,6 +187,7 @@ const emit = defineEmits<{
   (e: 'edit-category', category: AdminCategory): void
   (e: 'save-category'): void
   (e: 'delete-category', id: string): void
+  (e: 'delete-empty-categories'): void
   (e: 'close-edit-category-modal'): void
   (e: 'update:newCategory', val: any): void
   (e: 'update:editingCategory', val: any): void
@@ -228,6 +236,10 @@ const closeEditCategoryModal = () => {
   showEditCategoryModal.value = false
   emit('close-edit-category-modal')
 }
+
+const deleteEmptyCategories = () => {
+  emit('delete-empty-categories')
+}
 </script>
 
 <style scoped>
@@ -237,6 +249,40 @@ const closeEditCategoryModal = () => {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+
+.category-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.category-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.category-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+  border: 1px solid #ffc107;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #e0a800;
+  border-color: #d39e00;
+}
+
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

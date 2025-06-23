@@ -65,7 +65,7 @@
               <NuxtLink to="/cart" class="cart-link">
                 <span class="cart-text">Корзина</span>
                 <div class="cart-icon-wrapper">
-                  <span class="cart-icon">🛒</span>
+                  <span class="cart-icon"><IconsCart/></span>
                   <span v-if="isHydrated" class="cart-count">{{ cartCount }}</span>
                   <span v-else class="cart-count">0</span>
                 </div>
@@ -206,6 +206,7 @@
           </div>
           <nav class="header__nav" v-else>
             <ul class="header__menu">
+            <a href="/vacancies" class="header__link">Вакансии</a>
             <a href="/questionnaire" class="header__link">Опросные листы</a>
             <a href="/certificates" class="header__link">Сертификаты</a>
             <a href="/about" class="header__link">О компании</a>
@@ -220,7 +221,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useNuxtApp, useRoute, useRouter } from '#app'
 import { useCartStore } from '~/stores/cart'
 import { contacts } from '~/data/contacts'
 import type { Ref } from 'vue'

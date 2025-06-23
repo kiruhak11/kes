@@ -10,8 +10,9 @@
         <div class="product-details">
           <h2>{{ product.name || 'Без названия' }}</h2>
           <div class="product-specs">
-            <div v-for="spec in (Array.isArray(product.specs) ? product.specs.slice(0, 4) : product.specs ? Object.entries(product.specs).slice(0, 4).map(([key, value]) => ({ key, value })) : [])" :key="spec.key">
-              <span class="spec-label">{{ spec.key }}:</span>
+            <div v-for="spec in (Array.isArray(product.specs) ? product.specs.slice(0, 4) : product.specs ? Object.entries(product.specs).slice(0, 4).map(([key, value]) => ({ key, value })) : [])" :key="spec.key" class="spec-item">
+              <span class="spec-label">{{ spec.key }}</span>
+              <span class="spec-dots"></span>
               <span class="spec-value">{{ spec.value }}</span>
             </div>
           </div>
@@ -227,12 +228,28 @@ Email: ${formData.value.email}
 }
 
 .spec-item {
-  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.25rem 0;
+  gap: .5rem;
 }
 
 .spec-label {
-  font-weight: bold;
-  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.spec-dots {
+  flex-grow: 1;
+  border-bottom: 2px dotted #ccc;
+  position: relative;
+  bottom: 4px; /* Adjust vertical alignment */
+}
+
+.spec-value {
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .product-description {

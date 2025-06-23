@@ -502,13 +502,13 @@ const closeCommercialOfferModal = () => {
   }
 
   // Получаем инфу о категории
-  const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`) 
-  if (fetchedCategory.value && fetchedCategory.value.category) {
+  const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`)
+  if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
     categoryInfo.value = {
-      title: fetchedCategory.value.category.name || '',
-      description: fetchedCategory.value.category.description || '',
+      title: (fetchedCategory.value as any).category.name || '',
+      description: (fetchedCategory.value as any).category.description || '',
       slug: categorySlug.value
-    } 
+    }
   } else {
     console.error('Failed to fetch category info:', categoryError.value)
   }
@@ -843,10 +843,16 @@ const closeCommercialOfferModal = () => {
     font-size: 1rem;
     margin-bottom: 4px;
   }
-  
+  .spec-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.85rem;
+    padding: 0.1rem 0;
+    gap: .5rem;
+  }
   .spec-label {
     color: #222;
-    min-width: 120px;
     font-weight: 600;
   }
   

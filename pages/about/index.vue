@@ -96,18 +96,16 @@
         <p>
           Всю дополнительную информацию Вы можете получить, позвонив по телефону:
         </p>
+        <a :href="`tel:${contacts.phone[0]}`">{{ contacts.phone[0] }}</a>
         <p>
-          Тел./Факс: <strong>(3852) 226-337</strong>, <strong>(3852) 226-338</strong>, <strong>(3852) 226-938</strong>
-        </p>
-        <p>
-          E-mail: <a href="mailto:kes-altai@mail.ru">kes-altai@mail.ru</a>
+          E-mail: <a :href="`mailto:${contacts.email}`">{{ contacts.email }}</a>
         </p>
       </div>
     </section>
   </template>
   
   <script setup lang="ts">
-  // Здесь можно подключать динамические данные при необходимости
+import { contacts } from '~/data/contacts';
   </script>
   
   <style lang="scss" scoped>

@@ -1,9 +1,10 @@
 <template>
-  <div class="container">
-    <h1 class="page-title">Сертификаты</h1>
+  <div class="container" v-scroll-reveal="'fade-in'">
+    <h1 class="page-title" v-scroll-reveal="'slide-in-left'">Сертификаты</h1>
     <div class="certificates-grid">
       <div v-for="certificate in certificates" :key="certificate.id" 
            class="certificate-card"
+           v-scroll-reveal="'zoom-in'"
            @click="openModal(certificate)">
         <div class="certificate-card__inner">
           <!-- Certificate Image -->
@@ -63,35 +64,31 @@ interface Certificate {
 }
 
 const certificates: Certificate[] = [
+
   {
     id: 1,
-    title: 'Котлы угольные',
-    image: '/certificates/sert_kotl_ugoln.png'
+    title: 'Сертификат на газовые котлы',
+    image: '/certificates/dek_gaz.png'
   },
   {
     id: 2,
-    title: 'Котлы газовые',
-    image: '/certificates/sert_kotl_gaz.png'
+    title: 'Сертификат на водогрейные котлы на твердом и жидком топливе',
+    image: '/certificates/dek_kotly.png'
   },
   {
     id: 3,
-    title: 'Котлы на мазуте',
-    image: '/certificates/sert_kotl_maz.png'
+    title: 'Декларация о соответствии тягодутьевые машины',
+    image: '/certificates/dek_tyag.png'
   },
   {
     id: 4,
-    title: 'Котлы дизельные',
-    image: '/certificates/sert_kotl_diz.png'
+    title: 'Декларация о соответствии оборудование пылеулавливающее',
+    image: '/certificates/dek_pil.png'
   },
   {
     id: 5,
-    title: 'Сертификат соответствия КМТ',
-    image: '/certificates/sert_sootv_MKT.png'
-  },
-  {
-    id: 6,
-    title: 'Котлы газовые и мазутные',
-    image: '/certificates/sert_kotl_gaz_maz.png'
+    title: 'Декларация о соответствии блочно-модульной котельной',
+    image: '/certificates/dek_mod.png'
   }
 ];
 
@@ -231,7 +228,7 @@ const closeModal = () => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 80px 20px 20px;
+  padding: 20px 20px 20px;
 }
 
 .modal__content {
@@ -241,7 +238,6 @@ const closeModal = () => {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
-  max-height: calc(100vh - 100px);
   margin: auto;
 }
 
@@ -285,18 +281,18 @@ const closeModal = () => {
 
 .modal__body {
   padding: 30px;
-  overflow-y: auto;
-  max-height: calc(100vh - 200px);
 }
 
 .modal__image {
-  width: 100%;
+  display: block;
+  margin: 0 auto;
+  max-width: 100vw;
+  max-height: 80vh;
+  width: auto;
   height: auto;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   object-fit: contain;
-  max-width: 100%;
-  display: block;
 }
 
 /* Responsive styles */
@@ -345,13 +341,15 @@ const closeModal = () => {
     padding: 70px 15px 15px;
   }
   
-  .modal__content {
-    max-height: calc(100vh - 85px);
-  }
-  
   .modal__body {
     padding: 20px;
-    max-height: calc(100vh - 170px);
+    /* убираем ограничение по высоте */
+  }
+  .modal__image {
+    max-width: 98vw;
+    max-height: 60vh;
+    width: auto;
+    height: auto;
   }
 }
 </style> 
