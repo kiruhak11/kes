@@ -108,37 +108,49 @@
                 <ul class="mobile-menu">
                   <li>
                     <NuxtLink to="/catalog" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon">📋</span>
+                      <span class="menu-icon"><IconsCatalog /></span>
                       <span>Каталог продукции</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink to="/about/contacts" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon">📞</span>
+                      <span class="menu-icon"><IconsContacts /></span>
                       <span>Контакты</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink to="/about" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon">🏢</span>
+                      <span class="menu-icon"><IconsCompany /></span>
                       <span>О компании</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink to="/about/gallery" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon">🖼️</span>
+                      <span class="menu-icon"><IconsGallery /></span>
                       <span>Фотогалерея</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink to="/certificates" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon">📜</span>
+                      <span class="menu-icon"><IconsCertificates /></span>
                       <span>Сертификаты</span>
                     </NuxtLink>
                   </li>
                   <li>
+                    <NuxtLink to="/vacancies" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon"><IconsVacancies /></span>
+                      <span>Вакансии</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
+                    <NuxtLink to="/questionnaire" @click="showMobileMenu = false" class="mobile-menu-item">
+                      <span class="menu-icon"><IconsQuestionnaire /></span>
+                      <span>Опросные листы</span>
+                    </NuxtLink>
+                  </li>
+                  <li>
                     <NuxtLink to="/cart" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon">🛒</span>
+                      <span class="menu-icon"><IconsCart /></span>
                       <span>Корзина</span>
                       <span class="cart-badge" v-if="cartStore.totalItems">{{ cartStore.totalItems }}</span>
                     </NuxtLink>
@@ -224,6 +236,14 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useCartStore } from '~/stores/cart'
 import { contacts } from '~/data/contacts'
 import type { Ref } from 'vue'
+import IconsCatalog from '@/components/icons/catalog.vue';
+import IconsContacts from '@/components/icons/contacts.vue';
+import IconsCompany from '@/components/icons/company.vue';
+import IconsGallery from '@/components/icons/gallery.vue';
+import IconsCertificates from '@/components/icons/certificates.vue';
+import IconsVacancies from '@/components/icons/vacancies.vue';
+import IconsQuestionnaire from '@/components/icons/questionnaire.vue';
+import IconsCart from '@/components/icons/cart.vue';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {

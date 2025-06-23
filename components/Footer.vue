@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useNuxtApp } from '#app';
 const { $device } = useNuxtApp();
 import { contacts } from "~/data/contacts";
 
@@ -17,8 +16,8 @@ const sections = [
       { text: 'Главная', to: '/' },
       { text: 'Каталог', to: '/catalog' },
       { text: 'О компании', to: '/about' },
-      { text: 'Фотогалерея', to: '/gallery' },
-      { text: 'Контакты', to: '/contacts' }
+      { text: 'Фотогалерея', to: '/about/gallery' },
+      { text: 'Контакты', to: '/about/contacts' }
 
     ]
   },

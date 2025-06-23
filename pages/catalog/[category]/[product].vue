@@ -79,7 +79,10 @@
                 <button class="offer-btn" @click="openCommercialOfferModal(product)">
                   Заказать коммерческое предложение
                 </button>
-                <a :href="`tel:${contacts.phone[0]}`" class="offer-btn">Уточнить наличие</a>
+                <a v-if="$device.isMobile" :href="`tel:${contacts.phone[0]}`" class="offer-btn">Уточнить наличие</a>
+                <button v-else class="offer-btn" @click="openOfferModal()">
+                  Уточнить наличие
+                </button>
               </div>
             </div>
           </div>
@@ -356,6 +359,12 @@ const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/produc
 // Initialize products as an empty array
 const products = ref<Product[]>([])
 
+const openOfferModal = () => {
+  modalStore.openModal('Уточнить наличие', `Пожалуйста, уточните наличие товара у нашего менеджера. \n\n${contacts.phone[0]}`, 'Я позвоню', () => {
+    router.push(`tel:${contacts.phone[0]}`)
+  })
+}
+
 // Handle fetch errors
 if (fetchError.value) {
   console.error('Error fetching products:', fetchError.value)
@@ -470,7 +479,6 @@ const addToCart = () => {
   };
 
   cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
-  modalStore.showSuccess('Товар добавлен в корзину');
 }
 
 // Отображаемые характеристики
@@ -521,8 +529,7 @@ const productTabs = [
   { key: 'specs', label: 'Технические характеристики' },
   { key: 'delivery', label: 'Комплект поставки' },
   { key: 'scheme', label: 'Схема подключения' },
-  { key: 'certificates', label: 'Сертификаты и гарантии' },
-  { key: 'reviews', label: 'Отзывы' },
+  { key: 'certificates', label: 'Сертификаты и гарантии' }
 ];
 const activeTab = ref('description');
 
@@ -621,7 +628,11 @@ const incrementCart = () => {
 };
 const decrementCart = () => {
   if (product.value && cartItem.value && cartItem.value.quantity > 0) {
-    cartStore.removeItem(product.value.id);
+    if (cartItem.value.quantity === 1) {
+      cartStore.removeItem(product.value.id);
+    } else {
+      cartStore.updateQuantity(product.value.id, cartItem.value.quantity - 1);
+    }
   }
 };
 
