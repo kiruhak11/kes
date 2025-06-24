@@ -265,7 +265,7 @@ useHead({
     },
     {
       property: 'og:url',
-      content: 'https://kes-factory.ru'
+      content: 'https://kes.kiruhak11.ru'
     },
     {
       property: 'og:image',
@@ -289,13 +289,13 @@ useHead({
     },
     {
       name: 'canonical',
-      content: 'https://kes-factory.ru'
+      content: 'https://kes.kiruhak11.ru'
     }
   ],
   link: [
     {
       rel: 'canonical',
-      href: 'https://kes-factory.ru'
+      href: 'https://kes.kiruhak11.ru'
     }
   ]
 })

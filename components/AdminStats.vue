@@ -3,8 +3,7 @@
   <div>
     <h1>Статистика посещений и заявок</h1>
     <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>Загрузка данных...</p>
+      <UiLoader />
     </div>
     <div v-else-if="error" class="error-state">
       <p class="error-message">{{ error }}</p>
@@ -37,6 +36,9 @@
       <!-- Статистика заявок -->
       <div class="stats-requests">
         <h2>Заявки</h2>
+        <button class="btn btn-danger" style="margin-bottom: 1rem;" @click="$emit('delete-all-requests')">
+          Удалить все заявки
+        </button>
         <!-- Статистика по типам заявок -->
         <div class="request-stats">
           <div class="stats-card" v-for="(count, type) in stats.requests.stats" :key="type">
@@ -60,6 +62,7 @@
                 <th>Топливо</th>
                 <th>Тип мощности</th>
                 <th>Статус</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -78,6 +81,9 @@
                 <td>{{ request.fuel_type }}</td>
                 <td>{{ request.power_type }}</td>
                 <td>{{ request.status }}</td>
+                <td>
+                  <UiDeleteSmall @click.stop="$emit('delete-request', request.id)" />
+                </td>
               </tr>
             </tbody>
           </table>

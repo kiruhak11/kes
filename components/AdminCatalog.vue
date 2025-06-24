@@ -23,238 +23,313 @@
 
       <!-- Форма добавления нового товара -->
       <div class="add-form">
-        <div class="category-select">
-          <label>Категория:</label>
-          <div class="category-input">
-            <select v-model="newProdLocal.category">
-              <option value="">Выберите категорию</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-                {{ cat.name }}
-              </option>
-              <option value="new">+ Добавить новую категорию</option>
-            </select>
-            <input
-              v-if="newProdLocal.category === 'new'"
-              v-model="newCategoryLocal.name"
-              placeholder="Название новой категории"
-            />
+        <!-- Основная информация -->
+        <div class="edit-section">
+          <h3 class="edit-section__title">Основная информация</h3>
+          <div class="edit-section__content">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="required">Категория:</label>
+                <div class="category-input">
+                  <select v-model="newProdLocal.category" class="form-control">
+                    <option value="">Выберите категорию</option>
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                      {{ cat.name }}
+                    </option>
+                    <option value="new">+ Добавить новую категорию</option>
+                  </select>
+                  <input
+                    v-if="newProdLocal.category === 'new'"
+                    v-model="newCategoryLocal.name"
+                    placeholder="Название новой категории"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="required">Название:</label>
+                <input
+                  v-model="newProdLocal.name"
+                  placeholder="Название товара"
+                  class="form-control"
+                />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="required">Краткое описание:</label>
+              <textarea
+                v-model="newProdLocal.description"
+                placeholder="Краткое описание товара"
+                rows="2"
+                class="form-control"
+              ></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label>Расширенное описание:</label>
+              <textarea
+                v-model="newProdLocal.extendedDescription"
+                placeholder="Подробное описание товара"
+                rows="3"
+                class="form-control"
+              ></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="required">Цена (₽):</label>
+              <input
+                v-model.number="newProdLocal.price"
+                type="number"
+                placeholder="0"
+                class="form-control"
+              />
+            </div>
           </div>
         </div>
 
-        <input
-          v-model="newProdLocal.name"
-          placeholder="Название"
-        />
-        <textarea
-          v-model="newProdLocal.description"
-          placeholder="Краткое описание"
-        ></textarea>
-        <textarea
-          v-model="newProdLocal.extendedDescription"
-          placeholder="Расширенное описание"
-        ></textarea>
+        <!-- Изображения -->
+        <div class="edit-section">
+          <h3 class="edit-section__title">Изображения</h3>
+          <div class="edit-section__content">
+            <div class="form-group">
+              <label>Основное изображение:</label>
+              <div class="image-upload">
+                <select v-model="newProdLocal.image" class="image-select form-control">
+                  <option value="">Выберите изображение</option>
+                  <option
+                    v-for="img in presetImages"
+                    :key="img"
+                    :value="img"
+                  >
+                    {{ img.split('/').pop() }}
+                  </option>
+                  <option value="custom">Загрузить своё изображение</option>
+                </select>
+                <input
+                  v-if="newProdLocal.image === 'custom'"
+                  type="file"
+                  accept="image/*"
+                  @change="(e: any) => handleImageUpload(e, newProdLocal)"
+                  class="image-input"
+                />
+              </div>
+              <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="image-preview-container">
+                <img
+                  :src="newProdLocal.image"
+                  class="img-preview"
+                  alt="Основное изображение"
+                />
+              </div>
+            </div>
 
-        <textarea
-          v-model="newProdLocal.delivery_set"
-          placeholder="Комплект поставки"
-        ></textarea>
-
-        <label>Схема подключения:</label>
-        <input
-          type="file"
-          accept="image/*"
-          @change="(e) => handleConnectionSchemeUpload(e, newProdLocal)"
-        />
-        <img
-          v-if="newProdLocal.connection_scheme"
-          :src="newProdLocal.connection_scheme"
-          class="img-preview"
-          alt="Предпросмотр схемы"
-        />
-
-        <input
-          v-model.number="newProdLocal.price"
-          type="number"
-          placeholder="Цена"
-        />
-
-        <label>Изображение:</label>
-        <div class="image-upload">
-          <select v-model="newProdLocal.image" class="image-select">
-            <option value="">Выберите изображение</option>
-            <option
-              v-for="img in presetImages"
-              :key="img"
-              :value="img"
-            >
-              {{ img.split('/').pop() }}
-            </option>
-            <option value="custom">Загрузить своё изображение</option>
-          </select>
-          <input
-            v-if="newProdLocal.image === 'custom'"
-            type="file"
-            accept="image/*"
-            @change="(e: any) => handleImageUpload(e, newProdLocal)"
-            class="image-input"
-          />
-        </div>
-        <img
-          v-if="newProdLocal.image && newProdLocal.image !== 'custom'"
-          :src="newProdLocal.image"
-          class="img-preview"
-        />
-
-        <h4>Дополнительные изображения</h4>
-        <input type="file" multiple accept="image/*" @change="handleGalleryUpload" />
-        <div class="gallery-previews">
-          <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
-            <img :src="gimg" class="img-preview" />
-            <button class="btn btn-danger btn-sm" @click.prevent="removeGalleryImage(gidx)">✕</button>
-          </div>
-        </div>
-
-        <h3>Дополнительные характеристики</h3>
-        
-        <!-- Быстрое копирование характеристик -->
-        <div class="quick-specs-copy">
-          <label>Быстрое копирование характеристик:</label>
-          <div class="copy-controls">
-            <select v-model="selectedProductForCopy" @change="previewSpecsFromProduct" class="form-control">
-              <option value="">Выберите товар для копирования характеристик</option>
-              <option v-for="p in products" :key="p.id" :value="p.id">
-                {{ p.name }} ({{ p.category_name }})
-              </option>
-            </select>
-            <button 
-              v-if="selectedProductForCopy && previewedSpecs.length > 0" 
-              @click="confirmCopySpecs" 
-              class="btn btn-primary btn-sm"
-            >
-              Подтвердить копирование
-            </button>
-            <button 
-              v-if="selectedProductForCopy" 
-              @click="clearCopySelection" 
-              class="btn btn-secondary btn-sm"
-            >
-              Отмена
-            </button>
-          </div>
-          
-          <!-- Предварительный просмотр характеристик -->
-          <div v-if="previewedSpecs.length > 0" class="preview-specs">
-            <h4>Предварительный просмотр характеристик:</h4>
-            <div class="preview-specs-list">
-              <div v-for="(spec, idx) in previewedSpecs" :key="idx" class="preview-spec-item">
-                <strong>{{ spec.key }}:</strong> {{ spec.value }}
+            <div class="form-group">
+              <label>Дополнительные изображения:</label>
+              <input type="file" multiple accept="image/*" @change="handleGalleryUpload" class="form-control" />
+              <div class="gallery-previews">
+                <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
+                  <img :src="gimg" class="img-preview" />
+                  <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeGalleryImage(gidx)">✕</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <table class="specs-table">
-          <tbody>
-            <tr v-for="(spec, idx) in newSpecsLocal" :key="idx">
-              <td>
-                <div class="spec-input-container">
-                  <input 
-                    v-model="spec.key" 
-                    placeholder="Параметр" 
-                    @input="onSpecKeyInput(spec, $event)"
-                    @focus="showSpecSuggestions(spec)"
-                    @blur="hideSpecSuggestions"
-                  />
-                  <div v-if="spec.showKeySuggestions && specKeySuggestions.length > 0" class="spec-suggestions">
-                    <div 
-                      v-for="suggestion in specKeySuggestions" 
-                      :key="suggestion"
-                      @click="selectSpecKey(spec, suggestion)"
-                      class="spec-suggestion-item"
-                    >
-                      {{ suggestion }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="spec-input-container">
-                  <input 
-                    v-model="spec.value" 
-                    placeholder="Значение" 
-                    @input="onSpecValueInput(spec, $event)"
-                    @focus="showValueSuggestions(spec)"
-                    @blur="hideValueSuggestions"
-                  />
-                  <div v-if="spec.showValueSuggestions && specValueSuggestions.length > 0" class="spec-suggestions">
-                    <div 
-                      v-for="suggestion in specValueSuggestions" 
-                      :key="suggestion"
-                      @click="selectSpecValue(spec, suggestion)"
-                      class="spec-suggestion-item"
-                    >
-                      {{ suggestion }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <button class="btn btn-danger btn-sm" @click.prevent="removeNewSpec(idx)">✕</button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="spec-input-container">
-                  <input 
-                    v-model="newSpecLocal.key" 
-                    placeholder="Новая характеристика" 
-                    @input="onNewSpecKeyInput($event)"
-                    @focus="showNewSpecKeySuggestions"
-                    @blur="hideNewSpecKeySuggestions"
-                  />
-                  <div v-if="showNewSpecKeySuggestionsFlag && newSpecKeySuggestions.length > 0" class="spec-suggestions">
-                    <div 
-                      v-for="suggestion in newSpecKeySuggestions" 
-                      :key="suggestion"
-                      @click="selectNewSpecKey(suggestion)"
-                      class="spec-suggestion-item"
-                    >
-                      {{ suggestion }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="spec-input-container">
-                  <input 
-                    v-model="newSpecLocal.value" 
-                    placeholder="Значение" 
-                    @input="onNewSpecValueInput($event)"
-                    @focus="showNewSpecValueSuggestions"
-                    @blur="hideNewSpecValueSuggestions"
-                  />
-                  <div v-if="showNewSpecValueSuggestionsFlag && newSpecValueSuggestions.length > 0" class="spec-suggestions">
-                    <div 
-                      v-for="suggestion in newSpecValueSuggestions" 
-                      :key="suggestion"
-                      @click="selectNewSpecValue(suggestion)"
-                      class="spec-suggestion-item"
-                    >
-                      {{ suggestion }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <button class="btn btn-secondary btn-sm" @click.prevent="addNewSpec">Добавить</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Дополнительная информация -->
+        <div class="edit-section">
+          <h3 class="edit-section__title">Дополнительная информация</h3>
+          <div class="edit-section__content">
+            <div class="form-group">
+              <label>Комплект поставки:</label>
+              <textarea
+                v-model="newProdLocal.delivery_set"
+                placeholder="Опишите комплект поставки товара"
+                rows="3"
+                class="form-control"
+              ></textarea>
+            </div>
 
-        <button class="btn btn-secondary" @click="addProduct" :disabled="!isFormValid">
-          Добавить товар
-        </button>
+            <div class="form-group">
+              <label>Схема подключения:</label>
+              <input
+                type="file"
+                accept="image/*"
+                @change="(e) => handleConnectionSchemeUpload(e, newProdLocal)"
+                class="form-control"
+              />
+              <div v-if="newProdLocal.connection_scheme" class="image-preview-container">
+                <img
+                  :src="newProdLocal.connection_scheme"
+                  class="img-preview"
+                  alt="Схема подключения"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Характеристики -->
+        <div class="edit-section">
+          <h3 class="edit-section__title">Характеристики</h3>
+          <div class="edit-section__content">
+            <!-- Быстрое копирование характеристик -->
+            <div class="quick-specs-copy">
+              <label>Быстрое копирование характеристик:</label>
+              <div class="copy-controls">
+                <select v-model="selectedProductForCopy" @change="previewSpecsFromProduct" class="form-control">
+                  <option value="">Выберите товар для копирования характеристик</option>
+                  <option v-for="p in products" :key="p.id" :value="p.id">
+                    {{ p.name }} ({{ p.category_name }})
+                  </option>
+                </select>
+                <button 
+                  v-if="selectedProductForCopy && previewedSpecs.length > 0" 
+                  @click="confirmCopySpecs" 
+                  class="btn btn-primary btn-sm"
+                >
+                  Подтвердить копирование
+                </button>
+                <button 
+                  v-if="selectedProductForCopy" 
+                  @click="clearCopySelection" 
+                  class="btn btn-secondary btn-sm"
+                >
+                  Отмена
+                </button>
+              </div>
+              
+              <!-- Предварительный просмотр характеристик -->
+              <div v-if="previewedSpecs.length > 0" class="preview-specs">
+                <h4>Предварительный просмотр характеристик:</h4>
+                <div class="preview-specs-list">
+                  <div v-for="(spec, idx) in previewedSpecs" :key="idx" class="preview-spec-item">
+                    <strong>{{ spec.key }}:</strong> {{ spec.value }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <table class="specs-table">
+              <thead>
+                <tr>
+                  <th>Параметр</th>
+                  <th>Значение</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(spec, idx) in newSpecsLocal" :key="idx">
+                  <td>
+                    <div class="spec-input-container">
+                      <input 
+                        v-model="spec.key" 
+                        placeholder="Параметр" 
+                        @input="onSpecKeyInput(spec, $event)"
+                        @focus="showSpecSuggestions(spec)"
+                        @blur="hideSpecSuggestions"
+                        class="form-control"
+                      />
+                      <div v-if="spec.showKeySuggestions && specKeySuggestions.length > 0" class="spec-suggestions">
+                        <div 
+                          v-for="suggestion in specKeySuggestions" 
+                          :key="suggestion"
+                          @click="selectSpecKey(spec, suggestion)"
+                          class="spec-suggestion-item"
+                        >
+                          {{ suggestion }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="spec-input-container">
+                      <input 
+                        v-model="spec.value" 
+                        placeholder="Значение" 
+                        @input="onSpecValueInput(spec, $event)"
+                        @focus="showValueSuggestions(spec)"
+                        @blur="hideValueSuggestions"
+                        class="form-control"
+                      />
+                      <div v-if="spec.showValueSuggestions && specValueSuggestions.length > 0" class="spec-suggestions">
+                        <div 
+                          v-for="suggestion in specValueSuggestions" 
+                          :key="suggestion"
+                          @click="selectSpecValue(spec, suggestion)"
+                          class="spec-suggestion-item"
+                        >
+                          {{ suggestion }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <button class="btn-sm" @click.prevent="removeNewSpec(idx)"><UiDeleteSmall/></button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="spec-input-container">
+                      <input 
+                        v-model="newSpecLocal.key" 
+                        placeholder="Новая характеристика" 
+                        @input="onNewSpecKeyInput($event)"
+                        @focus="showNewSpecKeySuggestions"
+                        @blur="hideNewSpecKeySuggestions"
+                        class="form-control"
+                      />
+                      <div v-if="showNewSpecKeySuggestionsFlag && newSpecKeySuggestions.length > 0" class="spec-suggestions">
+                        <div 
+                          v-for="suggestion in newSpecKeySuggestions" 
+                          :key="suggestion"
+                          @click="selectNewSpecKey(suggestion)"
+                          class="spec-suggestion-item"
+                        >
+                          {{ suggestion }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="spec-input-container">
+                      <input 
+                        v-model="newSpecLocal.value" 
+                        placeholder="Значение" 
+                        @input="onNewSpecValueInput($event)"
+                        @focus="showNewSpecValueSuggestions"
+                        @blur="hideNewSpecValueSuggestions"
+                        class="form-control"
+                      />
+                      <div v-if="showNewSpecValueSuggestionsFlag && newSpecValueSuggestions.length > 0" class="spec-suggestions">
+                        <div 
+                          v-for="suggestion in newSpecValueSuggestions" 
+                          :key="suggestion"
+                          @click="selectNewSpecValue(suggestion)"
+                          class="spec-suggestion-item"
+                        >
+                          {{ suggestion }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <button class="btn btn-secondary btn-sm" @click.prevent="addNewSpec">Добавить</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Действия -->
+        <div class="edit-section edit-section--actions">
+          <div class="edit-section__content">
+            <button class="btn btn-primary" @click="addProduct" :disabled="!isFormValid">
+              Добавить товар
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Список товаров с аккордеоном -->
@@ -274,9 +349,8 @@
             <span class="prod-summary__name">{{ p.name }}</span>
             <span class="prod-summary__price">{{ p.price }} ₽</span>
             <button
-              class="btn btn-danger btn-sm prod-summary__delete"
               @click.stop="deleteProduct(p.id)"
-            >✕</button>
+            ><UiDeleteSmall /></button>
           </div>
 
           <!-- Детальная форма редактирования -->
@@ -285,166 +359,213 @@
               v-if="activeId === p.id"
               class="prod-details"
             >
-              <label>
-                Категория:
-                <select v-model="p.category">
-                  <option value="">Выберите категорию</option>
-                  <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-                    {{ cat.name }}
-                  </option>
-                </select>
-              </label>
-              <label>
-                Название:
-                <input v-model="p.name" />
-              </label>
-              <label>
-                Краткое описание:
-                <textarea v-model="p.description" rows="2"></textarea>
-              </label>
-              <label>
-                Расширенное описание:
-                <textarea v-model="p.extendedDescription" rows="3"></textarea>
-              </label>
-              <label>
-                Цена:
-                <input type="number" v-model.number="p.price" />
-              </label>
-
-              <label>Изображение:</label>
-              <div class="image-upload">
-                <select v-model="p.image" class="image-select">
-                  <option value="">Выберите изображение</option>
-                  <option
-                    v-for="img in presetImages"
-                    :key="img"
-                    :value="img"
-                  >
-                    {{ img.split('/').pop() }}
-                  </option>
-                  <option value="custom">Загрузить своё изображение</option>
-                </select>
-                <input
-                  v-if="p.image === 'custom'"
-                  type="file"
-                  accept="image/*"
-                  @change="(e: any) => handleImageUpload(e, p)"
-                  class="image-input"
-                />
-              </div>
-              <img
-                v-if="p.image && p.image !== 'custom'"
-                :src="p.image"
-                class="img-preview"
-              />
-
-              <textarea
-                v-model="p.delivery_set"
-                placeholder="Комплект поставки"
-              ></textarea>
-
-              <label>Схема подключения:</label>
-              <input
-                type="file"
-                accept="image/*"
-                @change="(e) => handleConnectionSchemeUpload(e, p)"
-              />
-              <img
-                v-if="p.connection_scheme"
-                :src="p.connection_scheme"
-                class="img-preview"
-                alt="Предпросмотр схемы"
-              />
-
-              <h3>Характеристики</h3>
-              <table class="specs-table">
-                <tbody>
-                <tr
-                  v-for="(spec, idx) in filteredSpecs(p.id)"
-                  :key="idx"
-                >
-                  <td>
-                    <div class="spec-input-container">
-                      <input
-                        v-model="spec.key"
-                        placeholder="Параметр"
-                        @input="onEditSpecKeyInput(spec, $event)"
-                        @focus="showEditSpecSuggestions(spec)"
-                        @blur="hideEditSpecSuggestions"
-                      />
-                      <div v-if="spec.showKeySuggestions && editSpecKeySuggestions.length > 0" class="spec-suggestions">
-                        <div 
-                          v-for="suggestion in editSpecKeySuggestions" 
-                          :key="suggestion"
-                          @click="selectEditSpecKey(spec, suggestion)"
-                          class="spec-suggestion-item"
-                        >
-                          {{ suggestion }}
-                        </div>
-                      </div>
+              <!-- Основная информация -->
+              <div class="edit-section">
+                <h3 class="edit-section__title">Основная информация</h3>
+                <div class="edit-section__content">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Категория:</label>
+                      <select v-model="p.category" class="form-control">
+                        <option value="">Выберите категорию</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                          {{ cat.name }}
+                        </option>
+                      </select>
                     </div>
-                  </td>
-                  <td>
-                    <div class="spec-input-container">
-                      <input
-                        v-model="spec.value"
-                        placeholder="Значение"
-                        @input="onEditSpecValueInput(spec, $event)"
-                        @focus="showEditValueSuggestions(spec)"
-                        @blur="hideEditValueSuggestions"
-                      />
-                      <div v-if="spec.showValueSuggestions && editSpecValueSuggestions.length > 0" class="spec-suggestions">
-                        <div 
-                          v-for="suggestion in editSpecValueSuggestions" 
-                          :key="suggestion"
-                          @click="selectEditSpecValue(spec, suggestion)"
-                          class="spec-suggestion-item"
-                        >
-                          {{ suggestion }}
-                        </div>
-                      </div>
+                    <div class="form-group">
+                      <label>Название:</label>
+                      <input v-model="p.name" class="form-control" />
                     </div>
-                  </td>
-                  <td>
-                    <button
-                      class="btn btn-danger btn-sm"
-                      @click.prevent="removeSpec(p.id, idx)"
-                    >✕</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td colspan="3">
-                    <button
-                      class="btn btn-secondary btn-sm"
-                      @click.prevent="addSpec(p.id)"
-                    >Добавить характеристику</button>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
-
-              <h4>Дополнительные изображения</h4>
-              <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" />
-              <div class="gallery-previews">
-                <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
-                  <img :src="gimg" class="img-preview" />
-                  <button class="btn btn-danger btn-sm" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Краткое описание:</label>
+                    <textarea v-model="p.description" rows="2" class="form-control"></textarea>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Расширенное описание:</label>
+                    <textarea v-model="p.extendedDescription" rows="3" class="form-control"></textarea>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Цена (₽):</label>
+                    <input type="number" v-model.number="p.price" class="form-control" />
+                  </div>
                 </div>
               </div>
 
-              <div class="prod-details__actions">
-                <button
-                  class="btn btn-primary"
-                  @click="updateWithSpecs(p)"
-                >
-                  Сохранить
-                </button>
-                <button
-                  class="btn btn-secondary"
-                  @click="cancelEdit"
-                >
-                  Отмена
-                </button>
+              <!-- Изображения -->
+              <div class="edit-section">
+                <h3 class="edit-section__title">Изображения</h3>
+                <div class="edit-section__content">
+                  <div class="form-group">
+                    <label>Основное изображение:</label>
+                    <div class="image-upload">
+                      <select v-model="p.image" class="image-select form-control">
+                        <option value="">Выберите изображение</option>
+                        <option
+                          v-for="img in presetImages"
+                          :key="img"
+                          :value="img"
+                        >
+                          {{ img.split('/').pop() }}
+                        </option>
+                        <option value="custom">Загрузить своё изображение</option>
+                      </select>
+                      <input
+                        v-if="p.image === 'custom'"
+                        type="file"
+                        accept="image/*"
+                        @change="(e: any) => handleImageUpload(e, p)"
+                        class="image-input"
+                      />
+                    </div>
+                    <div v-if="p.image && p.image !== 'custom'" class="image-preview-container">
+                      <img
+                        :src="p.image"
+                        class="img-preview"
+                        alt="Основное изображение"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Дополнительные изображения:</label>
+                    <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" class="form-control" />
+                    <div class="gallery-previews">
+                      <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
+                        <img :src="gimg" class="img-preview" />
+                        <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Дополнительная информация -->
+              <div class="edit-section">
+                <h3 class="edit-section__title">Дополнительная информация</h3>
+                <div class="edit-section__content">
+                  <div class="form-group">
+                    <label>Комплект поставки:</label>
+                    <textarea
+                      v-model="p.delivery_set"
+                      placeholder="Опишите комплект поставки товара"
+                      rows="3"
+                      class="form-control"
+                    ></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Схема подключения:</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      @change="(e) => handleConnectionSchemeUpload(e, p)"
+                      class="form-control"
+                    />
+                    <div v-if="p.connection_scheme" class="image-preview-container">
+                      <img
+                        :src="p.connection_scheme"
+                        class="img-preview"
+                        alt="Схема подключения"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Характеристики -->
+              <div class="edit-section">
+                <h3 class="edit-section__title">Характеристики</h3>
+                <div class="edit-section__content">
+                  <table class="specs-table">
+                    <tbody>
+                    <tr
+                      v-for="(spec, idx) in filteredSpecs(p.id)"
+                      :key="idx"
+                    >
+                      <td>
+                        <div class="spec-input-container">
+                          <input
+                            v-model="spec.key"
+                            placeholder="Параметр"
+                            @input="onEditSpecKeyInput(spec, $event)"
+                            @focus="showEditSpecSuggestions(spec)"
+                            @blur="hideEditSpecSuggestions"
+                            class="form-control"
+                          />
+                          <div v-if="spec.showKeySuggestions && editSpecKeySuggestions.length > 0" class="spec-suggestions">
+                            <div 
+                              v-for="suggestion in editSpecKeySuggestions" 
+                              :key="suggestion"
+                              @click="selectEditSpecKey(spec, suggestion)"
+                              class="spec-suggestion-item"
+                            >
+                              {{ suggestion }}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spec-input-container">
+                          <input
+                            v-model="spec.value"
+                            placeholder="Значение"
+                            @input="onEditSpecValueInput(spec, $event)"
+                            @focus="showEditValueSuggestions(spec)"
+                            @blur="hideEditValueSuggestions"
+                            class="form-control"
+                          />
+                          <div v-if="spec.showValueSuggestions && editSpecValueSuggestions.length > 0" class="spec-suggestions">
+                            <div 
+                              v-for="suggestion in editSpecValueSuggestions" 
+                              :key="suggestion"
+                              @click="selectEditSpecValue(spec, suggestion)"
+                              class="spec-suggestion-item"
+                            >
+                              {{ suggestion }}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          @click.prevent="removeSpec(p.id, idx)"
+                        ><UiDeleteSmall /></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colspan="3">
+                        <button
+                          class="btn btn-secondary btn-sm"
+                          @click.prevent="addSpec(p.id)"
+                        >Добавить характеристику</button>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Действия -->
+              <div class="edit-section edit-section--actions">
+                <div class="prod-details__actions">
+                  <button
+                    class="btn btn-primary"
+                    @click="updateWithSpecs(p)"
+                  >
+                    Сохранить изменения
+                  </button>
+                  <button
+                    class="btn btn-secondary"
+                    @click="cancelEdit"
+                  >
+                    Отмена
+                  </button>
+                </div>
               </div>
             </div>
           </transition>
@@ -954,6 +1075,17 @@ const validateNewCategory = () => {
     newCategoryLocal.value.name = ''
   }
 }
+
+// Валидация формы добавления товара
+const isFormValid = computed(() => {
+  return !!(
+    newProdLocal.value.category && 
+    newProdLocal.value.name && 
+    newProdLocal.value.description && 
+    newProdLocal.value.price && 
+    newProdLocal.value.price > 0
+  )
+})
 </script>
 
 <style lang="scss" scoped>
@@ -1027,151 +1159,233 @@ const validateNewCategory = () => {
   margin-bottom: 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 
-  .category-select {
-    margin-bottom: 1rem;
+  .edit-section {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    overflow: visible !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-    .category-input {
+    &__title {
+      background: var(--primary);
+      color: white;
+      margin: 0;
+      padding: 1rem 1.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    &__content {
+      padding: 1.5rem;
       display: flex;
+      flex-direction: column;
       gap: 1rem;
-      align-items: center;
-
-      select, input {
-        flex: 1;
-      }
+      z-index: 1;
     }
-  }
 
-  .filter-group {
-    margin-bottom: 1rem;
-    
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      font-size: 0.95rem;
-
-      @media (min-width: 768px) {
-        font-size: 1rem;
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
       }
     }
 
-    input {
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text);
+      }
+
+      label.required::after {
+        content: ' *';
+        color: #dc2626;
+        font-weight: bold;
+      }
+
+      .form-control {
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-size: 0.95rem;
+        background: var(--bg);
+        color: var(--text);
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+        }
+
+        &::placeholder {
+          color: var(--text-light);
+        }
+      }
+
+      textarea.form-control {
+        min-height: 80px;
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      select.form-control {
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+      }
+
+      .category-input {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .image-upload {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .image-select {
+          margin-bottom: 0.5rem;
+          cursor: pointer;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-position: right 0.5rem center !important;
+          background-repeat: no-repeat !important;
+          background-size: 1.5em 1.5em !important;
+          padding-right: 2.5rem !important;
+        }
+
+        .image-input {
+          padding: 0.5rem;
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          background: var(--bg);
+          color: var(--text);
+        }
+      }
+    }
+
+    .image-preview-container {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: center;
+      
+      .img-preview {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 0.5rem;
+        border: 2px solid var(--border);
+        object-fit: cover;
+      }
+    }
+
+    .gallery-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+
+      .gallery-item {
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: 2px solid var(--border);
+
+        .img-preview {
+          width: 100%;
+          height: 100px;
+          object-fit: cover;
+          display: block;
+        }
+
+        .gallery-remove-btn {
+          position: absolute;
+          top: 0.25rem;
+          right: 0.25rem;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          background: rgba(220, 38, 38, 0.9);
+          border: none;
+          color: white;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgb(220, 38, 38);
+            transform: scale(1.1);
+          }
+        }
+      }
+    }
+
+    .specs-table {
       width: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--secondary);
-      border-radius: 0.5rem;
-      font-size: 0.95rem;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      overflow: visible !important;
+
+      td {
+        padding: 0.5rem;
+        vertical-align: top;
+
+        &:last-child {
+          width: 50px;
+          text-align: center;
+        }
+      }
+
+      .spec-input-container {
+        position: relative;
+        width: 100%;
+
+        .form-control {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid var(--border);
+          border-radius: 0.25rem;
+          font-size: 0.9rem;
+          background: var(--bg);
+          color: var(--text);
+
+          &:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+          }
+        }
+      }
+    }
+
+    .edit-section--actions {
       background: var(--bg);
-
-      @media (min-width: 768px) {
-        font-size: 1rem;
+      border: 1px solid var(--primary);
+      
+      .edit-section__title {
+        background: var(--primary);
+        border-radius: 0.5rem;
       }
-    }
-  }
-
-  input, textarea, select {
-    width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    border: 1px solid var(--secondary);
-    border-radius: 0.5rem;
-    font-size: 0.95rem;
-    background: var(--bg);
-
-    @media (min-width: 768px) {
-      font-size: 1rem;
-    }
-  }
-
-  textarea {
-    min-height: 100px;
-    resize: vertical;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    font-size: 0.95rem;
-
-    @media (min-width: 768px) {
-      font-size: 1rem;
-    }
-  }
-
-  h3 {
-    font-size: 1.2rem;
-    margin: 1.5rem 0 1rem;
-    color: var(--text);
-  }
-
-  .img-preview {
-    max-width: 200px;
-    height: auto;
-    margin: 1rem 0;
-    border-radius: 0.25rem;
-  }
-
-  .gallery-previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .gallery-item {
-    position: relative;
-  }
-
-  .gallery-item .img-preview {
-    width: 120px;
-    height: auto;
-  }
-
-  .gallery-item button {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    padding: 0.25rem 0.4rem;
-  }
-}
-
-.specs-table {
-  width: 100%;
-  margin-bottom: 1rem;
-  border-collapse: collapse;
-
-  td {
-    padding: 0.5rem;
-    vertical-align: middle;
-
-    @media (max-width: 767px) {
-      display: block;
-      width: 100%;
-      padding: 0.25rem 0;
-    }
-  }
-
-  input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--secondary);
-    border-radius: 0.25rem;
-    font-size: 0.9rem;
-    margin-bottom: 0;
-
-    @media (min-width: 768px) {
-      font-size: 0.95rem;
-    }
-  }
-
-  button {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-    margin: 0;
-
-    @media (min-width: 768px) {
-      font-size: 0.95rem;
     }
   }
 }
@@ -1236,58 +1450,269 @@ const validateNewCategory = () => {
     padding: 1.5rem;
     border-top: 1px solid var(--secondary);
 
-    label {
-      display: block;
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
+    .edit-section {
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      margin-bottom: 1.5rem;
+      overflow: visible !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-      @media (min-width: 768px) {
-        font-size: 1rem;
+      &__title {
+        background: var(--primary);
+        color: white;
+        margin: 0;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+        border-radius: 0.5rem 0.5rem 0 0;
       }
 
-      input, textarea, select {
-        width: 100%;
-        padding: 0.75rem;
-        margin-top: 0.5rem;
-        border: 1px solid var(--secondary);
-        border-radius: 0.5rem;
-        font-size: 0.95rem;
-        background: var(--bg);
+      &__content {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        z-index: 1;
+      }
 
-        @media (min-width: 768px) {
-          font-size: 1rem;
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
         }
       }
 
-      textarea {
-        min-height: 100px;
-        resize: vertical;
-      }
-    }
-
-    .img-preview {
-      max-width: 200px;
-      height: auto;
-      margin: 1rem 0;
-      border-radius: 0.25rem;
-    }
-
-    &__actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-
-      @media (max-width: 767px) {
+      .form-group {
+        display: flex;
         flex-direction: column;
+        gap: 0.5rem;
+
+        label {
+          display: block;
+          margin-bottom: 0.25rem;
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: var(--text);
+        }
+
+        .form-control {
+          padding: 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          font-size: 0.95rem;
+          background: var(--bg);
+          color: var(--text);
+          transition: all 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+          }
+
+          &::placeholder {
+            color: var(--text-light);
+          }
+        }
+
+        textarea.form-control {
+          min-height: 80px;
+          resize: vertical;
+          font-family: inherit;
+        }
+
+        select.form-control {
+          cursor: pointer;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+          background-position: right 0.5rem center;
+          background-repeat: no-repeat;
+          background-size: 1.5em 1.5em;
+          padding-right: 2.5rem;
+        }
       }
 
-      button {
-        flex: 1;
-        padding: 0.75rem;
-        font-size: 0.95rem;
+      .image-upload {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
 
-        @media (min-width: 768px) {
-          font-size: 1rem;
+        .image-select {
+          margin-bottom: 0.5rem;
+        }
+
+        .image-input {
+          padding: 0.5rem;
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          background: var(--bg);
+          color: var(--text);
+        }
+      }
+
+      .image-preview-container {
+        margin-top: 0.5rem;
+        display: flex;
+        justify-content: center;
+        
+        .img-preview {
+          max-width: 200px;
+          max-height: 150px;
+          border-radius: 0.5rem;
+          border: 2px solid var(--border);
+          object-fit: cover;
+        }
+      }
+
+      .gallery-previews {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+
+        .gallery-item {
+          position: relative;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          border: 2px solid var(--border);
+
+          .img-preview {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+          }
+
+          .gallery-remove-btn {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            background: rgba(220, 38, 38, 0.9);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+              background: rgb(220, 38, 38);
+              transform: scale(1.1);
+            }
+          }
+        }
+      }
+
+      .specs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+        overflow: visible !important;
+
+        td {
+          padding: 0.5rem;
+          vertical-align: top;
+
+          &:last-child {
+            width: 50px;
+            text-align: center;
+          }
+        }
+
+        .spec-input-container {
+          position: relative;
+          width: 100%;
+
+          .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            background: var(--bg);
+            color: var(--text);
+
+            &:focus {
+              outline: none;
+              border-color: var(--primary);
+              box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+            }
+          }
+        }
+      }
+
+      .prod-details__actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        margin-top: 1rem;
+
+        .btn {
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.5rem;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          cursor: pointer;
+          border: none;
+          font-size: 0.95rem;
+          min-width: 120px;
+
+          &.btn-primary {
+            background: var(--primary);
+            color: white;
+
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+            }
+
+            &:active {
+              transform: translateY(0);
+              box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.3);
+            }
+          }
+
+          &.btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+
+            &:hover {
+              background: #e5e7eb;
+              border-color: #9ca3af;
+              transform: translateY(-1px);
+            }
+
+            &:active {
+              transform: translateY(0);
+            }
+          }
+
+          &.btn-danger {
+            background: #dc2626;
+            color: white;
+
+            &:hover {
+              background: #b91c1c;
+              transform: translateY(-1px);
+            }
+
+            &:active {
+              transform: translateY(0);
+            }
+          }
         }
       }
     }
@@ -1487,6 +1912,13 @@ const validateNewCategory = () => {
 .copy-controls .form-control {
   flex: 1;
   min-width: 200px;
+  z-index: 99999;
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
 }
 
 .copy-controls .btn {
@@ -1546,7 +1978,7 @@ const validateNewCategory = () => {
   border: 1px solid var(--border);
   border-radius: 0.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 99999;
   max-height: 200px;
   overflow-y: auto;
 }
@@ -1606,5 +2038,55 @@ const validateNewCategory = () => {
       box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
     }
   }
+}
+
+.edit-section select,
+.edit-section .form-control,
+.image-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.copy-controls select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+  color: var(--text);
+  min-width: 200px;
+}
+
+.spec-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.08);
+  border: 1.5px solid #e5e7eb;
+  z-index: 99999 !important;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.btn.btn-primary:disabled {
+  background: #9ca3af !important;
+  color: #fff !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+  box-shadow: none !important;
 }
 </style> 

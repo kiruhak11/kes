@@ -17,11 +17,11 @@
           <div class="category-card__header">
             <h3>{{ cat.name }}</h3>
             <div class="category-card__actions">
-              <button class="btn btn-secondary btn-sm" @click="editCategory(cat)">
-                <i class="fas fa-edit"></i> Редактировать
+              <button  @click="editCategory(cat)">
+                <UiEdit />
               </button>
-              <button class="btn btn-danger btn-sm" @click="deleteCategory(cat.id)">
-                <i class="fas fa-trash"></i>
+              <button @click="deleteCategory(cat.id)">
+                <UiDelete />
               </button>
             </div>
           </div>

@@ -89,7 +89,10 @@
       @fetch-stats="fetchStats"
       @show-request-details="showRequestDetails"
       @close-request-details="closeRequestDetails"
+      @delete-request="deleteRequest"
+      @delete-all-requests="deleteAllRequests"
     />
+    <UiLog v-if="!authorized && adminTab!=='catalog'" class="log" />
   </section>
 </template>
 
@@ -1161,9 +1164,44 @@ function getCategoryProductCount(categoryId: string): number {
  
   return count
 }
+
+async function deleteRequest(id: number) {
+  if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
+  try {
+    const res = await $fetch(`/api/requests/${id}`, { method: 'DELETE' });
+    if (res && res.success) {
+      await fetchStats();
+      modalStore.showSuccess('Заявка успешно удалена');
+    } else {
+      modalStore.showError('Ошибка при удалении заявки');
+    }
+  } catch (e: any) {
+    modalStore.showError('Ошибка при удалении заявки: ' + (e?.message || e));
+  }
+}
+
+async function deleteAllRequests() {
+  if (!confirm('Вы уверены, что хотите удалить все заявки?')) return;
+  try {
+    const res = await $fetch('/api/requests/delete-all', { method: 'DELETE' });
+    if (res && res.success) {
+      await fetchStats();
+      modalStore.showSuccess(`Удалено заявок: ${res.deleted}`);
+    } else {
+      modalStore.showError('Ошибка при удалении всех заявок');
+    }
+  } catch (e: any) {
+    modalStore.showError('Ошибка при удалении всех заявок: ' + (e?.message || e));
+  }
+}
 </script>
 
 <style lang="scss" scoped>
+.log {
+ display: flex;
+ justify-content: center;
+ align-items: center;
+}
 .admin-section {
   padding: 1rem;
 
