@@ -10,8 +10,8 @@
         width: p.size + 'px',
         height: p.size + 'px',
         background: `radial-gradient(circle, #fffbe6 0%, #ffe082 40%, ${p.color} 80%, transparent 100%)`,
-        opacity: p.opacity,
-        boxShadow: `0 0 8px 2px #fffbe6, 0 0 16px 4px ${p.color}, 0 0 32px 8px #ff6d00aa, 0 0 48px 16px #d8431555` + (p.isBig ? ', 0 0 32px 8px #fff' : ''),
+        opacity: p.opacity * 0.7,
+        boxShadow: `0 0 4px 1px #fffbe6, 0 0 8px 2px ${p.color}, 0 0 16px 4px #ff6d0055` + (p.isBig ? ', 0 0 12px 4px #fff' : ''),
         borderRadius: '50%',
         position: 'absolute',
         pointerEvents: 'none',
@@ -44,7 +44,7 @@ const ORANGE_COLORS = [
   '#ff9800', '#ffb300', '#ff6d00', '#ffae42', '#ffcc80'
 ]
 
-const PARTICLE_COUNT = 70
+const PARTICLE_COUNT = 40
 const particles = ref<Particle[]>([])
 const width = ref(0)
 const height = ref(0)
@@ -76,8 +76,8 @@ function createParticle(id: number): Particle {
   const vy = Math.sin(angle) * speed + random(-0.3, 0.3)
   const ax = random(-0.01, 0.01)
   const ay = random(-0.01, 0.01)
-  const isBig = Math.random() < 0.18
-  const size = isBig ? random(3.5, 6) : random(1.5, 3.5)
+  const isBig = Math.random() < 0.08
+  const size = isBig ? random(2.5, 4) : random(1, 2.2)
   const color = ORANGE_COLORS[Math.floor(random(0, ORANGE_COLORS.length))]
   const maxLife = random(55, 95)
   return {

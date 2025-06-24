@@ -565,6 +565,7 @@ onBeforeUnmount(() => {
 .header {
   margin-top: 75px;
   background-color: #f5f5f5;
+  z-index: 1000;
   @media (max-width: 768px) {
     margin-top: 0;
   }

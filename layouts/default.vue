@@ -1,5 +1,6 @@
 <template>
   <div class="app">
+    <div class="app-bg"></div>
     <Header />
     <div class="content"><slot></slot></div>
     <button
@@ -73,6 +74,25 @@ body {
   svg {
     width: 18px;
     height: 18px;
+  }
+}
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(120deg, #fff 0%, #f5f5f5 100%);
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('/images/hero4.png') center/cover no-repeat;
+    opacity: 0.08;
+    filter: blur(2px);
+    pointer-events: none;
+    z-index: 1;
   }
 }
 </style>
