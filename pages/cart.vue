@@ -1,91 +1,93 @@
 <template>
-  <section class="container">
-    <h1>Корзина</h1>
-    
-    <div v-if="cartStore.items.length === 0" class="empty-cart">
-      <p>Ваша корзина пуста</p>
-      <NuxtLink to="/catalog" class="btn btn-primary">Перейти в каталог</NuxtLink>
-    </div>
+  <client-only>
+    <section class="container">
+      <h1>Корзина</h1>
+      
+      <div v-if="cartStore.items.length === 0" class="empty-cart">
+        <p>Ваша корзина пуста</p>
+        <NuxtLink to="/catalog" class="btn btn-primary">Перейти в каталог</NuxtLink>
+      </div>
 
-    <div v-else class="cart-content">
-      <div class="cart-items">
-        <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
-          <img :src="item.image" :alt="item.name" class="cart-item-image" />
-          <div class="cart-item-details">
-            <h3>{{ item.name }}</h3>
-            <p class="cart-item-price">{{ item.price.toLocaleString() }} &#8381;</p>
-            <div class="cart-item-quantity">
-              <button @click="cartStore.updateQuantity(item.id, item.quantity - 1)" class="quantity-btn">-</button>
-              <span>{{ item.quantity }}</span>
-              <button @click="cartStore.updateQuantity(item.id, item.quantity + 1)" class="quantity-btn">+</button>
+      <div v-else class="cart-content">
+        <div class="cart-items">
+          <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
+            <img :src="item.image" :alt="item.name" class="cart-item-image" />
+            <div class="cart-item-details">
+              <h3>{{ item.name }}</h3>
+              <p class="cart-item-price">{{ item.price.toLocaleString() }} &#8381;</p>
+              <div class="cart-item-quantity">
+                <button @click="cartStore.updateQuantity(item.id, item.quantity - 1)" class="quantity-btn">-</button>
+                <span>{{ item.quantity }}</span>
+                <button @click="cartStore.updateQuantity(item.id, item.quantity + 1)" class="quantity-btn">+</button>
+              </div>
             </div>
+            <button @click="cartStore.removeItem(item.id)" class="remove-btn">×</button>
           </div>
-          <button @click="cartStore.removeItem(item.id)" class="remove-btn">×</button>
         </div>
-      </div>
 
-      <div class="cart-summary">
-        <h2>Оформление заказа</h2>
-        <div class="summary-row">
-          <span>Товары ({{ cartStore.totalItems }}):</span>
-          <span>{{ cartStore.totalPrice.toLocaleString() }} &#8381;</span>
+        <div class="cart-summary">
+          <h2>Оформление заказа</h2>
+          <div class="summary-row">
+            <span>Товары ({{ cartStore.totalItems }}):</span>
+            <span>{{ cartStore.totalPrice.toLocaleString() }} &#8381;</span>
+          </div>
+          <form @submit.prevent="submitOrder" class="order-form">
+            <div class="form-group">
+              <label for="name">Имя *</label>
+              <input
+                id="name"
+                v-model="orderForm.name"
+                type="text"
+                required
+                placeholder="Ваше имя"
+              />
+            </div>
+            <div class="form-group">
+              <label for="phone">Телефон *</label>
+              <input
+                id="phone"
+                v-model="orderForm.phone"
+                type="tel"
+                required
+                placeholder="Ваш телефон"
+              />
+            </div>
+            <div class="form-group">
+              <label for="email">E-mail</label>
+              <input
+                id="email"
+                v-model="orderForm.email"
+                type="email"
+                placeholder="Ваш e-mail"
+              />
+            </div>
+            <div class="form-group">
+              <label for="address">Адрес доставки *</label>
+              <textarea
+                id="address"
+                v-model="orderForm.address"
+                required
+                rows="3"
+                placeholder="Укажите адрес доставки"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="comment">Комментарий к заказу</label>
+              <textarea
+                id="comment"
+                v-model="orderForm.comment"
+                rows="3"
+                placeholder="Дополнительная информация"
+              ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+              {{ isSubmitting ? 'Отправка...' : 'Оформить заказ' }}
+            </button>
+          </form>
         </div>
-        <form @submit.prevent="submitOrder" class="order-form">
-          <div class="form-group">
-            <label for="name">Имя *</label>
-            <input
-              id="name"
-              v-model="orderForm.name"
-              type="text"
-              required
-              placeholder="Ваше имя"
-            />
-          </div>
-          <div class="form-group">
-            <label for="phone">Телефон *</label>
-            <input
-              id="phone"
-              v-model="orderForm.phone"
-              type="tel"
-              required
-              placeholder="Ваш телефон"
-            />
-          </div>
-          <div class="form-group">
-            <label for="email">E-mail</label>
-            <input
-              id="email"
-              v-model="orderForm.email"
-              type="email"
-              placeholder="Ваш e-mail"
-            />
-          </div>
-          <div class="form-group">
-            <label for="address">Адрес доставки *</label>
-            <textarea
-              id="address"
-              v-model="orderForm.address"
-              required
-              rows="3"
-              placeholder="Укажите адрес доставки"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label for="comment">Комментарий к заказу</label>
-            <textarea
-              id="comment"
-              v-model="orderForm.comment"
-              rows="3"
-              placeholder="Дополнительная информация"
-            ></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Отправка...' : 'Оформить заказ' }}
-          </button>
-        </form>
       </div>
-    </div>
-  </section>
+    </section>
+  </client-only>
 </template>
 
 <script setup lang="ts">

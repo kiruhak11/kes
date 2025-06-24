@@ -66,8 +66,9 @@
                 <span class="cart-text">Корзина</span>
                 <div class="cart-icon-wrapper">
                   <span class="cart-icon"><IconsCart/></span>
-                  <span v-if="isHydrated" class="cart-count">{{ cartCount }}</span>
-                  <span v-else class="cart-count">0</span>
+                  <client-only>
+                    <span class="cart-count">{{ cartCount }}</span>
+                  </client-only>
                 </div>
               </NuxtLink>
             </div>
@@ -152,7 +153,9 @@
                     <NuxtLink to="/cart" @click="showMobileMenu = false" class="mobile-menu-item">
                       <span class="menu-icon"><IconsCart /></span>
                       <span>Корзина</span>
-                      <span class="cart-badge" v-if="cartStore.totalItems">{{ cartStore.totalItems }}</span>
+                      <client-only>
+                        <span class="cart-badge" v-if="cartStore.totalItems">{{ cartStore.totalItems }}</span>
+                      </client-only>
                     </NuxtLink>
                   </li>
                 </ul>

@@ -18,11 +18,6 @@ const { theme, setTheme } = useTheme();
 const { trackVisit, error: trackingError } = useVisitTracking()
 import { contacts } from '~/data/contacts'
 
-// При монтировании на клиенте выставим сохранённую тему
-if (process.client) {
-  setTheme(theme.value === "dark" ? "dark" : "light");
-}
-
 // Отслеживаем посещение при загрузке приложения
 onMounted(() => {
   trackVisit()

@@ -1,47 +1,51 @@
 <template>
   <div class="home">
     <!-- Hero Section -->
-    <section class="hero" :class="{ 'hero--mobile': $device.isMobile }" v-scroll-reveal="'fade-in'">
-      <div
-        v-for="(img, idx) in heroImages"
-        :key="img"
-        class="hero__bg"
-        :class="{ active: idx === currentHero }"
-        :style="{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url('${img}')`
-        }"
-      />
-      <div class="container">
-        <div class="hero__content">
-          <h1 class="hero__title">
-            <span >Котельный завод «КЭС» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
-          </h1>
-          <div class="hero__title__bt">
-            <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
-            <NuxtLink to="/catalog" class="btn btn-primary">Перейти в Каталог</NuxtLink>
+    <client-only>
+      <section class="hero" :class="{ 'hero--mobile': $device.isMobile }" v-scroll-reveal="'fade-in'">
+        <div
+          v-for="(img, idx) in heroImages"
+          :key="img"
+          class="hero__bg"
+          :class="{ active: idx === currentHero }"
+          :style="{
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url('${img}')`
+          }"
+        />
+        <div class="container">
+          <div class="hero__content">
+            <h1 class="hero__title">
+              <span >Котельный завод «КЭС» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
+            </h1>
+            <div class="hero__title__bt">
+              <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
+              <NuxtLink to="/catalog" class="btn btn-primary">Перейти в Каталог</NuxtLink>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </client-only>
 
     <!-- Catalog Section -->
     <section class="catalog" v-scroll-reveal="'fade-in-up'">
       <div class="container">
         <h2 class="section-title">Каталог продукции</h2>
-        <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
-          <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
-            <NuxtLink :to="`/catalog/${category.slug}`">
-            <img 
-              :src="category.images[0]" 
-              :alt="category.title"
-              @error="handleImageError"
-            />
-            <h3>{{ category.title }}</h3>
-            <p v-if="!$device.isMobile">{{ category.description }}</p>
-            <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
-          </NuxtLink>
+        <client-only>
+          <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
+            <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
+              <NuxtLink :to="`/catalog/${category.slug}`">
+                <img 
+                  :src="category.images[0]" 
+                  :alt="category.title"
+                  @error="handleImageError"
+                />
+                <h3>{{ category.title }}</h3>
+                <p v-if="!$device.isMobile">{{ category.description }}</p>
+                <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
+              </NuxtLink>
+            </div>
           </div>
-        </div>
+        </client-only>
         <div class="text-center">
           <NuxtLink to="/catalog" class="btn btn-primary">Все категории</NuxtLink>
         </div>
