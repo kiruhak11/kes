@@ -1,0 +1,310 @@
+# Правила для Cursor AI - Nuxt.js Проект
+
+## Общие принципы
+
+### Технологический стек
+- **Фреймворк**: Nuxt 3 (Composition API)
+- **Язык**: TypeScript (строгий режим)
+- **Стили**: SCSS с модульной архитектурой
+- **Состояние**: Pinia
+- **База данных**: Supabase
+- **UI**: Vue 3 компоненты + rubillex_frog-modal
+- **Дополнительно**: Telegram Bot API, Chart.js
+
+### Архитектурные принципы
+1. **Компонентный подход**: Разделяй логику на переиспользуемые компоненты
+2. **Composition API**: Используй `<script setup>` и composables
+3. **TypeScript**: Строгая типизация для всех функций и компонентов
+4. **Модульность**: Разделяй код по функциональности
+
+## Структура проекта
+
+### Компоненты (`/components`)
+- **UI компоненты**: Базовые переиспользуемые элементы в `/components/ui/`
+- **Бизнес-компоненты**: Специфичные для приложения компоненты
+- **Иконки**: Векторные иконки в `/components/icons/`
+
+### Страницы (`/pages`)
+- Используй файловую маршрутизацию Nuxt
+- Каждая страница должна быть самодостаточной
+- Используй `<NuxtLayout>` для общих макетов
+
+### Composables (`/composables`)
+- Выноси повторяющуюся логику в composables
+- Используй префикс `use` для названий
+- Типизируй входные и выходные параметры
+
+### Стили (`/assets/styles`)
+- Глобальные стили в `/assets/styles/global/`
+- Переменные и миксины в `/assets/styles/collection/`
+- Компонентные стили в `<style lang="scss" scoped>`
+
+## Правила кодирования
+
+### Vue компоненты
+```vue
+<template>
+  <!-- Семантическая разметка -->
+  <div class="component-name">
+    <!-- Контент -->
+  </div>
+</template>
+
+<script setup lang="ts">
+// Импорты
+import { ref, computed } from 'vue'
+import type { ComponentProps } from '@/types'
+
+// Props с типизацией
+interface Props {
+  title: string
+  items?: string[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  items: () => []
+})
+
+// Emits с типизацией
+interface Emits {
+  (e: 'update', value: string): void
+  (e: 'delete', id: number): void
+}
+
+const emit = defineEmits<Emits>()
+
+// Реактивные данные
+const isLoading = ref(false)
+const data = ref<string[]>([])
+
+// Computed свойства
+const filteredData = computed(() => {
+  return data.value.filter(item => item.includes(props.title))
+})
+
+// Методы
+const handleClick = () => {
+  emit('update', 'new value')
+}
+</script>
+
+<style lang="scss" scoped>
+.component-name {
+  // Используй переменные из collection
+  color: var(--primary-color);
+  font-family: var(--font-primary);
+}
+</style>
+```
+
+### TypeScript правила
+1. **Строгая типизация**: Всегда указывай типы для переменных
+2. **Интерфейсы**: Создавай интерфейсы для сложных объектов
+3. **Типы**: Используй `type` для union типов
+4. **Generics**: Применяй где это улучшает типобезопасность
+
+```typescript
+// Пример типизации
+interface User {
+  id: number
+  name: string
+  email: string
+  role: 'admin' | 'user'
+}
+
+type ApiResponse<T> = {
+  data: T
+  status: number
+  message: string
+}
+
+const fetchUser = async (id: number): Promise<ApiResponse<User>> => {
+  // Реализация
+}
+```
+
+### Supabase интеграция
+1. **Типизация**: Используй генерированные типы Supabase
+2. **Обработка ошибок**: Всегда обрабатывай ошибки запросов
+3. **Кэширование**: Используй встроенное кэширование Nuxt
+
+```typescript
+// Пример работы с Supabase
+const { data: users, error } = await useSupabaseClient()
+  .from('users')
+  .select('*')
+  .eq('role', 'admin')
+
+if (error) {
+  console.error('Ошибка загрузки пользователей:', error)
+  return
+}
+```
+
+### Стилизация (SCSS)
+1. **Переменные**: Используй переменные из `/assets/styles/collection/`
+2. **БЭМ методология**: Применяй для сложных компонентов
+3. **Responsive**: Мобильный-first подход
+4. **Темная тема**: Поддерживай переключение тем
+
+```scss
+.component {
+  // Используй переменные
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  
+  // БЭМ
+  &__header {
+    padding: var(--spacing-md);
+  }
+  
+  &__content {
+    margin-top: var(--spacing-sm);
+  }
+  
+  // Responsive
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+```
+
+## Правила производительности
+
+### Оптимизация
+1. **Lazy loading**: Используй для тяжелых компонентов
+2. **Мемоизация**: Применяй `computed` и `watch` эффективно
+3. **Виртуализация**: Для больших списков
+4. **Изображения**: Используй `<NuxtImg>` для оптимизации
+
+### Безопасность
+1. **Валидация**: Проверяй все пользовательские данные
+2. **XSS защита**: Используй встроенные механизмы Vue
+3. **CSRF**: Применяй токены для форм
+4. **Environment variables**: Не коммить секреты
+
+## Правила тестирования
+
+### Структура тестов
+1. **Unit тесты**: Для composables и утилит
+2. **Component тесты**: Для Vue компонентов
+3. **E2E тесты**: Для критических пользовательских сценариев
+
+## Правила Git
+
+### Коммиты
+- Используй conventional commits
+- Пиши понятные сообщения на русском языке
+- Разделяй изменения на логические коммиты
+
+### Ветки
+- `main` - продакшн код
+- `develop` - разработка
+- `feature/*` - новые функции
+- `fix/*` - исправления багов
+
+## Дополнительные требования
+
+### Доступность (A11y)
+1. **Семантическая разметка**: Используй правильные HTML теги
+2. **ARIA атрибуты**: Добавляй где необходимо
+3. **Клавиатурная навигация**: Поддерживай Tab и Enter
+4. **Контрастность**: Следуй WCAG стандартам
+
+### SEO
+1. **Meta теги**: Используй `useHead` для динамических мета-тегов
+2. **Структурированные данные**: Добавляй JSON-LD
+3. **Sitemap**: Генерируй автоматически
+4. **Open Graph**: Для социальных сетей
+
+### Мобильная адаптация
+1. **Touch-friendly**: Минимальный размер кнопок 44px
+2. **Viewport**: Правильная настройка viewport
+3. **Performance**: Оптимизация для медленных соединений
+4. **Offline**: Поддержка базового офлайн функционала
+
+## Примеры хорошего кода
+
+### Composable
+```typescript
+// composables/useApi.ts
+export const useApi = () => {
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+  
+  const fetchData = async <T>(url: string): Promise<T | null> => {
+    isLoading.value = true
+    error.value = null
+    
+    try {
+      const response = await $fetch<T>(url)
+      return response
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Неизвестная ошибка'
+      return null
+    } finally {
+      isLoading.value = false
+    }
+  }
+  
+  return {
+    isLoading: readonly(isLoading),
+    error: readonly(error),
+    fetchData
+  }
+}
+```
+
+### Компонент с валидацией
+```vue
+<template>
+  <form @submit.prevent="handleSubmit" class="form">
+    <div class="form__field">
+      <label for="email" class="form__label">Email</label>
+      <input
+        id="email"
+        v-model="email"
+        type="email"
+        class="form__input"
+        :class="{ 'form__input--error': emailError }"
+        @blur="validateEmail"
+      />
+      <span v-if="emailError" class="form__error">{{ emailError }}</span>
+    </div>
+    
+    <button type="submit" class="form__submit" :disabled="!isValid">
+      Отправить
+    </button>
+  </form>
+</template>
+
+<script setup lang="ts">
+const email = ref('')
+const emailError = ref('')
+
+const isValid = computed(() => {
+  return email.value && !emailError.value
+})
+
+const validateEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!email.value) {
+    emailError.value = 'Email обязателен'
+  } else if (!emailRegex.test(email.value)) {
+    emailError.value = 'Неверный формат email'
+  } else {
+    emailError.value = ''
+  }
+}
+
+const handleSubmit = () => {
+  validateEmail()
+  if (isValid.value) {
+    // Отправка формы
+  }
+}
+</script>
+```
+
+Следуй этим правилам для создания качественного, поддерживаемого и масштабируемого кода в рамках Nuxt.js проекта. 
