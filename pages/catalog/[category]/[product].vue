@@ -107,10 +107,16 @@
           <div v-if="activeTab === 'specs'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Технические характеристики</h2>
             <ul class="specs-list">
-              <li v-for="([key, value], idx) in displaySpecs" :key="key" class="spec-item">
+              <li v-if="displaySpecs.length > 0" v-for="([key, value], idx) in displaySpecs" :key="key" class="spec-item">
                 <span class="spec-label">{{ capitalize(key) }}</span>
                 <span class="spec-dots"></span>
                 <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+              </li>
+              <li v-else class="spec-empty">
+                <div class="spec-empty-content">
+                  <UiEmpty />
+                  <p>Технические характеристики уточняются.</p>
+                </div>
               </li>
             </ul>
           </div>
@@ -1435,6 +1441,18 @@ if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
   justify-content: space-between;
   align-items: baseline;
   padding: 0.5rem 0;
+  gap: 1rem;
+}
+.spec-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+.spec-empty-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 1rem;
 }
 .spec-label {

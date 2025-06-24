@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 const { $device } = useNuxtApp();
 import { contacts } from "~/data/contacts";
+import UiParticles from '@/components/ui/Particles.vue'
 
 const sections = [
   {
@@ -57,6 +58,7 @@ if (fetchedCategories.value) {
 
 <template>
   <footer class="footer">
+    <UiParticles />
     <div class="container">
       <div v-if="$device.isMobile" class="footer__mobile">
         <div class="footer__logo">
@@ -137,6 +139,7 @@ if (fetchedCategories.value) {
   background: #1a1a1a;
   color: #fff;
   padding: 60px 0 30px;
+  position: relative;
 }
 
 .footer__content {

@@ -489,7 +489,7 @@ const filteredRegions = computed(() => {
 })
 
 const heroImages = [
-  '/images/hero1.jpg',
+  '/images/hero1.png',
   '/images/hero2.png',
   '/images/hero3.png',
   '/images/hero4.png',
@@ -498,10 +498,10 @@ const currentHero = ref(0)
 let intervalId: number | undefined
 
 const factoryImages = [
-  '/images/hero1.jpg',
-  '/images/hero2.png',
-  '/images/hero3.png',
-  '/images/hero4.png',
+  '/images/hero1x.png',
+  '/images/hero2x.png',
+  '/images/hero3x.png',
+  '/images/hero4x.png',
 ]
 const currentFactorySlide = ref(0)
 let factoryIntervalId: number | undefined

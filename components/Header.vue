@@ -579,6 +579,9 @@ onBeforeUnmount(() => {
   width: 100%;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .header__top-content {
@@ -598,6 +601,12 @@ onBeforeUnmount(() => {
   color: #333;
   text-decoration: none;
   font-size: 14px;
+  @media (max-width: 1050px) {
+    font-size: 12px;
+  }
+  @media (max-width: 1000px) {
+    font-size: 10px;
+  }
 }
 
 .header__callback {
@@ -608,6 +617,12 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   cursor: pointer;
   font-size: 14px;
+  @media (max-width: 1050px) {
+    font-size: 12px;
+  }
+  @media (max-width: 1000px) {
+    font-size: 10px;
+  }
 }
 
 .header__user-actions {
@@ -624,6 +639,12 @@ onBeforeUnmount(() => {
   padding: 8px 12px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  @media (max-width: 1050px) {
+    font-size: 12px;
+  }
+  @media (max-width: 1000px) {
+    font-size: 10px;
+  }
 }
 
 .header__nav-link:hover {
@@ -670,6 +691,12 @@ onBeforeUnmount(() => {
   left: 50%;
   transform: translateX(-50%);
   opacity: 1;
+  @media (max-width: 1050px) {
+    font-size: 12px;
+  }
+  @media (max-width: 1000px) {
+    font-size: 10px;
+  }
 }
 
 .cart-link:hover .cart-text {
@@ -745,6 +772,7 @@ onBeforeUnmount(() => {
   list-style: none;
   margin: 0;
   padding: 0;
+
 }
 
 .header__menu a {
@@ -752,6 +780,15 @@ onBeforeUnmount(() => {
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
+  @media (max-width: 1050px) {
+    font-size: 14px;
+  }
+  @media (max-width: 1000px) {
+    font-size: 12px;
+  }
+  @media (max-width: 875px) {
+    font-size: 10px;
+  }
 }
 
 .header__menu-item-has-children {
@@ -1139,6 +1176,19 @@ onBeforeUnmount(() => {
 .search-container {
   position: relative;
   width: 300px;
+  @media (max-width: 1200px) {
+    width: 200px;
+    font-size: 12px;
+  }
+  @media (max-width: 1100px) {
+    width: 150px;
+    font-size: 10px;
+  }
+  @media (max-width: 875px) {
+    width: 0px;
+    visibility: hidden;
+  }
+
 }
 
 .search-input-wrapper {
