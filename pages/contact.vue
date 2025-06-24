@@ -1,9 +1,9 @@
 <template>
   <section class="contact-section">
     <div class="container">
-      <h1>Оставить заявку</h1>
-      <form @submit.prevent="submitForm" novalidate>
-        <div class="form-group">
+      <h1 v-scroll-reveal="'fade-in-up'">Оставить заявку</h1>
+      <form @submit.prevent="submitForm" novalidate v-scroll-reveal="'fade-in-up'">
+        <div class="form-group" v-scroll-reveal="'slide-in-left'">
           <label for="name">Имя</label>
           <input
             id="name"
@@ -13,7 +13,7 @@
             placeholder="Ваше имя"
           />
         </div>
-        <div class="form-group">
+        <div class="form-group" v-scroll-reveal="'slide-in-right'">
           <label for="phone">Телефон</label>
           <input
             id="phone"
@@ -23,7 +23,7 @@
             placeholder="Ваш телефон"
           />
         </div>
-        <div class="form-group">
+        <div class="form-group" v-scroll-reveal="'slide-in-left'">
           <label for="email">E-mail</label>
           <input
             id="email"
@@ -33,7 +33,7 @@
             placeholder="Ваш e-mail"
           />
         </div>
-        <div class="form-group">
+        <div class="form-group" v-scroll-reveal="'slide-in-right'">
           <label for="message">Сообщение</label>
           <textarea
             id="message"
@@ -42,7 +42,7 @@
             placeholder="Ваш вопрос или комментарий"
           ></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
+        <button type="submit" class="btn btn-primary" v-scroll-reveal="'zoom-in'">Отправить</button>
       </form>
     </div>
   </section>

@@ -1,15 +1,20 @@
 <template>
     <div class="catalog-page">
       <div class="container">
-        <nav class="breadcrumbs">
+        <nav class="breadcrumbs" v-scroll-reveal="'fade-in'">
           <NuxtLink to="/">Главная</NuxtLink>
           <span class="breadcrumbs-separator">→</span>
           <span>Каталог</span>
         </nav>
-        <h1 class="page-title">Каталог продукции</h1>
+        <h1 class="page-title" v-scroll-reveal="'fade-in-up'">Каталог продукции</h1>
         
         <div class="catalog-grid">
-          <div v-for="category in categories" :key="category.slug" class="catalog-item">
+          <div 
+            v-for="(category, index) in categories" 
+            :key="category.slug" 
+            class="catalog-item"
+            v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
+          >
             
             <NuxtLink :to="`/catalog/${category.slug}`">
             <div class="catalog-item__image-container">

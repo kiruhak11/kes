@@ -1,7 +1,7 @@
 <template>
   <section class="admin-section container">
     <!-- Вкладки -->
-    <div class="admin-tabs">
+    <div class="admin-tabs" v-scroll-reveal="'fade-in-up'">
       <button :class="{active: adminTab==='catalog'}" @click="adminTab='catalog'">Каталог</button>
       <button :class="{active: adminTab==='categories'}" @click="adminTab='categories'">Категории</button>
       <button :class="{active: adminTab==='stats'}" @click="adminTab='stats'">Статистика</button>

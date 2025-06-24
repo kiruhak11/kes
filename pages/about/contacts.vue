@@ -1,10 +1,10 @@
 <template>
   <div class="contacts-container">
-    <h1 class="page-title">Контакты</h1>
+    <h1 class="page-title" v-scroll-reveal="'fade-in-up'">Контакты</h1>
 
     <div class="contacts-grid">
       <!-- Основная информация -->
-      <div class="contact-card main-info">
+      <div class="contact-card main-info" v-scroll-reveal="'slide-in-left'">
         <h2>ООО «КотлоЭнергоСнаб»</h2>
         <div class="contact-details">
           <div class="contact-item">
@@ -35,7 +35,7 @@
       </div>
 
       <!-- Реквизиты -->
-      <div class="contact-card requisites">
+      <div class="contact-card requisites" v-scroll-reveal="'slide-in-right'">
         <h2>Реквизиты</h2>
         <div class="requisites-content">
           <div class="requisites-group">
@@ -61,7 +61,7 @@
       </div>
 
       <!-- Карта -->
-      <div class="contact-card map-container">
+      <div class="contact-card map-container" v-scroll-reveal="'fade-in-up'">
         <h2 class="map-title"><span class="map-icon">📍</span> Как нас найти</h2>
         <div class="map animated-map">
           <iframe
@@ -77,7 +77,7 @@
           
         </div>
         <div style="text-align:center; margin-top:1rem;">
-            <a href="https://www.google.com/maps/search/?api=1&query=Бриллиантовая+2Е,+Барнаул" target="_blank" rel="noopener" class="map-btn">Открыть в Google Картах</a>
+            <a href="https://www.google.com/maps/search/?api=1&query=Бриллиантовая+2Е,+Барнаул" target="_blank" rel="noopener" class="map-btn" v-scroll-reveal="'zoom-in'">Открыть в Google Картах</a>
           </div>
       </div>
     </div>

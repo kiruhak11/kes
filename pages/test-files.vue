@@ -1,37 +1,37 @@
 <template>
   <div class="test-files-container">
-    <h1>Тестирование файлов</h1>
+    <h1 v-scroll-reveal="'fade-in-up'">Тестирование файлов</h1>
     
-    <div class="test-section">
-      <h2>1. Проверка файлов в папке uploads</h2>
-      <button @click="testFiles" :disabled="loading">Проверить файлы</button>
-      <div v-if="filesResult" class="result">
+    <div class="test-section" v-scroll-reveal="'fade-in-up'">
+      <h2 v-scroll-reveal="'slide-in-left'">1. Проверка файлов в папке uploads</h2>
+      <button @click="testFiles" :disabled="loading" v-scroll-reveal="'zoom-in'">Проверить файлы</button>
+      <div v-if="filesResult" class="result" v-scroll-reveal="'fade-in-up'">
         <h3>Результат:</h3>
         <pre>{{ JSON.stringify(filesResult, null, 2) }}</pre>
       </div>
     </div>
 
-    <div class="test-section">
-      <h2>2. Исправление путей в базе данных</h2>
-      <button @click="fixPaths" :disabled="fixingPaths">Исправить пути</button>
-      <div v-if="fixResult" class="result">
+    <div class="test-section" v-scroll-reveal="'fade-in-up'">
+      <h2 v-scroll-reveal="'slide-in-right'">2. Исправление путей в базе данных</h2>
+      <button @click="fixPaths" :disabled="fixingPaths" v-scroll-reveal="'zoom-in'">Исправить пути</button>
+      <div v-if="fixResult" class="result" v-scroll-reveal="'fade-in-up'">
         <h3>Результат:</h3>
         <pre>{{ JSON.stringify(fixResult, null, 2) }}</pre>
       </div>
     </div>
 
-    <div class="test-section">
-      <h2>3. Тест загрузки файла</h2>
-      <input type="file" @change="testUpload" accept="image/*" />
-      <div v-if="uploadResult" class="result">
+    <div class="test-section" v-scroll-reveal="'fade-in-up'">
+      <h2 v-scroll-reveal="'slide-in-left'">3. Тест загрузки файла</h2>
+      <input type="file" @change="testUpload" accept="image/*" v-scroll-reveal="'zoom-in'" />
+      <div v-if="uploadResult" class="result" v-scroll-reveal="'fade-in-up'">
         <h3>Результат загрузки:</h3>
         <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
-        <div v-if="uploadResult.path" class="image-test">
+        <div v-if="uploadResult.path" class="image-test" v-scroll-reveal="'slide-in-right'">
           <h4>Тест отображения изображения:</h4>
           <img :src="uploadResult.path" style="max-width: 200px; margin: 10px 0; border: 1px solid #ccc;" />
           <p>Путь: {{ uploadResult.path }}</p>
-          <button @click="testImageAccess(uploadResult.path)">Проверить доступ к файлу</button>
-          <div v-if="imageTestResult" class="result">
+          <button @click="testImageAccess(uploadResult.path)" v-scroll-reveal="'zoom-in'">Проверить доступ к файлу</button>
+          <div v-if="imageTestResult" class="result" v-scroll-reveal="'fade-in-up'">
             <h5>Результат проверки:</h5>
             <pre>{{ JSON.stringify(imageTestResult, null, 2) }}</pre>
           </div>
@@ -39,14 +39,19 @@
       </div>
     </div>
 
-    <div class="test-section">
-      <h2>4. Тест существующих файлов</h2>
+    <div class="test-section" v-scroll-reveal="'fade-in-up'">
+      <h2 v-scroll-reveal="'slide-in-right'">4. Тест существующих файлов</h2>
       <div v-if="filesResult && filesResult.files">
-        <div v-for="file in filesResult.files" :key="file.name" class="file-test">
+        <div 
+          v-for="(file, index) in filesResult.files" 
+          :key="file.name" 
+          class="file-test"
+          v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
+        >
           <h4>{{ file.name }}</h4>
           <p>Путь: {{ file.path }}</p>
           <img :src="file.path" style="max-width: 150px; margin: 5px 0; border: 1px solid #ccc;" />
-          <button @click="testImageAccess(file.path)">Проверить доступ</button>
+          <button @click="testImageAccess(file.path)" v-scroll-reveal="'zoom-in'">Проверить доступ</button>
         </div>
       </div>
     </div>

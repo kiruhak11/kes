@@ -1,9 +1,9 @@
 <template>
   <client-only>
     <section class="container">
-      <h1>Корзина</h1>
+      <h1 v-scroll-reveal="'fade-in-up'">Корзина</h1>
 
-      <div v-if="cartStore.items.length === 0" class="empty-cart">
+      <div v-if="cartStore.items.length === 0" class="empty-cart" v-scroll-reveal="'fade-in-up'">
         <p>Ваша корзина пуста</p>
         <NuxtLink to="/catalog" class="btn btn-primary"
           >Перейти в каталог</NuxtLink
@@ -11,8 +11,13 @@
       </div>
 
       <div v-else class="cart-content">
-        <div class="cart-items">
-          <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
+        <div class="cart-items" v-scroll-reveal="'fade-in-up'">
+          <div 
+            v-for="(item, index) in cartStore.items" 
+            :key="item.id" 
+            class="cart-item"
+            v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
+          >
             <img :src="item.image" :alt="item.name" class="cart-item-image" />
             <div class="cart-item-details">
               <h3>{{ item.name }}</h3>
@@ -41,14 +46,14 @@
           </div>
         </div>
 
-        <div class="cart-summary">
-          <h2>Оформление заказа</h2>
-          <div class="summary-row">
+        <div class="cart-summary" v-scroll-reveal="'fade-in-up'">
+          <h2 v-scroll-reveal="'fade-in-up'">Оформление заказа</h2>
+          <div class="summary-row" v-scroll-reveal="'slide-in-left'">
             <span>Товары ({{ cartStore.totalItems }}):</span>
             <span>{{ cartStore.totalPrice.toLocaleString() }} &#8381;</span>
           </div>
-          <form @submit.prevent="submitOrder" class="order-form">
-            <div class="form-group">
+          <form @submit.prevent="submitOrder" class="order-form" v-scroll-reveal="'fade-in-up'">
+            <div class="form-group" v-scroll-reveal="'slide-in-left'">
               <label for="name">Имя *</label>
               <input
                 id="name"
@@ -58,7 +63,7 @@
                 placeholder="Ваше имя"
               />
             </div>
-            <div class="form-group">
+            <div class="form-group" v-scroll-reveal="'slide-in-right'">
               <label for="phone">Телефон *</label>
               <input
                 id="phone"
@@ -68,7 +73,7 @@
                 placeholder="Ваш телефон"
               />
             </div>
-            <div class="form-group">
+            <div class="form-group" v-scroll-reveal="'slide-in-left'">
               <label for="email">E-mail</label>
               <input
                 id="email"
@@ -77,7 +82,7 @@
                 placeholder="Ваш e-mail"
               />
             </div>
-            <div class="form-group">
+            <div class="form-group" v-scroll-reveal="'slide-in-right'">
               <label for="address">Адрес доставки *</label>
               <textarea
                 id="address"
@@ -87,7 +92,7 @@
                 placeholder="Укажите адрес доставки"
               ></textarea>
             </div>
-            <div class="form-group">
+            <div class="form-group" v-scroll-reveal="'slide-in-left'">
               <label for="comment">Комментарий к заказу</label>
               <textarea
                 id="comment"
@@ -100,6 +105,7 @@
               type="submit"
               class="btn btn-primary"
               :disabled="isSubmitting"
+              v-scroll-reveal="'zoom-in'"
             >
               {{ isSubmitting ? "Отправка..." : "Оформить заказ" }}
             </button>

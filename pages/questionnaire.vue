@@ -1,23 +1,24 @@
 <template>
   <div class="questionnaire-page">
     <div class="container">
-      <h1 class="page-title">Опросные листы</h1>
-      <p class="page-description">
+      <h1 class="page-title" v-scroll-reveal="'fade-in-up'">Опросные листы</h1>
+      <p class="page-description" v-scroll-reveal="'fade-in-up'">
         Для подготовки технико-коммерческого предложения, пожалуйста, скачайте и заполните соответствующий опросный лист. 
         Заполненный документ вы можете отправить нам на почту.
       </p>
       
-      <div v-if="questionnaires.length === 0" class="no-files">
+      <div v-if="questionnaires.length === 0" class="no-files" v-scroll-reveal="'fade-in-up'">
         Нет доступных для скачивания опросных листов.
       </div>
       
       <div v-else class="questionnaire-list">
         <a 
-          v-for="file in questionnaires" 
+          v-for="(file, index) in questionnaires" 
           :key="file.name" 
           :href="file.path" 
           download 
           class="questionnaire-item"
+          v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
         >
           <div class="file-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -34,13 +35,13 @@
       </div>
     </div>
 
-    <div class="commercial-offer-banner">
+    <div class="commercial-offer-banner" v-scroll-reveal="'fade-in-up'">
       <div class="container">
-        <h2 class="banner-title">Готовы сделать заказ?</h2>
-        <p class="banner-description">
+        <h2 class="banner-title" v-scroll-reveal="'fade-in-up'">Готовы сделать заказ?</h2>
+        <p class="banner-description" v-scroll-reveal="'slide-in-left'">
           Отправьте нам заполненный опросный лист или свяжитесь для получения коммерческого предложения.
         </p>
-        <NuxtLink to="/contact" class="btn-offer">
+        <NuxtLink to="/contact" class="btn-offer" v-scroll-reveal="'zoom-in'">
           Заказать коммерческое предложение
         </NuxtLink>
       </div>

@@ -1,20 +1,20 @@
 <template>
     <div class="category-page">
       <div class="container">
-        <nav class="breadcrumbs">
+        <nav class="breadcrumbs" v-scroll-reveal="'fade-in'">
           <NuxtLink to="/">Главная</NuxtLink>
           <span class="breadcrumbs-separator">→</span>
           <NuxtLink to="/catalog">Каталог</NuxtLink>
           <span class="breadcrumbs-separator">→</span>
           <span>{{ categoryInfo?.title || 'Категория' }}</span>
         </nav>
-        <div class="category-header">
+        <div class="category-header" v-scroll-reveal="'fade-in-up'">
           <h1 class="page-title">{{ categoryInfo?.title || 'Категория' }}</h1>
           <p class="category-description">{{ categoryInfo?.description || '' }}</p>
         </div>
   
         <div class="category-content">
-          <div class="category-sidebar">
+          <div class="category-sidebar" v-scroll-reveal="'slide-in-left'">
             <div class="filter-section">
               <h3>Фильтры</h3>
               <div class="filters-content">
@@ -48,19 +48,20 @@
                   </div>
                 </div>
                 <div class="filter-actions">
-                  <button class="btn btn-primary" @click="applyFilters">Применить</button>
-                  <button class="btn btn-secondary" @click="resetFilters">Сбросить все</button>
+                  <button class="btn btn-primary" @click="applyFilters" v-scroll-reveal="'zoom-in'">Применить</button>
+                  <button class="btn btn-secondary" @click="resetFilters" v-scroll-reveal="'zoom-in'">Сбросить все</button>
                 </div>
               </div>
             </div>
           </div>
   
-          <div class="category-products">
+          <div class="category-products" v-scroll-reveal="'fade-in-up'">
             <div class="products-grid">
               <div
-                v-for="product in paginatedProducts"
+                v-for="(product, index) in paginatedProducts"
                 :key="product.id"
                 class="product-card"
+                v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
               >
                 <div class="product-card__clickable" @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)">
                   <div class="product-card__img-wrap">
@@ -83,26 +84,26 @@
                         <span class="product-price">{{ product.price?.toLocaleString() }} <span class="currency">р.</span></span>
                         <span class="product-price-note">Цена с НДС</span>
                       </div>
-                      <button class="buy-btn" @click.stop="addToCart(product, $event)">
+                      <button class="buy-btn" @click.stop="addToCart(product, $event)" v-scroll-reveal="'zoom-in'">
                         <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
                         <span>Купить</span>
                       </button>
                     </div>
                   </div>
                 </div>
-                <button class="offer-btn" @click="openCommercialOfferModal(product)">Заказать коммерческое предложение</button>
+                <button class="offer-btn" @click="openCommercialOfferModal(product)" v-scroll-reveal="'zoom-in'">Заказать коммерческое предложение</button>
               </div>
-              <div v-if="filteredProducts.length === 0" class="no-products-message">
+              <div v-if="filteredProducts.length === 0" class="no-products-message" v-scroll-reveal="'fade-in-up'">
                 Нет товаров в данной категории.
               </div>
             </div>
-            <div class="products-count" v-if="filteredProducts.length > 0">
+            <div class="products-count" v-if="filteredProducts.length > 0" v-scroll-reveal="'fade-in-up'">
               Найдено товаров: {{ filteredProducts.length }}
             </div>
           </div>
         </div>
       </div>
-      <div class="pagination" v-if="totalPages > 1">
+      <div class="pagination" v-if="totalPages > 1" v-scroll-reveal="'fade-in-up'">
         <button 
           class="btn btn-secondary" 
           :disabled="currentPage === 1"

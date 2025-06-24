@@ -50,7 +50,7 @@ const props = defineProps({
   position: relative;
 }
 .error-logo {
-  width: 120px;
+  width: 320px;
   margin-bottom: 1.5rem;
   filter: drop-shadow(0 2px 8px rgba(227,30,36,0.10));
 }

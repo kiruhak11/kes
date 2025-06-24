@@ -1,8 +1,8 @@
 <template>
   <div class="gallery-container">
-    <h1 class="gallery-title">Фотогалерея</h1>
+    <h1 class="gallery-title" v-scroll-reveal="'fade-in-up'">Фотогалерея</h1>
     
-    <div class="gallery-categories">
+    <div class="gallery-categories" v-scroll-reveal="'fade-in-up'">
       <button 
         v-for="category in categories" 
         :key="category"
@@ -19,6 +19,7 @@
         :key="index"
         class="gallery-card"
         @click="openLightbox(index)"
+        v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
       >
         <img :src="image.path" :alt="image.name" class="gallery-image">
         <div class="gallery-content">

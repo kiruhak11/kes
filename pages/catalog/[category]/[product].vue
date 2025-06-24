@@ -1,7 +1,7 @@
 <template>
   <div class="product-detail-page">
     <div class="container">
-      <nav class="breadcrumbs">
+      <nav class="breadcrumbs" v-scroll-reveal="'fade-in'">
         <NuxtLink to="/">Главная</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
         <NuxtLink to="/catalog">Каталог</NuxtLink>
@@ -11,10 +11,10 @@
         <span>{{ product?.name || 'Товар' }}</span>
       </nav>
 
-      <div v-if="product" class="product-detail-card">
+      <div v-if="product" class="product-detail-card" v-scroll-reveal="'fade-in-up'">
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
-          <div class="product-gallery">
+          <div class="product-gallery" v-scroll-reveal="'slide-in-left'">
             <!-- Основное изображение -->
             <div class="main-image-container">
               <button v-if="imageList.length > 1" class="gallery-nav prev" @click="prevImage">
@@ -45,7 +45,7 @@
             </div>
           </div>
 
-          <div class="product-info-block">
+          <div class="product-info-block" v-scroll-reveal="'slide-in-right'">
             <h1 class="product-title">{{ product.name }}</h1>
             <div class="product-main-row">
               <div class="product-main-description">
@@ -65,7 +65,7 @@
                   <span class="product-price">{{ product.price.toLocaleString() }} <span class="currency">₽</span></span>
                   <span class="product-price-note">Цена с НДС</span>
                 </div>
-                <button v-if="!cartCount" class="buy-btn" @click="addToCart">
+                <button v-if="!cartCount" class="buy-btn" @click="addToCart" v-scroll-reveal="'zoom-in'">
                   <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
                   <span>Положить в корзину</span>
                 </button>
@@ -76,11 +76,11 @@
                 </div>
               </div>
               <div class="product-main-actions-right">
-                <button class="offer-btn" @click="openCommercialOfferModal(product)">
+                <button class="offer-btn" @click="openCommercialOfferModal(product)" v-scroll-reveal="'zoom-in'">
                   Заказать коммерческое предложение
                 </button>
                 <a v-if="$device.isMobile" :href="`tel:${contacts.phone[0]}`" class="offer-btn">Уточнить наличие</a>
-                <button v-else class="offer-btn" @click="openOfferModal()">
+                <button v-else class="offer-btn" @click="openOfferModal()" v-scroll-reveal="'zoom-in'">
                   Уточнить наличие
                 </button>
               </div>
@@ -89,7 +89,7 @@
         </div>
         <hr class="section-divider" />
         <!-- Вкладки -->
-        <div class="product-tabs">
+        <div class="product-tabs" v-scroll-reveal="'fade-in-up'">
           <button
             v-for="tab in productTabs"
             :key="tab.key"
@@ -99,12 +99,12 @@
             {{ tab.label }}
           </button>
         </div>
-        <div class="tab-content">
-          <div v-if="activeTab === 'description'" class="section-block">
+        <div class="tab-content" v-scroll-reveal="'fade-in-up'">
+          <div v-if="activeTab === 'description'" class="section-block" v-scroll-reveal="'slide-in-left'">
             <h2 class="section-title">Описание товара</h2>
             <p>{{ product.extendedDescription }}</p>
           </div>
-          <div v-if="activeTab === 'specs'" class="section-block">
+          <div v-if="activeTab === 'specs'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Технические характеристики</h2>
             <ul class="specs-list">
               <li v-for="([key, value], idx) in displaySpecs" :key="key" class="spec-item">
@@ -114,19 +114,19 @@
               </li>
             </ul>
           </div>
-          <div v-if="activeTab === 'delivery'" class="section-block">
+          <div v-if="activeTab === 'delivery'" class="section-block" v-scroll-reveal="'slide-in-left'">
             <h2 class="section-title">Комплект поставки</h2>
             <div v-if="product.delivery_set" class="delivery-set-content" v-html="product.delivery_set.replace(/\\n/g, '<br>')"></div>
             <div v-else class="no-data-message">Информация о комплекте поставки уточняется.</div>
           </div>
-          <div v-if="activeTab === 'scheme'" class="section-block">
+          <div v-if="activeTab === 'scheme'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Схема подключения</h2>
             <div v-if="product.connection_scheme" class="scheme-image-container">
               <img :src="product.connection_scheme" alt="Схема подключения" class="scheme-image">
             </div>
             <div v-else class="no-data-message">Схема подключения уточняется.</div>
           </div>
-          <div v-if="activeTab === 'certificates'" class="section-block certificates-block">
+          <div v-if="activeTab === 'certificates'" class="section-block certificates-block" v-scroll-reveal="'fade-in-up'">
             <h2 class="section-title">Сертификаты и гарантии</h2>
             <div class="cert-gallery-slider-wrap">
               <div class="cert-gallery-scroll">
@@ -153,13 +153,13 @@
               </div>
             </div>
           </div>
-          <div v-if="activeTab === 'reviews'" class="section-block reviews-block">
+          <div v-if="activeTab === 'reviews'" class="section-block reviews-block" v-scroll-reveal="'fade-in-up'">
             <h2 class="section-title">Отзывы о продукции</h2>
-            <div class="review-card">
+            <div class="review-card" v-scroll-reveal="'slide-in-left'">
               <div class="review-author">Иван Петров</div>
               <div class="review-text">Отличный котел, быстро доставили и помогли с установкой!</div>
             </div>
-            <div class="review-card">
+            <div class="review-card" v-scroll-reveal="'slide-in-right'">
               <div class="review-author">ООО "ТеплоСервис"</div>
               <div class="review-text">Работаем с этим заводом не первый год, всегда всё на высшем уровне.</div>
             </div>
@@ -167,13 +167,13 @@
         </div>
         <hr class="section-divider" />
         <!-- О заводе -->
-        <div class="about-factory-section">
-          <div class="factory-menu">
+        <div class="about-factory-section" v-scroll-reveal="'fade-in-up'">
+          <div class="factory-menu" v-scroll-reveal="'fade-in-up'">
             <button v-for="tab in factoryTabs" :key="tab.key" :class="['factory-tab-btn', { active: activeFactoryTab === tab.key }]" @click="activeFactoryTab = tab.key">
               {{ tab.label }}
             </button>
           </div>
-          <div class="factory-content">
+          <div class="factory-content" v-scroll-reveal="'fade-in-up'">
             <div v-if="activeFactoryTab === 'certificates'">
               <section class="certificates-gallery-section">
                 <h2 class="certificates-gallery-title">Сертификаты и гарантии</h2>
