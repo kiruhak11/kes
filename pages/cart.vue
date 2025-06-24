@@ -2,10 +2,12 @@
   <client-only>
     <section class="container">
       <h1>Корзина</h1>
-      
+
       <div v-if="cartStore.items.length === 0" class="empty-cart">
         <p>Ваша корзина пуста</p>
-        <NuxtLink to="/catalog" class="btn btn-primary">Перейти в каталог</NuxtLink>
+        <NuxtLink to="/catalog" class="btn btn-primary"
+          >Перейти в каталог</NuxtLink
+        >
       </div>
 
       <div v-else class="cart-content">
@@ -14,14 +16,28 @@
             <img :src="item.image" :alt="item.name" class="cart-item-image" />
             <div class="cart-item-details">
               <h3>{{ item.name }}</h3>
-              <p class="cart-item-price">{{ item.price.toLocaleString() }} &#8381;</p>
+              <p class="cart-item-price">
+                {{ item.price.toLocaleString() }} &#8381;
+              </p>
               <div class="cart-item-quantity">
-                <button @click="cartStore.updateQuantity(item.id, item.quantity - 1)" class="quantity-btn">-</button>
+                <button
+                  @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
+                  class="quantity-btn"
+                >
+                  -
+                </button>
                 <span>{{ item.quantity }}</span>
-                <button @click="cartStore.updateQuantity(item.id, item.quantity + 1)" class="quantity-btn">+</button>
+                <button
+                  @click="cartStore.updateQuantity(item.id, item.quantity + 1)"
+                  class="quantity-btn"
+                >
+                  +
+                </button>
               </div>
             </div>
-            <button @click="cartStore.removeItem(item.id)" class="remove-btn">×</button>
+            <button @click="cartStore.removeItem(item.id)" class="remove-btn">
+              ×
+            </button>
           </div>
         </div>
 
@@ -80,8 +96,12 @@
                 placeholder="Дополнительная информация"
               ></textarea>
             </div>
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Отправка...' : 'Оформить заказ' }}
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="isSubmitting"
+            >
+              {{ isSubmitting ? "Отправка..." : "Оформить заказ" }}
             </button>
           </form>
         </div>
@@ -91,30 +111,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useCartStore } from '~/stores/cart'
-const modalStore = useModalStore()
-const cartStore = useCartStore()
-const isSubmitting = ref(false)
+import { ref } from "vue";
+import { useCartStore } from "~/stores/cart";
+import { useModalStore } from "~/stores/modal";
+const modalStore = useModalStore();
+const cartStore = useCartStore();
+const isSubmitting = ref(false);
 
 const orderForm = ref({
-  name: '',
-  phone: '',
-  email: '',
-  address: '',
-  comment: ''
-})
+  name: "",
+  phone: "",
+  email: "",
+  address: "",
+  comment: "",
+});
 
 async function submitOrder() {
   try {
-    isSubmitting.value = true
+    isSubmitting.value = true;
 
-    const orderItems = cartStore.items.map(item => ({
+    const orderItems = cartStore.items.map((item) => ({
       name: item.name,
       price: item.price,
       quantity: item.quantity,
-      total: item.price * item.quantity
-    }))
+      total: item.price * item.quantity,
+    }));
 
     const payload = {
       text: `🛒 Новый заказ:
@@ -122,35 +143,44 @@ async function submitOrder() {
 - Телефон: ${orderForm.value.phone}
 - E-mail: ${orderForm.value.email}
 - Адрес: ${orderForm.value.address}
-- Комментарий: ${orderForm.value.comment || 'нет'}
+- Комментарий: ${orderForm.value.comment || "нет"}
 
 Товары:
-${orderItems.map(item => `- ${item.name} (${item.quantity} шт.) - ${item.total.toLocaleString()} ₽`).join('\n')}
+${orderItems
+  .map(
+    (item) =>
+      `- ${item.name} (${item.quantity} шт.) - ${item.total.toLocaleString()} ₽`
+  )
+  .join("\n")}
 
-Итого: ${cartStore.totalPrice.toLocaleString()} ₽`
-    }
+Итого: ${cartStore.totalPrice.toLocaleString()} ₽`,
+    };
 
     const res = await $fetch("/api/contact", {
       method: "POST",
       body: payload,
-    })
+    });
 
     // Очищаем корзину и форму после успешной отправки
-    cartStore.clearCart()
+    cartStore.clearCart();
     orderForm.value = {
-      name: '',
-      phone: '',
-      email: '',
-      address: '',
-      comment: ''
-    }
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      comment: "",
+    };
 
-    modalStore.showSuccess('Спасибо за заказ! Мы свяжемся с вами в ближайшее время.')
+    modalStore.showSuccess(
+      "Спасибо за заказ! Мы свяжемся с вами в ближайшее время."
+    );
   } catch (err) {
-    console.error('Ошибка отправки заказа:', err)
-    modalStore.showSuccess(`Произошла ошибка при отправке заказа: ${err}. Пожалуйста, попробуйте позже.`)
+    console.error("Ошибка отправки заказа:", err);
+    modalStore.showSuccess(
+      `Произошла ошибка при отправке заказа: ${err}. Пожалуйста, попробуйте позже.`
+    );
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
 }
 </script>
@@ -327,4 +357,4 @@ button[type="submit"]:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
-</style> 
+</style>

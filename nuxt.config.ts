@@ -23,29 +23,34 @@ export default defineNuxtConfig({
     key: process.env.SUPABASE_KEY,
     redirect: false,
     redirectOptions: {
-      login: '/auth/login',
-      callback: '/confirm',
-      exclude: ['/*'],
+      login: "/auth/login",
+      callback: "/confirm",
+      exclude: ["/*"],
     },
   },
   runtimeConfig: {
     public: {
-      supabaseUrl: process.env.SUPABASE_URL || 'https://your-project.supabase.co',
-      supabaseKey: process.env.SUPABASE_KEY || 'your-anon-key',
+      supabaseUrl:
+        process.env.SUPABASE_URL || "https://your-project.supabase.co",
+      supabaseKey: process.env.SUPABASE_KEY || "your-anon-key",
       telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
       telegramChatId: process.env.TELEGRAM_CHAT_ID,
-      adminPassword: process.env.ADMIN_PASSWORD || 'admin'
+      adminPassword: process.env.ADMIN_PASSWORD || "admin",
     },
   },
   modules: [
-    '@nuxtjs/device',
-    '@nuxtjs/supabase',
-    '@pinia/nuxt',
-    'rubillex_frog-modal',
-    "nuxt-file-storage"
+    "@nuxtjs/device",
+    "@nuxtjs/supabase",
+    "@pinia/nuxt",
+    "pinia-plugin-persistedstate/nuxt",
+    "rubillex_frog-modal",
+    "nuxt-file-storage",
   ],
+  piniaPluginPersistedstate: {
+    storage: "localStorage",
+  },
   fileStorage: {
     // Используем переменную окружения для пути к хранилищу файлов
-    mount: process.env.FILE_STORAGE_MOUNT || './public/uploads'
-  }
+    mount: process.env.FILE_STORAGE_MOUNT || "./public/uploads",
+  },
 });

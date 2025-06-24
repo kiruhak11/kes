@@ -10,33 +10,33 @@
 <script setup lang="ts">
 // Подключаем тему, чтобы установить атрибут data-theme при старте
 import { useTheme } from "@/composables/useTheme";
-import { useVisitTracking } from '~/composables/useVisitTracking'
+import { useVisitTracking } from "~/composables/useVisitTracking";
 
 const { theme, setTheme } = useTheme();
 
 // Инициализируем отслеживание посещений
-const { trackVisit, error: trackingError } = useVisitTracking()
-import { contacts } from '~/data/contacts'
+const { trackVisit, error: trackingError } = useVisitTracking();
+import { contacts } from "~/data/contacts";
 
 // Отслеживаем посещение при загрузке приложения
 onMounted(() => {
-  trackVisit()
-})
+  trackVisit();
+});
 
 // Логируем ошибки отслеживания
 watch(trackingError, (error) => {
   if (error) {
-    console.error('Visit tracking error:', error)
+    console.error("Visit tracking error:", error);
   }
-})
+});
 
 useSeoMeta({
-  titleTemplate: (title) => "КотлоЭнергоСнаб"
+  titleTemplate: (title) => "КотлоЭнергоСнаб",
 });
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 
 :root {
   --primary-color: #e31e24;
@@ -64,7 +64,7 @@ useSeoMeta({
 }
 
 body {
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: "Roboto", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: var(--text-color);
@@ -76,7 +76,8 @@ a {
   color: inherit;
 }
 
-ul, ol {
+ul,
+ol {
   list-style: none;
 }
 
@@ -149,7 +150,7 @@ img {
   .container {
     max-width: 720px;
   }
-  
+
   .grid-4 {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -159,8 +160,9 @@ img {
   .container {
     max-width: 540px;
   }
-  
-  .grid-3, .grid-4 {
+
+  .grid-3,
+  .grid-4 {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -169,8 +171,10 @@ img {
   .container {
     max-width: 100%;
   }
-  
-  .grid-2, .grid-3, .grid-4 {
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
     grid-template-columns: 1fr;
   }
 }

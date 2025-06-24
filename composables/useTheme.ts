@@ -9,7 +9,7 @@ export const useTheme = () => {
   };
 
   // при монтировании
-  if (process.client) {
+  if (import.meta.client) {
     setTheme(theme.value as any);
   }
 
