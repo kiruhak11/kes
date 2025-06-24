@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRuntimeConfig } from "#app";
+import { useModalStore } from "~/stores/modal";
 
 const name = ref("");
 const phone = ref("");
@@ -73,16 +73,16 @@ async function submitForm() {
     const res = await $fetch("/api/contact", {
       method: "POST",
       body: payload,
-    }); 
-    
-    modalStore.showSuccess(`Сообщение "${message.value}" Успешно отправленно!`)
-    name.value = '';
-    phone.value = '';
-    email.value = '';
-    message.value = '';
+    });
+
+    modalStore.showSuccess(`Сообщение "${message.value}" Успешно отправленно!`);
+    name.value = "";
+    phone.value = "";
+    email.value = "";
+    message.value = "";
   } catch (err) {
     console.error("Ошибка отправки:", err);
-    modalStore.showError(`Ошибка отправки ${err}`)
+    modalStore.showError(`Ошибка отправки ${err}`);
   }
 }
 </script>
