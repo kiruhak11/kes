@@ -22,7 +22,7 @@
               </button>
               <img 
                 :src="imageList[currentImageIndex] || '/images/placeholders/placeholder.png'" 
-                :alt="product.name" 
+                :alt="product.name ? String(product.name) : ''" 
                 class="main-image" 
               />
               <button v-if="imageList.length > 1" class="gallery-nav next" @click="nextImage">
@@ -49,7 +49,7 @@
             <h1 class="product-title">{{ product.name }}</h1>
             <div class="product-main-row">
               <div class="product-main-description">
-                <p class="product-short-description">{{ product.description }}</p>
+                <div class="product-short-description extended-description-content" v-html="parseExtendedDescription(product.description)"></div>
               </div>
               <div class="product-main-specs">
                 <div v-for="([key, value], idx) in displaySpecs.slice(0, 4)" :key="key" class="spec-item">
@@ -102,7 +102,7 @@
         <div class="tab-content" v-scroll-reveal="'fade-in-up'">
           <div v-if="activeTab === 'description'" class="section-block" v-scroll-reveal="'slide-in-left'">
             <h2 class="section-title">Описание товара</h2>
-            <p>{{ product.extendedDescription }}</p>
+            <div class="extended-description-content" v-html="parseExtendedDescription(product.extendedDescription)"></div>
           </div>
           <div v-if="activeTab === 'specs'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Технические характеристики</h2>
@@ -241,10 +241,10 @@
               class="product-card"
               @click="router.push(`/catalog/${relatedProduct.category_slug || categorySlug}/${generateProductSlug(relatedProduct)}`)"
             >
-              <img :src="relatedProduct.image" :alt="relatedProduct.name" />
+              <img :src="relatedProduct.image" :alt="relatedProduct.name ? String(relatedProduct.name) : ''" />
               <div class="product-card__content">
                 <h3>{{ relatedProduct.name }}</h3>
-                <div class="related-category">{{ relatedProduct.description.slice(0, 32) + '...' }}</div>
+                <div class="related-category extended-description-content" v-html="parseExtendedDescription(relatedProduct.description.slice(0, 32) + '...')"></div>
                 <div class="related-price">{{ relatedProduct.price.toLocaleString() }} &#8381;</div>
               </div>
             </div>
@@ -512,13 +512,11 @@ const displaySpecs = computed(() => {
 // Похожие товары
 const relatedProducts = computed(() => {
   if (!product.value || !products.value) return []
-  
   // Фильтруем товары, исключая текущий
   const filteredProducts = products.value.filter(p => p.id !== product.value?.id)
-  
-  // Перемешиваем массив и берем первые 3 элемента
-  const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5)
-  return shuffled.slice(0, 3)
+  // Сортируем по id (или по алфавиту, если нужно)
+  const sorted = [...filteredProducts].sort((a, b) => a.id - b.id)
+  return sorted.slice(0, 3)
 })
 
 const generateProductSlug = (product: Product): string => {
@@ -681,6 +679,124 @@ if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
   }
 } else {
   console.error('Failed to fetch category info:', categoryError.value)
+}
+
+function escapeHtml(text: string): string {
+  console.log('escapeHtml input:', text);
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  const result = text.replace(/[&<>"']/g, m => map[m]);
+  console.log('escapeHtml output:', result);
+  return result;
+}
+
+function parseInlineMarkdown(text: string): string {
+  console.log('parseInlineMarkdown input:', text);
+  // Обработка жирного текста
+  text = text.replace(/\*\*(.*?)\*\*/g, (match, content) => {
+    console.log('Found bold text:', content);
+    return `<strong>${content}</strong>`;
+  });
+  // Обработка курсива
+  text = text.replace(/\*(.*?)\*/g, (match, content) => {
+    console.log('Found italic text:', content);
+    return `<em>${content}</em>`;
+  });
+  console.log('parseInlineMarkdown output:', text);
+  return text;
+}
+
+function parseExtendedDescription(description: string | null): string {
+  console.log('parseExtendedDescription input:', description);
+  
+  if (!description) {
+    console.log('Empty description, returning empty string');
+    return '';
+  }
+
+  const lines = description.split('\n');
+  console.log('Split lines:', lines);
+  
+  let html = '';
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    console.log(`Processing line ${i}:`, line);
+
+    // Пропускаем пустые строки, но добавляем разрыв строки
+    if (!line) {
+      console.log('Empty line detected');
+      if (inList) {
+        console.log('Closing list due to empty line');
+        html += '</ul>';
+        inList = false;
+      }
+      if (i > 0 && i < lines.length - 1) {
+        console.log('Adding line break');
+        html += '<br>';
+      }
+      continue;
+    }
+
+    // Обработка заголовков и других элементов
+    if (line.startsWith('### ')) {
+      console.log('Processing h3 heading');
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      const text = escapeHtml(line.substring(4));
+      html += `<h3 class="description-h3">${parseInlineMarkdown(text)}</h3>`;
+    } else if (line.startsWith('## ')) {
+      console.log('Processing h2 heading');
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      const text = escapeHtml(line.substring(3));
+      html += `<h2 class="description-h2">${parseInlineMarkdown(text)}</h2>`;
+    } else if (line.startsWith('# ')) {
+      console.log('Processing h1 heading');
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      const text = escapeHtml(line.substring(2));
+      html += `<h1 class="description-h1">${parseInlineMarkdown(text)}</h1>`;
+    } else if (line.startsWith('- ')) {
+      console.log('Processing list item');
+      if (!inList) {
+        console.log('Starting new list');
+        html += '<ul class="description-list">';
+        inList = true;
+      }
+      const text = escapeHtml(line.substring(2));
+      html += `<li class="description-list-item">${parseInlineMarkdown(text)}</li>`;
+    } else {
+      console.log('Processing regular paragraph');
+      if (inList) {
+        console.log('Closing list before paragraph');
+        html += '</ul>';
+        inList = false;
+      }
+      const text = escapeHtml(line);
+      html += `<p class="description-paragraph">${parseInlineMarkdown(text)}</p>`;
+    }
+  }
+
+  if (inList) {
+    console.log('Closing final list');
+    html += '</ul>';
+  }
+
+  console.log('Final HTML output:', html);
+  return html;
 }
 </script>
 
@@ -1857,5 +1973,74 @@ if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
 }
 .breadcrumbs a:hover {
   text-decoration: underline;
+}
+
+/* Стили для расширенного описания */
+.extended-description-content {
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.extended-description-content .description-h1,
+.extended-description-content .description-h2,
+.extended-description-content .description-h3 {
+  margin: 1.5em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.extended-description-content .description-h1 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-hover);
+  padding-bottom: 0.5rem;
+}
+
+.extended-description-content .description-h2 {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;
+}
+
+.extended-description-content .description-h3 {
+  font-size: 1.25rem;
+  color: var(--text-color);
+}
+
+.extended-description-content .description-paragraph {
+  margin: 1em 0;
+  line-height: 1.6;
+}
+
+.extended-description-content .description-list {
+  margin: 1em 0;
+  padding-left: 2em;
+  list-style-type: disc;
+}
+
+.extended-description-content .description-list-item {
+  margin: 0.5em 0;
+  line-height: 1.5;
+}
+
+.extended-description-content .description-list-item::marker {
+  color: var(--primary-color);
+}
+
+.extended-description-content strong {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.extended-description-content em {
+  font-style: italic;
+  color: var(--text-light);
+}
+
+.extended-description-content br {
+  display: block;
+  content: "";
+  margin: 1em 0;
 }
 </style> 

@@ -68,12 +68,9 @@
             
             <div class="form-group">
               <label>Расширенное описание:</label>
-              <textarea
+              <MarkdownEditor
                 v-model="newProdLocal.extendedDescription"
-                placeholder="Подробное описание товара"
-                rows="3"
-                class="form-control"
-              ></textarea>
+              />
             </div>
             
             <div class="form-group">
@@ -384,9 +381,12 @@
                     <textarea v-model="p.description" rows="2" class="form-control"></textarea>
                   </div>
                   
-                  <div class="form-group">
-                    <label>Расширенное описание:</label>
-                    <textarea v-model="p.extendedDescription" rows="3" class="form-control"></textarea>
+                                      <div class="form-group">
+                      <label>Расширенное описание:</label>
+                      <MarkdownEditor
+                        :model-value="p.extendedDescription || ''"
+                        @update:model-value="val => p.extendedDescription = val"
+                      />
                   </div>
                   
                   <div class="form-group">
@@ -576,8 +576,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useFileStorage } from '~/composables/useFileStorage'
+import MarkdownEditor from './MarkdownEditor.vue'
 
 interface Spec {
   key: string;
@@ -1086,6 +1087,197 @@ const isFormValid = computed(() => {
     newProdLocal.value.price > 0
   )
 })
+
+// Состояние редактора
+const showPreview = ref(false)
+const extendedDescriptionTextarea = ref<HTMLTextAreaElement | null>(null)
+
+// Общие функции для редактирования markdown
+function insertTextIntoTextarea(textarea: HTMLTextAreaElement, before: string, after: string = '') {
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const text = textarea.value
+  const selectedText = text.substring(start, end)
+
+  const beforeText = text.substring(0, start)
+  const afterText = text.substring(end)
+
+  const newText = beforeText + before + selectedText + after + afterText
+  textarea.value = newText
+
+  // Восстанавливаем фокус и выделение
+  nextTick(() => {
+    textarea.focus()
+    textarea.setSelectionRange(
+      start + before.length,
+      end + before.length
+    )
+  })
+
+  // Вызываем событие input для обновления v-model
+  textarea.dispatchEvent(new Event('input'))
+}
+
+// Функции для работы с markdown
+function insertMarkdownHeading(textarea: HTMLTextAreaElement, level: number) {
+  const prefix = '#'.repeat(level) + ' '
+  insertTextIntoTextarea(textarea, prefix)
+}
+
+function insertMarkdownBold(textarea: HTMLTextAreaElement) {
+  insertTextIntoTextarea(textarea, '**', '**')
+}
+
+function insertMarkdownItalic(textarea: HTMLTextAreaElement) {
+  insertTextIntoTextarea(textarea, '*', '*')
+}
+
+function insertMarkdownList(textarea: HTMLTextAreaElement) {
+  insertTextIntoTextarea(textarea, '- ')
+}
+
+// Функции для работы с редактором
+function getEditorTextarea(event: Event): HTMLTextAreaElement | null {
+  const target = event.target as HTMLElement
+  const editor = target.closest('.extended-description-editor')
+  return editor?.querySelector('textarea') || null
+}
+
+// Функции для работы с редактором нового товара
+function insertHeading(level: number) {
+  if (!extendedDescriptionTextarea.value) return
+  insertMarkdownHeading(extendedDescriptionTextarea.value, level)
+}
+
+function insertBold() {
+  if (!extendedDescriptionTextarea.value) return
+  insertMarkdownBold(extendedDescriptionTextarea.value)
+}
+
+function insertItalic() {
+  if (!extendedDescriptionTextarea.value) return
+  insertMarkdownItalic(extendedDescriptionTextarea.value)
+}
+
+function insertList() {
+  if (!extendedDescriptionTextarea.value) return
+  insertMarkdownList(extendedDescriptionTextarea.value)
+}
+
+// Функции для работы с редактором существующего товара
+function insertEditHeading(product: Product, level: number, event: Event) {
+  const textarea = getEditorTextarea(event)
+  if (!textarea) return
+  insertMarkdownHeading(textarea, level)
+  product.extendedDescription = textarea.value
+}
+
+function insertEditBold(product: Product, event: Event) {
+  const textarea = getEditorTextarea(event)
+  if (!textarea) return
+  insertMarkdownBold(textarea)
+  product.extendedDescription = textarea.value
+}
+
+function insertEditItalic(product: Product, event: Event) {
+  const textarea = getEditorTextarea(event)
+  if (!textarea) return
+  insertMarkdownItalic(textarea)
+  product.extendedDescription = textarea.value
+}
+
+function insertEditList(product: Product, event: Event) {
+  const textarea = getEditorTextarea(event)
+  if (!textarea) return
+  insertMarkdownList(textarea)
+  product.extendedDescription = textarea.value
+}
+
+function togglePreview() {
+  showPreview.value = !showPreview.value
+}
+
+// Функция для предварительного просмотра
+function parseMarkdown(text: string | undefined): string {
+  if (!text) return ''
+  
+  const lines = text.split('\n')
+  let html = ''
+  let inList = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+
+    if (!line) {
+      if (inList) {
+        html += '</ul>'
+        inList = false
+      }
+      html += '<br>'
+      continue
+    }
+
+    if (line.startsWith('### ')) {
+      if (inList) {
+        html += '</ul>'
+        inList = false
+      }
+      const text = line.substring(4)
+      html += `<h3>${parseInlineMarkdown(text)}</h3>`
+    } else if (line.startsWith('## ')) {
+      if (inList) {
+        html += '</ul>'
+        inList = false
+      }
+      const text = line.substring(3)
+      html += `<h2>${parseInlineMarkdown(text)}</h2>`
+    } else if (line.startsWith('# ')) {
+      if (inList) {
+        html += '</ul>'
+        inList = false
+      }
+      const text = line.substring(2)
+      html += `<h1>${parseInlineMarkdown(text)}</h1>`
+    } else if (line.startsWith('- ')) {
+      if (!inList) {
+        html += '<ul>'
+        inList = true
+      }
+      const text = line.substring(2)
+      html += `<li>${parseInlineMarkdown(text)}</li>`
+    } else {
+      if (inList) {
+        html += '</ul>'
+        inList = false
+      }
+      html += `<p>${parseInlineMarkdown(line)}</p>`
+    }
+  }
+
+  if (inList) {
+    html += '</ul>'
+  }
+
+  return html
+}
+
+function parseInlineMarkdown(text: string): string {
+  // Обработка жирного текста
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  // Обработка курсива
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>')
+  return text
+}
+
+// Функция для создания вычисляемого свойства для extendedDescription
+function useExtendedDescription(product: Product) {
+  return computed({
+    get: () => product.extendedDescription || '',
+    set: (value: string) => {
+      product.extendedDescription = value
+    }
+  })
+}
 </script>
 
 <style lang="scss" scoped>

@@ -16,21 +16,22 @@
     "@nuxtjs/device": "^3.2.4",
     "@nuxtjs/supabase": "^1.5.2",
     "@pinia/nuxt": "0.11.0",
-    "pinia-plugin-persistedstate": "^4.3.0",
     "@vueuse/nuxt": "^13.3.0",
     "chart.js": "^4.5.0",
     "nuxt": "^3.13.2",
+    "pinia-plugin-persistedstate": "^4.3.0",
     "rubillex_frog-modal": "^1.4.4",
     "supabase": "^2.24.3",
     "telegraf": "^4.16.3",
-    "vue": "latest",
-    "vue-router": "latest"
+    "vue": "^3.5.13",
+    "vue-router": "latest",
+    "vue-yandex-maps": "^2.1.9"
   },
   "devDependencies": {
     "@types/node": "^24.0.1",
     "nuxt-file-storage": "^0.3.0",
     "sass": "^1.89.0",
     "typescript": "^5.8.3",
-    "vue-tsc": "^2.2.10"
+    "vue-tsc": "latest"
   }
 }
