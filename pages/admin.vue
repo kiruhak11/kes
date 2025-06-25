@@ -162,6 +162,8 @@ interface Product {
   additional_images?: string[]
   delivery_set?: string
   connection_scheme?: string
+  additional_requirements?: string
+  required_products?: number[]
 }
 
 interface Request {
@@ -205,7 +207,9 @@ const newProd = ref({
   image: '',
   category: '',
   delivery_set: '',
-  connection_scheme: ''
+  connection_scheme: '',
+  additional_requirements: '',
+  required_products: []
 })
 const newCategory = ref({
   name: '',
@@ -304,7 +308,9 @@ if (fetchedProducts.value) {
       specs: {
         ...cleanSpecs,
         images: additionalImages
-      }
+      },
+      additional_requirements: product.additional_requirements || '',
+      required_products: product.required_products || []
     }
   })
 } else {
@@ -398,21 +404,21 @@ async function addProduct() {
       })
 
       if (!categoryResponse.ok) {
-        const errorText = await categoryResponse.text()
-        console.error('Category creation error:', errorText)
-        throw new Error('Failed to create category: ' + errorText)
+        const errorData = await categoryResponse.json()
+        throw new Error(errorData.statusMessage || 'Failed to create category')
       }
 
-      const categoryData = await categoryResponse.json()
+      const newCategoryData = await categoryResponse.json()
+      categoryId = newCategoryData.id
+      categorySlug = newCategoryData.slug
+      categoryName = newCategoryData.name
 
-      categoryId = categoryData.id
-      categorySlug = categoryData.slug || generateSlug(newCategory.value.name)
-      categoryName = categoryData.name || newCategory.value.name
-
+      // Добавляем новую категорию в список
       categories.value.push({
-        id: categoryId,
-        name: categoryName,
-        slug: categorySlug
+        id: String(newCategoryData.id),
+        name: newCategoryData.name,
+        description: newCategoryData.description,
+        slug: newCategoryData.slug
       })
     } else {
       // Находим существующую категорию
@@ -421,48 +427,40 @@ async function addProduct() {
         throw new Error('Category not found')
       }
       categoryId = category.id
-      categoryName = category.name
       categorySlug = category.slug
+      categoryName = category.name
     }
 
     // Подготовка спецификаций
     const specs: Record<string, any> = {}
 
-    // Добавляем характеристики, если они есть
-    newSpecs.value.forEach(spec => {
-      if (spec.key && spec.value) {
-        specs[spec.key] = spec.value
+    // Добавляем все характеристики из newSpecs
+    newSpecs.value.forEach(s => {
+      if (s.key && s.value) {
+        specs[s.key] = s.value
       }
     })
 
-    // Добавляем топливо только если оно выбрано
-    if (newProdSelectedFuels.value.length > 0) {
-      specs.fuel = newProdSelectedFuels.value
+    // Добавляем изображения галереи, если есть
+    if (newProdGallery.value.length > 0) {
+      specs.images = newProdGallery.value
     }
 
-    // Добавляем мощность только если оба значения указаны
-    if (newProdPowerValue.value && newProdPowerUnit.value) {
-      specs.power = `${newProdPowerValue.value} ${newProdPowerUnit.value}`
-    }
-
-    // Подготовка данных товара
+    // Создаем объект продукта для отправки
     const productData = {
       name: newProd.value.name,
       description: newProd.value.description,
-      extendedDescription: newProd.value.extendedDescription,
+      extendedDescription: newProd.value.extendedDescription || '',
       price: Number(newProd.value.price),
       image: newProd.value.image || '/images/placeholders/placeholder.png',
       category_id: categoryId,
-      category_name: categoryName,
-      category_slug: categorySlug,
-      specs: Object.keys(specs).length > 0 ? specs : undefined, // Если specs пустой, не отправляем его
-      additional_images: newProdGallery.value.length > 0 ? newProdGallery.value : undefined,
-      delivery_set: newProd.value.delivery_set || undefined,
-      connection_scheme: newProd.value.connection_scheme || undefined
+      specs: specs,
+      delivery_set: newProd.value.delivery_set || null,
+      connection_scheme: newProd.value.connection_scheme || null,
+      additional_requirements: newProd.value.additional_requirements || null,
+      required_products: newProd.value.required_products || []
     }
 
-
-    // Отправляем запрос на создание товара
     const response = await fetch('/api/products', {
       method: 'POST',
       headers: {
@@ -471,24 +469,29 @@ async function addProduct() {
       body: JSON.stringify(productData)
     })
 
-    const responseData = await response.json()
-
     if (!response.ok) {
-      throw new Error(`Failed to create product: ${responseData.message || 'Unknown error'}`)
+      const errorData = await response.json()
+      throw new Error(errorData.statusMessage || 'Failed to create product')
     }
 
-    // Очищаем форму после успешного добавления
+    const newProduct = await response.json()
+
+    // Добавляем новый продукт в список
+    products.value.push({
+      ...newProduct,
+      category: categoryName,
+      category_slug: categorySlug,
+      slug: generateSlug(newProduct.name)
+    })
+
+    // Очищаем форму
     resetForm()
-    
-    // Обновляем список товаров
-    await refreshProducts()
 
-    // Показываем уведомление об успехе
-    modalStore.openModal("Успех","Товар успешно добавлен")
-
+    // Показываем сообщение об успехе
+    modalStore.showSuccess('Товар успешно добавлен')
   } catch (error: any) {
-    console.error('Error adding product:', error)
-    modalStore.openModal("Ошибка",`Ошибка при добавлении товара: ${error.message || 'Неизвестная ошибка'}`)
+    console.error('Error creating product:', error)
+    modalStore.showError(`Ошибка при создании товара: ${error.message}`)
   }
 }
 
@@ -502,7 +505,9 @@ const resetForm = () => {
     image: '',
     category: '',
     delivery_set: '',
-    connection_scheme: ''
+    connection_scheme: '',
+    additional_requirements: '',
+    required_products: []
   }
   newCategory.value = {
     name: '',
@@ -550,28 +555,11 @@ function toggle(id: number) {
 // Обновляем функцию updateWithSpecs
 async function updateWithSpecs(p: Product) {
   try {
-    // Подготовка спецификаций
-    const specs: Record<string, any> = {}
-
-    // Добавляем все характеристики из specsList
-    specsList.value[p.id]?.forEach(s => {
-      if (s.key && s.value) {
-        specs[s.key] = s.value
-      }
-    })
-
-    // Добавляем изображения галереи, если есть
-    if (p.specs && Array.isArray(p.specs.images)) {
-      specs.images = p.specs.images
+    // Создаем объект для обновления
+    const cleanSpecs = { ...p.specs }
+    if (Array.isArray(cleanSpecs.images)) {
+      cleanSpecs.images = cleanSpecs.images
     }
-
-    // Очищаем старые поля из specs перед отправкой
-    const cleanSpecs: Record<string, any> = {}
-    Object.entries(specs).forEach(([key, value]) => {
-      if (!['power', 'fuel', 'powerUnit'].includes(key)) {
-        cleanSpecs[key] = value
-      }
-    })
 
     // Находим категорию
     const category = categories.value.find(c => c.name === p.category)
@@ -582,19 +570,18 @@ async function updateWithSpecs(p: Product) {
 
     // Подготовка данных для обновления
     const updateData = {
-      id: p.id,
       name: p.name,
       description: p.description,
-      extendedDescription: p.extendedDescription,
-      price: p.price,
+      extendedDescription: p.extendedDescription || '',
+      price: Number(p.price),
       image: p.image,
       category_id: category.id,
-      specs: Object.keys(cleanSpecs).length > 0 ? cleanSpecs : null,
-      additional_images: Array.isArray(p.specs?.images) ? p.specs.images : null,
+      specs: cleanSpecs,
       delivery_set: p.delivery_set || null,
-      connection_scheme: p.connection_scheme || null
+      connection_scheme: p.connection_scheme || null,
+      additional_requirements: p.additional_requirements || null,
+      required_products: p.required_products || []
     }
- 
 
     await $fetch(`/api/products/${p.id}`, {
       method: 'PUT',
@@ -614,7 +601,9 @@ async function updateWithSpecs(p: Product) {
         category: p.category,
         specs: cleanSpecs,
         delivery_set: p.delivery_set,
-        connection_scheme: p.connection_scheme
+        connection_scheme: p.connection_scheme,
+        additional_requirements: p.additional_requirements,
+        required_products: p.required_products
       }
     }
 

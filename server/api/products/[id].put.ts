@@ -18,7 +18,9 @@ export default defineEventHandler(async (event) => {
       specs: body.specs || null, // Если specs undefined, записываем null
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : null,
       delivery_set: body.delivery_set || null,
-      connection_scheme: body.connection_scheme || null
+      connection_scheme: body.connection_scheme || null,
+      additional_requirements: body.additional_requirements || null,
+      required_products: Array.isArray(body.required_products) ? body.required_products : null
     }
  
 

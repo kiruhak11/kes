@@ -166,6 +166,56 @@
           </div>
         </div>
 
+        <!-- Дополнительные требования -->
+        <div class="edit-section">
+          <h3 class="edit-section__title">Дополнительно потребуется</h3>
+          <div class="edit-section__content">
+            <div class="form-group">
+              <label>Описание дополнительных требований:</label>
+              <textarea
+                v-model="newProdLocal.additional_requirements"
+                placeholder="Опишите, что потребуется дополнительно"
+                rows="3"
+                class="form-control"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Связанные товары:</label>
+              <select 
+                v-model="selectedProduct" 
+                class="form-control"
+                @change="addRequiredProduct"
+              >
+                <option value="">Выберите товар</option>
+                <option 
+                  v-for="prod in products.filter(p => p.id !== newProdLocal.id)" 
+                  :key="prod.id" 
+                  :value="prod.id"
+                >
+                  {{ prod.name }}
+                </option>
+              </select>
+
+              <div v-if="newProdLocal.required_products.length > 0" class="required-products-list">
+                <div 
+                  v-for="prodId in newProdLocal.required_products" 
+                  :key="prodId" 
+                  class="required-product-item"
+                >
+                  <span>{{ products.find(p => p.id === prodId)?.name }}</span>
+                  <button 
+                    class="btn-sm" 
+                    @click="removeRequiredProduct(prodId)"
+                  >
+                    <UiDeleteSmall/>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Характеристики -->
         <div class="edit-section">
           <h3 class="edit-section__title">Характеристики</h3>
@@ -550,6 +600,67 @@
                 </div>
               </div>
 
+              <!-- Дополнительные требования в форме редактирования -->
+              <div class="edit-section">
+                <h3 class="edit-section__title">Дополнительно потребуется</h3>
+                <div class="edit-section__content">
+                  <div class="form-group">
+                    <label>Описание дополнительных требований:</label>
+                    <textarea
+                      v-model="p.additional_requirements"
+                      placeholder="Опишите, что потребуется дополнительно"
+                      rows="3"
+                      class="form-control"
+                    ></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Связанные товары:</label>
+                    <select 
+                      v-model="selectedProduct" 
+                      class="form-control"
+                      @change="(e) => addRequiredProductToExisting(e, p)"
+                    >
+                      <option value="">Выберите товар</option>
+                      <option 
+                        v-for="prod in products.filter(prod => prod.id !== p.id)" 
+                        :key="prod.id" 
+                        :value="prod.id"
+                      >
+                        {{ prod.name }}
+                      </option>
+                    </select>
+
+                    <div v-if="p.required_products && p.required_products.length > 0" class="required-products-list">
+                      <div 
+                        v-for="prodId in p.required_products" 
+                        :key="prodId" 
+                        class="required-product-item"
+                      >
+                        <div class="required-product-item__info">
+                          <img 
+                            :src="products.find(prod => prod.id === prodId)?.image" 
+                            :alt="products.find(prod => prod.id === prodId)?.name"
+                            class="required-product-item__image"
+                          />
+                          <div class="required-product-item__details">
+                            <span class="required-product-item__name">{{ products.find(prod => prod.id === prodId)?.name }}</span>
+                            <span class="required-product-item__price">{{ products.find(prod => prod.id === prodId)?.price }} ₽</span>
+                          </div>
+                        </div>
+                        <button 
+                          class="required-product-item__remove"
+                          @click="removeRequiredProductFromExisting(p, prodId)"
+                          title="Удалить"
+                        >
+                          <UiDeleteSmall/>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Действия -->
               <div class="edit-section edit-section--actions">
                 <div class="prod-details__actions">
@@ -609,6 +720,8 @@ interface Product {
   specs?: Record<string, any>
   connection_scheme?: string
   delivery_set?: string
+  additional_requirements?: string
+  required_products?: number[]
 }
 
 // Props
@@ -707,6 +820,39 @@ watch(newSpecLocal, (val) => { emit('update:newSpec', val) })
 const newSpecsLocal = ref(props.newSpecs)
 watch(() => props.newSpecs, (val) => { newSpecsLocal.value = val })
 watch(newSpecsLocal, (val) => { emit('update:newSpecs', val) })
+
+// Initialize additional requirements if not present
+if (!newProdLocal.value.additional_requirements) {
+  newProdLocal.value.additional_requirements = ''
+}
+if (!newProdLocal.value.required_products) {
+  newProdLocal.value.required_products = []
+}
+
+// Selected product for additional requirements
+const selectedProduct = ref('')
+
+// Add required product
+const addRequiredProduct = () => {
+  if (!selectedProduct.value) return
+  
+  const productId = Number(selectedProduct.value)
+  if (!newProdLocal.value.required_products?.includes(productId)) {
+    if (!newProdLocal.value.required_products) {
+      newProdLocal.value.required_products = []
+    }
+    newProdLocal.value.required_products.push(productId)
+  }
+  selectedProduct.value = ''
+}
+
+// Remove required product
+const removeRequiredProduct = (productId: number) => {
+  if (!newProdLocal.value.required_products) return
+  newProdLocal.value.required_products = newProdLocal.value.required_products.filter((id: number) => id !== productId)
+}
+
+
 
 // Переменные для системы подсказок
 const selectedProductForCopy = ref('')
@@ -1278,6 +1424,29 @@ function useExtendedDescription(product: Product) {
     }
   })
 }
+
+// Functions for handling required products
+const addRequiredProductToExisting = (event: Event, product: Product) => {
+  const target = event.target as HTMLSelectElement
+  const productId = Number(target.value)
+  if (!productId) return
+
+  if (!product.required_products) {
+    product.required_products = []
+  }
+  
+  if (!product.required_products.includes(productId)) {
+    product.required_products.push(productId)
+  }
+  
+  target.value = '' // Reset select
+}
+
+const removeRequiredProductFromExisting = (product: Product, productId: number) => {
+  if (!product.required_products) return
+  product.required_products = product.required_products.filter((id: number) => id !== productId)
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -2282,5 +2451,170 @@ function useExtendedDescription(product: Product) {
   cursor: not-allowed !important;
   opacity: 0.7 !important;
   box-shadow: none !important;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.required-products-list {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
+.required-product-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary);
+
+    .required-product-item__image img {
+      transform: scale(1.05);
+    }
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex: 1;
+  }
+
+  &__image {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin-left: -2rem;
+    margin-top: -3rem;
+    margin-bottom: -3rem;
+    z-index: 2;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__name {
+    font-size: 1.1rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  &__price {
+    font-size: 1rem;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  &__remove {
+    padding: 0.75rem;
+    border: none;
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--danger);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-left: 1rem;
+    z-index: 3;
+
+    &:hover {
+      background: var(--danger);
+      color: white;
+      transform: scale(1.1) rotate(90deg);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// Улучшенные стили для выпадающего списка
+.form-group select {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  }
+
+  &:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Улучшенные стили для текстового поля
+.form-group textarea {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.3s ease;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  }
+
+  &:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-light);
+  }
 }
 </style> 

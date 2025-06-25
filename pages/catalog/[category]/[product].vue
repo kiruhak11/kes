@@ -132,6 +132,43 @@
             </div>
             <div v-else class="no-data-message">Схема подключения уточняется.</div>
           </div>
+          <!-- Дополнительные требования -->
+          <div v-if="activeTab === 'additional'" class="section-block" v-scroll-reveal="'slide-in-right'">
+            <h2 class="section-title">Дополнительно потребуется</h2>
+            <div v-if="product.additional_requirements || (product.required_products && product.required_products.length > 0)">
+              <div v-if="product.additional_requirements" class="additional-description">
+                {{ product.additional_requirements }}
+              </div>
+              
+              <div v-if="product.required_products && product.required_products.length > 0" class="required-products-grid">
+                <div 
+                  v-for="prodId in product.required_products" 
+                  :key="prodId" 
+                  class="required-product-card"
+                  @click="navigateToProduct(getProductById(prodId))"
+                >
+                  <div class="required-product-card__image-wrapper">
+                    <div class="required-product-card__image">
+                      <img :src="getProductById(prodId)?.image" :alt="getProductById(prodId)?.name">
+                    </div>
+                  </div>
+                  <div class="required-product-card__content">
+                    <div class="required-product-card__header">
+                      <h3 class="required-product-card__title">{{ getProductById(prodId)?.name }}</h3>
+                      <div class="required-product-card__price">{{ getProductById(prodId)?.price?.toLocaleString() }} ₽</div>
+                    </div>
+                    <p class="required-product-card__description">{{ getProductById(prodId)?.description }}</p>
+                    <div class="required-product-card__footer">
+                      <button class="required-product-card__button">Подробнее →</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              Для данного товара не указаны дополнительные требования
+            </div>
+          </div>
           <div v-if="activeTab === 'certificates'" class="section-block certificates-block" v-scroll-reveal="'fade-in-up'">
             <h2 class="section-title">Сертификаты и гарантии</h2>
             <div class="cert-gallery-slider-wrap">
@@ -309,6 +346,8 @@ interface APIProduct {
   specs: ProductSpecs
   delivery_set: string | null
   connection_scheme: string | null
+  additional_requirements: string | null
+  required_products: number[] | null
 }
 
 interface Product {
@@ -325,6 +364,8 @@ interface Product {
   additional_images?: string[]
   delivery_set?: string
   connection_scheme?: string
+  additional_requirements?: string
+  required_products?: number[]
 }
 
 interface Certificate {
@@ -376,8 +417,9 @@ if (fetchError.value) {
   console.error('Error fetching products:', fetchError.value)
   products.value = []
 } else if (fetchedProducts.value) {
-  // Only map if we have valid data
-  products.value = (fetchedProducts.value as APIProduct[]).map(product => ({
+  // Cast the response to unknown first, then to APIProduct[]
+  const apiProducts = fetchedProducts.value as unknown as APIProduct[]
+  products.value = apiProducts.map(product => ({
     id: product.id,
     name: product.name || '',
     description: product.description || '',
@@ -390,7 +432,9 @@ if (fetchError.value) {
     additional_images: product.additional_images || [],
     specs: product.specs || {},
     delivery_set: product.delivery_set || '',
-    connection_scheme: product.connection_scheme || ''
+    connection_scheme: product.connection_scheme || '',
+    additional_requirements: product.additional_requirements || '',
+    required_products: product.required_products || []
   }))
 } else {
   products.value = []
@@ -487,21 +531,21 @@ const addToCart = () => {
   cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
 }
 
-// Отображаемые характеристики
+// Заменим вычисление displaySpecs, чтобы корректно фильтровать ненужные поля
 const displaySpecs = computed(() => {
   if (!product.value?.specs) return []
+  
+  // Список полей, которые нужно исключить
+  const excludeFields = ['images', 'power', 'fuel']
   
   return Object.entries(product.value.specs)
     .filter(([key, value]) => 
       value !== null && 
       value !== undefined && 
       value !== '' && 
-      key !== 'images' && 
-      key !== 'power' && 
-      key !== 'fuel'
+      !excludeFields.includes(key)
     )
     .map(([key, value]) => {
-      // Обработка массивов (например, для топлива)
       if (Array.isArray(value)) {
         return [key, value.join(', ')]
       }
@@ -533,6 +577,7 @@ const productTabs = [
   { key: 'specs', label: 'Технические характеристики' },
   { key: 'delivery', label: 'Комплект поставки' },
   { key: 'scheme', label: 'Схема подключения' },
+  { key: 'additional', label: 'Дополнительно потребуется' },
   { key: 'certificates', label: 'Сертификаты и гарантии' }
 ];
 const activeTab = ref('description');
@@ -798,6 +843,17 @@ function parseExtendedDescription(description: string | null): string {
   console.log('Final HTML output:', html);
   return html;
 }
+
+// Add helper function to get product by ID
+const getProductById = (id: number) => {
+  return products.value.find(p => p.id === id)
+}
+
+// Add helper function for navigation
+const navigateToProduct = (product: Product | undefined) => {
+  if (!product) return
+  router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)
+}
 </script>
 
 <style scoped lang="scss">
@@ -990,7 +1046,7 @@ function parseExtendedDescription(description: string | null): string {
 .product-main-row {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 10px;
   align-items: flex-start;
   margin-top: 12px;
 }
@@ -1556,7 +1612,7 @@ function parseExtendedDescription(description: string | null): string {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 0.5rem 0;
+  padding: 0.3rem 0;
   gap: 1rem;
 }
 .spec-empty {
@@ -2042,5 +2098,274 @@ function parseExtendedDescription(description: string | null): string {
   display: block;
   content: "";
   margin: 1em 0;
+}
+
+.section-block {
+  margin-bottom: 2rem;
+}
+
+.additional-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  white-space: pre-line;
+}
+
+.required-products-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+}
+
+.required-product-card {
+  position: relative;
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  overflow: visible;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  min-height: 240px;
+  margin-top: 2rem;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary);
+
+    .required-product-card__image img {
+      transform: scale(1.05) translateY(-5px);
+    }
+
+    .required-product-card__button {
+      background: var(--primary);
+      color: white;
+      padding-right: 2rem;
+      
+      &::after {
+        transform: translateX(5px);
+        opacity: 1;
+      }
+    }
+  }
+
+  &__image-wrapper {
+    position: relative;
+    width: 300px;
+    min-width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  &__image {
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1));
+    }
+  }
+
+  &__content {
+    flex: 1;
+    padding: 2.5rem;
+    padding-left: 3rem;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 15%);
+    position: relative;
+    z-index: 1;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  &__price {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--primary);
+    white-space: nowrap;
+    background: rgba(227, 30, 36, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+  }
+
+  &__description {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0;
+    flex: 1;
+  }
+
+  &__footer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__button {
+    padding: 1rem 2rem;
+    border: 2px solid var(--primary);
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &::after {
+      content: "→";
+      position: absolute;
+      right: 1.5rem;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    &:hover {
+      background: var(--primary);
+      color: white;
+      padding-right: 3rem;
+
+      &::after {
+        transform: translateX(5px);
+        opacity: 1;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .required-product-card {
+    flex-direction: column;
+    align-items: center;
+    padding-top: 180px;
+    margin-top: 4rem;
+
+    &__image-wrapper {
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 260px;
+      min-width: 260px;
+    }
+
+    &__image {
+      width: 280px;
+      height: 280px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    &__content {
+      width: 100%;
+      padding: 2rem;
+      background: white;
+    }
+
+    &__header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    &__title {
+      font-size: 1.5rem;
+    }
+
+    &__price {
+      font-size: 1.5rem;
+    }
+
+    &__description {
+      text-align: center;
+    }
+
+    &__footer {
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .required-product-card {
+    padding-top: 160px;
+    margin-top: 3rem;
+
+    &__image-wrapper {
+      top: -100px;
+      width: 220px;
+      min-width: 220px;
+    }
+
+    &__image {
+      width: 240px;
+      height: 240px;
+    }
+
+    &__content {
+      padding: 1.5rem;
+    }
+
+    &__title {
+      font-size: 1.25rem;
+    }
+
+    &__price {
+      font-size: 1.25rem;
+    }
+
+    &__description {
+      font-size: 1rem;
+    }
+
+    &__button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 </style> 

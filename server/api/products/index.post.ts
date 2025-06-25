@@ -19,6 +19,8 @@ interface Product {
   specs?: ProductSpecs
   delivery_set?: string
   connection_scheme?: string
+  additional_requirements?: string
+  required_products?: number[]
 }
 
 export default defineEventHandler(async (event) => {
@@ -59,7 +61,9 @@ export default defineEventHandler(async (event) => {
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : [],
       specs: body.specs || {},
       delivery_set: body.delivery_set || null,
-      connection_scheme: body.connection_scheme || null
+      connection_scheme: body.connection_scheme || null,
+      additional_requirements: body.additional_requirements || null,
+      required_products: Array.isArray(body.required_products) ? body.required_products : null
     }
  
 

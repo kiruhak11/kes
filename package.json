@@ -29,9 +29,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.1",
+    "@types/sortablejs": "^1.15.8",
+    "@vueuse/core": "^13.4.0",
     "nuxt-file-storage": "^0.3.0",
     "sass": "^1.89.0",
     "typescript": "^5.8.3",
-    "vue-tsc": "latest"
+    "vue-tsc": "latest",
+    "vuedraggable": "^4.1.0"
   }
 }
