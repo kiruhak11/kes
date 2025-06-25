@@ -1096,6 +1096,7 @@ const isFormValid = computed(() => {
   background: var(--bg);
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
 }
 
 .login-box h2 {
@@ -1112,6 +1113,7 @@ const isFormValid = computed(() => {
   border: 1px solid var(--secondary);
   border-radius: 0.5rem;
   font-size: 0.95rem;
+  z-index: 10000;
 }
 
 @media (min-width: 768px) {

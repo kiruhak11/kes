@@ -133,7 +133,6 @@
   import { ref, computed, watch, onMounted } from 'vue'
   import { useCartStore } from '~/stores/cart'
   import { useRoute, useRouter } from 'vue-router'
-  import { useFetch } from '#app'
   import CommercialOfferModal from '~/components/CommercialOfferModal.vue'
   const props = defineProps<{
   product: {
@@ -545,6 +544,7 @@ const closeCommercialOfferModal = () => {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 40px;
+    padding-top: 40px;
   }
   
   .category-sidebar {
@@ -800,11 +800,11 @@ const closeCommercialOfferModal = () => {
   
   .product-image {
     width: 220px;
-    height: 170px;
+    height: 220px;
     object-fit: contain;
     border-radius: 8px;
     z-index: 2;
-    margin-top: -40px;
+    margin-top: -80px;
     position: static;
   }
   

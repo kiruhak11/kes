@@ -12,6 +12,7 @@
             <img 
               :src="certificate.image" 
               :alt="certificate.title"
+              loading="lazy"
             />
           </div>
           
@@ -30,33 +31,23 @@
       </div>
     </div>
 
-    <!-- Modal -->
-    <div v-if="selectedCertificate" 
-         class="modal"
-         @click="closeModal">
-      <div class="modal__content" @click.stop>
-        <button 
-          @click="closeModal"
-          class="modal__close"
-        >
-          <span>&times;</span>
-        </button>
-        <div class="modal__header">
-          <h2 class="modal__title">{{ selectedCertificate.title }}</h2>
-        </div>
-        <div class="modal__body">
-          <img 
-            :src="selectedCertificate.image" 
-            :alt="selectedCertificate.title"
-            class="modal__image"
-          />
-        </div>
-      </div>
-    </div>
+    <!-- Certificate Modal -->
+    <CertificateModal
+      v-if="isModalVisible"
+      :certificate="selectedCertificate"
+      :current-index="currentIndex"
+      :total-count="certificates.length"
+      :on-previous="previousCertificate"
+      :on-next="nextCertificate"
+      :on-close="closeModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue';
+import CertificateModal from '~/components/CertificateModal.vue';
+
 interface Certificate {
   id: number;
   title: string;
@@ -64,7 +55,6 @@ interface Certificate {
 }
 
 const certificates: Certificate[] = [
-
   {
     id: 1,
     title: 'Сертификат на газовые котлы',
@@ -92,14 +82,39 @@ const certificates: Certificate[] = [
   }
 ];
 
+// Reactive state
 const selectedCertificate = ref<Certificate | null>(null);
+const isModalVisible = ref(false);
 
+// Computed
+const currentIndex = computed(() => {
+  if (!selectedCertificate.value) return 0;
+  return certificates.findIndex(cert => cert.id === selectedCertificate.value!.id);
+});
+
+// Methods
 const openModal = (certificate: Certificate) => {
   selectedCertificate.value = certificate;
+  isModalVisible.value = true;
 };
 
 const closeModal = () => {
+  isModalVisible.value = false;
   selectedCertificate.value = null;
+};
+
+const previousCertificate = () => {
+  if (currentIndex.value > 0) {
+    const prevIndex = currentIndex.value - 1;
+    selectedCertificate.value = certificates[prevIndex];
+  }
+};
+
+const nextCertificate = () => {
+  if (currentIndex.value < certificates.length - 1) {
+    const nextIndex = currentIndex.value + 1;
+    selectedCertificate.value = certificates[nextIndex];
+  }
 };
 </script>
 
@@ -219,82 +234,6 @@ const closeModal = () => {
   margin-right: 8px;
 }
 
-/* Modal styles */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px 20px 20px;
-}
-
-.modal__content {
-  position: relative;
-  max-width: 900px;
-  width: 100%;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  margin: auto;
-}
-
-.modal__close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  color: #fff;
-  font-size: 2rem;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  z-index: 2;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  transition: background-color 0.3s ease;
-}
-
-.modal__close:hover {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.modal__header {
-  padding: 20px;
-  background: #f8f8f8;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.modal__title {
-  font-size: 1.5rem;
-  color: #333;
-  text-align: center;
-  margin: 0;
-}
-
-.modal__body {
-  padding: 30px;
-}
-
-.modal__image {
-  display: block;
-  margin: 0 auto;
-  max-width: 100vw;
-  max-height: 80vh;
-  width: auto;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  object-fit: contain;
-}
-
 /* Responsive styles */
 @media (max-width: 1200px) {
   .certificates-grid {
@@ -335,21 +274,6 @@ const closeModal = () => {
   .btn {
     padding: 8px 16px;
     font-size: 0.9rem;
-  }
-
-  .modal {
-    padding: 70px 15px 15px;
-  }
-  
-  .modal__body {
-    padding: 20px;
-    /* убираем ограничение по высоте */
-  }
-  .modal__image {
-    max-width: 98vw;
-    max-height: 60vh;
-    width: auto;
-    height: auto;
   }
 }
 </style> 

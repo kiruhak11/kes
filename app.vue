@@ -68,7 +68,6 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: var(--text-color);
-  background: var(--bg-color);
 }
 
 a {

@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 const { $device } = useNuxtApp();
 import { contacts } from "~/data/contacts";
-import UiParticles from '@/components/ui/Particles.vue'
 
 const sections = [
   {
@@ -17,7 +16,6 @@ const sections = [
       { text: 'Главная', to: '/' },
       { text: 'Каталог', to: '/catalog' },
       { text: 'О компании', to: '/about' },
-      { text: 'Фотогалерея', to: '/about/gallery' },
       { text: 'Контакты', to: '/about/contacts' }
 
     ]
@@ -58,7 +56,6 @@ if (fetchedCategories.value) {
 
 <template>
   <footer class="footer">
-    <UiParticles />
     <div class="container">
       <div v-if="$device.isMobile" class="footer__mobile">
         <div class="footer__logo">
@@ -92,7 +89,6 @@ if (fetchedCategories.value) {
               <h3 class="footer__nav-title">О заводе</h3>
               <ul class="footer__nav-list">
                 <li><NuxtLink to="/certificates">Сертификаты</NuxtLink></li>
-                <li><NuxtLink to="/about/gallery">Фотогалерея</NuxtLink></li>
                 <li><NuxtLink to="/about/contacts">Контакты</NuxtLink></li>
                 <li><NuxtLink to="/contact">Оставить заявку</NuxtLink></li>
                 <li><NuxtLink to="/cart">Корзина</NuxtLink></li>

@@ -110,7 +110,8 @@
       <div class="container">
         <h2 class="section-title">Услуги завода</h2>
         <div class="grid grid-4">
-          <div
+          <NuxtLink
+            :to="`/contact?service=${encodeURIComponent(service.title.replace(/<br>/g, ' '))}`"
             class="service-card"
             v-for="(service, idx) in services"
             :key="service.title"
@@ -118,6 +119,63 @@
           >
             <img :src="service.img" :alt="service.title" />
             <h3 v-html="service.title"></h3>
+            <div class="service-card__arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="cta-section" v-scroll-reveal="'fade-in-up'">
+      <div class="container">
+        <div class="cta-card">
+          <div class="cta-content">
+            
+            <div class="cta-text">
+              <h3>Дополнительные услуги!</h3>
+              <p>Наши специалисты подберут оптимальное решение для вашего объекта и предложат выгодную цену. Получите бесплатную консультацию и расчет стоимости.</p>
+            </div>
+            <div class="cta-actions">
+              <a href="tel:+73852500000" class="btn btn-primary btn-large">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                {{ contacts.phone[0] }}
+              </a>
+              <NuxtLink to="/contact" class="btn btn-outline btn-large">
+                Заказать звонок
+              </NuxtLink>
+            </div>
+          </div>
+          <div class="cta-features">
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span>Бесплатная консультация</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span>Индивидуальный подход</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span>Быстрый расчет стоимости</span>
+            </div>
           </div>
         </div>
       </div>
@@ -234,7 +292,7 @@ import { useModalStore } from '~/stores/modal'
 import BackIcon from '~/components/icons/back.vue'
 import NextIcon from '~/components/icons/next.vue'
 import TypeWriter from '~/components/TypeWriter.vue'
-
+import { contacts } from '~/data/contacts'
 // SEO Meta Tags
 useHead({
   title: 'Котельный завод КЭС - Производство котельного оборудования в Барнауле',
@@ -554,22 +612,22 @@ function handleImageError(e: Event) {
 
 const services = [
   {
-    img: '/images/services/installation.jpg',
+    img: '/images/services/installation.png',
     title: 'Монтаж | Демонтаж <br>котлов',
     animation: 'slide-in-left',
   },
   {
-    img: '/images/services/design.jpg',
+    img: '/images/services/design.png',
     title: 'Проектирование котельной',
     animation: 'fade-in-up',
   },
   {
-    img: '/images/services/startup.jpg',
+    img: '/images/services/startup.png',
     title: 'Пуско-наладка котельной',
     animation: 'zoom-in',
   },
   {
-    img: '/images/services/turnkey.jpg',
+  img: '/images/services/turnkey.png',
     title: 'Котельная под ключ',
     animation: 'slide-in-right',
   },
@@ -648,7 +706,7 @@ const services = [
 }
 .catalog-card img {
   position: absolute;
-  top: -40px;
+  top: -50px;
   left: 50%;
   transform: translateX(-50%);
   width: 200px;
@@ -835,14 +893,253 @@ const services = [
 
 .service-card {
   text-align: center;
+  background: white;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(220, 53, 69, 0.1);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+}
+
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #dc3545, #c82333, #a71e2a);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.service-card:hover,
+.service-card:focus {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.2);
+  text-decoration: none;
+  color: inherit;
+}
+
+.service-card:hover::before,
+.service-card:focus::before {
+  transform: scaleX(1);
+}
+
+.service-card:active {
+  transform: translateY(-4px);
 }
 
 .service-card img {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.service-card:hover img,
+.service-card:focus img {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(220, 53, 69, 0.2);
+}
+
+.service-card h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: #1a1a1a;
+  line-height: 1.3;
+  position: relative;
+}
+
+.service-card h3::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #dc3545, #c82333);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.service-card:hover h3::after,
+.service-card:focus h3::after {
+  opacity: 1;
+}
+
+.service-card__arrow {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background: rgba(220, 53, 69, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dc3545;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.service-card:hover .service-card__arrow,
+.service-card:focus .service-card__arrow {
+  background: #dc3545;
+  color: white;
+  transform: translateX(4px);
+  opacity: 1;
+}
+
+.cta-section {
+  padding: 20px 0 60px 0;
+}
+
+.cta-card {
+  background: white;
+  border-radius: 16px;
+  padding: 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #dc3545, #c82333, #a71e2a);
+}
+
+.cta-content {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.cta-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  border-radius: 50%;
+  color: white;
+  flex-shrink: 0;
+}
+
+.cta-text h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.cta-text p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
+  max-width: 500px;
+}
+
+.cta-actions {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.btn-large {
+  padding: 16px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline:hover {
+  background: #dc3545;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-primary.btn-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.cta-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  padding-top: 32px;
+  border-top: 1px solid #e9ecef;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #dc3545;
+  border-radius: 8px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.feature-item span {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
 }
 
 .calculator {
@@ -1044,6 +1341,102 @@ const services = [
   .dot {
     width: 10px;
     height: 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .cta-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    text-align: center;
+  }
+  
+  .cta-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .cta-features {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  
+  .service-card {
+    padding: 24px 20px;
+  }
+  
+  .service-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .service-card__arrow {
+    width: 28px;
+    height: 28px;
+    bottom: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cta-card {
+    padding: 32px 24px;
+  }
+  
+  .cta-text h3 {
+    font-size: 1.6rem;
+  }
+  
+  .cta-text p {
+    font-size: 1rem;
+  }
+  
+  .cta-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-large {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .cta-features {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .feature-item {
+    padding: 12px;
+  }
+  
+  .cta-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .service-card {
+    padding: 20px 16px;
+    margin-bottom: 20px;
+  }
+  
+  .service-card img {
+    height: 160px;
+    margin-bottom: 20px;
+  }
+  
+  .service-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+  
+  .service-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .service-card__arrow {
+    width: 24px;
+    height: 24px;
+    bottom: 10px;
+    right: 10px;
   }
 }
 </style>

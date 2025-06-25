@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import BaseModal from "~/components/BaseModal.vue";
 import CategoryForm from "~/components/CategoryForm.vue";
+import CertificateModal from "~/components/CertificateModal.vue";
 
 export const useModalStore = defineStore("modal", () => {
   const isOpen = ref(false);
@@ -57,6 +58,28 @@ export const useModalStore = defineStore("modal", () => {
     });
   }
 
+  function showCertificateModal(
+    certificate: any,
+    currentIndex: number,
+    totalCount: number,
+    onPrevious?: () => void,
+    onNext?: () => void,
+    onClose?: () => void
+  ) {
+    modal.setModal(CertificateModal, {
+      certificate,
+      currentIndex,
+      totalCount,
+      onPrevious: onPrevious || (() => {}),
+      onNext: onNext || (() => {}),
+      onClose: onClose || (() => {}),
+    });
+  }
+
+  function closeModal() {
+    modal.closeModal();
+  }
+
   return {
     isOpen,
     title,
@@ -68,5 +91,7 @@ export const useModalStore = defineStore("modal", () => {
     showError,
     showConfirm,
     showCategoryForm,
+    showCertificateModal,
+    closeModal,
   };
 });

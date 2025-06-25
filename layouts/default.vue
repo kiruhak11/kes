@@ -37,9 +37,6 @@ onUnmounted(() => {
 .content {
   flex-grow: 1;
 }
-body {
-  background-color: var(--background-color);
-}
 .app {
   display: flex;
   position: relative;
@@ -79,7 +76,7 @@ body {
 .app-bg {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   width: 100vw;
   height: 100vh;
@@ -92,7 +89,7 @@ body {
     opacity: 0.08;
     filter: blur(2px);
     pointer-events: none;
-    z-index: 1;
+    z-index: -1;
   }
 }
 </style>

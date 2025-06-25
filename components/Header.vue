@@ -126,12 +126,6 @@
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/about/gallery" @click="showMobileMenu = false" class="mobile-menu-item">
-                      <span class="menu-icon"><IconsGallery /></span>
-                      <span>Фотогалерея</span>
-                    </NuxtLink>
-                  </li>
-                  <li>
                     <NuxtLink to="/certificates" @click="showMobileMenu = false" class="mobile-menu-item">
                       <span class="menu-icon"><IconsCertificates /></span>
                       <span>Сертификаты</span>
@@ -221,11 +215,10 @@
           </div>
           <nav class="header__nav" v-else>
             <ul class="header__menu">
-            <a href="/vacancies" class="header__link">Вакансии</a>
             <a href="/questionnaire" class="header__link">Опросные листы</a>
             <a href="/certificates" class="header__link">Сертификаты</a>
             <a href="/about" class="header__link">О компании</a>
-            <a href="/about/gallery" class="header__link">Фотогалерея</a>
+            <a href="/vacancies" class="header__link">Вакансии</a>
               </ul>
           </nav>
         </div>
@@ -565,7 +558,6 @@ onBeforeUnmount(() => {
 .header {
   margin-top: 75px;
   background-color: #f5f5f5;
-  z-index: 1000;
   @media (max-width: 768px) {
     margin-top: 0;
   }

@@ -1201,9 +1201,12 @@ async function deleteAllRequests() {
  display: flex;
  justify-content: center;
  align-items: center;
+  z-index: 1000;
 }
+
 .admin-section {
   padding: 1rem;
+  z-index: 1000;
 
   @media (min-width: 768px) {
     padding: 2rem;
