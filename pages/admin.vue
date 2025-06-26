@@ -686,6 +686,10 @@ function logout() {
   authorized.value = false
   password.value = ''
   loginError.value = null
+  // Очищаем сохраненную авторизацию из localStorage
+  if (process.client) {
+    localStorage.removeItem('adminAuth')
+  }
 }
 
 // Обновленная функция загрузки галереи
@@ -870,10 +874,43 @@ watch(adminTab, (tab) => {
 
 // Обновляем onMounted
 onMounted(() => {
+  // Проверяем сохраненную авторизацию
+  checkSavedAuth()
+  
   if (adminTab.value === 'stats' && authorized.value) {
     fetchStats()
   }
 })
+
+// Функция для проверки сохраненной авторизации
+function checkSavedAuth() {
+  if (process.client) {
+    const savedAuth = localStorage.getItem('adminAuth')
+    if (savedAuth) {
+      try {
+        const authData = JSON.parse(savedAuth)
+        if (authData.authorized && authData.timestamp) {
+          // Проверяем, не истек ли срок действия (7 дней)
+          const now = Date.now()
+          const authTime = authData.timestamp
+          const sevenDays = 7 * 24 * 60 * 60 * 1000 // 7 дней в миллисекундах
+          
+          if (now - authTime < sevenDays) {
+            // Авторизация еще действительна
+            authorized.value = true
+            return
+          } else {
+            // Авторизация истекла, удаляем из localStorage
+            localStorage.removeItem('adminAuth')
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing saved auth data:', error)
+        localStorage.removeItem('adminAuth')
+      }
+    }
+  }
+}
 
 // Обновляем состояние для статистики
 const stats = ref<Stats>({
@@ -1235,6 +1272,47 @@ function updateSpecsList(productId: number, specs: Spec[]) {
 
       @media (min-width: 768px) {
         font-size: 2rem;
+      }
+    }
+  }
+
+  .catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0;
+      text-align: left;
+
+      @media (min-width: 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    .logout-btn {
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+      font-size: 0.95rem;
+      min-width: 120px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+
+      &:hover {
+        background: #e5e7eb;
+        border-color: #9ca3af;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
       }
     }
   }

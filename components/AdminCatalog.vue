@@ -11,6 +11,18 @@
         placeholder="Пароль"
         @keyup.enter="login"
       />
+      <div class="remember-me">
+        <label class="remember-me__label">
+          <input 
+            type="checkbox" 
+            v-model="rememberMe"
+          />
+          <svg viewBox="0 0 64 64" height="1.5em" width="1.5em">
+    <path d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16" pathLength="575.0541381835938" class="path"></path>
+  </svg>
+          <span class="remember-me__text">Запомнить меня</span>
+        </label>
+      </div>
       <button class="btn btn-primary" @click="login">
         Войти
       </button>
@@ -19,7 +31,13 @@
 
     <!-- Управление каталогом -->
     <div v-else class="catalog-manager">
-      <h1>Управление каталогом</h1>
+      <div class="catalog-header">
+        <h1>Управление каталогом</h1>
+        
+          <UiLogout @click="logout"/>
+  
+      
+      </div>
 
       <!-- Форма добавления нового товара -->
       <div class="add-form">
@@ -749,7 +767,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useFileStorage } from '~/composables/useFileStorage'
 import MarkdownEditor from './MarkdownEditor.vue'
 
@@ -1248,7 +1266,13 @@ const selectEditSpecValue = (spec: Spec, value: string) => {
 }
 
 // Methods
-const login = () => emit('login')
+const login = () => {
+  emit('login')
+  // Сохраняем авторизацию, если включен чекбокс "Запомнить меня"
+  if (rememberMe.value) {
+    saveAuth()
+  }
+}
 const addProduct = () => {
   emit('addProduct')
 }
@@ -1608,6 +1632,67 @@ const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
   draggedEditProductId.value = null
 }
 
+// Переменная для "Запомнить меня"
+const rememberMe = ref(false)
+
+// Проверяем сохраненную авторизацию при загрузке компонента
+onMounted(() => {
+  checkSavedAuth()
+})
+
+// Функция для проверки сохраненной авторизации
+const checkSavedAuth = () => {
+  if (process.client) {
+    const savedAuth = localStorage.getItem('adminAuth')
+    if (savedAuth) {
+      try {
+        const authData = JSON.parse(savedAuth)
+        if (authData.authorized && authData.timestamp) {
+          // Проверяем, не истек ли срок действия (7 дней)
+          const now = Date.now()
+          const authTime = authData.timestamp
+          const sevenDays = 7 * 24 * 60 * 60 * 1000 // 7 дней в миллисекундах
+          
+          if (now - authTime < sevenDays) {
+            // Авторизация еще действительна
+            emit('login')
+            return
+          } else {
+            // Авторизация истекла, удаляем из localStorage
+            localStorage.removeItem('adminAuth')
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing saved auth data:', error)
+        localStorage.removeItem('adminAuth')
+      }
+    }
+  }
+}
+
+// Функция для сохранения авторизации
+const saveAuth = () => {
+  if (process.client && rememberMe.value) {
+    const authData = {
+      authorized: true,
+      timestamp: Date.now()
+    }
+    localStorage.setItem('adminAuth', JSON.stringify(authData))
+  }
+}
+
+// Функция для удаления сохраненной авторизации
+const clearSavedAuth = () => {
+  if (process.client) {
+    localStorage.removeItem('adminAuth')
+  }
+}
+
+const logout = () => {
+  emit('logout')
+  // Очищаем сохраненную авторизацию при выходе
+  clearSavedAuth()
+}
 </script>
 
 <style lang="scss" scoped>
@@ -2610,6 +2695,39 @@ const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
   max-height: 200px;
   overflow-y: auto;
 }
+/* From Uiverse.io by SelfMadeSystem */ 
+.remember-me__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin: 0;
+  cursor: pointer;
+}
+
+.remember-me__label input {
+  display: none;
+}
+
+.container svg {
+  overflow: visible;
+}
+
+.path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+  stroke-dasharray: 241 9999999;
+  stroke-dashoffset: 0;
+}
+
+.container input:checked ~ svg .path {
+  stroke-dasharray: 70.5096664428711 9999999;
+  stroke-dashoffset: -262.2723388671875;
+}
 
 .spec-suggestion-item {
   padding: 0.75rem;
@@ -2837,6 +2955,64 @@ const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
 
     &__remove {
       align-self: flex-end;
+    }
+  }
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  &__label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__checkbox {
+    margin-right: 0.5rem;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  &__text {
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+}
+
+.catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .logout-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 0.95rem;
+    min-width: 120px;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.3);
     }
   }
 }

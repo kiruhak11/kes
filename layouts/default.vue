@@ -3,12 +3,11 @@
     <div class="app-bg"></div>
     <Header />
     <div class="content"><slot></slot></div>
-    <button
+    <UiGoTop
       :class="['button-go-top', { 'button-go-top_active': isActive }]"
       @click="goTop"
     >
-      <IconsGoTop />
-    </button>
+    </UiGoTop>
     <Footer />
   </div>
 </template>
@@ -44,8 +43,6 @@ onUnmounted(() => {
   min-height: 100dvh;
 }
 .button-go-top {
-  background-color: var(--background-color);
-  color: var(--color-text);
   padding: 12px;
   border-radius: 100%;
   position: fixed;
@@ -55,17 +52,11 @@ onUnmounted(() => {
   opacity: 0;
   cursor: pointer;
   visibility: hidden;
-  border: 1px solid var(--color-text);
   transition: all 0.3s cubic-bezier(0.27, 0.09, 0.42, 1.53);
 
   &_active {
     opacity: 1;
     visibility: visible;
-  }
-  &:hover {
-    background-color: var(--background-color-hover);
-    color: var(--color-text-hover);
-    border: 1px solid var(--color-text);
   }
 
   svg {
