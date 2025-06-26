@@ -73,10 +73,14 @@
                       <span class="product-title-icon"><!-- иконка, если нужна --></span>
                     </div>
                     <div class="product-card__specs">
-                      <div v-for="([key, value], idx) in Object.entries(product.specs || {}).filter(([k]) => k !== 'images' && k !== 'power' && k !== 'fuel').slice(0, 4)" :key="key" class="spec-item">
-                        <span class="spec-label">{{ key }}</span>
+                      <div v-for="spec in (product.specs || []).slice(0, 4)" :key="spec.id" class="spec-item">
+                        <span class="spec-label">{{ typeof spec === 'object' ? spec.key : 'Invalid spec' }}</span>
                         <span class="spec-dots"></span>
-                        <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+                        <span class="spec-value">{{ typeof spec === 'object' ? spec.value : JSON.stringify(spec) }}</span>
+                      </div>
+                      <!-- Debug info -->
+                      <div v-if="product.specs && product.specs.length > 0" style="font-size: 10px; color: red;">
+                        Debug: {{ JSON.stringify(product.specs[0]) }}
                       </div>
                     </div>
                     <div class="product-card__bottom">
@@ -134,6 +138,8 @@
   import { useCartStore } from '~/stores/cart'
   import { useRoute, useRouter } from 'vue-router'
   import CommercialOfferModal from '~/components/CommercialOfferModal.vue'
+  import type { Characteristic } from '~/types/product'
+
   const props = defineProps<{
   product: {
     id: number
@@ -147,9 +153,7 @@
     category_slug?: string
     category?: string
     slug?: string
-    specs?: {
-      [key: string]: any
-    }
+    specs?: Characteristic[]
     additional_images?: string[] | null
     images?: string[]
   }
@@ -197,9 +201,7 @@ const closeCommercialOfferModal = () => {
     category_slug?: string
     category?: string
     slug?: string
-    specs?: {
-      [key: string]: any
-    }
+    specs?: Characteristic[]
     additional_images?: string[] | null
     images?: string[]
   }
@@ -302,11 +304,13 @@ const closeCommercialOfferModal = () => {
   const powerUnits = computed(() => {
     const units = new Set<string>()
     productsInCategory.value.forEach(product => {
-      const powerStr = product.specs?.power
-      if (powerStr && powerStr !== 'отсутствует') {
-        const match = powerStr.match(/^(\d+(\.\d+)?)\s*(.*)$/)
-        if (match) {
-          units.add(match[3])
+      if (product.specs && Array.isArray(product.specs)) {
+        const powerSpec = product.specs.find(spec => spec.key === 'power')
+        if (powerSpec && powerSpec.value && powerSpec.value !== 'отсутствует') {
+          const match = powerSpec.value.match(/^(\d+(\.\d+)?)\s*(.*)$/)
+          if (match) {
+            units.add(match[3])
+          }
         }
       }
     })
@@ -316,9 +320,14 @@ const closeCommercialOfferModal = () => {
   const uniqueFuels = computed(() => {
     const fuels = new Set<string>()
     productsInCategory.value.forEach(product => {
-      if (product.specs?.fuel) {
-        if (Array.isArray(product.specs.fuel)) {
-          product.specs.fuel.forEach(f => fuels.add(f))
+      if (product.specs && Array.isArray(product.specs)) {
+        const fuelSpec = product.specs.find(spec => spec.key === 'fuel')
+        if (fuelSpec && fuelSpec.value) {
+          if (Array.isArray(fuelSpec.value)) {
+            fuelSpec.value.forEach((f: string) => fuels.add(f))
+          } else {
+            fuels.add(fuelSpec.value)
+          }
         }
       }
     })
@@ -329,9 +338,9 @@ const closeCommercialOfferModal = () => {
   const uniqueSpecs = computed(() => {
     const specsSet = new Set<string>()
     productsInCategory.value.forEach(product => {
-      if (product.specs) {
-        Object.keys(product.specs).forEach(key => {
-          if (key !== 'images' && key !== 'power' && key !== 'fuel') specsSet.add(key)
+      if (product.specs && Array.isArray(product.specs)) {
+        product.specs.forEach(spec => {
+          if (spec.key) specsSet.add(spec.key)
         })
       }
     })
@@ -342,15 +351,11 @@ const closeCommercialOfferModal = () => {
   const specOptions = computed(() => {
     const options: Record<string, Set<any>> = {}
     productsInCategory.value.forEach(product => {
-      if (product.specs) {
-        Object.entries(product.specs).forEach(([key, value]) => {
-          if (key !== 'images' && key !== 'power' && key !== 'fuel') {
-            if (!options[key]) options[key] = new Set()
-            if (Array.isArray(value)) {
-              value.forEach(v => options[key].add(v))
-            } else {
-              options[key].add(value)
-            }
+      if (product.specs && Array.isArray(product.specs)) {
+        product.specs.forEach(spec => {
+          if (spec.key && spec.value) {
+            if (!options[spec.key]) options[spec.key] = new Set()
+            options[spec.key].add(spec.value)
           }
         })
       }
@@ -382,7 +387,11 @@ const closeCommercialOfferModal = () => {
       for (const key of uniqueSpecs.value) {
         const filterValue = dynamicFilters.value[key]
         if (filterValue === undefined || filterValue === '' || (Array.isArray(filterValue) && filterValue.length === 0)) continue
-        const productValue = product.specs?.[key]
+        
+        // Находим значение характеристики в новом формате
+        const specItem = product.specs?.find(spec => spec.key === key)
+        const productValue = specItem?.value
+        
         if (Array.isArray(filterValue)) {
           if (!Array.isArray(productValue) || !filterValue.some(v => productValue.includes(v))) {
             return false

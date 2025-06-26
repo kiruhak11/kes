@@ -57,6 +57,7 @@
       @update:new-prod="val => newProd = val"
       @update:new-spec="val => newSpec = val"
       @update:new-specs="val => newSpecs = val"
+      @update-specs-list="updateSpecsList"
     />
     <AdminCategories v-if="adminTab==='categories' && authorized"
       :categories="categories"
@@ -106,6 +107,7 @@ import Chart from 'chart.js/auto'
 import { useStats } from '~/composables/useStats'
 import { useModalStore } from '~/stores/modal'
 import { useFileStorage } from '~/composables/useFileStorage'
+import { convertSpecsToCharacteristics, convertCharacteristicsToSpecs } from '~/utils/characteristics'
 const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
 // Добавляем объявление переменной chart
 let chart: Chart | null = null
@@ -125,10 +127,17 @@ const transliterate = (text: string): string => {
 };
 
 interface Spec {
+  id: number;
   key: string;
   value: string;
   showKeySuggestions?: boolean;
   showValueSuggestions?: boolean;
+}
+
+interface Characteristic {
+  id: number;
+  key: string;
+  value: string;
 }
 
 interface Category {
@@ -158,7 +167,7 @@ interface Product {
   category_id?: string
   category_slug?: string
   slug: string
-  specs?: Record<string, any>
+  specs?: Characteristic[]
   additional_images?: string[]
   delivery_set?: string
   connection_scheme?: string
@@ -220,7 +229,7 @@ const activeId = ref<number|null>(null)
 
 // Характеристики
 const newSpecs = ref<Spec[]>([])
-const newSpec = ref<Spec>({ key:'', value:'' })
+const newSpec = ref<Spec>({ id: 1, key:'', value:'' })
 
 // Новые реактивные переменные для мощности и топлива
 const newProdPowerValue = ref()
@@ -287,28 +296,15 @@ if (fetchedProducts.value) {
       c.slug === product.category_slug
     )
     
-    // Сохраняем дополнительные изображения
-    const additionalImages = product.specs?.images || product.additional_images || []
-    
-    // Создаем новый объект specs без старых полей power, fuel, powerUnit
-    const cleanSpecs: Record<string, any> = {}
-    if (product.specs) {
-      Object.entries(product.specs).forEach(([key, value]) => {
-        // Исключаем старые поля, которые больше не используются
-        if (!['power', 'fuel', 'powerUnit'].includes(key)) {
-          cleanSpecs[key] = value
-        }
-      })
-    }
+    // Конвертируем старый формат specs в новый формат characteristics
+    const characteristics = convertSpecsToCharacteristics(product.specs as Record<string, any>)
     
     return {
       ...product,
       category: category?.name || product.category || '',
+      category_name: category?.name || product.category || '',
       slug: generateSlug(product.name || ''),
-      specs: {
-        ...cleanSpecs,
-        images: additionalImages
-      },
+      specs: characteristics,
       additional_requirements: product.additional_requirements || '',
       required_products: product.required_products || []
     }
@@ -329,22 +325,13 @@ watch(products, (newProducts) => {
     newProducts.forEach(p => {
       // Инициализируем specsList только если его еще нет для этого продукта
       if (!specsList.value[p.id]) {
-        specsList.value[p.id] = Object.entries(p.specs || {})
-          .filter(([key]) => key !== 'images') // Исключаем images, так как они обрабатываются отдельно
-          .map(([k,v]) => ({
-            key: k, 
-            value: String(v),
-            showKeySuggestions: false,
-            showValueSuggestions: false
-          }))
-      }
-      
-      // Убеждаемся, что поле images существует в specs
-      if (!p.specs) {
-        p.specs = {}
-      }
-      if (!Array.isArray(p.specs.images)) {
-        p.specs.images = []
+        specsList.value[p.id] = (p.specs || []).map(spec => ({
+          id: spec.id,
+          key: spec.key, 
+          value: spec.value,
+          showKeySuggestions: false,
+          showValueSuggestions: false
+        }))
       }
     })
   }
@@ -431,20 +418,12 @@ async function addProduct() {
       categoryName = category.name
     }
 
-    // Подготовка спецификаций
-    const specs: Record<string, any> = {}
-
-    // Добавляем все характеристики из newSpecs
-    newSpecs.value.forEach(s => {
-      if (s.key && s.value) {
-        specs[s.key] = s.value
-      }
-    })
-
-    // Добавляем изображения галереи, если есть
-    if (newProdGallery.value.length > 0) {
-      specs.images = newProdGallery.value
-    }
+    // Подготовка характеристик
+    const characteristics = newSpecs.value.map(spec => ({
+      id: spec.id,
+      key: spec.key,
+      value: spec.value
+    }))
 
     // Создаем объект продукта для отправки
     const productData = {
@@ -454,7 +433,8 @@ async function addProduct() {
       price: Number(newProd.value.price),
       image: newProd.value.image || '/images/placeholders/placeholder.png',
       category_id: categoryId,
-      specs: specs,
+      specs: characteristics,
+      additional_images: newProdGallery.value,
       delivery_set: newProd.value.delivery_set || null,
       connection_scheme: newProd.value.connection_scheme || null,
       additional_requirements: newProd.value.additional_requirements || null,
@@ -480,7 +460,9 @@ async function addProduct() {
     products.value.push({
       ...newProduct,
       category: categoryName,
+      category_name: categoryName,
       category_slug: categorySlug,
+      additional_images: newProdGallery.value,
       slug: generateSlug(newProduct.name)
     })
 
@@ -532,22 +514,13 @@ function toggle(id: number) {
       }
 
       // Обновляем specsList для редактируемого продукта, включая все характеристики
-      specsList.value[id] = Object.entries(productToEdit.specs || {})
-        .filter(([key]) => key !== 'images') // Исключаем только images, так как они обрабатываются отдельно
-        .map(([k,v]) => ({
-          key: k, 
-          value: String(v),
-          showKeySuggestions: false,
-          showValueSuggestions: false
-        }))
-      
-      // Убеждаемся, что поле images существует в specs
-      if (!productToEdit.specs) {
-        productToEdit.specs = {}
-      }
-      if (!Array.isArray(productToEdit.specs.images)) {
-        productToEdit.specs.images = []
-      }
+      specsList.value[id] = (productToEdit.specs || []).map(spec => ({
+        id: spec.id,
+        key: spec.key, 
+        value: spec.value,
+        showKeySuggestions: false,
+        showValueSuggestions: false
+      }))
     }
   }
 }
@@ -555,18 +528,15 @@ function toggle(id: number) {
 // Обновляем функцию updateWithSpecs
 async function updateWithSpecs(p: Product) {
   try {
-    // Создаем объект для обновления
-    const cleanSpecs = { ...p.specs }
-    if (Array.isArray(cleanSpecs.images)) {
-      cleanSpecs.images = cleanSpecs.images
-    }
-
     // Находим категорию
     const category = categories.value.find(c => c.name === p.category)
     if (!category) {
       console.error('Category not found:', p.category)
       return
     }
+
+    // Получаем обновленные характеристики из specsList
+    const updatedSpecs = specsList.value[p.id] || []
 
     // Подготовка данных для обновления
     const updateData = {
@@ -576,7 +546,8 @@ async function updateWithSpecs(p: Product) {
       price: Number(p.price),
       image: p.image,
       category_id: category.id,
-      specs: cleanSpecs,
+      specs: updatedSpecs, // Используем обновленные характеристики
+      additional_images: p.additional_images || [], // Добавляем галерею изображений
       delivery_set: p.delivery_set || null,
       connection_scheme: p.connection_scheme || null,
       additional_requirements: p.additional_requirements || null,
@@ -599,7 +570,8 @@ async function updateWithSpecs(p: Product) {
         price: p.price,
         image: p.image,
         category: p.category,
-        specs: cleanSpecs,
+        specs: updatedSpecs, // Обновляем specs в продукте
+        additional_images: p.additional_images, // Обновляем галерею изображений
         delivery_set: p.delivery_set,
         connection_scheme: p.connection_scheme,
         additional_requirements: p.additional_requirements,
@@ -618,7 +590,12 @@ function cancelEdit() {
 }
 
 function addSpec(id:number) {
+  const newId = specsList.value[id].length > 0 
+    ? Math.max(...specsList.value[id].map(s => s.id)) + 1 
+    : 1
+  
   specsList.value[id].push({ 
+    id: newId,
     key:'', 
     value:'',
     showKeySuggestions: false,
@@ -632,7 +609,12 @@ function removeSpec(id:number, idx:number) {
 
 function addNewSpec() {
   if (newSpec.value.key && newSpec.value.value) {
+    const newId = newSpecs.value.length > 0 
+      ? Math.max(...newSpecs.value.map(s => s.id)) + 1 
+      : 1
+    
     newSpecs.value.push({ 
+      id: newId,
       key:newSpec.value.key, 
       value:newSpec.value.value,
       showKeySuggestions: false,
@@ -650,23 +632,10 @@ function removeNewSpec(idx:number) {
 async function deleteProduct(id:number) {
   const prodToDelete = products.value.find(x=>x.id===id)
   const cat = prodToDelete?.category
-  const desc = prodToDelete?.specs?.categoryDescription
+  
   await $fetch(`/api/products/${id}`, { method:'DELETE' })
   products.value = products.value.filter(x=>x.id!==id)
   delete specsList.value[id]
-  if (cat && desc) {
-    // Найти следующий товар этой категории
-    const next = products.value.find(x=>x.category===cat)
-    if (next && (!next.specs || !next.specs.categoryDescription)) {
-      if (!next.specs) next.specs = {}
-      next.specs.categoryDescription = desc
-      // Сохраняем обновление на сервере
-      await $fetch(`/api/products/${next.id}`, {
-        method: 'PUT',
-        body: { ...next, specs: next.specs }
-      })
-    }
-  }
 }
 
 // Импортируем новый composable для работы с файлами
@@ -743,8 +712,8 @@ function removeGalleryImage(idx:number) {
 
 // Для редактирования галереи
 function removeEditGalleryImage(p: Product, idx: number) {
-  if (p.specs && Array.isArray(p.specs.images)) {
-    p.specs.images.splice(idx, 1)
+  if (p.additional_images && Array.isArray(p.additional_images)) {
+    p.additional_images.splice(idx, 1)
   }
 }
 
@@ -754,12 +723,11 @@ async function handleEditGalleryUpload(event: Event, p: Product) {
   if (!input.files || input.files.length === 0) return
   
   const files = Array.from(input.files)
-  if (!p.specs) p.specs = {}
-  if (!Array.isArray(p.specs.images)) p.specs.images = []
+  if (!p.additional_images) p.additional_images = []
   
   try {
     const filePaths = await uploadFiles(files)
-    p.specs.images.push(...filePaths)
+    p.additional_images.push(...filePaths)
   } catch (error) {
     console.error('Error uploading gallery images:', error)
   }
@@ -1182,6 +1150,13 @@ async function deleteAllRequests() {
   } catch (e: any) {
     modalStore.showError('Ошибка при удалении всех заявок: ' + (e?.message || e));
   }
+}
+
+function updateSpecsList(productId: number, specs: Spec[]) {
+  if (!specsList.value[productId]) {
+    specsList.value[productId] = [];
+  }
+  specsList.value[productId] = specs;
 }
 </script>
 

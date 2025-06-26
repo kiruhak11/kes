@@ -1,5 +1,12 @@
 import { serverSupabaseClient } from '#supabase/server'
 import { createError } from 'h3'
+import { convertCharacteristicsToSpecs } from '~/utils/characteristics'
+
+interface Characteristic {
+  id: number
+  key: string
+  value: string
+}
 
 interface ProductSpecs {
   power?: string
@@ -16,7 +23,7 @@ interface Product {
   image: string
   category_id: string
   additional_images?: string[]
-  specs?: ProductSpecs
+  specs?: Characteristic[]
   delivery_set?: string
   connection_scheme?: string
   additional_requirements?: string
@@ -50,6 +57,9 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event)
 
+    // Сохраняем характеристики в новом формате (массив объектов)
+    const specsArray = Array.isArray(body.specs) ? body.specs : []
+
     // Prepare product data
     const productData = {
       name: body.name,
@@ -59,7 +69,7 @@ export default defineEventHandler(async (event) => {
       image: body.image || '/images/placeholders/placeholder.png',
       category_id: body.category_id,
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : [],
-      specs: body.specs || {},
+      specs: specsArray, // Сохраняем как массив объектов
       delivery_set: body.delivery_set || null,
       connection_scheme: body.connection_scheme || null,
       additional_requirements: body.additional_requirements || null,

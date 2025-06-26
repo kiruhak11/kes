@@ -1,11 +1,21 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
+import { convertCharacteristicsToSpecs } from '~/utils/characteristics'
+
+interface Characteristic {
+  id: number
+  key: string
+  value: string
+}
 
 export default defineEventHandler(async (event) => {
   try {
     const client = await serverSupabaseClient(event)
     const id = Number(event.context.params?.id)
     const body = await readBody(event)
+
+    // Сохраняем характеристики в новом формате (массив объектов)
+    const specsArray = Array.isArray(body.specs) ? body.specs : []
 
     // Map the incoming data to match the database schema
     const updateData = {
@@ -15,7 +25,7 @@ export default defineEventHandler(async (event) => {
       price: body.price,
       image: body.image,
       category_id: body.category_id,
-      specs: body.specs || null, // Если specs undefined, записываем null
+      specs: specsArray, // Сохраняем как массив объектов
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : null,
       delivery_set: body.delivery_set || null,
       connection_scheme: body.connection_scheme || null,

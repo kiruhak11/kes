@@ -2,6 +2,7 @@ import { defineEventHandler, createError } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
 import { getQuery } from 'h3'
 import type { Database } from '~/types/database.types'
+import { convertSpecsToCharacteristics } from '~/utils/characteristics'
 
 type Product = Database['public']['Tables']['products']['Row']
 type Category = Database['public']['Tables']['categories']['Row']
@@ -14,6 +15,19 @@ interface ProductSpecs {
   power?: string
   fuel?: string[] | string
   [key: string]: any
+}
+
+interface ProductWithCharacteristics extends Omit<Product, 'specs'> {
+  specs?: Characteristic[]
+  category_name?: string
+  category_slug?: string
+  slug?: string
+}
+
+interface Characteristic {
+  id: number
+  key: string
+  value: string
 }
 
 function generateSlug(text: string): string {
@@ -98,24 +112,32 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Transform the data to ensure consistent structure
-    const transformedProducts = products.map((product) => {
-      const category = product.categories
+    // Transform products to include category info and convert specs
+    const transformedProducts: ProductWithCharacteristics[] = products.map(product => {
+      const category = product.categories as any
+      
+      // Debug: Log the original specs format
+      console.log('Original specs for product', product.id, ':', product.specs)
+      
+      // Convert specs from object to characteristics array
+      const characteristics = convertSpecsToCharacteristics(product.specs as Record<string, any>)
+      
+      // Debug: Log the converted characteristics
+      console.log('Converted characteristics for product', product.id, ':', characteristics)
+      
+      // Ensure characteristics is always an array
+      const finalSpecs = Array.isArray(characteristics) ? characteristics : []
+      
       return {
         ...product,
-        category_name: category?.name,
-        category_slug: category?.slug,
-        specs: {
-          ...(product.specs as Record<string, any> || {}),
-          power: (product.specs as any)?.power || 'отсутствует',
-          fuel: Array.isArray((product.specs as any)?.fuel) 
-            ? (product.specs as any).fuel 
-            : typeof (product.specs as any)?.fuel === 'string' 
-              ? (product.specs as any).fuel.split(', ').map((f: string) => f.trim())
-              : ['отсутствует']
-        }
+        category_name: category?.name || '',
+        category_slug: category?.slug || '',
+        slug: product.name ? product.name.toLowerCase().replace(/\s+/g, '-') : '',
+        specs: finalSpecs
       }
     })
+
+    const totalPages = Math.ceil((count || 0) / limit)
 
     return {
       products: transformedProducts,
@@ -123,15 +145,14 @@ export default defineEventHandler(async (event) => {
         total: count || 0,
         page,
         limit,
-        totalPages: Math.ceil((count || 0) / limit)
+        totalPages
       }
     }
   } catch (e: any) {
     console.error('GET /api/products error:', e)
     throw createError({ 
       statusCode: e.statusCode || 500, 
-      statusMessage: e.statusMessage || 'Internal Server Error',
-      data: e.data
+      statusMessage: e.statusMessage || 'Internal Server Error' 
     })
   }
 })

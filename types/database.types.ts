@@ -238,6 +238,12 @@ export const Constants = {
   },
 } as const
 
+export interface Characteristic {
+  id: number;
+  key: string;
+  value: string;
+}
+
 export interface Product {
   id: number
   name: string
@@ -249,7 +255,7 @@ export interface Product {
   category_name: string
   category_slug: string
   slug: string
-  specs?: Record<string, any>
+  specs?: Characteristic[]
   additional_images?: string[]
   delivery_set?: string
   connection_scheme?: string

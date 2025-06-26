@@ -31,7 +31,11 @@
               <div class="form-group">
                 <label class="required">Категория:</label>
                 <div class="category-input">
-                  <select v-model="newProdLocal.category" class="form-control">
+                  <select 
+                    v-model="newProdLocal.category" 
+                    class="form-control"
+                    :class="{ 'required-field': showValidationErrors && (!newProdLocal.category || (newProdLocal.category === 'new' && !newCategoryLocal.name)) }"
+                  >
                     <option value="">Выберите категорию</option>
                     <option v-for="cat in categories" :key="cat.id" :value="cat.name">
                       {{ cat.name }}
@@ -43,6 +47,7 @@
                     v-model="newCategoryLocal.name"
                     placeholder="Название новой категории"
                     class="form-control"
+                    :class="{ 'required-field': showValidationErrors && newProdLocal.category === 'new' && !newCategoryLocal.name }"
                   />
                 </div>
               </div>
@@ -52,6 +57,7 @@
                   v-model="newProdLocal.name"
                   placeholder="Название товара"
                   class="form-control"
+                  :class="{ 'required-field': showValidationErrors && (!newProdLocal.name || newProdLocal.name.trim() === '') }"
                 />
               </div>
             </div>
@@ -63,6 +69,7 @@
                 placeholder="Краткое описание товара"
                 rows="2"
                 class="form-control"
+                :class="{ 'required-field': showValidationErrors && (!newProdLocal.description || newProdLocal.description.trim() === '') }"
               ></textarea>
             </div>
             
@@ -80,6 +87,7 @@
                 type="number"
                 placeholder="0"
                 class="form-control"
+                :class="{ 'required-field': showValidationErrors && (!newProdLocal.price || newProdLocal.price <= 0) }"
               />
             </div>
           </div>
@@ -260,13 +268,26 @@
             <table class="specs-table">
               <thead>
                 <tr>
-                  <th>Параметр</th>
-                  <th>Значение</th>
-                  <th></th>
+                  <th style="width: 40px;"></th>
+                  <th style="width: 45%;">Параметр</th>
+                  <th style="width: 45%;">Значение</th>
+                  <th style="width: 60px;"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(spec, idx) in newSpecsLocal" :key="idx">
+                <tr 
+                  v-for="(spec, idx) in newSpecsLocal" 
+                  :key="spec.id"
+                  :draggable="true"
+                  @dragstart="onDragStart($event, idx)"
+                  @dragover.prevent
+                  @drop="onDrop($event, idx)"
+                  class="spec-row"
+                  :class="{ 'dragging': draggedIndex === idx }"
+                >
+                  <td class="drag-handle">
+                    <div class="drag-icon">⋮⋮</div>
+                  </td>
                   <td>
                     <div class="spec-input-container">
                       <input 
@@ -275,7 +296,7 @@
                         @input="onSpecKeyInput(spec, $event)"
                         @focus="showSpecSuggestions(spec)"
                         @blur="hideSpecSuggestions"
-                        class="form-control"
+                        class="form-control spec-input"
                       />
                       <div v-if="spec.showKeySuggestions && specKeySuggestions.length > 0" class="spec-suggestions">
                         <div 
@@ -297,7 +318,7 @@
                         @input="onSpecValueInput(spec, $event)"
                         @focus="showValueSuggestions(spec)"
                         @blur="hideValueSuggestions"
-                        class="form-control"
+                        class="form-control spec-input"
                       />
                       <div v-if="spec.showValueSuggestions && specValueSuggestions.length > 0" class="spec-suggestions">
                         <div 
@@ -316,6 +337,7 @@
                   </td>
                 </tr>
                 <tr>
+                  <td></td>
                   <td>
                     <div class="spec-input-container">
                       <input 
@@ -372,9 +394,31 @@
         <!-- Действия -->
         <div class="edit-section edit-section--actions">
           <div class="edit-section__content">
-            <button class="btn btn-primary" @click="addProduct" :disabled="!isFormValid">
-              Добавить товар
+            <button 
+              class="btn btn-primary" 
+              @click="showValidation(); addProduct()" 
+              :disabled="!isFormValid"
+              :class="{ 'btn--disabled': !isFormValid }"
+            >
+              {{ isFormValid ? 'Добавить товар' : 'Заполните обязательные поля' }}
             </button>
+            <div v-if="!isFormValid && showValidationErrors" class="validation-hint">
+              <p>Для добавления товара необходимо заполнить:</p>
+              <ul>
+                <li v-if="!newProdLocal.category || (newProdLocal.category === 'new' && !newCategoryLocal.name)">
+                  • Категорию товара
+                </li>
+                <li v-if="!newProdLocal.name || newProdLocal.name.trim() === ''">
+                  • Название товара
+                </li>
+                <li v-if="!newProdLocal.description || newProdLocal.description.trim() === ''">
+                  • Краткое описание
+                </li>
+                <li v-if="!newProdLocal.price || newProdLocal.price <= 0">
+                  • Цену (больше 0)
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -485,7 +529,7 @@
                     <label>Дополнительные изображения:</label>
                     <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" class="form-control" />
                     <div class="gallery-previews">
-                      <div v-for="(gimg, gidx) in (p.specs?.images || [])" :key="gidx" class="gallery-item">
+                      <div v-for="(gimg, gidx) in (p.additional_images || [])" :key="gidx" class="gallery-item">
                         <img :src="gimg" class="img-preview" />
                         <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
                       </div>
@@ -532,11 +576,28 @@
                 <h3 class="edit-section__title">Характеристики</h3>
                 <div class="edit-section__content">
                   <table class="specs-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 40px;"></th>
+                        <th style="width: 45%;">Параметр</th>
+                        <th style="width: 45%;">Значение</th>
+                        <th style="width: 60px;"></th>
+                      </tr>
+                    </thead>
                     <tbody>
                     <tr
                       v-for="(spec, idx) in filteredSpecs(p.id)"
-                      :key="idx"
+                      :key="spec.id"
+                      :draggable="true"
+                      @dragstart="onEditDragStart($event, p.id, idx)"
+                      @dragover.prevent
+                      @drop="onEditDrop($event, p.id, idx)"
+                      class="spec-row"
+                      :class="{ 'dragging': draggedEditIndex === idx && draggedEditProductId === p.id }"
                     >
+                      <td class="drag-handle">
+                        <div class="drag-icon">⋮⋮</div>
+                      </td>
                       <td>
                         <div class="spec-input-container">
                           <input
@@ -545,7 +606,7 @@
                             @input="onEditSpecKeyInput(spec, $event)"
                             @focus="showEditSpecSuggestions(spec)"
                             @blur="hideEditSpecSuggestions"
-                            class="form-control"
+                            class="form-control spec-input"
                           />
                           <div v-if="spec.showKeySuggestions && editSpecKeySuggestions.length > 0" class="spec-suggestions">
                             <div 
@@ -567,7 +628,7 @@
                             @input="onEditSpecValueInput(spec, $event)"
                             @focus="showEditValueSuggestions(spec)"
                             @blur="hideEditValueSuggestions"
-                            class="form-control"
+                            class="form-control spec-input"
                           />
                           <div v-if="spec.showValueSuggestions && editSpecValueSuggestions.length > 0" class="spec-suggestions">
                             <div 
@@ -587,8 +648,9 @@
                         ><UiDeleteSmall /></button>
                       </td>
                     </tr>
-                    <tr>
-                      <td colspan="3">
+                    <tr class="new-spec-row">
+                      <td></td>
+                      <td colspan="2">
                         <button
                           class="btn btn-secondary btn-sm"
                           @click.prevent="addSpec(p.id)"
@@ -692,6 +754,7 @@ import { useFileStorage } from '~/composables/useFileStorage'
 import MarkdownEditor from './MarkdownEditor.vue'
 
 interface Spec {
+  id: number;
   key: string;
   value: string;
   showKeySuggestions?: boolean;
@@ -717,11 +780,20 @@ interface Product {
   category_id?: string
   category_slug?: string
   slug: string
-  specs?: Record<string, any>
+  specs?: Characteristic[]
+  additional_images?: string[]
   connection_scheme?: string
   delivery_set?: string
   additional_requirements?: string
   required_products?: number[]
+}
+
+interface Characteristic {
+  id: number
+  key: string
+  value: string
+  showKeySuggestions?: boolean
+  showValueSuggestions?: boolean
 }
 
 // Props
@@ -780,6 +852,7 @@ const emit = defineEmits<{
   (e: 'update:newProd', val: any): void
   (e: 'update:newSpec', val: Spec): void
   (e: 'update:newSpecs', val: Spec[]): void
+  (e: 'updateSpecsList', productId: number, specs: Spec[]): void
 }>()
 
 // Локальная переменная для пароля
@@ -874,9 +947,11 @@ const previewedSpecs = ref<{key: string, value: string}[]>([])
 const getAllSpecKeys = computed(() => {
   const keys = new Set<string>()
   props.products.forEach(product => {
-    if (product.specs) {
-      Object.keys(product.specs).forEach(key => {
-        keys.add(key)
+    if (product.specs && Array.isArray(product.specs)) {
+      product.specs.forEach(spec => {
+        if (spec.key) {
+          keys.add(spec.key)
+        }
       })
     }
   })
@@ -887,8 +962,12 @@ const getAllSpecKeys = computed(() => {
 const getSpecValuesForKey = (key: string) => {
   const values = new Set<string>()
   props.products.forEach(product => {
-    if (product.specs && product.specs[key]) {
-      values.add(String(product.specs[key]))
+    if (product.specs && Array.isArray(product.specs)) {
+      product.specs.forEach(spec => {
+        if (spec.key === key && spec.value) {
+          values.add(spec.value)
+        }
+      })
     }
   })
   return Array.from(values).sort()
@@ -902,16 +981,16 @@ const previewSpecsFromProduct = () => {
   }
   
   const product = props.products.find(p => p.id === Number(selectedProductForCopy.value))
-  if (!product || !product.specs) {
+  if (!product || !product.specs || !Array.isArray(product.specs)) {
     clearPreview()
     return
   }
   
   // Подготавливаем характеристики для предварительного просмотра
-  previewedSpecs.value = []
-  Object.entries(product.specs).forEach(([key, value]) => {
-    previewedSpecs.value.push({ key, value: String(value) })
-  })
+  previewedSpecs.value = product.specs.map(spec => ({
+    key: spec.key,
+    value: spec.value
+  }))
 }
 
 // Подтверждение копирования характеристик
@@ -920,8 +999,9 @@ const confirmCopySpecs = () => {
   newSpecsLocal.value = []
   
   // Копируем характеристики в пустые поля
-  previewedSpecs.value.forEach(spec => {
+  previewedSpecs.value.forEach((spec, index) => {
     newSpecsLocal.value.push({ 
+      id: index + 1,
       key: spec.key, 
       value: spec.value,
       showKeySuggestions: false,
@@ -995,7 +1075,7 @@ const onSpecValueInput = (spec: any, event: Event) => {
   }
 }
 
-const showValueSuggestions = (spec: any) => {
+const showValueSuggestions = (spec: Spec) => {
   spec.showValueSuggestions = true
   if (spec.key) {
     specValueSuggestions.value = getSpecValuesForKey(spec.key)
@@ -1011,7 +1091,7 @@ const hideValueSuggestions = () => {
   }, 200)
 }
 
-const selectSpecValue = (spec: any, value: string) => {
+const selectSpecValue = (spec: Spec, value: string) => {
   spec.value = value
   spec.showValueSuggestions = false
   specValueSuggestions.value = []
@@ -1086,7 +1166,7 @@ const selectNewSpecValue = (value: string) => {
 }
 
 // Обработчики для подсказок в редактировании
-const onEditSpecKeyInput = (spec: any, event: Event) => {
+const onEditSpecKeyInput = (spec: Spec, event: Event) => {
   const target = event.target as HTMLInputElement
   const value = target.value.toLowerCase()
   
@@ -1099,7 +1179,7 @@ const onEditSpecKeyInput = (spec: any, event: Event) => {
   }
 }
 
-const showEditSpecSuggestions = (spec: any) => {
+const showEditSpecSuggestions = (spec: Spec) => {
   spec.showKeySuggestions = true
   editSpecKeySuggestions.value = getAllSpecKeys.value
 }
@@ -1109,25 +1189,22 @@ const hideEditSpecSuggestions = () => {
     editSpecKeySuggestions.value = []
     // Очищаем флаги для всех характеристик в редактировании
     props.products.forEach(product => {
-      if (product.specs) {
-        Object.keys(product.specs).forEach(key => {
-          const spec = props.specsList[product.id]?.find(s => s.key === key)
-          if (spec) {
-            spec.showKeySuggestions = false
-          }
+      if (product.specs && Array.isArray(product.specs)) {
+        product.specs.forEach(spec => {
+          spec.showKeySuggestions = false
         })
       }
     })
   }, 200)
 }
 
-const selectEditSpecKey = (spec: any, key: string) => {
+const selectEditSpecKey = (spec: Spec, key: string) => {
   spec.key = key
   spec.showKeySuggestions = false
   editSpecKeySuggestions.value = []
 }
 
-const onEditSpecValueInput = (spec: any, event: Event) => {
+const onEditSpecValueInput = (spec: Spec, event: Event) => {
   const target = event.target as HTMLInputElement
   const value = target.value.toLowerCase()
   
@@ -1143,7 +1220,7 @@ const onEditSpecValueInput = (spec: any, event: Event) => {
   }
 }
 
-const showEditValueSuggestions = (spec: any) => {
+const showEditValueSuggestions = (spec: Spec) => {
   spec.showValueSuggestions = true
   if (spec.key) {
     editSpecValueSuggestions.value = getSpecValuesForKey(spec.key)
@@ -1155,19 +1232,16 @@ const hideEditValueSuggestions = () => {
     editSpecValueSuggestions.value = []
     // Очищаем флаги для всех характеристик в редактировании
     props.products.forEach(product => {
-      if (product.specs) {
-        Object.keys(product.specs).forEach(key => {
-          const spec = props.specsList[product.id]?.find(s => s.key === key)
-          if (spec) {
-            spec.showValueSuggestions = false
-          }
+      if (product.specs && Array.isArray(product.specs)) {
+        product.specs.forEach(spec => {
+          spec.showValueSuggestions = false
         })
       }
     })
   }, 200)
 }
 
-const selectEditSpecValue = (spec: any, value: string) => {
+const selectEditSpecValue = (spec: Spec, value: string) => {
   spec.value = value
   spec.showValueSuggestions = false
   editSpecValueSuggestions.value = []
@@ -1186,7 +1260,12 @@ const addSpec = (id: number) => emit('addSpec', id)
 const removeSpec = (id: number, idx: number) => emit('removeSpec', id, idx)
 const addNewSpec = () => {
   if (newSpecLocal.value.key && newSpecLocal.value.value) {
+    const newId = newSpecsLocal.value.length > 0 
+      ? Math.max(...newSpecsLocal.value.map(s => s.id)) + 1 
+      : 1
+    
     newSpecsLocal.value.push({ 
+      id: newId,
       key: newSpecLocal.value.key, 
       value: newSpecLocal.value.value,
       showKeySuggestions: false,
@@ -1223,16 +1302,30 @@ const validateNewCategory = () => {
   }
 }
 
+// Состояние для валидации
+const showValidationErrors = ref(false)
+
 // Валидация формы добавления товара
 const isFormValid = computed(() => {
-  return !!(
-    newProdLocal.value.category && 
-    newProdLocal.value.name && 
-    newProdLocal.value.description && 
-    newProdLocal.value.price && 
-    newProdLocal.value.price > 0
-  )
+  // Проверяем базовые обязательные поля
+  const hasCategory = newProdLocal.value.category && 
+    (newProdLocal.value.category !== 'new' || newCategoryLocal.value.name)
+  const hasName = newProdLocal.value.name && newProdLocal.value.name.trim() !== ''
+  const hasDescription = newProdLocal.value.description && newProdLocal.value.description.trim() !== ''
+  const hasValidPrice = newProdLocal.value.price && newProdLocal.value.price > 0
+  
+  return hasCategory && hasName && hasDescription && hasValidPrice
 })
+
+// Функция для показа ошибок валидации
+const showValidation = () => {
+  showValidationErrors.value = true
+}
+
+// Функция для скрытия ошибок валидации
+const hideValidation = () => {
+  showValidationErrors.value = false
+}
 
 // Состояние редактора
 const showPreview = ref(false)
@@ -1447,6 +1540,74 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
   product.required_products = product.required_products.filter((id: number) => id !== productId)
 }
 
+// Drag & Drop функциональность для характеристик
+const draggedIndex = ref<number | null>(null)
+const draggedEditIndex = ref<number | null>(null)
+const draggedEditProductId = ref<number | null>(null)
+
+// Drag & Drop для новых характеристик
+const onDragStart = (event: DragEvent, index: number) => {
+  draggedIndex.value = index
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', index.toString())
+  }
+}
+
+const onDrop = (event: DragEvent, dropIndex: number) => {
+  event.preventDefault()
+  if (draggedIndex.value === null || draggedIndex.value === dropIndex) return
+  
+  const specs = [...newSpecsLocal.value]
+  const draggedSpec = specs[draggedIndex.value]
+  specs.splice(draggedIndex.value, 1)
+  specs.splice(dropIndex, 0, draggedSpec)
+  
+  // Обновляем ID для правильного порядка
+  specs.forEach((spec, index) => {
+    spec.id = index + 1
+  })
+  
+  newSpecsLocal.value = specs
+  draggedIndex.value = null
+}
+
+// Drag & Drop для редактирования характеристик
+const onEditDragStart = (event: DragEvent, productId: number, index: number) => {
+  draggedEditIndex.value = index
+  draggedEditProductId.value = productId
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', `${productId}-${index}`)
+  }
+}
+
+const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
+  event.preventDefault()
+  if (draggedEditIndex.value === null || draggedEditIndex.value === dropIndex || draggedEditProductId.value !== productId) return
+  
+  // Получаем текущие характеристики из filteredSpecs
+  const currentSpecs = props.filteredSpecs(productId)
+  if (!currentSpecs || currentSpecs.length === 0) return
+  
+  const specs = [...currentSpecs]
+  const draggedSpec = specs[draggedEditIndex.value]
+  specs.splice(draggedEditIndex.value, 1)
+  specs.splice(dropIndex, 0, draggedSpec)
+  
+  // Обновляем ID для правильного порядка
+  specs.forEach((spec, index) => {
+    spec.id = index + 1
+  })
+  
+  // Обновляем specsList через emit или напрямую через props
+  // Поскольку specsList передается как prop, нам нужно обновить его в родительском компоненте
+  // Для этого создадим emit событие
+  emit('updateSpecsList', productId, specs)
+  draggedEditIndex.value = null
+  draggedEditProductId.value = null
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -1596,6 +1757,16 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
         &::placeholder {
           color: var(--text-light);
         }
+
+        &.required-field {
+          border-color: #dc2626;
+          background-color: #fef2f2;
+          
+          &:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+          }
+        }
       }
 
       textarea.form-control {
@@ -1709,6 +1880,14 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
       margin-top: 0.5rem;
       overflow: visible !important;
 
+      th {
+        padding: 0.5rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text);
+        border-bottom: 2px solid var(--border);
+      }
+
       td {
         padding: 0.5rem;
         vertical-align: top;
@@ -1716,6 +1895,40 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
         &:last-child {
           width: 50px;
           text-align: center;
+        }
+      }
+
+      .drag-handle {
+        width: 40px;
+        text-align: center;
+        cursor: grab;
+        
+        &:active {
+          cursor: grabbing;
+        }
+      }
+
+      .drag-icon {
+        color: var(--text-light);
+        font-size: 1.2rem;
+        user-select: none;
+        cursor: grab;
+        
+        &:active {
+          cursor: grabbing;
+        }
+      }
+
+      .spec-row {
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+          background-color: rgba(var(--primary-rgb), 0.05);
+        }
+        
+        &.dragging {
+          opacity: 0.5;
+          background-color: rgba(var(--primary-rgb), 0.1);
         }
       }
 
@@ -1881,6 +2094,16 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
           &::placeholder {
             color: var(--text-light);
           }
+
+          &.required-field {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+            
+            &:focus {
+              border-color: #dc2626;
+              box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+            }
+          }
         }
 
         textarea.form-control {
@@ -1982,6 +2205,14 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
         margin-top: 0.5rem;
         overflow: visible !important;
 
+        th {
+          padding: 0.5rem;
+          text-align: left;
+          font-weight: 600;
+          color: var(--text);
+          border-bottom: 2px solid var(--border);
+        }
+
         td {
           padding: 0.5rem;
           vertical-align: top;
@@ -1989,6 +2220,40 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
           &:last-child {
             width: 50px;
             text-align: center;
+          }
+        }
+
+        .drag-handle {
+          width: 40px;
+          text-align: center;
+          cursor: grab;
+          
+          &:active {
+            cursor: grabbing;
+          }
+        }
+
+        .drag-icon {
+          color: var(--text-light);
+          font-size: 1.2rem;
+          user-select: none;
+          cursor: grab;
+          
+          &:active {
+            cursor: grabbing;
+          }
+        }
+
+        .spec-row {
+          transition: background-color 0.2s ease;
+          
+          &:hover {
+            background-color: rgba(var(--primary-rgb), 0.05);
+          }
+          
+          &.dragging {
+            opacity: 0.5;
+            background-color: rgba(var(--primary-rgb), 0.1);
           }
         }
 
@@ -2339,216 +2604,211 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
   right: 0;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 0.25rem;
+  border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 99999;
+  z-index: 1000;
   max-height: 200px;
   overflow-y: auto;
 }
 
 .spec-suggestion-item {
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid var(--border-light);
-  font-size: 0.9rem;
-
+  
   &:hover {
-    background-color: var(--primary-light);
+    background-color: var(--bg-light);
+  }
+  
+  &:first-child {
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+  
+  &:last-child {
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+}
+
+.spec-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+  }
+  
+  &:hover {
+    border-color: var(--primary);
+  }
+  
+  &::placeholder {
+    color: var(--text-light);
+  }
+}
+
+.drag-handle {
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.drag-icon {
+  font-size: 1.2rem;
+  color: var(--text-light);
+  user-select: none;
+  transition: color 0.2s ease;
+  
+  &:hover {
     color: var(--primary);
   }
-
-  &:last-child {
-    border-bottom: none;
-  }
 }
 
-.spec-suggestion-item:active {
-  background-color: var(--primary);
-  color: white;
-}
-
-/* Анимация появления подсказок */
-.spec-suggestions {
-  animation: fadeInUp 0.2s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Улучшения для таблицы характеристик */
 .specs-table {
-  .spec-input-container input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--secondary);
-    border-radius: 0.25rem;
-    font-size: 0.9rem;
-    margin-bottom: 0;
-    transition: border-color 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+  border-collapse: collapse;
+  width: 100%;
+  
+  th, td {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  
+  th {
+    background: var(--bg-light);
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  tbody tr {
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: var(--bg-light);
+    }
+  }
+  
+  .new-spec-row {
+    background: var(--bg-light);
+    
+    td {
+      border-top: 2px solid var(--primary);
     }
   }
 }
 
-.edit-section select,
-.edit-section .form-control,
-.image-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-}
-
-.copy-controls select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border);
-  font-size: 0.95rem;
-  color: var(--text);
-  min-width: 200px;
-}
-
-.spec-suggestions {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: #fff !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.08);
-  border: 1.5px solid #e5e7eb;
-  z-index: 99999 !important;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.btn.btn-primary:disabled {
-  background: #9ca3af !important;
-  color: #fff !important;
+.btn--disabled {
+  background-color: #ccc !important;
+  border-color: #999 !important;
   cursor: not-allowed !important;
-  opacity: 0.7 !important;
-  box-shadow: none !important;
+  opacity: 0.6;
 }
 
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.validation-hint {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 0.5rem;
+  color: #856404;
+  font-size: 0.9rem;
+
+  p {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.5rem;
+
+    li {
+      margin: 0.25rem 0;
+    }
+  }
 }
 
-.required-products-list {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 0.5rem;
-}
-
+// Стили для required-product-item
 .required-product-item {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 1rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: visible;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     border-color: var(--primary);
-
-    .required-product-item__image img {
-      transform: scale(1.05);
-    }
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   &__info {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 0.75rem;
     flex: 1;
+    min-width: 0;
   }
 
   &__image {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin-left: -2rem;
-    margin-top: -3rem;
-    margin-bottom: -3rem;
-    z-index: 2;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: transform 0.3s ease;
-    }
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+    flex-shrink: 0;
   }
 
   &__details {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
   }
 
   &__name {
-    font-size: 1.1rem;
-    color: var(--text);
     font-weight: 600;
+    color: var(--text);
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__price {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--primary);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   &__remove {
-    padding: 0.75rem;
+    background: none;
     border: none;
-    background: rgba(220, 38, 38, 0.1);
-    color: var(--danger);
+    color: #dc3545;
     cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-left: 1rem;
-    z-index: 3;
+    flex-shrink: 0;
 
     &:hover {
-      background: var(--danger);
-      color: white;
-      transform: scale(1.1) rotate(90deg);
+      background: #f8d7da;
+      color: #721c24;
     }
 
     &:active {
@@ -2557,64 +2817,27 @@ const removeRequiredProductFromExisting = (product: Product, productId: number) 
   }
 }
 
-// Улучшенные стили для выпадающего списка
-.form-group select {
+.required-products-list {
+  margin-top: 1rem;
   padding: 1rem;
+  background: var(--bg-light);
+  border-radius: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 1rem;
-  font-size: 1rem;
-  background: var(--bg);
-  color: var(--text);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 1rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 3rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-  &:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
-  }
-
-  &:hover {
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
 }
 
-// Улучшенные стили для текстового поля
-.form-group textarea {
-  padding: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  font-size: 1rem;
-  background: var(--bg);
-  color: var(--text);
-  transition: all 0.3s ease;
-  resize: vertical;
-  min-height: 120px;
-  font-family: inherit;
-  line-height: 1.6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+@media (max-width: 768px) {
+  .required-product-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
 
-  &:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
-  }
+    &__info {
+      width: 100%;
+    }
 
-  &:hover {
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  &::placeholder {
-    color: var(--text-light);
+    &__remove {
+      align-self: flex-end;
+    }
   }
 }
 </style> 

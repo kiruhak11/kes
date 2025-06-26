@@ -52,10 +52,10 @@
                 <div class="product-short-description extended-description-content" v-html="parseExtendedDescription(product.description)"></div>
               </div>
               <div class="product-main-specs">
-                <div v-for="([key, value], idx) in displaySpecs.slice(0, 4)" :key="key" class="spec-item">
-                  <span class="spec-label">{{ capitalize(key) }}</span>
+                <div v-for="spec in displaySpecs.slice(0, 4)" :key="spec.id" class="spec-item">
+                  <span class="spec-label">{{ capitalize(spec.key) }}</span>
                   <span class="spec-dots"></span>
-                  <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+                  <span class="spec-value">{{ spec.value }}</span>
                 </div>
               </div>
             </div>
@@ -107,10 +107,10 @@
           <div v-if="activeTab === 'specs'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Технические характеристики</h2>
             <ul class="specs-list">
-              <li v-if="displaySpecs.length > 0" v-for="([key, value], idx) in displaySpecs" :key="key" class="spec-item">
-                <span class="spec-label">{{ capitalize(key) }}</span>
+              <li v-if="displaySpecs.length > 0" v-for="spec in displaySpecs" :key="spec.id" class="spec-item">
+                <span class="spec-label">{{ capitalize(spec.key) }}</span>
                 <span class="spec-dots"></span>
-                <span class="spec-value">{{ Array.isArray(value) ? value.join(', ') : value }}</span>
+                <span class="spec-value">{{ spec.value }}</span>
               </li>
               <li v-else class="spec-empty">
                 <div class="spec-empty-content">
@@ -315,6 +315,7 @@ import { contacts } from '~/data/contacts';
 import { useModalStore } from '~/stores/modal';
 import CommercialOfferModal from '~/components/CommercialOfferModal.vue';
 import { useRoute, useRouter } from 'vue-router';
+import type { Characteristic } from '~/types/product';
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
@@ -343,7 +344,7 @@ interface APIProduct {
   extendedDescription: string | null
   category_id: string | null
   additional_images: string[] | null
-  specs: ProductSpecs
+  specs: Characteristic[] | ProductSpecs
   delivery_set: string | null
   connection_scheme: string | null
   additional_requirements: string | null
@@ -360,7 +361,7 @@ interface Product {
   category: string
   category_slug: string
   slug: string
-  specs?: ProductSpecs
+  specs?: Characteristic[]
   additional_images?: string[]
   delivery_set?: string
   connection_scheme?: string
@@ -430,7 +431,7 @@ if (fetchError.value) {
     category_slug: '', // Will be filled from category data
     slug: '', // Will be generated
     additional_images: product.additional_images || [],
-    specs: product.specs || {},
+    specs: Array.isArray(product.specs) ? product.specs : [],
     delivery_set: product.delivery_set || '',
     connection_scheme: product.connection_scheme || '',
     additional_requirements: product.additional_requirements || '',
@@ -531,26 +532,33 @@ const addToCart = () => {
   cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
 }
 
-// Заменим вычисление displaySpecs, чтобы корректно фильтровать ненужные поля
+// Заменим вычисление displaySpecs, чтобы корректно работать с новым форматом
 const displaySpecs = computed(() => {
   if (!product.value?.specs) return []
   
-  // Список полей, которые нужно исключить
-  const excludeFields = ['images', 'power', 'fuel']
+  // Проверяем, что specs это массив
+  if (!Array.isArray(product.value.specs)) {
+    console.error('Product specs is not an array:', product.value.specs)
+    return []
+  }
   
-  return Object.entries(product.value.specs)
-    .filter(([key, value]) => 
-      value !== null && 
-      value !== undefined && 
-      value !== '' && 
-      !excludeFields.includes(key)
-    )
-    .map(([key, value]) => {
-      if (Array.isArray(value)) {
-        return [key, value.join(', ')]
-      }
-      return [key, value]
-    })
+  // Фильтруем характеристики
+  const filtered = product.value.specs.filter(spec => {
+    // Проверяем, что spec это объект с нужными полями
+    if (!spec || typeof spec !== 'object') {
+      console.error('Invalid spec object:', spec)
+      return false
+    }
+    
+    return spec.key && 
+           spec.value && 
+           spec.value !== null && 
+           spec.value !== undefined && 
+           spec.value !== ''
+  })
+  
+  console.log('Display specs for product:', product.value.name, filtered)
+  return filtered
 })
 
 // Похожие товары
