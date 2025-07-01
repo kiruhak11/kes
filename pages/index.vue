@@ -34,10 +34,12 @@
           <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
             <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
               <NuxtLink :to="`/catalog/${category.slug}`">
-                <img 
-                  :src="category.images[0]" 
+                <NuxtImg
+                  :placeholder="true"
+                  sizes="400px xxs:900px md:1200px"
+                  format="webp"
+                  :src="category.images[0] ?? '/images/placeholders/placeholder.png'" 
                   :alt="`${category.title} - котельное оборудование`"
-                  @error="handleImageError"
                 />
                 <h3>{{ category.title }}</h3>
                 <p v-if="!$device.isMobile">{{ category.description }}</p>
@@ -76,7 +78,13 @@
                 class="factory-slide"
                 :class="{ active: idx === currentFactorySlide }"
               >
-                <img :src="img" :alt="`Фото завода ${idx + 1}`" />
+                <NuxtImg
+                  :placeholder="true"
+                  sizes="400px xxs:900px md:1200px"
+                  format="webp"
+                  :src="img"
+                  :alt="`Фото завода ${idx + 1}`"
+                />
               </div>
               <div class="factory-slider__caption">
                 <h3>Наш завод</h3>
@@ -117,7 +125,13 @@
             :key="service.title"
             v-scroll-reveal="service.animation"
           >
-            <img :src="service.img" :alt="service.title" />
+            <NuxtImg
+              :placeholder="true"
+              sizes="400px xxs:900px md:1200px"
+              format="webp"
+              :src="service.img"
+              :alt="service.title"
+            />
             <h3 v-html="service.title"></h3>
             <div class="service-card__arrow">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -4,7 +4,13 @@
       <h1 class="section-title" v-scroll-reveal="'slide-in-left'">Вакансии</h1>
       <div class="vacancies-grid">
         <div class="card vacancy-card" v-for="vacancy in vacancies" :key="vacancy.title" v-scroll-reveal="'zoom-in'" @click="openVacancyModal(vacancy)" style="cursor:pointer;">
-          <img :src="vacancy.img" :alt="vacancy.title" class="vacancy-img" />
+          <NuxtImg
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            :src="vacancy.img"
+            :alt="vacancy.title"
+            class="vacancy-img" />
           <h2 class="vacancy-title">{{ vacancy.title }}</h2>
           <p class="vacancy-short">{{ vacancy.short }}</p>
           <div class="vacancy-card-spacer"></div>
@@ -22,7 +28,13 @@
       <div v-if="showModal && selectedVacancy" class="vacancy-modal-overlay" @click.self="closeVacancyModal">
         <div class="vacancy-modal">
           <button class="modal-close" @click="closeVacancyModal">×</button>
-          <img :src="selectedVacancy.img" :alt="selectedVacancy.title" class="vacancy-modal-img" />
+          <NuxtImg
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            :src="selectedVacancy.img"
+            :alt="selectedVacancy.title"
+            class="vacancy-modal-img" />
           <h2 class="vacancy-modal-title">{{ selectedVacancy.title }}</h2>
           <div class="vacancy-info">
             <div v-if="selectedVacancy.duties" class="vacancy-block">
@@ -133,9 +145,6 @@ const reqIcon = `<svg width='20' height='20' fill='none' xmlns='http://www.w3.or
 </script>
 
 <style scoped>
-.price{
-  
-}
 .vacancy-motivation-phone {
   display: flex;
   flex-direction: column;

@@ -5,7 +5,13 @@
       
       <div class="product-info">
         <div class="product-image">
-          <img :src="product.images?.[0] || product.image || '/images/placeholders/product-placeholder.png'" :alt="product.name || 'Product'">
+          <NuxtImg
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            :src="product.images?.[0] || product.image || '/images/placeholders/product-placeholder.png'"
+            :alt="product.name || 'Product'"
+          />
         </div>
         <div class="product-details">
           <h2>{{ product.name || 'Без названия' }}</h2>

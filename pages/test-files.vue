@@ -28,7 +28,13 @@
         <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
         <div v-if="uploadResult.path" class="image-test" v-scroll-reveal="'slide-in-right'">
           <h4>Тест отображения изображения:</h4>
-          <img :src="uploadResult.path" style="max-width: 200px; margin: 10px 0; border: 1px solid #ccc;" />
+          <NuxtImg
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            :src="uploadResult.path"
+            style="max-width: 200px; margin: 10px 0; border: 1px solid #ccc;"
+          />
           <p>Путь: {{ uploadResult.path }}</p>
           <button @click="testImageAccess(uploadResult.path)" v-scroll-reveal="'zoom-in'">Проверить доступ к файлу</button>
           <div v-if="imageTestResult" class="result" v-scroll-reveal="'fade-in-up'">
@@ -50,7 +56,13 @@
         >
           <h4>{{ file.name }}</h4>
           <p>Путь: {{ file.path }}</p>
-          <img :src="file.path" style="max-width: 150px; margin: 5px 0; border: 1px solid #ccc;" />
+          <NuxtImg
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            :src="file.path"
+            style="max-width: 150px; margin: 5px 0; border: 1px solid #ccc;"
+          />
           <button @click="testImageAccess(file.path)" v-scroll-reveal="'zoom-in'">Проверить доступ</button>
         </div>
       </div>

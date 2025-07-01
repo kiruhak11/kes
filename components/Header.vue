@@ -31,7 +31,13 @@
                   >
                     <div class="product-info">
                       <div class="product-image">
-                        <img :src="product.image" :alt="product.name">
+                        <NuxtImg
+                          :placeholder="true"
+                          sizes="400px xxs:900px md:1200px"
+                          format="webp"
+                          :src="product.image"
+                          :alt="product.name"
+                        />
                       </div>
                       <div class="product-details">
                         <div class="product-main">
@@ -81,7 +87,13 @@
         <div class="header__main-content">
           <div class="header__logo">
             <NuxtLink to="/">
-              <img src="/images/logo.png" alt="Котельный завод КЭС" />
+              <NuxtImg
+                :placeholder="true"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
+                :src="'/images/logo.png'"
+                alt="Котельный завод КЭС"
+              />
             </NuxtLink>
           </div>
           <div v-if="$device.isMobile" class="mobile-header-actions">
@@ -185,7 +197,13 @@
                     >
                       <div class="product-info">
                         <div class="product-image">
-                          <img :src="product.image" :alt="product.name">
+                          <NuxtImg
+                            :placeholder="true"
+                            sizes="400px xxs:900px md:1200px"
+                            format="webp"
+                            :src="product.image"
+                            :alt="product.name"
+                          />
                         </div>
                         <div class="product-details">
                           <div class="product-main">

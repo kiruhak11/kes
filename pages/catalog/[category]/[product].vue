@@ -20,7 +20,10 @@
               <button v-if="imageList.length > 1" class="gallery-nav prev" @click="prevImage">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <img 
+              <NuxtImg
+                :placeholder="true"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
                 :src="imageList[currentImageIndex] || '/images/placeholders/placeholder.png'" 
                 :alt="product.name ? String(product.name) : ''" 
                 class="main-image" 
@@ -39,7 +42,13 @@
                   :class="['thumbnail-btn', { active: idx === currentImageIndex }]"
                   @click="currentImageIndex = idx"
                 >
-                  <img :src="img" :alt="`${product.name} - изображение ${idx + 1}`" />
+                  <NuxtImg
+                    :placeholder="true"
+                    sizes="400px xxs:900px md:1200px"
+                    format="webp"
+                    :src="img"
+                    :alt="`${product.name} - изображение ${idx + 1}`"
+                  />
                 </button>
               </div>
             </div>
@@ -128,7 +137,14 @@
           <div v-if="activeTab === 'scheme'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Схема подключения</h2>
             <div v-if="product.connection_scheme" class="scheme-image-container">
-              <img :src="product.connection_scheme" alt="Схема подключения" class="scheme-image">
+              <NuxtImg
+                :placeholder="true"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
+                :src="product.connection_scheme"
+                alt="Схема подключения"
+                class="scheme-image"
+              />
             </div>
             <div v-else class="no-data-message">Схема подключения уточняется.</div>
           </div>
@@ -149,7 +165,13 @@
                 >
                   <div class="required-product-card__image-wrapper">
                     <div class="required-product-card__image">
-                      <img :src="getProductById(prodId)?.image" :alt="getProductById(prodId)?.name">
+                      <NuxtImg
+                        :placeholder="true"
+                        sizes="400px xxs:900px md:1200px"
+                        format="webp"
+                        :src="getProductById(prodId)?.image"
+                        :alt="getProductById(prodId)?.name"
+                      />
                     </div>
                   </div>
                   <div class="required-product-card__content">
@@ -176,7 +198,13 @@
                 <div class="cert-gallery-track">
                   <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
                     <div class="cert-gallery-img-wrap">
-                      <img :src="certificate.image" :alt="certificate.title" />
+                      <NuxtImg
+                        :placeholder="true"
+                        sizes="400px xxs:900px md:1200px"
+                        format="webp"
+                        :src="certificate.image"
+                        :alt="certificate.title"
+                      />
                     </div>
                     <div class="cert-gallery-title">{{ certificate.title }}</div>
                     <button class="cert-gallery-btn" @click="openCertificateModal(certificate)">Просмотреть</button>
@@ -226,7 +254,13 @@
                     <div class="cert-gallery-track">
                       <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
                         <div class="cert-gallery-img-wrap">
-                          <img :src="certificate.image" :alt="certificate.title" />
+                          <NuxtImg
+                            :placeholder="true"
+                            sizes="400px xxs:900px md:1200px"
+                            format="webp"
+                            :src="certificate.image"
+                            :alt="certificate.title"
+                          />
                         </div>
                         <div class="cert-gallery-title">{{ certificate.title }}</div>
                         <button class="cert-gallery-btn" @click="openCertificateModal(certificate)">Просмотреть</button>
@@ -278,7 +312,13 @@
               class="product-card"
               @click="router.push(`/catalog/${relatedProduct.category_slug || categorySlug}/${generateProductSlug(relatedProduct)}`)"
             >
-              <img :src="relatedProduct.image" :alt="relatedProduct.name ? String(relatedProduct.name) : ''" />
+              <NuxtImg
+                :placeholder="true"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
+                :src="relatedProduct.image"
+                :alt="relatedProduct.name ? String(relatedProduct.name) : ''"
+              />
               <div class="product-card__content">
                 <h3>{{ relatedProduct.name }}</h3>
                 <div class="related-category extended-description-content" v-html="parseExtendedDescription(relatedProduct.description.slice(0, 32) + '...')"></div>
@@ -301,7 +341,13 @@
         <div class="cert-modal-content" @click.stop>
           <button class="cert-modal-close" @click="closeCertificateModal">&times;</button>
           <div class="cert-modal-title">{{ selectedCertificate.title }}</div>
-          <img :src="selectedCertificate.image" :alt="selectedCertificate.title" class="cert-modal-img" />
+          <NuxtImg
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            :src="selectedCertificate.image"
+            :alt="selectedCertificate.title"
+            class="cert-modal-img" />
         </div>
       </div>
     </div>

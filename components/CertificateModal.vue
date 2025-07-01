@@ -70,7 +70,10 @@
               @touchmove="handleTouchMove"
               @touchend="handleTouchEnd"
             >
-              <img 
+              <NuxtImg
+                :placeholder="true"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
                 v-if="certificate?.image"
                 :src="certificate.image" 
                 :alt="certificate.title"

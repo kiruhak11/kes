@@ -65,7 +65,13 @@
               >
                 <div class="product-card__clickable" @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)">
                   <div class="product-card__img-wrap">
-                    <img :src="product.image ?? undefined" :alt="product.name ?? undefined" class="product-image" />
+                    <NuxtImg
+                      :placeholder="true"
+                      sizes="400px xxs:900px md:1200px"
+                      format="webp"
+                      :src="product.image ?? undefined"
+                      :alt="product.name ?? undefined"
+                      class="product-image" />
                   </div>
                   <div class="product-card__content">
                     <div class="product-card__title-row">
@@ -77,10 +83,6 @@
                         <span class="spec-label">{{ typeof spec === 'object' ? spec.key : 'Invalid spec' }}</span>
                         <span class="spec-dots"></span>
                         <span class="spec-value">{{ typeof spec === 'object' ? spec.value : JSON.stringify(spec) }}</span>
-                      </div>
-                      <!-- Debug info -->
-                      <div v-if="product.specs && product.specs.length > 0" style="font-size: 10px; color: red;">
-                        Debug: {{ JSON.stringify(product.specs[0]) }}
                       </div>
                     </div>
                     <div class="product-card__bottom">

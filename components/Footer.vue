@@ -59,7 +59,7 @@ if (fetchedCategories.value) {
     <div class="container">
       <div v-if="$device.isMobile" class="footer__mobile">
         <div class="footer__logo">
-          <img src="/images/logo-white.png" alt="ООО «КотлоЭнергоСнаб»" />
+          <NuxtImg :src="'/images/logo-white.png'" :placeholder="true" sizes="400px xxs:900px md:1200px" format="webp" alt="ООО «КотлоЭнергоСнаб»" />
           <p class="footer__slogan">Производим котлы для тех, кто выбирает качество</p>
         </div>
         <nav class="footer__mobile-nav">
@@ -80,7 +80,7 @@ if (fetchedCategories.value) {
       <div v-else>
         <div class="footer__content">
           <div class="footer__logo">
-            <img src="/images/logo-white.png" alt="ООО «КотлоЭнергоСнаб»" />
+            <NuxtImg :src="'/images/logo-white.png'" :placeholder="true" sizes="400px xxs:900px md:1200px" format="webp" alt="ООО «КотлоЭнергоСнаб»" />
             <p class="footer__slogan">Котлы и котельное оборудование Барнаул — надёжность с 2009 года</p>
           </div>
           

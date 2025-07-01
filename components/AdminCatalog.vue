@@ -138,7 +138,10 @@
                 />
               </div>
               <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="image-preview-container">
-                <img
+                <NuxtImg
+                  :placeholder="true"
+                  sizes="400px xxs:900px md:1200px"
+                  format="webp"
                   :src="newProdLocal.image"
                   class="img-preview"
                   alt="Основное изображение"
@@ -151,7 +154,12 @@
               <input type="file" multiple accept="image/*" @change="handleGalleryUpload" class="form-control" />
               <div class="gallery-previews">
                 <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
-                  <img :src="gimg" class="img-preview" />
+                  <NuxtImg
+                    :placeholder="true"
+                    sizes="400px xxs:900px md:1200px"
+                    format="webp"
+                    :src="gimg"
+                    class="img-preview" />
                   <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeGalleryImage(gidx)">✕</button>
                 </div>
               </div>
@@ -182,7 +190,10 @@
                 class="form-control"
               />
               <div v-if="newProdLocal.connection_scheme" class="image-preview-container">
-                <img
+                <NuxtImg
+                  :placeholder="true"
+                  sizes="400px xxs:900px md:1200px"
+                  format="webp"
                   :src="newProdLocal.connection_scheme"
                   class="img-preview"
                   alt="Схема подключения"
@@ -535,7 +546,10 @@
                       />
                     </div>
                     <div v-if="p.image && p.image !== 'custom'" class="image-preview-container">
-                      <img
+                      <NuxtImg
+                        :placeholder="true"
+                        sizes="400px xxs:900px md:1200px"
+                        format="webp"
                         :src="p.image"
                         class="img-preview"
                         alt="Основное изображение"
@@ -548,7 +562,13 @@
                     <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" class="form-control" />
                     <div class="gallery-previews">
                       <div v-for="(gimg, gidx) in (p.additional_images || [])" :key="gidx" class="gallery-item">
-                        <img :src="gimg" class="img-preview" />
+                        <NuxtImg
+                          :placeholder="true"
+                          sizes="400px xxs:900px md:1200px"
+                          format="webp"
+                          :src="gimg"
+                          class="img-preview"
+                        />
                         <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
                       </div>
                     </div>
@@ -579,7 +599,10 @@
                       class="form-control"
                     />
                     <div v-if="p.connection_scheme" class="image-preview-container">
-                      <img
+                      <NuxtImg
+                        :placeholder="true"
+                        sizes="400px xxs:900px md:1200px"
+                        format="webp"
                         :src="p.connection_scheme"
                         class="img-preview"
                         alt="Схема подключения"
@@ -718,7 +741,10 @@
                         class="required-product-item"
                       >
                         <div class="required-product-item__info">
-                          <img 
+                          <NuxtImg
+                            :placeholder="true"
+                            sizes="400px xxs:900px md:1200px"
+                            format="webp"
                             :src="products.find(prod => prod.id === prodId)?.image" 
                             :alt="products.find(prod => prod.id === prodId)?.name"
                             class="required-product-item__image"

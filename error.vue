@@ -1,7 +1,7 @@
 <template>
   <div class="error-page">
     <div class="error-content">
-      <img src="/images/logo.png" alt="Котельный завод КЭС" class="error-logo" />
+      <NuxtImg :src="'/images/logo.png'" :placeholder="true" sizes="400px xxs:900px md:1200px" format="webp" alt="Котельный завод КЭС" class="error-logo" />
       <h1 v-if="error.statusCode === 404">404</h1>
       <h1 v-else>Ошибка</h1>
       <h2 v-if="error.statusCode === 404">Страница не найдена</h2>

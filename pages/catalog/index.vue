@@ -19,7 +19,10 @@
             <NuxtLink :to="`/catalog/${category.slug}`">
             <div class="catalog-item__image-container">
               <transition-group name="fade">
-                <img 
+                <NuxtImg
+                  :placeholder="true"
+                  sizes="400px xxs:900px md:1200px"
+                  format="webp"
                   v-for="(image, index) in category.images" 
                   :key="image"
                   :src="image" 

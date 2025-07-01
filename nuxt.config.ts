@@ -45,6 +45,7 @@ export default defineNuxtConfig({
     "pinia-plugin-persistedstate/nuxt",
     "rubillex_frog-modal",
     "nuxt-file-storage",
+    "@nuxt/image",
   ],
   piniaPluginPersistedstate: {
     storage: "localStorage",

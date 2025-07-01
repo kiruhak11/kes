@@ -9,7 +9,10 @@
         <div class="certificate-card__inner">
           <!-- Certificate Image -->
           <div class="certificate-card__image">
-            <img 
+            <NuxtImg
+              :placeholder="true"
+              sizes="400px xxs:900px md:1200px"
+              format="webp"
               :src="certificate.image" 
               :alt="certificate.title"
               loading="lazy"
