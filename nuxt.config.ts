@@ -18,6 +18,17 @@ export default defineNuxtConfig({
       },
     },
   },
+  image: {
+    screens: {
+        default: 320,
+        xxs: 480,
+        md: 996,
+        lg: 1280,
+        sm: 640,
+    },
+    format: ['webp'],
+},
+
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
