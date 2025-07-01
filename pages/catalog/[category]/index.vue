@@ -142,24 +142,7 @@
   import CommercialOfferModal from '~/components/CommercialOfferModal.vue'
   import type { Characteristic } from '~/types/product'
 
-  const props = defineProps<{
-  product: {
-    id: number
-    name: string | null
-    description: string | null
-    extendedDescription?: string | null
-    price: number | null
-    image: string | null
-    category_id: string | null
-    category_name?: string
-    category_slug?: string
-    category?: string
-    slug?: string
-    specs?: Characteristic[]
-    additional_images?: string[] | null
-    images?: string[]
-  }
-}>()
+
 const showCommercialOfferModal = ref(false)
 const selectedProduct = ref<Product | null>(null)
 
@@ -526,6 +509,9 @@ const closeCommercialOfferModal = () => {
 
   // Инициализируем все фильтры пустыми значениями
   onMounted(() => {
+    
+  // Программно триггерим scroll событие
+  window.dispatchEvent(new Event('scroll'))
     uniqueSpecs.value.forEach(spec => {
       dynamicFilters.value[spec] = ''
     })
@@ -774,6 +760,7 @@ const closeCommercialOfferModal = () => {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 30px;
+    row-gap: 60px
   }
   
   .product-card {
