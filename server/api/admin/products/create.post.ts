@@ -7,7 +7,6 @@ export default eventHandler(async (event) => {
 
     // Validate request body
     if (!body || typeof body !== 'object') {
-      console.error('Invalid request body:', body)
       throw createError({
         statusCode: 400,
         message: 'Invalid request body'
@@ -19,7 +18,6 @@ export default eventHandler(async (event) => {
     const missingFields = requiredFields.filter(field => !body[field])
     
     if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields)
       throw createError({
         statusCode: 422,
         message: `Missing required fields: ${missingFields.join(', ')}`
@@ -38,8 +36,6 @@ export default eventHandler(async (event) => {
       category_id: body.category_id,
       specs: body.specs || {}
     }
-
-    console.log('Creating product with data:', productData)
 
     // Insert into database
     const { data: newProduct, error: insertError } = await client
@@ -76,11 +72,9 @@ export default eventHandler(async (event) => {
       })
     }
 
-    console.log('Created product:', newProduct)
     return newProduct
 
   } catch (error: any) {
-    console.error('Error in POST /api/admin/products/create:', error)
     throw createError({
       statusCode: error.statusCode || 500,
       message: error.message || 'Internal server error'

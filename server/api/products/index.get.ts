@@ -116,14 +116,10 @@ export default defineEventHandler(async (event) => {
     const transformedProducts: ProductWithCharacteristics[] = products.map(product => {
       const category = product.categories as any
       
-      // Debug: Log the original specs format
-      console.log('Original specs for product', product.id, ':', product.specs)
       
       // Convert specs from object to characteristics array
       const characteristics = convertSpecsToCharacteristics(product.specs as Record<string, any>)
       
-      // Debug: Log the converted characteristics
-      console.log('Converted characteristics for product', product.id, ':', characteristics)
       
       // Ensure characteristics is always an array
       const finalSpecs = Array.isArray(characteristics) ? characteristics : []

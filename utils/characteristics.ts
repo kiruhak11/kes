@@ -4,16 +4,14 @@ import type { Characteristic } from '~/types/product'
  * Конвертирует старый формат характеристик (объект) в новый (массив)
  */
 export function convertSpecsToCharacteristics(specs: Record<string, any> | null): Characteristic[] {
-  console.log('convertSpecsToCharacteristics input:', specs)
+  
   
   if (!specs || typeof specs !== 'object') {
-    console.log('convertSpecsToCharacteristics: invalid input, returning empty array')
     return []
   }
 
   // Проверяем, если specs уже в новом формате (массив объектов с id, key, value)
   if (Array.isArray(specs)) {
-    console.log('convertSpecsToCharacteristics: specs is already an array, validating format')
     const isValidArray = specs.every(item => 
       typeof item === 'object' && 
       item !== null && 
@@ -23,10 +21,8 @@ export function convertSpecsToCharacteristics(specs: Record<string, any> | null)
     )
     
     if (isValidArray) {
-      console.log('convertSpecsToCharacteristics: specs is already in correct format, returning as is')
       return specs as Characteristic[]
     } else {
-      console.log('convertSpecsToCharacteristics: specs is array but not in correct format, treating as old format')
     }
   }
 
@@ -47,12 +43,10 @@ export function convertSpecsToCharacteristics(specs: Record<string, any> | null)
         value: Array.isArray(value) ? value.join(', ') : String(value)
       }))
       
-    console.log('convertSpecsToCharacteristics output (converted from object):', result)
     return result
   }
 
   // Если это массив, но не в правильном формате, возвращаем пустой массив
-  console.log('convertSpecsToCharacteristics: invalid array format, returning empty array')
   return []
 }
 

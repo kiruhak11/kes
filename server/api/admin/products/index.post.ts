@@ -56,8 +56,6 @@ export default defineEventHandler(async (event) => {
       specs: body.specs || {}
     }
 
-    console.log('Creating product with data:', productData)
-
     // Insert into database
     const { data: newProduct, error: insertError } = await client
       .from('products')
@@ -73,7 +71,6 @@ export default defineEventHandler(async (event) => {
       .single()
 
     if (insertError) {
-      console.error('Database error:', insertError)
       if (insertError.code === '42501') {
         throw createError({
           statusCode: 403,
@@ -93,7 +90,6 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    console.log('Created product:', newProduct)
     return newProduct
 
   } catch (error: any) {

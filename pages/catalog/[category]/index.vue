@@ -15,13 +15,22 @@
   
         <div class="category-content">
           <div class="category-sidebar" v-scroll-reveal="'slide-in-left'">
-            <div class="filter-section">
-              <h3>Фильтры</h3>
-              <div class="filters-content">
+            <div class="filter-section" @click="toggleFiltersCollapsed" style="cursor:pointer; user-select:none;">
+              <h3 class="filter-section__title">
+                Фильтры
+                <span class="filter-section__arrow" :style="{ transform: filtersCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }">
+                  <IconsArrowDown/>
+                </span>
+              </h3>
+            </div>
+            <transition name="filters-slide">
+              <div v-show="!filtersCollapsed" class="filters-content">
                 <div class="filter-group price-range">
                   <div class="filter-header" @click="togglePriceFilter">
                     <span>Цена</span>
-                    <span class="filter-arrow">{{ priceFilterOpen ? '▲' : '▼' }}</span>
+                    <span class="filter-arrow" :class="{ open: priceFilterOpen }">
+                      <IconsArrowDown/>
+                    </span>
                   </div>
                   <div v-show="priceFilterOpen" class="filter-body">
                     <div class="price-inputs">
@@ -31,10 +40,14 @@
                     </div>
                   </div>
                 </div>
-                <div v-for="(spec, idx) in uniqueSpecs" :key="spec" class="filter-group">
+                <div v-for="spec in filteredSpecs" :key="spec" class="filter-group">
                   <div class="filter-header" @click="toggleSpecFilter(spec)">
                     <span>{{ spec }}</span>
-                    <span class="filter-arrow">{{ openFilters[spec] ? '▲' : '▼' }}</span>
+                    <span class="filter-arrow" :class="{ open: openFilters[spec] }">
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4.5 7.5L9 12L13.5 7.5" stroke="#e31e24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
                   </div>
                   <div v-show="openFilters[spec]" class="filter-body">
                     <template v-if="specOptions[spec] && specOptions[spec].length > 0">
@@ -52,7 +65,7 @@
                   <button class="btn btn-secondary" @click="resetFilters" v-scroll-reveal="'zoom-in'">Сбросить все</button>
                 </div>
               </div>
-            </div>
+            </transition>
           </div>
   
           <div class="category-products" v-scroll-reveal="'fade-in-up'">
@@ -320,7 +333,7 @@ const closeCommercialOfferModal = () => {
   })
 
   // 1. Собираем все уникальные характеристики из specs
-  const uniqueSpecs = computed(() => {
+  const uniqueSpecs = computed<string[]>(() => {
     const specsSet = new Set<string>()
     productsInCategory.value.forEach(product => {
       if (product.specs && Array.isArray(product.specs)) {
@@ -516,6 +529,17 @@ const closeCommercialOfferModal = () => {
       dynamicFilters.value[spec] = ''
     })
   })
+
+  const filtersCollapsed = ref(true)
+  const toggleFiltersCollapsed = () => {
+    filtersCollapsed.value = !filtersCollapsed.value
+  }
+
+  const filteredSpecs = computed(() =>
+    uniqueSpecs.value.filter(
+      spec => Array.isArray(specOptions.value[spec]) && specOptions.value[spec].length > 1
+    )
+  )
   </script>
   
   <style scoped>
@@ -545,59 +569,100 @@ const closeCommercialOfferModal = () => {
   }
   
   .category-sidebar {
-    background: #fff;
+    background: none;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    overflow: hidden;
+    box-shadow: none;
+    padding: 0;
+    overflow: visible;
   }
   
   .filter-section {
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
-    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+    padding: 0 0 0 0;
     margin-bottom: 24px;
     width: 100%;
     box-sizing: border-box;
+    display: inline-block;
+    min-width: 0;
+    overflow: visible;
   }
 
-  .filter-section h3 {
+  .filter-section__title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
     font-size: 1.25rem;
     font-weight: 700;
     color: #222;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #f0f0f0;
+    padding: 20px 24px 20px 24px;
+    border-radius: 16px 16px 0 0;
+    transition: background 0.2s;
+  }
+  .filter-section__arrow {
+    font-size: 1.2em;
+    margin-left: 12px;
+    color: #e31e24;
+    transition: transform 0.3s cubic-bezier(.4,2,.6,1), color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  .filters-content {
+    padding: 20px 24px 24px 24px;
+    border-radius: 0 0 16px 16px;
+    background: #fff;
+    
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 2px 12px rgba(227,30,36,0.04);
+    overflow: hidden;
+  }
+
+  /* Анимация выезда фильтров */
+  .filters-slide-enter-active, .filters-slide-leave-active {
+    transition: max-height 0.45s cubic-bezier(.4,2,.6,1), opacity 0.35s, padding 0.3s;
+  }
+  .filters-slide-enter-from, .filters-slide-leave-to {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .filters-slide-enter-to, .filters-slide-leave-from {
+    max-height: 1200px;
+    opacity: 1;
+    padding-top: 20px;
+    padding-bottom: 24px;
   }
 
   .filter-group {
-    margin-bottom: 12px;
-    border: 1px solid #eaeaea;
-    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid #ececec;
+    border-radius: 10px;
     overflow: hidden;
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
+    background: #fafbfc;
+    box-shadow: 0 2px 8px rgba(227,30,36,0.03);
+    transition: box-shadow 0.2s, border-color 0.2s;
   }
 
   .filter-group:hover {
     border-color: #e31e24;
-    box-shadow: 0 2px 8px rgba(227, 30, 36, 0.08);
+    box-shadow: 0 4px 16px rgba(227,30,36,0.08);
   }
 
   .filter-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 16px;
+    padding: 14px 18px;
     background: #f8f9fa;
     cursor: pointer;
-    transition: all 0.2s ease;
     font-weight: 600;
     color: #222;
-    width: 100%;
-    box-sizing: border-box;
+    transition: background 0.2s;
+    border-radius: 10px 10px 0 0;
   }
 
   .filter-header:hover {
@@ -605,17 +670,25 @@ const closeCommercialOfferModal = () => {
   }
 
   .filter-arrow {
-    font-size: 0.9em;
-    color: #e31e24;
-    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s cubic-bezier(.4,2,.6,1);
+  }
+
+  .filter-arrow svg {
+    display: block;
+    transition: transform 0.3s cubic-bezier(.4,2,.6,1);
+  }
+
+  .filter-arrow.open svg {
+    transform: rotate(180deg);
   }
 
   .filter-body {
-    padding: 16px;
+    padding: 16px 18px 12px 18px;
     background: #fff;
-    border-top: 1px solid #eaeaea;
-    width: 100%;
-    box-sizing: border-box;
+    border-top: 1px solid #ececec;
+    border-radius: 0 0 10px 10px;
   }
 
   .price-inputs {

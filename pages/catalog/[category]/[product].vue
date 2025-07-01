@@ -603,7 +603,6 @@ const displaySpecs = computed(() => {
            spec.value !== ''
   })
   
-  console.log('Display specs for product:', product.value.name, filtered)
   return filtered
 })
 
@@ -781,7 +780,6 @@ if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
 }
 
 function escapeHtml(text: string): string {
-  console.log('escapeHtml input:', text);
   const map: { [key: string]: string } = {
     '&': '&amp;',
     '<': '&lt;',
@@ -790,54 +788,42 @@ function escapeHtml(text: string): string {
     "'": '&#039;'
   };
   const result = text.replace(/[&<>"']/g, m => map[m]);
-  console.log('escapeHtml output:', result);
   return result;
 }
 
 function parseInlineMarkdown(text: string): string {
-  console.log('parseInlineMarkdown input:', text);
   // Обработка жирного текста
   text = text.replace(/\*\*(.*?)\*\*/g, (match, content) => {
-    console.log('Found bold text:', content);
     return `<strong>${content}</strong>`;
   });
   // Обработка курсива
   text = text.replace(/\*(.*?)\*/g, (match, content) => {
-    console.log('Found italic text:', content);
     return `<em>${content}</em>`;
   });
-  console.log('parseInlineMarkdown output:', text);
   return text;
 }
 
 function parseExtendedDescription(description: string | null): string {
-  console.log('parseExtendedDescription input:', description);
   
   if (!description) {
-    console.log('Empty description, returning empty string');
     return '';
   }
 
   const lines = description.split('\n');
-  console.log('Split lines:', lines);
-  
+
   let html = '';
   let inList = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    console.log(`Processing line ${i}:`, line);
 
     // Пропускаем пустые строки, но добавляем разрыв строки
     if (!line) {
-      console.log('Empty line detected');
       if (inList) {
-        console.log('Closing list due to empty line');
         html += '</ul>';
         inList = false;
       }
       if (i > 0 && i < lines.length - 1) {
-        console.log('Adding line break');
         html += '<br>';
       }
       continue;
@@ -845,7 +831,6 @@ function parseExtendedDescription(description: string | null): string {
 
     // Обработка заголовков и других элементов
     if (line.startsWith('### ')) {
-      console.log('Processing h3 heading');
       if (inList) {
         html += '</ul>';
         inList = false;
@@ -853,7 +838,6 @@ function parseExtendedDescription(description: string | null): string {
       const text = escapeHtml(line.substring(4));
       html += `<h3 class="description-h3">${parseInlineMarkdown(text)}</h3>`;
     } else if (line.startsWith('## ')) {
-      console.log('Processing h2 heading');
       if (inList) {
         html += '</ul>';
         inList = false;
@@ -861,7 +845,6 @@ function parseExtendedDescription(description: string | null): string {
       const text = escapeHtml(line.substring(3));
       html += `<h2 class="description-h2">${parseInlineMarkdown(text)}</h2>`;
     } else if (line.startsWith('# ')) {
-      console.log('Processing h1 heading');
       if (inList) {
         html += '</ul>';
         inList = false;
@@ -869,18 +852,14 @@ function parseExtendedDescription(description: string | null): string {
       const text = escapeHtml(line.substring(2));
       html += `<h1 class="description-h1">${parseInlineMarkdown(text)}</h1>`;
     } else if (line.startsWith('- ')) {
-      console.log('Processing list item');
       if (!inList) {
-        console.log('Starting new list');
         html += '<ul class="description-list">';
         inList = true;
       }
       const text = escapeHtml(line.substring(2));
       html += `<li class="description-list-item">${parseInlineMarkdown(text)}</li>`;
     } else {
-      console.log('Processing regular paragraph');
       if (inList) {
-        console.log('Closing list before paragraph');
         html += '</ul>';
         inList = false;
       }
@@ -890,11 +869,9 @@ function parseExtendedDescription(description: string | null): string {
   }
 
   if (inList) {
-    console.log('Closing final list');
     html += '</ul>';
   }
 
-  console.log('Final HTML output:', html);
   return html;
 }
 
