@@ -86,7 +86,8 @@
       <div class="container">
         <div class="header__main-content">
           <div class="header__logo">
-            <NuxtLink to="/">
+            <NuxtLink to="/" 
+            class="untouchable">
               <NuxtImg
                 :placeholder="true"
                 sizes="400px xxs:900px md:1200px"

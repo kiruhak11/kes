@@ -8,10 +8,19 @@
           :key="img"
           class="hero__bg"
           :class="{ active: idx === currentHero }"
-          :style="{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url('${img}')`
-          }"
-        />
+        >
+          <NuxtImg
+            :src="img"
+            :alt="`Главный баннер ${idx + 1}`"
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            class="hero__bg-image"
+            @error="handleImageError"
+            fallback="/images/placeholders/placeholder.png"
+          />
+          <div class="hero__bg-overlay"></div>
+        </div>
         <div class="container">
           <div class="hero__content">
             <h1 class="hero__title">
@@ -617,10 +626,16 @@ onBeforeUnmount(() => {
   if (factoryIntervalId) clearInterval(factoryIntervalId)
 })
 
-function handleImageError(e: Event) {
+function handleImageError(e: Event | string) {
+  if (typeof e === 'string') {
+    // NuxtImg может передавать строку с ошибкой
+    console.error('Image error:', e)
+    return
+  }
+  
   const img = e.target as HTMLImageElement
   if (img) {
-    img.src = '/images/placeholders/category-placeholder.png'
+    img.src = '/images/placeholders/placeholder.png'
   }
 }
 
@@ -662,17 +677,33 @@ const services = [
   width: 100%;
   height: 100%;
   z-index: 0;
-  background-size: cover;
-  background-position: center;
   opacity: 0;
   transition: opacity 1.5s;
+  overflow: hidden;
+}
+
+.hero__bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.hero__bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5));
+  z-index: 1;
 }
 .hero__bg.active {
   opacity: 1;
 }
 .hero__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .hero__title {
