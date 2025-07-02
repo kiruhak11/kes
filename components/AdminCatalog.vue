@@ -137,15 +137,19 @@
                   class="image-input"
                 />
               </div>
-              <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="image-preview-container">
-                <NuxtImg
-                  :placeholder="true"
-                  sizes="400px xxs:900px md:1200px"
-                  format="webp"
-                  :src="newProdLocal.image"
-                  class="img-preview"
-                  alt="Основное изображение"
-                />
+              <!-- Новый блок: превью основного изображения как в галерее -->
+              <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="gallery-previews" style="margin-top: 0.5rem;">
+                <div class="gallery-item">
+                  <NuxtImg
+                    :placeholder="true"
+                    sizes="400px xxs:900px md:1200px"
+                    format="webp"
+                    :src="newProdLocal.image"
+                    class="img-preview"
+                    alt="Основное изображение"
+                  />
+                  <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeMainImage">✕</button>
+                </div>
               </div>
             </div>
 
@@ -153,7 +157,7 @@
               <label>Дополнительные изображения:</label>
               <input type="file" multiple accept="image/*" @change="handleGalleryUpload" class="form-control" />
               <div class="gallery-previews">
-                <div v-for="(gimg, gidx) in newProdGallery" :key="gidx" class="gallery-item">
+                <div v-for="(gimg, gidx) in newProdGalleryLocal" :key="gidx" class="gallery-item">
                   <NuxtImg
                     :placeholder="true"
                     sizes="400px xxs:900px md:1200px"
@@ -552,10 +556,7 @@
                       />
                     </div>
                     <div v-if="p.image && p.image !== 'custom'" class="image-preview-container">
-                      <NuxtImg
-                        :placeholder="true"
-                        sizes="400px xxs:900px md:1200px"
-                        format="webp"
+                      <img
                         :src="p.image"
                         class="img-preview"
                         alt="Основное изображение"
@@ -568,10 +569,7 @@
                     <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" class="form-control" />
                     <div class="gallery-previews">
                       <div v-for="(gimg, gidx) in (p.additional_images || [])" :key="gidx" class="gallery-item">
-                        <NuxtImg
-                          :placeholder="true"
-                          sizes="400px xxs:900px md:1200px"
-                          format="webp"
+                        <img
                           :src="gimg"
                           class="img-preview"
                         />
@@ -605,10 +603,7 @@
                       class="form-control"
                     />
                     <div v-if="p.connection_scheme" class="image-preview-container">
-                      <NuxtImg
-                        :placeholder="true"
-                        sizes="400px xxs:900px md:1200px"
-                        format="webp"
+                      <img
                         :src="p.connection_scheme"
                         class="img-preview"
                         alt="Схема подключения"
@@ -748,10 +743,7 @@
                         class="required-product-item"
                       >
                         <div class="required-product-item__info">
-                          <NuxtImg
-                            :placeholder="true"
-                            sizes="400px xxs:900px md:1200px"
-                            format="webp"
+                            <img
                             :src="products.find(prod => prod.id === prodId)?.image" 
                             :alt="products.find(prod => prod.id === prodId)?.name"
                             class="required-product-item__image"
@@ -801,7 +793,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
-import { useFileStorage } from '~/composables/useFileStorage'
+import { useFileStorage } from '@/composables/useFileStorage'
 import MarkdownEditor from './MarkdownEditor.vue'
 
 interface Spec {
@@ -907,6 +899,7 @@ const emit = defineEmits<{
   (e: 'update:newSpec', val: Spec): void
   (e: 'update:newSpecs', val: Spec[]): void
   (e: 'updateSpecsList', productId: number, specs: Spec[]): void
+  (e: 'update:newProdGallery', val: string[]): void
 }>()
 
 // Локальная переменная для пароля
@@ -1354,8 +1347,6 @@ const removeNewSpec = (idx: number) => emit('removeNewSpec', idx)
 const deleteProduct = (id: number) => emit('deleteProduct', id)
 const handleImageUpload = (event: Event, product: Product | Partial<Product>) => emit('handleImageUpload', event, product)
 const toggleNewProdFuelDropdown = () => emit('toggleNewProdFuelDropdown')
-const handleGalleryUpload = (event: Event) => emit('handleGalleryUpload', event)
-const removeGalleryImage = (idx: number) => emit('removeGalleryImage', idx)
 const removeEditGalleryImage = (product: Product, idx: number) => emit('removeEditGalleryImage', product, idx)
 const handleEditGalleryUpload = (event: Event, product: Product) => emit('handleEditGalleryUpload', event, product)
 const handleConnectionSchemeUpload = (event: Event, product: Product) => emit('handleConnectionSchemeUpload', event, product)
@@ -1744,6 +1735,42 @@ const logout = () => {
   // Очищаем сохраненную авторизацию при выходе
   clearSavedAuth()
 }
+
+// Добавляю метод для удаления основного изображения
+const removeMainImage = () => {
+  newProdLocal.value.image = ''
+}
+
+const newProdGalleryLocal = ref([...props.newProdGallery])
+
+watch(() => props.newProdGallery, (val) => {
+  newProdGalleryLocal.value = [...val]
+})
+
+const addGalleryImages = (images: string[]) => {
+  newProdGalleryLocal.value.push(...images)
+  emit('update:newProdGallery', [...newProdGalleryLocal.value])
+}
+
+const removeGalleryImage = (idx: number) => {
+  newProdGalleryLocal.value.splice(idx, 1)
+  emit('update:newProdGallery', [...newProdGalleryLocal.value])
+}
+
+const handleGalleryUpload = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+  const files = Array.from(input.files)
+  try {
+    const filePaths = await uploadFiles(files)
+    addGalleryImages(filePaths)
+  } catch (error) {
+    console.error('Error uploading gallery images:', error)
+  }
+  input.value = ''
+}
+
+const { uploadFiles } = useFileStorage()
 </script>
 
 <style lang="scss" scoped>
