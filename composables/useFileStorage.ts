@@ -1,7 +1,26 @@
-export function useFileStorage() {
-  const uploadFiles = async (files: File[]): Promise<string[]> => {
+import { ref } from 'vue'
+
+export interface UseFileStorageOptions {
+  clearOldFiles?: boolean
+}
+
+export function useFileStorage(options: UseFileStorageOptions = {}) {
+  const files = ref<File[]>([])
+
+  const handleFileInput = (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files) return
+    const selectedFiles = Array.from(input.files)
+    if (options.clearOldFiles) {
+      files.value = selectedFiles
+    } else {
+      files.value.push(...selectedFiles)
+    }
+  }
+
+  const uploadFiles = async (uploadFiles: File[]): Promise<string[]> => {
     try {
-      const uploadPromises = files.map(async (file) => {
+      const uploadPromises = uploadFiles.map(async (file) => {
         const formData = new FormData()
         formData.append('file', file)
         
@@ -83,6 +102,8 @@ export function useFileStorage() {
   }
 
   return {
+    files,
+    handleFileInput,
     uploadFiles,
     uploadSingleFile,
     deleteFile,

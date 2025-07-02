@@ -1769,6 +1769,34 @@ const getImageUrl = (path: string) => {
   if (path.startsWith('/uploads/')) return path.replace('/uploads/', '/api/uploads/')
   return `/api/uploads/${path.replace(/^\/+/, '')}`
 }
+
+// Для основного изображения
+const {
+  files: mainImageFiles,
+  handleFileInput: handleMainImageInput,
+  uploadFiles: uploadMainImageFiles
+} = useFileStorage({ clearOldFiles: true })
+
+// Для галереи
+const {
+  files: galleryFiles,
+  handleFileInput: handleGalleryInput,
+  uploadFiles: uploadGalleryFiles
+} = useFileStorage({ clearOldFiles: true })
+
+// Функция для загрузки основного изображения
+const uploadMainImage = async () => {
+  if (!mainImageFiles.value.length) return
+  const paths = await uploadMainImageFiles(mainImageFiles.value)
+  newProdLocal.value.image = paths[0] || ''
+}
+
+// Функция для загрузки галереи
+const uploadGallery = async () => {
+  if (!galleryFiles.value.length) return
+  const paths = await uploadGalleryFiles(galleryFiles.value)
+  addGalleryImages(paths)
+}
 </script>
 
 <style lang="scss" scoped>
