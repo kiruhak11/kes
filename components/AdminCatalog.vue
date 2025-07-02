@@ -1032,7 +1032,6 @@ const previewSpecsFromProduct = () => {
 const confirmCopySpecs = () => {
   // Очищаем текущие характеристики
   newSpecsLocal.value = []
-  
   // Копируем характеристики в пустые поля
   previewedSpecs.value.forEach((spec, index) => {
     newSpecsLocal.value.push({ 
@@ -1044,7 +1043,8 @@ const confirmCopySpecs = () => {
       show_in_filters: false
     })
   })
-  
+  // Синхронизируем с родителем!
+  emit('update:newSpecs', [...newSpecsLocal.value])
   // Очищаем предварительный просмотр и выбор
   clearCopySelection()
 }
