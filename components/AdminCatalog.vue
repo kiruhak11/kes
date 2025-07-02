@@ -141,7 +141,7 @@
               <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="gallery-previews" style="margin-top: 0.5rem;">
                 <div class="gallery-item">
                   <img
-                    :src="newProdLocal.image"
+                    :src="getImageUrl(newProdLocal.image)"
                     class="img-preview"
                     alt="Основное изображение"
                   />
@@ -156,7 +156,7 @@
               <div class="gallery-previews">
                 <div v-for="(gimg, gidx) in newProdGalleryLocal" :key="gidx" class="gallery-item">
                     <img
-                    :src="gimg"
+                    :src="getImageUrl(gimg)"
                     class="img-preview" />
                   <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeGalleryImage(gidx)">✕</button>
                 </div>
@@ -189,7 +189,7 @@
               />
               <div v-if="newProdLocal.connection_scheme" class="image-preview-container">
                 <img
-                  :src="newProdLocal.connection_scheme"
+                  :src="getImageUrl(newProdLocal.connection_scheme)"
                   class="img-preview"
                   alt="Схема подключения"
                 />
@@ -548,7 +548,7 @@
                     </div>
                     <div v-if="p.image && p.image !== 'custom'" class="image-preview-container">
                       <img
-                        :src="p.image"
+                        :src="getImageUrl(p.image)"
                         class="img-preview"
                         alt="Основное изображение"
                       />
@@ -561,7 +561,7 @@
                     <div class="gallery-previews">
                       <div v-for="(gimg, gidx) in (p.additional_images || [])" :key="gidx" class="gallery-item">
                         <img
-                          :src="gimg"
+                          :src="getImageUrl(gimg)"
                           class="img-preview"
                         />
                         <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
@@ -595,7 +595,7 @@
                     />
                     <div v-if="p.connection_scheme" class="image-preview-container">
                       <img
-                        :src="p.connection_scheme"
+                        :src="getImageUrl(p.connection_scheme)"
                         class="img-preview"
                         alt="Схема подключения"
                       />
@@ -735,7 +735,7 @@
                       >
                         <div class="required-product-item__info">
                             <img
-                            :src="products.find(prod => prod.id === prodId)?.image" 
+                            :src="getImageUrl(products.find(prod => prod.id === prodId)?.image || '')"
                             :alt="products.find(prod => prod.id === prodId)?.name"
                             class="required-product-item__image"
                           />
@@ -1762,6 +1762,13 @@ const handleGalleryUpload = async (event: Event) => {
 }
 
 const { uploadFiles } = useFileStorage()
+
+const getImageUrl = (path: string) => {
+  if (!path) return ''
+  if (path.startsWith('/api/uploads/')) return path
+  if (path.startsWith('/uploads/')) return path.replace('/uploads/', '/api/uploads/')
+  return `/api/uploads/${path.replace(/^\/+/, '')}`
+}
 </script>
 
 <style lang="scss" scoped>
