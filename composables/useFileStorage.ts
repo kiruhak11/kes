@@ -23,30 +23,18 @@ export function useFileStorage(options: UseFileStorageOptions = {}) {
       const uploadPromises = uploadFiles.map(async (file) => {
         const formData = new FormData()
         formData.append('file', file)
-        
-        const response = await $fetch('/api/files', {
+        const response = await fetch('/api/files', {
           method: 'POST',
-          body: {
-            files: [{
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              content: await fileToDataUrl(file)
-            }]
-          }
+          body: formData
         })
-        
-        if (!response.success) {
-          throw new Error('Failed to upload file')
-        }
-        
-        return response.files[0].path
+        const data = await response.json()
+        // Возвращаем путь в формате /api/uploads/имя_файла
+        return data.path.replace(/^\/uploads\//, '/api/uploads/')
       })
-      
       return await Promise.all(uploadPromises)
     } catch (error) {
-      console.error('Error uploading files:', error)
-      throw error
+      console.error('Ошибка загрузки файлов:', error)
+      return []
     }
   }
 
