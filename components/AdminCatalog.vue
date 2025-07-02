@@ -140,10 +140,7 @@
               <!-- Новый блок: превью основного изображения как в галерее -->
               <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="gallery-previews" style="margin-top: 0.5rem;">
                 <div class="gallery-item">
-                  <NuxtImg
-                    :placeholder="true"
-                    sizes="400px xxs:900px md:1200px"
-                    format="webp"
+                  <img
                     :src="newProdLocal.image"
                     class="img-preview"
                     alt="Основное изображение"
@@ -158,10 +155,7 @@
               <input type="file" multiple accept="image/*" @change="handleGalleryUpload" class="form-control" />
               <div class="gallery-previews">
                 <div v-for="(gimg, gidx) in newProdGalleryLocal" :key="gidx" class="gallery-item">
-                  <NuxtImg
-                    :placeholder="true"
-                    sizes="400px xxs:900px md:1200px"
-                    format="webp"
+                    <img
                     :src="gimg"
                     class="img-preview" />
                   <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeGalleryImage(gidx)">✕</button>
@@ -194,10 +188,7 @@
                 class="form-control"
               />
               <div v-if="newProdLocal.connection_scheme" class="image-preview-container">
-                <NuxtImg
-                  :placeholder="true"
-                  sizes="400px xxs:900px md:1200px"
-                  format="webp"
+                <img
                   :src="newProdLocal.connection_scheme"
                   class="img-preview"
                   alt="Схема подключения"
