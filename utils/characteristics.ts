@@ -21,7 +21,11 @@ export function convertSpecsToCharacteristics(specs: Record<string, any> | null)
     )
     
     if (isValidArray) {
-      return specs as Characteristic[]
+      // Добавляем поле show_in_filters если его нет
+      return specs.map(spec => ({
+        ...spec,
+        show_in_filters: spec.show_in_filters !== undefined ? spec.show_in_filters : false
+      })) as Characteristic[]
     } else {
     }
   }
@@ -40,7 +44,8 @@ export function convertSpecsToCharacteristics(specs: Record<string, any> | null)
       .map(([key, value], index) => ({
         id: index + 1,
         key,
-        value: Array.isArray(value) ? value.join(', ') : String(value)
+        value: Array.isArray(value) ? value.join(', ') : String(value),
+        show_in_filters: false // По умолчанию false для старых записей
       }))
       
     return result
@@ -58,13 +63,8 @@ export function convertCharacteristicsToSpecs(characteristics: Characteristic[] 
     return {}
   }
 
-  const specs: Record<string, any> = {}
-  characteristics.forEach(char => {
-    if (char.key && char.value) {
-      specs[char.key] = char.value
-    }
-  })
-  return specs
+  // Возвращаем массив характеристик как есть, чтобы сохранить все поля включая show_in_filters
+  return characteristics
 }
 
 /**

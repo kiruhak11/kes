@@ -3,6 +3,7 @@
     <!-- Вкладки -->
     <div class="admin-tabs" v-scroll-reveal="'fade-in-up'">
       <button :class="{active: adminTab==='catalog'}" @click="adminTab='catalog'">Каталог</button>
+      <button :class="{active: adminTab==='filters'}" @click="adminTab='filters'">Фильтры</button>
       <button :class="{active: adminTab==='categories'}" @click="adminTab='categories'">Категории</button>
       <button :class="{active: adminTab==='stats'}" @click="adminTab='stats'">Статистика</button>
     </div>
@@ -33,6 +34,7 @@
       :is-form-valid="!!isFormValid"
       :modal-store="modalStore"
       :filtered-specs="filteredSpecs"
+      :set-show-in-filters-for-all="setShowInFiltersForAll"
       @add-product="addProduct"
       @reset-form="resetForm"
       @toggle="toggle"
@@ -46,18 +48,12 @@
       @handle-image-upload="handleImageUpload"
       @handle-connection-scheme-upload="handleConnectionSchemeUpload"
       @toggle-new-prod-fuel-dropdown="toggleNewProdFuelDropdown"
-      @handle-gallery-upload="handleGalleryUpload"
-      @remove-gallery-image="removeGalleryImage"
-      @remove-edit-gallery-image="removeEditGalleryImage"
-      @handle-edit-gallery-upload="handleEditGalleryUpload"
-      @update:new-category="val => newCategory = val"
-      @update:new-prod-power-value="val => newProdPowerValue = val"
-      @update:new-prod-power-unit="val => newProdPowerUnit = val"
-      @update:new-prod-selected-fuels="val => newProdSelectedFuels = val"
-      @update:new-prod="val => newProd = val"
-      @update:new-spec="val => newSpec = val"
-      @update:new-specs="val => newSpecs = val"
-      @update-specs-list="updateSpecsList"
+    />
+    
+    <AdminFilters v-if="adminTab==='filters'"
+      :products="products"
+      :specs-list="specsList"
+      :categories="categories"
     />
     <AdminCategories v-if="adminTab==='categories' && authorized"
       :categories="categories"
@@ -101,6 +97,7 @@
 import AdminCatalog from '~/components/AdminCatalog.vue'
 import AdminCategories from '~/components/AdminCategories.vue'
 import AdminStats from '~/components/AdminStats.vue'
+import AdminFilters from '~/components/AdminFilters.vue'
 import { ref, onMounted, watch, h } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import Chart from 'chart.js/auto'
@@ -130,6 +127,7 @@ interface Spec {
   id: number;
   key: string;
   value: string;
+  show_in_filters?: boolean;
   showKeySuggestions?: boolean;
   showValueSuggestions?: boolean;
 }
@@ -229,7 +227,7 @@ const activeId = ref<number|null>(null)
 
 // Характеристики
 const newSpecs = ref<Spec[]>([])
-const newSpec = ref<Spec>({ id: 1, key:'', value:'' })
+const newSpec = ref<Spec>({ id: 1, key:'', value:'', show_in_filters: false })
 
 // Новые реактивные переменные для мощности и топлива
 const newProdPowerValue = ref()
@@ -329,6 +327,7 @@ watch(products, (newProducts) => {
           id: spec.id,
           key: spec.key, 
           value: spec.value,
+          show_in_filters: (spec as any).show_in_filters || false,
           showKeySuggestions: false,
           showValueSuggestions: false
         }))
@@ -392,21 +391,44 @@ async function addProduct() {
 
       if (!categoryResponse.ok) {
         const errorData = await categoryResponse.json()
-        throw new Error(errorData.statusMessage || 'Failed to create category')
+        if (categoryResponse.status === 409) {
+          // Категория уже существует, используем существующую
+          const existingCategory = categories.value.find(c => c.name === newCategory.value.name)
+          if (existingCategory) {
+            categoryId = existingCategory.id
+            categorySlug = existingCategory.slug
+            categoryName = existingCategory.name
+          } else {
+            throw new Error('Category already exists but not found in local list')
+          }
+        } else {
+          throw new Error(errorData.statusMessage || 'Failed to create category')
+        }
+      } else {
+        const newCategoryData = await categoryResponse.json()
+        categoryId = newCategoryData.id
+        categorySlug = newCategoryData.slug
+        categoryName = newCategoryData.name
+
+        // Добавляем новую категорию в список
+        categories.value.push({
+          id: String(newCategoryData.id),
+          name: newCategoryData.name,
+          description: newCategoryData.description,
+          slug: newCategoryData.slug
+        })
+        
+        // Обновляем список категорий
+        const { data: updatedCategories } = await useFetch<Category[]>('/api/categories')
+        if (updatedCategories.value) {
+          categories.value = updatedCategories.value.map(cat => ({
+            id: String(cat.id),
+            name: cat.title,
+            description: cat.description,
+            slug: cat.slug
+          }))
+        }
       }
-
-      const newCategoryData = await categoryResponse.json()
-      categoryId = newCategoryData.id
-      categorySlug = newCategoryData.slug
-      categoryName = newCategoryData.name
-
-      // Добавляем новую категорию в список
-      categories.value.push({
-        id: String(newCategoryData.id),
-        name: newCategoryData.name,
-        description: newCategoryData.description,
-        slug: newCategoryData.slug
-      })
     } else {
       // Находим существующую категорию
       const category = categories.value.find(c => c.name === newProd.value.category)
@@ -422,7 +444,8 @@ async function addProduct() {
     const characteristics = newSpecs.value.map(spec => ({
       id: spec.id,
       key: spec.key,
-      value: spec.value
+      value: spec.value,
+      show_in_filters: spec.show_in_filters || false
     }))
 
     // Создаем объект продукта для отправки
@@ -456,18 +479,28 @@ async function addProduct() {
 
     const newProduct = await response.json()
 
-    // Добавляем новый продукт в список
-    products.value.push({
-      ...newProduct,
-      category: categoryName,
-      category_name: categoryName,
-      category_slug: categorySlug,
-      additional_images: newProdGallery.value,
-      slug: generateSlug(newProduct.name)
-    })
-
     // Очищаем форму
     resetForm()
+
+    // Небольшая задержка для обновления базы данных
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Обновляем список продуктов
+    await refreshProducts()
+    
+    // Принудительно обновляем specsList для всех продуктов
+    if (products.value) {
+      products.value.forEach(p => {
+        specsList.value[p.id] = (p.specs || []).map(spec => ({
+          id: spec.id,
+          key: spec.key, 
+          value: spec.value,
+          show_in_filters: (spec as any).show_in_filters || false,
+          showKeySuggestions: false,
+          showValueSuggestions: false
+        }))
+      })
+    }
 
     // Показываем сообщение об успехе
     modalStore.showSuccess('Товар успешно добавлен')
@@ -518,6 +551,7 @@ function toggle(id: number) {
         id: spec.id,
         key: spec.key, 
         value: spec.value,
+        show_in_filters: (spec as any).show_in_filters || false,
         showKeySuggestions: false,
         showValueSuggestions: false
       }))
@@ -554,31 +588,25 @@ async function updateWithSpecs(p: Product) {
       required_products: p.required_products || []
     }
 
-    await $fetch(`/api/products/${p.id}`, {
+    // Получаем обновленный продукт с сервера
+    const updatedProduct = await $fetch(`/api/products/${p.id}`, {
       method: 'PUT',
       body: updateData
     })
 
-    // Обновляем данные локально вместо перезагрузки
+    // Обновляем specsList для этого продукта
+    if (updatedProduct && updatedProduct.specs) {
+      specsList.value[p.id] = convertSpecsToCharacteristics(updatedProduct.specs)
+    }
+    // Обновляем сам продукт в products
     const productIndex = products.value.findIndex(prod => prod.id === p.id)
-    if (productIndex !== -1) {
+    if (productIndex !== -1 && updatedProduct) {
       products.value[productIndex] = {
         ...products.value[productIndex],
-        name: p.name,
-        description: p.description,
-        extendedDescription: p.extendedDescription,
-        price: p.price,
-        image: p.image,
-        category: p.category,
-        specs: updatedSpecs, // Обновляем specs в продукте
-        additional_images: p.additional_images, // Обновляем галерею изображений
-        delivery_set: p.delivery_set,
-        connection_scheme: p.connection_scheme,
-        additional_requirements: p.additional_requirements,
-        required_products: p.required_products
+        ...updatedProduct,
+        specs: convertSpecsToCharacteristics(updatedProduct.specs)
       }
     }
-
     activeId.value = null
   } catch (error) {
     console.error('Error updating product:', error)
@@ -598,6 +626,7 @@ function addSpec(id:number) {
     id: newId,
     key:'', 
     value:'',
+    show_in_filters: false,
     showKeySuggestions: false,
     showValueSuggestions: false
   })
@@ -617,11 +646,13 @@ function addNewSpec() {
       id: newId,
       key:newSpec.value.key, 
       value:newSpec.value.value,
+      show_in_filters: newSpec.value.show_in_filters || false,
       showKeySuggestions: false,
       showValueSuggestions: false
     })
     newSpec.value.key = ''
     newSpec.value.value = ''
+    newSpec.value.show_in_filters = false
   }
 }
 
@@ -1159,33 +1190,31 @@ function getCategoryProductCount(categoryId: string): number {
   return count
 }
 
-async function deleteRequest(id: number) {
-  if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
-  try {
-    const res = await $fetch(`/api/requests/${id}`, { method: 'DELETE' });
-    if (res && res.success) {
-      await fetchStats();
-      modalStore.showSuccess('Заявка успешно удалена');
-    } else {
-      modalStore.showError('Ошибка при удалении заявки');
-    }
-  } catch (e: any) {
-    modalStore.showError('Ошибка при удалении заявки: ' + (e?.message || e));
-  }
-}
-
 async function deleteAllRequests() {
   if (!confirm('Вы уверены, что хотите удалить все заявки?')) return;
   try {
     const res = await $fetch('/api/requests/delete-all', { method: 'DELETE' });
-    if (res && res.success) {
+    if (res && (res as any).success) {
       await fetchStats();
-      modalStore.showSuccess(`Удалено заявок: ${res.deleted}`);
-    } else {
-      modalStore.showError('Ошибка при удалении всех заявок');
+      modalStore.showSuccess('Все заявки удалены');
     }
-  } catch (e: any) {
-    modalStore.showError('Ошибка при удалении всех заявок: ' + (e?.message || e));
+  } catch (error) {
+    console.error('Error deleting all requests:', error);
+    modalStore.showError('Ошибка при удалении заявок');
+  }
+}
+
+async function deleteRequest(id: number) {
+  if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
+  try {
+    const res = await $fetch(`/api/requests/${id}`, { method: 'DELETE' });
+    if (res && (res as any).deleted) {
+      await fetchStats();
+      modalStore.showSuccess('Заявка удалена');
+    }
+  } catch (error) {
+    console.error('Error deleting request:', error);
+    modalStore.showError('Ошибка при удалении заявки');
   }
 }
 
@@ -1194,6 +1223,21 @@ function updateSpecsList(productId: number, specs: Spec[]) {
     specsList.value[productId] = [];
   }
   specsList.value[productId] = specs;
+}
+
+// --- Массовое обновление show_in_filters по ключу ---
+function setShowInFiltersForAll(key: string, value: boolean) {
+  // Для всех товаров и их характеристик
+  Object.keys(specsList.value).forEach(productId => {
+    const specs = specsList.value[Number(productId)]
+    if (Array.isArray(specs)) {
+      specs.forEach(spec => {
+        if (spec.key === key) {
+          (spec as any).show_in_filters = value
+        }
+      })
+    }
+  })
 }
 </script>
 

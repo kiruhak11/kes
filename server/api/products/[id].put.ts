@@ -1,11 +1,11 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
-import { convertCharacteristicsToSpecs } from '~/utils/characteristics'
 
 interface Characteristic {
   id: number
   key: string
   value: string
+  show_in_filters?: boolean
 }
 
 export default defineEventHandler(async (event) => {
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       price: body.price,
       image: body.image,
       category_id: body.category_id,
-      specs: specsArray, // Сохраняем как массив объектов
+      specs: specsArray, // Сохраняем как массив объектов с show_in_filters
       additional_images: Array.isArray(body.additional_images) ? body.additional_images : null,
       delivery_set: body.delivery_set || null,
       connection_scheme: body.connection_scheme || null,

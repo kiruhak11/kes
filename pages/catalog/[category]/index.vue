@@ -311,7 +311,7 @@ const closeCommercialOfferModal = () => {
 
   // Pagination state
   const currentPage = ref(1)
-  const itemsPerPage = 10
+  const itemsPerPage = 1000
 
   // Products state
   const allProducts = ref<Product[]>([])
@@ -548,9 +548,7 @@ const closeCommercialOfferModal = () => {
     return filteredProducts.value.slice(start, end)
   })
 
-  const totalPages = computed(() => {
-    return Math.ceil(filteredProducts.value.length / itemsPerPage)
-  })
+  const totalPages = computed(() => 1)
 
   // Добавляем методы для пагинации
   const goToPage = (page: number) => {

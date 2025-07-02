@@ -32,11 +32,11 @@ export const useProducts = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const getCacheKey = (categorySlug?: string, page: number = 1, limit: number = 10) => {
+  const getCacheKey = (categorySlug?: string, page: number = 1, limit: number = 1000) => {
     return `products:${categorySlug || 'all'}:${page}:${limit}`
   }
 
-  const fetchProducts = async (categorySlug?: string, page: number = 1, limit: number = 10) => {
+  const fetchProducts = async (categorySlug?: string, page: number = 1, limit: number = 1000) => {
     loading.value = true
     error.value = null
 

@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       .from('categories')
       .select('*')
       .eq('slug', categorySlug)
-      .limit(1)
+      .limit(10)
 
     if (catError) {
       console.error('Category fetch error:', catError)

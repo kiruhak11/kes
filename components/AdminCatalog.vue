@@ -297,11 +297,10 @@
             <table class="specs-table">
               <thead>
                 <tr>
-                  <th style="width: 40px;"></th>
-                  <th style="width: 35%;">Параметр</th>
-                  <th style="width: 35%;">Значение</th>
-                  <th style="width: 80px;">В фильтрах</th>
-                  <th style="width: 60px;"></th>
+                                          <th style="width: 40px;"></th>
+                        <th style="width: 40%;">Параметр</th>
+                        <th style="width: 40%;">Значение</th>
+                        <th style="width: 60px;"></th>
                 </tr>
               </thead>
               <tbody>
@@ -627,9 +626,8 @@
                     <thead>
                       <tr>
                         <th style="width: 40px;"></th>
-                        <th style="width: 35%;">Параметр</th>
-                        <th style="width: 35%;">Значение</th>
-                        <th style="width: 80px;">В фильтрах</th>
+                        <th style="width: 40%;">Параметр</th>
+                        <th style="width: 40%;">Значение</th>
                         <th style="width: 60px;"></th>
                       </tr>
                     </thead>
@@ -691,9 +689,7 @@
                           </div>
                         </div>
                       </td>
-                      <td style="text-align:center;">
-                        <input type="checkbox" v-model="spec.show_in_filters" />
-                      </td>
+
                       <td>
                         <button
                           @click.prevent="removeSpec(p.id, idx)"
@@ -702,7 +698,7 @@
                     </tr>
                     <tr class="new-spec-row">
                       <td></td>
-                      <td colspan="3">
+                      <td colspan="2">
                         <button
                           class="btn btn-secondary btn-sm"
                           @click.prevent="addSpec(p.id)"
@@ -878,6 +874,7 @@ const props = defineProps<{
   isFormValid: boolean
   modalStore: any
   filteredSpecs: (id: number) => Spec[]
+  setShowInFiltersForAll: (key: string, value: boolean) => void
 }>()
 
 // Emits
@@ -1303,6 +1300,19 @@ const selectEditSpecValue = (spec: Spec, value: string) => {
   spec.value = value
   spec.showValueSuggestions = false
   editSpecValueSuggestions.value = []
+}
+
+// Обработчик изменений флажка show_in_filters
+const onShowInFiltersChange = (productId: number, specIndex: number, event: Event) => {
+  const target = event.target as HTMLInputElement | null
+  if (!target) return
+  const value = target.checked
+  if (props.specsList[productId] && props.specsList[productId][specIndex]) {
+    const key = props.specsList[productId][specIndex].key
+    if (typeof props.setShowInFiltersForAll === 'function') {
+      props.setShowInFiltersForAll(key, value)
+    }
+  }
 }
 
 // Methods

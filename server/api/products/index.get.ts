@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     const categorySlug = query.categorySlug as string | undefined
     const productSlug = query.productSlug as string | undefined
     const page = parseInt(query.page as string) || 1
-    const limit = parseInt(query.limit as string) || 10
+    const limit = parseInt(query.limit as string) || 99999
     const offset = (page - 1) * limit
  
 

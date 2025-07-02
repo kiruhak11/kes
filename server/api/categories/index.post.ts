@@ -13,6 +13,28 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Проверяем, существует ли уже категория с таким названием
+    const { data: existingCategory, error: checkError } = await client
+      .from('categories')
+      .select('id, name')
+      .eq('name', body.title)
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Error checking existing category:', checkError)
+      throw createError({ 
+        statusCode: 500, 
+        statusMessage: `Failed to check existing category: ${checkError.message}` 
+      })
+    }
+
+    if (existingCategory) {
+      throw createError({ 
+        statusCode: 409, 
+        statusMessage: `Category with name "${body.title}" already exists` 
+      })
+    }
+
     // Убеждаемся, что у нас есть slug
     const slug = body.slug || body.title.toLowerCase()
       .replace(/[^a-z0-9а-яё]+/g, '-')  // Добавляем поддержку кириллицы
