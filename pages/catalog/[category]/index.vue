@@ -100,7 +100,7 @@
                 </div>
 
                 <!-- Динамические фильтры -->
-                <div v-for="spec in filteredSpecs" :key="spec" class="filter-card" :class="{ active: dynamicFilters[spec] }">
+                <div v-for="spec in filteredSpecs" :key="spec" class="filter-card" :class="{ active: dynamicFilters[spec] || (rangeFilters[spec] && (dynamicRangeFilters[spec]?.min !== undefined || dynamicRangeFilters[spec]?.max !== undefined)) }">
                   <div class="filter-card__header">
                     <div class="filter-card__title-group">
                       <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -116,7 +116,26 @@
                   </div>
                   <div class="filter-card__body">
                     <div class="filter-content">
-                      <template v-if="specOptions[spec] && specOptions[spec].length > 0">
+                                             <template v-if="rangeFilters[spec]">
+                         <div class="price-range">
+                           <div class="price-inputs">
+                             <div class="price-input-group">
+                               <label>От</label>
+                               <div class="input-wrapper">
+                                 <input type="number" :value="getRangeFilterValue(spec, 'min')" @input="updateRangeFilter(spec, 'min', $event)" placeholder="0" />
+                               </div>
+                             </div>
+                             <div class="price-separator"></div>
+                             <div class="price-input-group">
+                               <label>До</label>
+                               <div class="input-wrapper">
+                                 <input type="number" :value="getRangeFilterValue(spec, 'max')" @input="updateRangeFilter(spec, 'max', $event)" placeholder="∞" />
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       </template>
+                      <template v-else-if="specOptions[spec] && specOptions[spec].length > 0">
                         <div v-if="specOptions[spec].length <= 8" class="select-wrapper">
                           <select v-model="dynamicFilters[spec]" class="filter-select">
                             <option value="">Выберите {{ spec.toLowerCase() }}</option>
@@ -128,7 +147,7 @@
                         </div>
                       </template>
                     </div>
-                    <button v-if="dynamicFilters[spec]" class="clear-filter-btn" @click="clearFilter(spec)">
+                    <button v-if="dynamicFilters[spec] || (rangeFilters[spec] && (dynamicRangeFilters[spec]?.min !== undefined || dynamicRangeFilters[spec]?.max !== undefined))" class="clear-filter-btn" @click="clearFilter(spec)">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                         <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                       </svg>
@@ -438,6 +457,27 @@ const closeCommercialOfferModal = () => {
     return Object.fromEntries(Object.entries(options).map(([k, v]) => [k, Array.from(v)]))
   })
 
+  // 1. Определяем, какие фильтры являются диапазонными (например, '100 - 200')
+  function isRangeValue(val: string): boolean {
+    if (!val) return false;
+    // Поддержка формата 'число - число', допускается пробелы
+    return /^\s*\d+(?:[.,]\d+)?\s*[-–—]\s*\d+(?:[.,]\d+)?\s*$/.test(val);
+  }
+
+  const rangeFilters = computed(() => {
+    const result: Record<string, boolean> = {};
+    for (const key of uniqueSpecs.value) {
+      const options = specOptions.value[key] as string[];
+      if (options && options.length > 0 && options.every(isRangeValue)) {
+        result[key] = true;
+      }
+    }
+    return result;
+  });
+
+  // 2. Состояние для диапазонных фильтров
+  const dynamicRangeFilters = ref<Record<string, { min: number | undefined, max: number | undefined }>>({});
+
   // 3. Состояние фильтров по характеристикам
   const dynamicFilters = ref<Record<string, any>>({})
 
@@ -446,7 +486,7 @@ const closeCommercialOfferModal = () => {
     max: undefined as number | undefined
   })
 
-  // Update the filteredProducts computed property
+  // 3. Модифицируем filteredProducts для поддержки диапазонных фильтров
   const filteredProducts = computed(() => {
     return productsInCategory.value.filter(product => {
       // Price range filter
@@ -459,25 +499,40 @@ const closeCommercialOfferModal = () => {
 
       // Dynamic filters
       for (const key of uniqueSpecs.value) {
-        const filterValue = dynamicFilters.value[key]
-        if (filterValue === undefined || filterValue === '' || (Array.isArray(filterValue) && filterValue.length === 0)) continue
-        
-        // Находим значение характеристики в новом формате
-        const specItem = product.specs?.find(spec => spec.key === key)
-        const productValue = specItem?.value
-        
-        if (Array.isArray(filterValue)) {
-          if (!Array.isArray(productValue) || !filterValue.some(v => productValue.includes(v))) {
-            return false
-          }
-        } else {
-          if (Array.isArray(productValue)) {
-            if (!productValue.includes(filterValue)) {
+                 if (rangeFilters.value[key]) {
+           // Диапазонный фильтр
+           const { min, max } = dynamicRangeFilters.value[key] || {};
+           if (min === undefined && max === undefined) continue;
+           const specItem = product.specs?.find(spec => spec.key === key);
+           if (!specItem) continue;
+           // Парсим диапазон из значения характеристики
+           const match = typeof specItem.value === 'string' && specItem.value.match(/(\d+(?:[.,]\d+)?)[^\d]+(\d+(?:[.,]\d+)?)/);
+           if (!match) continue;
+           const valMin = parseFloat(match[1].replace(',', '.'));
+           const valMax = parseFloat(match[2].replace(',', '.'));
+           
+           // Проверяем, что товар начинается с указанного минимума и заканчивается указанным максимумом
+           if (min !== undefined && valMin > min) return false; // Минимум товара больше минимума фильтра
+           if (max !== undefined && valMax < max) return false; // Максимум товара меньше максимума фильтра
+         } else {
+          // Обычный фильтр
+          const filterValue = dynamicFilters.value[key]
+          if (filterValue === undefined || filterValue === '' || (Array.isArray(filterValue) && filterValue.length === 0)) continue
+          const specItem = product.specs?.find(spec => spec.key === key)
+          const productValue = specItem?.value
+          if (Array.isArray(filterValue)) {
+            if (!Array.isArray(productValue) || !filterValue.some(v => productValue.includes(v))) {
               return false
             }
           } else {
-            if (productValue != filterValue) {
-              return false
+            if (Array.isArray(productValue)) {
+              if (!productValue.includes(filterValue)) {
+                return false
+              }
+            } else {
+              if (productValue != filterValue) {
+                return false
+              }
             }
           }
         }
@@ -511,31 +566,26 @@ const closeCommercialOfferModal = () => {
   }
 
   function resetFilters() {
-    // Сбрасываем все фильтры к пустым значениям
     uniqueSpecs.value.forEach(spec => {
       dynamicFilters.value[spec] = ''
+      if (rangeFilters.value[spec]) dynamicRangeFilters.value[spec] = { min: undefined, max: undefined }
     })
     priceRange.value = {
       min: undefined,
       max: undefined
     }
-    // Дропдауны остаются открытыми
   }
 
   function resetAllFilters() {
-    // Сбрасываем все фильтры к пустым значениям
     uniqueSpecs.value.forEach(spec => {
       dynamicFilters.value[spec] = ''
+      if (rangeFilters.value[spec]) dynamicRangeFilters.value[spec] = { min: undefined, max: undefined }
     })
     priceRange.value = {
       min: undefined,
       max: undefined
     }
-    
-    // Сбрасываем пагинацию на первую страницу
     currentPage.value = 1
-    
-    // Прокручиваем к началу страницы
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -560,6 +610,24 @@ const closeCommercialOfferModal = () => {
 
   function clearFilter(spec: string) {
     dynamicFilters.value[spec] = ''
+    if (rangeFilters.value[spec] && dynamicRangeFilters.value[spec]) {
+      dynamicRangeFilters.value[spec] = { min: undefined, max: undefined }
+    }
+  }
+
+  function getRangeFilterValue(spec: string, field: 'min' | 'max'): number | undefined {
+    return dynamicRangeFilters.value[spec]?.[field]
+  }
+
+  function updateRangeFilter(spec: string, field: 'min' | 'max', event: Event) {
+    const target = event.target as HTMLInputElement
+    const value = target.value === '' ? undefined : Number(target.value)
+    
+    if (!dynamicRangeFilters.value[spec]) {
+      dynamicRangeFilters.value[spec] = { min: undefined, max: undefined }
+    }
+    
+    dynamicRangeFilters.value[spec][field] = value
   }
 
   const generateProductSlug = (product: Product) => {
@@ -620,8 +688,21 @@ const closeCommercialOfferModal = () => {
     uniqueSpecs.value.forEach(spec => {
       dynamicFilters.value[spec] = ''
       openFilters.value[spec] = true // Все дропдауны всегда открыты
+      // Инициализируем диапазонные фильтры
+      if (rangeFilters.value[spec]) {
+        dynamicRangeFilters.value[spec] = { min: undefined, max: undefined }
+      }
     })
   })
+
+  // Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
+  watch(rangeFilters, (newRangeFilters) => {
+    Object.keys(newRangeFilters).forEach(spec => {
+      if (newRangeFilters[spec] && !dynamicRangeFilters.value[spec]) {
+        dynamicRangeFilters.value[spec] = { min: undefined, max: undefined }
+      }
+    })
+  }, { immediate: true })
 
   const filtersCollapsed = ref(true)
   const toggleFiltersCollapsed = () => {
@@ -1070,7 +1151,6 @@ const closeCommercialOfferModal = () => {
     align-items: center;
     margin-bottom: 30px;
     padding: 20px 0;
-    border-bottom: 1px solid #e9ecef;
   }
 
   .products-count {
@@ -1154,7 +1234,8 @@ const closeCommercialOfferModal = () => {
   
   .product-card__clickable:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 24px 24px rgba(0,0,0,0.13);
   }
   
   .product-card__img-wrap {
@@ -1292,7 +1373,6 @@ const closeCommercialOfferModal = () => {
   
   .offer-btn {
     width: 100%;
-    margin-top: 24px;
     background: linear-gradient(45deg, #e31e24, #ff4d4d);
     color: #fff;
     border: none;
@@ -1590,5 +1670,5 @@ const closeCommercialOfferModal = () => {
   }
   .breadcrumbs a:hover {
     text-decoration: underline;
-  }
-  </style> 
+      }
+    </style> 

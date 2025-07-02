@@ -297,7 +297,7 @@ Email: ${formData.value.email}
 }
 
 .submit-btn {
-  background-color: #007bff;
+  background-color: #e31e24;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -313,7 +313,7 @@ Email: ${formData.value.email}
 }
 
 .submit-btn:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: #e31e24;
 }
 
 @media (max-width: 768px) {
