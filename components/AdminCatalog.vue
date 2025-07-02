@@ -356,9 +356,6 @@
                       </div>
                     </div>
                   </td>
-                  <td style="text-align:center;">
-                    <input type="checkbox" v-model="spec.show_in_filters" />
-                  </td>
                   <td>
                     <button class="btn-sm" @click.prevent="removeNewSpec(idx)"><UiDeleteSmall/></button>
                   </td>
