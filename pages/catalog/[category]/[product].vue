@@ -20,10 +20,7 @@
               <button v-if="imageList.length > 1" class="gallery-nav prev" @click="prevImage">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <NuxtImg
-                :placeholder="true"
-                sizes="400px xxs:900px md:1200px"
-                format="webp"
+              <img
                 :src="imageList[currentImageIndex] || '/images/placeholders/placeholder.png'" 
                 :alt="product.name ? String(product.name) : ''" 
                 class="main-image" 
@@ -42,10 +39,7 @@
                   :class="['thumbnail-btn', { active: idx === currentImageIndex }]"
                   @click="currentImageIndex = idx"
                 >
-                  <NuxtImg
-                    :placeholder="true"
-                    sizes="400px xxs:900px md:1200px"
-                    format="webp"
+                  <img
                     :src="img"
                     :alt="`${product.name} - изображение ${idx + 1}`"
                   />
@@ -137,10 +131,7 @@
           <div v-if="activeTab === 'scheme'" class="section-block" v-scroll-reveal="'slide-in-right'">
             <h2 class="section-title">Схема подключения</h2>
             <div v-if="product.connection_scheme" class="scheme-image-container">
-              <NuxtImg
-                :placeholder="true"
-                sizes="400px xxs:900px md:1200px"
-                format="webp"
+              <img
                 :src="product.connection_scheme"
                 alt="Схема подключения"
                 class="scheme-image"
@@ -165,10 +156,7 @@
                 >
                   <div class="required-product-card__image-wrapper">
                     <div class="required-product-card__image">
-                      <NuxtImg
-                        :placeholder="true"
-                        sizes="400px xxs:900px md:1200px"
-                        format="webp"
+                      <img
                         :src="getProductById(prodId)?.image"
                         :alt="getProductById(prodId)?.name"
                       />
@@ -198,10 +186,7 @@
                 <div class="cert-gallery-track">
                   <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
                     <div class="cert-gallery-img-wrap">
-                      <NuxtImg
-                        :placeholder="true"
-                        sizes="400px xxs:900px md:1200px"
-                        format="webp"
+                      <img
                         :src="certificate.image"
                         :alt="certificate.title"
                       />
@@ -254,10 +239,7 @@
                     <div class="cert-gallery-track">
                       <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
                         <div class="cert-gallery-img-wrap">
-                          <NuxtImg
-                            :placeholder="true"
-                            sizes="400px xxs:900px md:1200px"
-                            format="webp"
+                          <img
                             :src="certificate.image"
                             :alt="certificate.title"
                           />
@@ -312,10 +294,7 @@
               class="product-card"
               @click="router.push(`/catalog/${relatedProduct.category_slug || categorySlug}/${generateProductSlug(relatedProduct)}`)"
             >
-              <NuxtImg
-                :placeholder="true"
-                sizes="400px xxs:900px md:1200px"
-                format="webp"
+              <img
                 :src="relatedProduct.image"
                 :alt="relatedProduct.name ? String(relatedProduct.name) : ''"
               />
@@ -341,10 +320,7 @@
         <div class="cert-modal-content" @click.stop>
           <button class="cert-modal-close" @click="closeCertificateModal">&times;</button>
           <div class="cert-modal-title">{{ selectedCertificate.title }}</div>
-          <NuxtImg
-            :placeholder="true"
-            sizes="400px xxs:900px md:1200px"
-            format="webp"
+          <img
             :src="selectedCertificate.image"
             :alt="selectedCertificate.title"
             class="cert-modal-img" />

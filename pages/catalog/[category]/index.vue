@@ -177,10 +177,7 @@
             >
               <div class="product-card__clickable" @click="router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)">
                 <div class="product-card__img-wrap">
-                  <NuxtImg
-                    :placeholder="true"
-                    sizes="400px xxs:900px md:1200px"
-                    format="webp"
+                  <img
                     :src="product.image ?? undefined"
                     :alt="product.name ?? undefined"
                     class="product-image" />
