@@ -300,7 +300,7 @@
               </thead>
               <tbody>
                 <tr 
-                  v-for="(spec, idx) in newSpecsLocal" 
+                  v-for="(spec, idx) in props.newSpecs" 
                   :key="spec.id"
                   :draggable="true"
                   @dragstart="onDragStart($event, idx)"
@@ -423,7 +423,7 @@
           <div class="edit-section__content">
             <button 
               class="btn btn-primary" 
-              @click="showValidation(); addProduct()" 
+              @click="syncSpecsAndAddProduct" 
               :disabled="!isFormValid"
               :class="{ 'btn--disabled': !isFormValid }"
             >
@@ -925,10 +925,6 @@ const newSpecLocal = ref(props.newSpec)
 watch(() => props.newSpec, (val) => { newSpecLocal.value = val })
 watch(newSpecLocal, (val) => { emit('update:newSpec', val) })
 
-const newSpecsLocal = ref(props.newSpecs)
-watch(() => props.newSpecs, (val) => { newSpecsLocal.value = val })
-watch(newSpecsLocal, (val) => { emit('update:newSpecs', val) })
-
 // Initialize additional requirements if not present
 if (!newProdLocal.value.additional_requirements) {
   newProdLocal.value.additional_requirements = ''
@@ -1031,21 +1027,19 @@ const previewSpecsFromProduct = () => {
 // Подтверждение копирования характеристик
 const confirmCopySpecs = () => {
   // Очищаем текущие характеристики
-  newSpecsLocal.value = []
-  // Копируем характеристики в пустые поля
+  props.newSpecs.splice(0, props.newSpecs.length)
+  // Копируем характеристики с id
   previewedSpecs.value.forEach((spec, index) => {
-    newSpecsLocal.value.push({ 
+    props.newSpecs.push({
       id: index + 1,
-      key: spec.key, 
+      key: spec.key,
       value: spec.value,
       showKeySuggestions: false,
       showValueSuggestions: false,
       show_in_filters: false
     })
   })
-  // Синхронизируем с родителем!
-  emit('update:newSpecs', [...newSpecsLocal.value])
-  // Очищаем предварительный просмотр и выбор
+  emit('update:newSpecs', [...props.newSpecs])
   clearCopySelection()
 }
 
@@ -1082,7 +1076,7 @@ const showSpecSuggestions = (spec: any) => {
 const hideSpecSuggestions = () => {
   setTimeout(() => {
     specKeySuggestions.value = []
-    newSpecsLocal.value.forEach(spec => {
+    props.newSpecs.forEach(spec => {
       spec.showKeySuggestions = false
     })
   }, 200)
@@ -1121,7 +1115,7 @@ const showValueSuggestions = (spec: Spec) => {
 const hideValueSuggestions = () => {
   setTimeout(() => {
     specValueSuggestions.value = []
-    newSpecsLocal.value.forEach(spec => {
+    props.newSpecs.forEach(spec => {
       spec.showValueSuggestions = false
     })
   }, 200)
@@ -1315,11 +1309,11 @@ const addSpec = (id: number) => emit('addSpec', id)
 const removeSpec = (id: number, idx: number) => emit('removeSpec', id, idx)
 const addNewSpec = () => {
   if (newSpecLocal.value.key && newSpecLocal.value.value) {
-    const newId = newSpecsLocal.value.length > 0 
-      ? Math.max(...newSpecsLocal.value.map(s => s.id)) + 1 
+    const newId = props.newSpecs.length > 0 
+      ? Math.max(...props.newSpecs.map(s => s.id)) + 1 
       : 1
     
-    newSpecsLocal.value.push({ 
+    props.newSpecs.push({ 
       id: newId,
       key: newSpecLocal.value.key, 
       value: newSpecLocal.value.value,
@@ -1612,7 +1606,7 @@ const onDrop = (event: DragEvent, dropIndex: number) => {
   event.preventDefault()
   if (draggedIndex.value === null || draggedIndex.value === dropIndex) return
   
-  const specs = [...newSpecsLocal.value]
+  const specs = [...props.newSpecs]
   const draggedSpec = specs[draggedIndex.value]
   specs.splice(draggedIndex.value, 1)
   specs.splice(dropIndex, 0, draggedSpec)
@@ -1621,8 +1615,8 @@ const onDrop = (event: DragEvent, dropIndex: number) => {
   specs.forEach((spec, index) => {
     spec.id = index + 1
   })
-  
-  newSpecsLocal.value = specs
+  props.newSpecs.splice(0, props.newSpecs.length, ...specs)
+  // props.newSpecs = specs
   draggedIndex.value = null
 }
 
@@ -1793,6 +1787,19 @@ const uploadGallery = async () => {
   if (!galleryFiles.value.length) return
   const paths = await uploadGalleryFiles(galleryFiles.value)
   addGalleryImages(paths)
+}
+
+// Добавьте функцию для сброса характеристик
+function resetNewSpecsLocal() {
+  props.newSpecs.splice(0, props.newSpecs.length)
+}
+
+function syncSpecsAndAddProduct() {
+  emit('update:newSpecs', [...props.newSpecs])
+  nextTick(() => {
+    showValidation()
+    addProduct()
+  })
 }
 </script>
 
@@ -2726,7 +2733,6 @@ const uploadGallery = async () => {
 .copy-controls .form-control {
   flex: 1;
   min-width: 200px;
-  z-index: 99999;
   position: relative;
   background: var(--bg);
   border: 1px solid var(--border);
