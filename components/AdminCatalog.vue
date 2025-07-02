@@ -298,8 +298,9 @@
               <thead>
                 <tr>
                   <th style="width: 40px;"></th>
-                  <th style="width: 45%;">Параметр</th>
-                  <th style="width: 45%;">Значение</th>
+                  <th style="width: 35%;">Параметр</th>
+                  <th style="width: 35%;">Значение</th>
+                  <th style="width: 80px;">В фильтрах</th>
                   <th style="width: 60px;"></th>
                 </tr>
               </thead>
@@ -361,6 +362,9 @@
                       </div>
                     </div>
                   </td>
+                  <td style="text-align:center;">
+                    <input type="checkbox" v-model="spec.show_in_filters" />
+                  </td>
                   <td>
                     <button class="btn-sm" @click.prevent="removeNewSpec(idx)"><UiDeleteSmall/></button>
                   </td>
@@ -410,6 +414,9 @@
                         </div>
                       </div>
                     </div>
+                  </td>
+                  <td style="text-align:center;">
+                    <input type="checkbox" v-model="newSpecLocal.show_in_filters" />
                   </td>
                   <td>
                     <button class="btn btn-secondary btn-sm" @click.prevent="addNewSpec">Добавить</button>
@@ -620,8 +627,9 @@
                     <thead>
                       <tr>
                         <th style="width: 40px;"></th>
-                        <th style="width: 45%;">Параметр</th>
-                        <th style="width: 45%;">Значение</th>
+                        <th style="width: 35%;">Параметр</th>
+                        <th style="width: 35%;">Значение</th>
+                        <th style="width: 80px;">В фильтрах</th>
                         <th style="width: 60px;"></th>
                       </tr>
                     </thead>
@@ -683,6 +691,9 @@
                           </div>
                         </div>
                       </td>
+                      <td style="text-align:center;">
+                        <input type="checkbox" v-model="spec.show_in_filters" />
+                      </td>
                       <td>
                         <button
                           @click.prevent="removeSpec(p.id, idx)"
@@ -691,7 +702,7 @@
                     </tr>
                     <tr class="new-spec-row">
                       <td></td>
-                      <td colspan="2">
+                      <td colspan="3">
                         <button
                           class="btn btn-secondary btn-sm"
                           @click.prevent="addSpec(p.id)"
@@ -803,6 +814,7 @@ interface Spec {
   value: string;
   showKeySuggestions?: boolean;
   showValueSuggestions?: boolean;
+  show_in_filters?: boolean;
 }
 
 interface AdminCategory {
@@ -838,6 +850,7 @@ interface Characteristic {
   value: string
   showKeySuggestions?: boolean
   showValueSuggestions?: boolean
+  show_in_filters?: boolean
 }
 
 // Props
@@ -1049,7 +1062,8 @@ const confirmCopySpecs = () => {
       key: spec.key, 
       value: spec.value,
       showKeySuggestions: false,
-      showValueSuggestions: false
+      showValueSuggestions: false,
+      show_in_filters: false
     })
   })
   
@@ -1319,7 +1333,8 @@ const addNewSpec = () => {
       key: newSpecLocal.value.key, 
       value: newSpecLocal.value.value,
       showKeySuggestions: false,
-      showValueSuggestions: false
+      showValueSuggestions: false,
+      show_in_filters: false
     })
     newSpecLocal.value.key = ''
     newSpecLocal.value.value = ''

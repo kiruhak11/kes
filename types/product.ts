@@ -2,6 +2,7 @@ export interface Characteristic {
   id: number;
   key: string;
   value: string;
+  show_in_filters?: boolean;
 }
 
 export interface Product {

@@ -100,7 +100,7 @@ img {
 
 .btn {
   display: inline-block;
-  padding: 12px 24px;
+  padding: 12px 16px;
   border-radius: 4px;
   font-weight: 500;
   text-align: center;
