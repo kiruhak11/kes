@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import CertificateModal from '~/components/CertificateModal.vue';
+import { useHead } from 'nuxt/app';
 
 interface Certificate {
   id: number;
@@ -119,6 +120,41 @@ const nextCertificate = () => {
     selectedCertificate.value = certificates[nextIndex];
   }
 };
+
+useHead({
+  title: 'Сертификаты — КотлоЭнергоСнаб',
+  meta: [
+    { name: 'description', content: 'Сертификаты и декларации соответствия продукции КотлоЭнергоСнаб.' },
+    { name: 'keywords', content: 'КотлоЭнергоСнаб, сертификаты, декларации, соответствие, Барнаул' },
+    { name: 'author', content: 'КотлоЭнергоСнаб' },
+    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
+    { property: 'og:title', content: 'Сертификаты — КотлоЭнергоСнаб' },
+    { property: 'og:description', content: 'Сертификаты и декларации соответствия продукции КотлоЭнергоСнаб.' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:url', content: 'https://kes-sib.ru/certificates' },
+    { property: 'og:image', content: '/images/hero1.jpg' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'Сертификаты — КотлоЭнергоСнаб' },
+    { name: 'twitter:description', content: 'Сертификаты и декларации соответствия продукции КотлоЭнергоСнаб.' },
+    { name: 'robots', content: 'index, follow' }
+  ],
+  link: [
+    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
+    { rel: 'canonical', href: 'https://kes-sib.ru/certificates' }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "КотлоЭнергоСнаб",
+        "url": "https://kes-sib.ru/",
+        "logo": "https://kes-sib.ru/favicon.ico"
+      })
+    }
+  ]
+});
 </script>
 
 <style scoped>

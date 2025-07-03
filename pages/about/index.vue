@@ -106,6 +106,88 @@
   
   <script setup lang="ts">
 import { contacts } from '~/data/contacts';
+import { useHead } from 'nuxt/app';
+
+useHead({
+  title: 'О компании КотлоЭнергоСнаб — Котельный завод КЭС Барнаул',
+  meta: [
+    {
+      name: 'description',
+      content: 'О компании КотлоЭнергоСнаб: производство котлов, котельного оборудования, монтаж, сервис, Барнаул.'
+    },
+    {
+      name: 'keywords',
+      content: 'КотлоЭнергоСнаб, о компании, котельный завод, Барнаул, котлы, производство, монтаж, сервис'
+    },
+    {
+      name: 'author',
+      content: 'КотлоЭнергоСнаб'
+    },
+    {
+      property: 'og:site_name',
+      content: 'КотлоЭнергоСнаб'
+    },
+    {
+      property: 'og:title',
+      content: 'О компании КотлоЭнергоСнаб — Котельный завод КЭС Барнаул'
+    },
+    {
+      property: 'og:description',
+      content: 'О компании КотлоЭнергоСнаб: производство котлов, котельного оборудования, монтаж, сервис, Барнаул.'
+    },
+    {
+      property: 'og:type',
+      content: 'website'
+    },
+    {
+      property: 'og:url',
+      content: 'https://kes-sib.ru/about/'
+    },
+    {
+      property: 'og:image',
+      content: '/images/hero1.jpg'
+    },
+    {
+      name: 'twitter:card',
+      content: 'summary_large_image'
+    },
+    {
+      name: 'twitter:title',
+      content: 'О компании КотлоЭнергоСнаб — Котельный завод КЭС Барнаул'
+    },
+    {
+      name: 'twitter:description',
+      content: 'О компании КотлоЭнергоСнаб: производство котлов, котельного оборудования, монтаж, сервис, Барнаул.'
+    },
+    {
+      name: 'robots',
+      content: 'index, follow'
+    }
+  ],
+  link: [
+    {
+      rel: 'icon',
+      href: '/favicon.ico',
+      type: 'image/x-icon'
+    },
+    {
+      rel: 'canonical',
+      href: 'https://kes-sib.ru/about/'
+    }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "КотлоЭнергоСнаб",
+        "url": "https://kes-sib.ru/",
+        "logo": "https://kes-sib.ru/favicon.ico"
+      })
+    }
+  ]
+});
   </script>
   
   <style lang="scss" scoped>

@@ -63,6 +63,7 @@
 <script setup lang="ts">
 import { contacts } from '~/data/contacts';
 import { ref } from 'vue';
+import { useHead } from 'nuxt/app';
 
 interface Vacancy {
   title: string;
@@ -142,6 +143,41 @@ function closeVacancyModal() {
 
 const dutyIcon = `<svg width='20' height='20' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='2' y='2' width='16' height='16' rx='4' fill='#007bff'/><path d='M7 10.5l2 2 4-4' stroke='#fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>`;
 const reqIcon = `<svg width='20' height='20' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='2' y='2' width='16' height='16' rx='4' fill='#28a745'/><path d='M7 8h6M7 12h6' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg>`;
+
+useHead({
+  title: 'Вакансии — КотлоЭнергоСнаб',
+  meta: [
+    { name: 'description', content: 'Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.' },
+    { name: 'keywords', content: 'КотлоЭнергоСнаб, вакансии, работа, Барнаул, котельный завод' },
+    { name: 'author', content: 'КотлоЭнергоСнаб' },
+    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
+    { property: 'og:title', content: 'Вакансии — КотлоЭнергоСнаб' },
+    { property: 'og:description', content: 'Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:url', content: 'https://kes-sib.ru/vacancies' },
+    { property: 'og:image', content: '/images/hero1.jpg' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'Вакансии — КотлоЭнергоСнаб' },
+    { name: 'twitter:description', content: 'Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.' },
+    { name: 'robots', content: 'index, follow' }
+  ],
+  link: [
+    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
+    { rel: 'canonical', href: 'https://kes-sib.ru/vacancies' }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "КотлоЭнергоСнаб",
+        "url": "https://kes-sib.ru/",
+        "logo": "https://kes-sib.ru/favicon.ico"
+      })
+    }
+  ]
+});
 </script>
 
 <style scoped>

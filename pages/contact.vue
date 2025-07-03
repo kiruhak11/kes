@@ -68,6 +68,7 @@
 import { ref, onMounted } from "vue";
 import { useModalStore } from "~/stores/modal";
 import { useRoute } from "vue-router";
+import { useHead } from 'nuxt/app';
 
 const name = ref("");
 const phone = ref("");
@@ -84,6 +85,41 @@ onMounted(() => {
   if (serviceParam && typeof serviceParam === 'string') {
     selectedService.value = decodeURIComponent(serviceParam);
   }
+});
+
+useHead({
+  title: 'Контакты — КотлоЭнергоСнаб',
+  meta: [
+    { name: 'description', content: 'Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.' },
+    { name: 'keywords', content: 'КотлоЭнергоСнаб, контакты, заявка, Барнаул, котлы, оборудование' },
+    { name: 'author', content: 'КотлоЭнергоСнаб' },
+    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
+    { property: 'og:title', content: 'Контакты — КотлоЭнергоСнаб' },
+    { property: 'og:description', content: 'Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:url', content: 'https://kes-sib.ru/contact' },
+    { property: 'og:image', content: '/images/hero1.jpg' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'Контакты — КотлоЭнергоСнаб' },
+    { name: 'twitter:description', content: 'Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.' },
+    { name: 'robots', content: 'index, follow' }
+  ],
+  link: [
+    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
+    { rel: 'canonical', href: 'https://kes-sib.ru/contact' }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "КотлоЭнергоСнаб",
+        "url": "https://kes-sib.ru/",
+        "logo": "https://kes-sib.ru/favicon.ico"
+      })
+    }
+  ]
 });
 
 async function submitForm() {
