@@ -57,6 +57,15 @@ export default defineNuxtConfig({
     "rubillex_frog-modal",
     "nuxt-file-storage",
     "@nuxt/image",
+    ["@nuxtjs/sitemap", {
+      siteUrl: 'https://kes-sib.ru',
+      xsl: false,
+      defaults: {
+        changefreq: 'weekly',
+        priority: 0.7,
+      },
+      // Можно добавить фильтрацию/исключения при необходимости
+    }],
   ],
   piniaPluginPersistedstate: {
     storage: "localStorage",
