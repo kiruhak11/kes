@@ -43,10 +43,7 @@
           <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
             <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
               <NuxtLink :to="`/catalog/${category.slug}`">
-                <NuxtImg
-                  :placeholder="true"
-                  sizes="400px xxs:900px md:1200px"
-                  format="webp"
+                <img
                   :src="category.images[0] ?? '/images/placeholders/placeholder.png'" 
                   :alt="`${category.title} - котельное оборудование`"
                 />
