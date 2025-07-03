@@ -549,6 +549,12 @@ const formatPhoneNumber = (event: Event) => {
 }
 const modalStore = useModalStore();
 async function calculate() {
+  // Валидация телефона: минимум 10 цифр (без кода страны)
+  const phoneDigits = phoneNumber.value.replace(/\D/g, '');
+  if (!phoneDigits || phoneDigits.length < 10) {
+    modalStore.showError('Пожалуйста, введите корректный номер телефона.');
+    return;
+  }
   const payload = {
     text: `📩 Новая заявка:
 - Телефон: ${phoneNumber.value}

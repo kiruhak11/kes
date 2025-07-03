@@ -161,7 +161,7 @@
         </div>
 
         <!-- Товары -->
-        <div class="products-section" v-scroll-reveal="'fade-in-up'">
+        <div class="products-section" >
           <div class="products-header">
             <div class="products-count" v-if="filteredProducts.length > 0">
               Найдено товаров: <strong>{{ filteredProducts.length }}</strong>
@@ -241,30 +241,32 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted, nextTick } from 'vue'
   import { useCartStore } from '~/stores/cart'
   import { useRoute, useRouter } from 'vue-router'
   import CommercialOfferModal from '~/components/CommercialOfferModal.vue'
   import type { Characteristic } from '~/types/product'
+  import { useNuxtApp } from 'nuxt/app'
 
+  const { $vScrollReveal } = useNuxtApp()
 
-const showCommercialOfferModal = ref(false)
-const selectedProduct = ref<Product | null>(null)
+  const showCommercialOfferModal = ref(false)
+  const selectedProduct = ref<Product | null>(null)
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.src = '/images/placeholders/product-placeholder.png'
-}
+  const handleImageError = (event: Event) => {
+    const img = event.target as HTMLImageElement
+    img.src = '/images/placeholders/product-placeholder.png'
+  }
 
-const openCommercialOfferModal = (product: Product) => {
-  selectedProduct.value = product
-  showCommercialOfferModal.value = true
-}
+  const openCommercialOfferModal = (product: Product) => {
+    selectedProduct.value = product
+    showCommercialOfferModal.value = true
+  }
 
-const closeCommercialOfferModal = () => {
-  showCommercialOfferModal.value = false
-  selectedProduct.value = null
-}
+  const closeCommercialOfferModal = () => {
+    showCommercialOfferModal.value = false
+    selectedProduct.value = null
+  }
   const transliterate = (text: string): string => {
     const mapping: { [key: string]: string } = {
       'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
@@ -724,6 +726,15 @@ const closeCommercialOfferModal = () => {
     })
     return count
   })
+
+  // Следим за изменениями в paginatedProducts, чтобы обновить scroll-reveal
+  watch(paginatedProducts, async () => {
+    await nextTick();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('scroll'));
+      window.dispatchEvent(new Event('resize'));
+    }
+  }, { immediate: true, deep: true })
   </script>
   
   <style scoped>

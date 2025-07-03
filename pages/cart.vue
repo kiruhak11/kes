@@ -28,7 +28,7 @@
             <div class="cart-item-details">
               <h3>{{ item.name }}</h3>
               <p class="cart-item-price">
-                {{ item.price.toLocaleString() }} &#8381;
+                {{ (typeof item.price === 'number' && typeof item.quantity === 'number' ? item.price : 0).toLocaleString() }} &#8381;
               </p>
               <div class="cart-item-quantity">
                 <button

@@ -274,6 +274,15 @@ const transliterate = (text: string): string => {
   return text.split('').map(char => mapping[char] || char).join('');
 };
 
+const generateProductSlug = (product: { name?: string | null }): string => {
+  if (!product || !product.name) return ''
+  return transliterate(product.name)
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
 interface Product {
   id: number
   name: string
@@ -454,24 +463,30 @@ const filteredBoilers = computed(() => {
 })
 
 // Обработчик выбора товара
-const selectProduct = (product: Product) => {
-  searchQuery.value = product.name
+const selectProduct = async (product: Product) => {
+  let categorySlug = product.category_slug;
+
+  // Если slug категории отсутствует, получаем его
+  if (!categorySlug) {
+    try {
+      const { data: categoryData }: any = await useFetch(`/api/categories/by-product/${product.id}`);
+      if (categoryData.value && categoryData.value.category) {
+        categorySlug = categoryData.value.category.slug;
+      } else {
+        console.error('Category not found for product:', product.id);
+        return; // Не переходим, если категория не найдена
+      }
+    } catch (error) {
+      console.error('Error fetching category slug:', error);
+      return; // Не переходим при ошибке
+    }
+  }
+
+  const productSlug = generateProductSlug(product)
+  router.push(`/catalog/${categorySlug}/${productSlug}`)
   showSearchResults.value = false
   showMobileSearch.value = false
-  // Используем category_slug если он есть, иначе генерируем из category
-  const categorySlug = product.category_slug || transliterate(product.category).toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-  
-  // Используем существующий slug если он есть, иначе генерируем из имени
-  const productSlug = product.slug || transliterate(product.name).toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-  
-  // Переходим на страницу товара
-  navigateTo(`/catalog/${categorySlug}/${productSlug}`)
+  searchQuery.value = ''
 }
 
 // Обработчик выбора подсказки

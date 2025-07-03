@@ -10,7 +10,6 @@
         <span class="breadcrumbs-separator">→</span>
         <span>{{ product?.name || 'Товар' }}</span>
       </nav>
-
       <div v-if="product" class="product-detail-card" v-scroll-reveal="'fade-in-up'">
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
@@ -307,31 +306,13 @@
           </div>
         </div>
       </div>
-      <div v-else class="no-product-message">
-        Товар не найден.
-      </div>
-      <CommercialOfferModal
-        v-if="showCommercialOfferModal && selectedProduct"
-        :is-open="showCommercialOfferModal"
-        :product="selectedProduct"
-        @close="closeCommercialOfferModal"
-      />
-      <div v-if="selectedCertificate" class="cert-modal" @click="closeCertificateModal">
-        <div class="cert-modal-content" @click.stop>
-          <button class="cert-modal-close" @click="closeCertificateModal">&times;</button>
-          <div class="cert-modal-title">{{ selectedCertificate.title }}</div>
-          <img
-            :src="selectedCertificate.image"
-            :alt="selectedCertificate.title"
-            class="cert-modal-img" />
-        </div>
-      </div>
+      <!-- v-else ничего не рендерим, чтобы не было мигания "Товар не найден" -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect } from 'vue';
+import { ref, computed, watch, watchEffect, onUnmounted } from 'vue';
 import { useCartStore } from '~/stores/cart';
 import { contacts } from '~/data/contacts';
 import { useModalStore } from '~/stores/modal';
@@ -412,6 +393,12 @@ const productSlug = computed(() => {
   return typeof slug === 'string' ? slug : Array.isArray(slug) ? slug[0] : ''
 })
 
+// Добавляем проверку, активен ли маршрут продукта
+const isProductRouteActive = computed(() => {
+  // Мы считаем маршрут активным, если есть и категория, и продукт
+  return !!(route.params.category && route.params.product);
+});
+
 // Fetch products
 const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/products`, {
   query: computed(() => ({
@@ -429,81 +416,77 @@ const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/produc
 // Initialize products as an empty array
 const products = ref<Product[]>([])
 
+watchEffect(() => {
+  if (fetchError.value) {
+    console.error('Error fetching products:', fetchError.value)
+    products.value = []
+  } else if (fetchedProducts.value) {
+    // Cast the response to unknown first, then to APIProduct[]
+    const apiProducts = fetchedProducts.value as unknown as APIProduct[]
+    products.value = apiProducts.map(product => ({
+      id: product.id,
+      name: product.name || '',
+      description: product.description || '',
+      extendedDescription: product.extendedDescription || '',
+      price: product.price || 0,
+      image: product.image || '',
+      category: '', // Will be filled from category data
+      category_slug: '', // Will be filled from category data
+      slug: '', // Will be generated
+      additional_images: product.additional_images || [],
+      specs: Array.isArray(product.specs) ? product.specs : [],
+      delivery_set: product.delivery_set || '',
+      connection_scheme: product.connection_scheme || '',
+      additional_requirements: product.additional_requirements || '',
+      required_products: product.required_products || []
+    }))
+  } else {
+    products.value = []
+  }
+})
+
 const openOfferModal = () => {
   modalStore.openModal('Уточнить наличие', `Пожалуйста, уточните наличие товара у нашего менеджера. \n\n${contacts.phone[0]}`, 'Я позвоню', () => {
     router.push(`tel:${contacts.phone[0]}`)
   })
 }
 
-// Handle fetch errors
-if (fetchError.value) {
-  console.error('Error fetching products:', fetchError.value)
-  products.value = []
-} else if (fetchedProducts.value) {
-  // Cast the response to unknown first, then to APIProduct[]
-  const apiProducts = fetchedProducts.value as unknown as APIProduct[]
-  products.value = apiProducts.map(product => ({
-    id: product.id,
-    name: product.name || '',
-    description: product.description || '',
-    extendedDescription: product.extendedDescription || '',
-    price: product.price || 0,
-    image: product.image || '',
-    category: '', // Will be filled from category data
-    category_slug: '', // Will be filled from category data
-    slug: '', // Will be generated
-    additional_images: product.additional_images || [],
-    specs: Array.isArray(product.specs) ? product.specs : [],
-    delivery_set: product.delivery_set || '',
-    connection_scheme: product.connection_scheme || '',
-    additional_requirements: product.additional_requirements || '',
-    required_products: product.required_products || []
-  }))
-} else {
-  products.value = []
-}
+// Заменяем currentProduct на ref, чтобы избежать мигания при навигации
+const product = ref<Product | null>(null);
 
-// Get the current product
-const currentProduct = computed(() => {
-  if (!products.value || products.value.length === 0) { 
-    return null
+// Вычисляемое свойство для поиска товара по slug
+const searchedProduct = computed(() => {
+  if (!productSlug.value || !products.value || products.value.length === 0) {
+    return null;
   }
-   
-  
-  // Find product by matching slug or generated slug from name
-  const foundProduct = products.value.find(p => {
+  return products.value.find(p => {
     const generatedSlug = transliterate((p.name || '').toLowerCase())
       .toLowerCase()
       .replace(/[^a-z0-9 -]/g, '')
       .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
+      .replace(/-+/g, '-');
+    return p.slug === productSlug.value || generatedSlug === productSlug.value;
+  }) || null;
+});
 
-    return p.slug === productSlug.value || generatedSlug === productSlug.value
-  })
-  
-  if (!foundProduct) {
-    console.error('Product not found:', {
-      productSlug: productSlug.value,
-      availableProducts: products.value.map(p => ({
-        name: p.name,
-        slug: p.slug
-      }))
-    })
-  } else { 
+// Обновляем `product` только когда это необходимо
+watch(searchedProduct, (newProduct) => {
+  if (newProduct) {
+    product.value = newProduct;
+  } else if (productSlug.value) {
+    // Если есть slug, но товар не найден
+    product.value = null;
   }
-
-  return foundProduct || null
-})
+  // Если slug пуст (навигация), ничего не делаем, `product` сохраняет значение
+}, { immediate: true });
 
 // Handle product not found
-watch(currentProduct, (product) => {
-  if (!product && products.value.length > 0) { 
-    router.push(`/catalog/${categorySlug.value}`)
+watch(product, (newProduct, oldProduct) => {
+  // Перенаправляем, только если мы на странице товара и товар не найден
+  if (!isLoadingProducts.value && !newProduct && products.value.length > 0 && isProductRouteActive.value) {
+    router.push(`/catalog/${categorySlug.value}`);
   }
-}, { immediate: true })
-
-// Use currentProduct in the template
-const product = currentProduct
+});
 
 const capitalize = (s: string) => {
   if (typeof s !== 'string') return ''
@@ -861,6 +844,25 @@ const navigateToProduct = (product: Product | undefined) => {
   if (!product) return
   router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)
 }
+
+onUnmounted(() => {
+  products.value = [];
+  currentImageIndex.value = 0;
+  activeTab.value = 'description';
+  showCommercialOfferModal.value = false;
+  selectedProduct.value = null;
+  activeFactoryTab.value = 'certificates';
+  selectedCertificate.value = null;
+  galleryActiveIndex.value = 0;
+  categoryInfo.value = undefined;
+});
+
+const isLoadingProducts = ref(true);
+watchEffect(() => {
+  if (fetchedProducts.value || fetchError.value) {
+    isLoadingProducts.value = false;
+  }
+});
 </script>
 
 <style scoped lang="scss">

@@ -123,6 +123,13 @@ useHead({
 });
 
 async function submitForm() {
+  // Валидация: обязательно хотя бы телефон или email
+  const phoneDigits = phone.value.replace(/\D/g, '');
+  const emailValid = email.value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+  if ((!phoneDigits || phoneDigits.length < 10) && !emailValid) {
+    modalStore.showError('Пожалуйста, укажите корректный телефон или email.');
+    return;
+  }
   const payload = {
     text: `📩 Новая заявка:
 - Имя: ${name.value}

@@ -146,3 +146,14 @@ button:hover::after, .btn:hover::after, [class*="btn"]:hover::after {
 .scroll-reveal--slide-in-right {
   transform: translateX(40px);
 }
+
+// Nuxt page transition: page-fade
+.page-fade-enter-active, .page-fade-leave-active {
+  transition: opacity 0.3s;
+}
+.page-fade-enter-from, .page-fade-leave-to {
+  opacity: 0;
+}
+.page-fade-enter-to, .page-fade-leave-from {
+  opacity: 1;
+}
