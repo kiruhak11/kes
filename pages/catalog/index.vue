@@ -10,7 +10,7 @@
         
         <div class="catalog-grid">
           <div 
-            v-for="(category, index) in categories" 
+            v-for="(category, index) in paginatedCategories" 
             :key="category.slug" 
             class="catalog-item"
             v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
@@ -37,12 +37,29 @@
           </NuxtLink>
           </div>
         </div>
+        <div class="pagination" v-if="totalPages > 1">
+          <button 
+            class="btn btn-secondary" 
+            :disabled="currentPage === 1"
+            @click="goToPage(currentPage - 1)"
+          >
+            Назад
+          </button>
+          <span class="page-info">Страница {{ currentPage }} из {{ totalPages }}</span>
+          <button 
+            class="btn btn-secondary" 
+            :disabled="currentPage === totalPages"
+            @click="goToPage(currentPage + 1)"
+          >
+            Вперед
+          </button>
+        </div>
       </div>
     </div>
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount } from 'vue';
+  import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
   
   interface Category {
     id: string;
@@ -87,6 +104,20 @@
       clearInterval(intervalId);
     }
   });
+  
+  // Пагинация
+  const currentPage = ref(1);
+  const itemsPerPage = 20;
+  const totalPages = computed(() => Math.ceil(categories.value.length / itemsPerPage));
+  const paginatedCategories = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return categories.value.slice(start, start + itemsPerPage);
+  });
+  function goToPage(page: number) {
+    if (page >= 1 && page <= totalPages.value) {
+      currentPage.value = page;
+    }
+  }
   </script>
   
   <style scoped>
