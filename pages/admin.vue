@@ -245,8 +245,13 @@ const availableFuels = ['Природный газ', 'Дизельное топ�
 // Предзаготовленные картинки
 const presetImages = [
   '/images/cutouts/kotel1.png',
-  '/images/cutouts/kotel2.png',
-  '/images/cutouts/kotel3.png'
+  '/images/cutouts/dimosos_pered.png',
+  '/images/cutouts/dimosos_zad.png',
+  '/images/cutouts/kva_gaz.png',
+  '/images/cutouts/kva_ygol.png',
+  '/images/cutouts/tchzm.png',
+  '/images/cutouts/tlph.png',
+  '/images/cutouts/TSHPM.png'
 ]
 
 // add after newProdSelectedFuels definitions
