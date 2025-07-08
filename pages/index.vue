@@ -44,7 +44,7 @@
             <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
               <NuxtLink :to="`/catalog/${category.slug}`">
                 <img
-                  :src="category.images[0] ?? '/images/placeholders/placeholder.png'" 
+                  :src="Array.isArray(category.images) && category.images[0] ? category.images[0] : '/images/placeholders/placeholder.png'" 
                   :alt="`${category.title} - котельное оборудование`"
                 />
                 <h3>{{ category.title }}</h3>
@@ -404,11 +404,22 @@ interface Category {
   description: string;
 }
 const mainCategories = ref<Category[]>([]);
-const { data: fetchedCategories, error: fetchError } = await useFetch<Category[]>('/api/categories');
-if (fetchedCategories.value) {
+const { data: fetchedCategories, error: fetchError } = await useFetch<{ categories: Category[] }>('/api/categories');
+if (Array.isArray(fetchedCategories.value)) {
   mainCategories.value = fetchedCategories.value.slice(0, 3);
-} else if (fetchError.value) {
-  console.error('Error loading categories:', fetchError.value);
+} else if (
+  fetchedCategories.value &&
+  typeof fetchedCategories.value === 'object' &&
+  Array.isArray(fetchedCategories.value.categories)
+) {
+  mainCategories.value = fetchedCategories.value.categories.slice(0, 3);
+} else {
+  mainCategories.value = [];
+  if (fetchError.value) {
+    console.error('Error loading categories:', fetchError.value);
+  } else {
+    console.error('Некорректный ответ от /api/categories:', fetchedCategories.value);
+  }
 }
 
 const typeBuilding = ref('')

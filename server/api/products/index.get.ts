@@ -1,15 +1,8 @@
-import { defineEventHandler, createError } from 'h3'
-import { serverSupabaseClient } from '#supabase/server'
-import { getQuery } from 'h3'
-import type { Database } from '~/types/database.types'
+import { defineEventHandler, createError, getQuery } from 'h3'
+import prisma from '~/server/utils/prisma'
 import { convertSpecsToCharacteristics } from '~/utils/characteristics'
 
-type Product = Database['public']['Tables']['products']['Row']
-type Category = Database['public']['Tables']['categories']['Row']
-
-interface ProductWithCategory extends Omit<Product, 'category'> {
-  category?: Category | null
-}
+interface ProductWithCategory extends Record<string, any> {}
 
 interface ProductSpecs {
   power?: string
@@ -17,12 +10,7 @@ interface ProductSpecs {
   [key: string]: any
 }
 
-interface ProductWithCharacteristics extends Omit<Product, 'specs'> {
-  specs?: Characteristic[]
-  category_name?: string
-  category_slug?: string
-  slug?: string
-}
+interface ProductWithCharacteristics extends Record<string, any> {}
 
 interface Characteristic {
   id: number
@@ -50,55 +38,35 @@ function generateSlug(text: string): string {
 }
 
 export default defineEventHandler(async (event) => {
-  try { 
-    const client = await serverSupabaseClient<Database>(event)
+  try {
     const query = getQuery(event)
     const categorySlug = query.categorySlug as string | undefined
     const productSlug = query.productSlug as string | undefined
     const page = parseInt(query.page as string) || 1
     const limit = parseInt(query.limit as string) || 99999
     const offset = (page - 1) * limit
- 
 
-    // Build the base query
-    let dbQuery = client
-      .from('products')
-      .select(`
-        *,
-        categories!products_category_id_fkey (
-          id,
-          name,
-          slug
-        )
-      `, { count: 'exact' })
-
-    // Add category filter if not 'all'
+    const where: any = {}
     if (categorySlug && categorySlug !== 'all') {
-      dbQuery = dbQuery.eq('categories.slug', categorySlug)
+      where.categories = { slug: categorySlug }
     }
-
-    // Add product filter if provided and valid
     if (productSlug && productSlug !== 'undefined') {
       const productId = parseInt(productSlug)
       if (!isNaN(productId)) {
-        dbQuery = dbQuery.eq('id', productId)
+        where.id = productId
       }
     }
- 
-    // Add pagination and ordering
-    const { data: products, error, count } = await dbQuery
-      .order('id', { ascending: true })
-      .range(offset, offset + limit - 1)
 
-    if (error) {
-      console.error('Supabase query error:', error)
-      throw createError({ 
-        statusCode: 500, 
-        statusMessage: 'Failed to fetch products from Supabase',
-        data: { error: error.message }
-      })
-    }
- 
+    const [products, total] = await Promise.all([
+      prisma.products.findMany({
+        where,
+        include: { categories: true },
+        orderBy: { id: 'asc' },
+        skip: offset,
+        take: limit
+      }),
+      prisma.products.count({ where })
+    ])
 
     if (!products || products.length === 0) {
       return {
@@ -133,22 +101,22 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const totalPages = Math.ceil((count || 0) / limit)
-
     return {
       products: transformedProducts,
       pagination: {
-        total: count || 0,
+        total,
         page,
         limit,
-        totalPages
+        totalPages: Math.ceil(total / limit)
       }
     }
   } catch (e: any) {
     console.error('GET /api/products error:', e)
-    throw createError({ 
-      statusCode: e.statusCode || 500, 
-      statusMessage: e.statusMessage || 'Internal Server Error' 
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || 'Internal Server Error'
     })
   }
 })
+
+

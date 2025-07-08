@@ -45,10 +45,10 @@ interface Category {
   image: string;
   description: string;
 }
-const { data: fetchedCategories, error: fetchError } = await useFetch<Category[]>('/api/categories');
+const { data: fetchedCategories, error: fetchError } = await useFetch<{ categories: Category[] }>('/api/categories');
 const footerCategories = ref<Category[]>([]);
-if (fetchedCategories.value) {
-  footerCategories.value = fetchedCategories.value.slice(0, 5);
+if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)) {
+  footerCategories.value = fetchedCategories.value.categories.slice(0, 5);
 } else if (fetchError.value) {
   console.error('Error loading categories:', fetchError.value);
 }

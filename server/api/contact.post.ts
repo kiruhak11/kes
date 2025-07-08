@@ -1,8 +1,7 @@
 // server/api/contact.post.ts
 import { readBody, createError, defineEventHandler } from "h3";
 import { useRuntimeConfig } from "#imports";
-import { serverSupabaseClient } from '#supabase/server'
-import type { Database } from '~/types/supabase'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -31,11 +30,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Получаем клиент Supabase
-    const client = await serverSupabaseClient<Database>(event);
-
-    // Сохраняем заявку в базу данных
-    const requestData: Database['public']['Tables']['requests']['Insert'] = {
+    // Сохраняем заявку в базу данных через Prisma
+    const requestData = {
       type: body.text.includes('🛒') ? 'order' : 'contact',
       phone: body.text.match(/Телефон: (.*?)(?:\n|$)/)?.[1] || '',
       region: body.text.match(/Регион: (.*?)(?:\n|$)/)?.[1] || '',
@@ -45,21 +41,7 @@ export default defineEventHandler(async (event) => {
       raw_text: body.text,
       status: 'new'
     }
-
-    const { error: dbError } = await client
-      .from('requests')
-      .insert([requestData])
-
-    if (dbError) {
-      console.error('Error saving request to database:', {
-        error: dbError,
-        requestData: { ...requestData, raw_text: '[REDACTED]' }
-      });
-      throw createError({
-        statusCode: 500,
-        statusMessage: `Database error: ${dbError.message}`
-      });
-    }
+    await prisma.requests.create({ data: requestData })
 
     // формируем запрос к Telegram
     const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
@@ -86,9 +68,11 @@ export default defineEventHandler(async (event) => {
         statusMessage: `Telegram API Error: ${err.message}`,
       });
     }
-  } catch (error: any) {
-    // Log any unhandled errors
-    console.error('Unhandled error in contact API:', error);
-    throw error;
+  } catch (e: any) {
+    console.error('POST /api/contact error:', e)
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || 'Internal Server Error'
+    })
   }
-});
+})

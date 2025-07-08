@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model categories {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  slug        String   @unique
+  products    products[] @relation("CategoryProducts")
+}
+
+model products {
+  id                      Int      @id @default(autoincrement())
+  name                    String?
+  description             String?   @db.Text
+  extendedDescription     String?   @db.Text
+  price                   Decimal? @db.Decimal(65, 30)
+  image                   String?
+  specs                   Json?
+  category_id             String?  // uuid, relation to categories
+  additional_images       Json?    // ARRAY (text[]), используем Json для MySQL
+  category_name           String?
+  category_slug           String?
+  delivery_set            String?   @db.Text
+  connection_scheme       String?   @db.Text
+  additional_requirements String?   @db.Text
+  required_products       Json?    // ARRAY (integer[]), используем Json для MySQL
+  categories              categories? @relation(fields: [category_id], references: [id], name: "CategoryProducts")
+}
+
+model requests {
+  id            BigInt   @id @default(autoincrement())
+  type          String
+  phone         String
+  region        String?
+  type_building String?
+  fuel_type     String?
+  power_type    String?
+  raw_text      String?   @db.Text
+  status        String?  @default("new")
+  created_at    DateTime @default(now())
+}
+
+model sessions {
+  id          String   @id @default(uuid())
+  created_at  DateTime @default(now())
+  user_id     String?  @default(uuid())
+  last_active DateTime?
+}
+
+model visits {
+  id         BigInt   @id @default(autoincrement())
+  date       DateTime @db.Date
+  count      Int      @default(1)
+  created_at DateTime @default(now())
+
+  @@unique([date])
+}
+
+model country_stats {
+  country String @id
+  count   Int    @default(1)
+}
+
+model browser_stats {
+  browser String @id
+  count   Int    @default(1)
+} 
