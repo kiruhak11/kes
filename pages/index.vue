@@ -768,6 +768,10 @@ const services = [
   position: relative;
   padding-top: 80px;
   overflow: visible;
+  width: 100%;
+  max-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .catalog-card img {
   position: absolute;
@@ -970,6 +974,10 @@ const services = [
   color: inherit;
   display: block;
   cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .service-card::before {
@@ -1339,10 +1347,11 @@ const services = [
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;
+  background: var(--primary-color);
 }
 
 .btn-primary:hover {
-  background: #0056b3;
+  background: var(--primary-hover);
 }
 
 @media (max-width: 992px) {
@@ -1502,6 +1511,44 @@ const services = [
     height: 24px;
     bottom: 10px;
     right: 10px;
+  }
+}
+
+// Grid стили для совместимости
+.grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 992px) {
+  .grid-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
   }
 }
 </style>

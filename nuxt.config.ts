@@ -2,8 +2,48 @@ import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
   typescript: { strict: true },
-  css: ["@/assets/styles/global/index.scss"],
+  
+  // Экспериментальные функции для производительности
+  experimental: {
+    payloadExtraction: false,
+    renderJsonPayloads: true,
+    componentIslands: true,
+    treeshakeClientOnly: true,
+    asyncContext: true,
+    crossOriginPrefetch: true,
+  },
+
+  // Оптимизация рендеринга
+  nitro: {
+    compressPublicAssets: true,
+    minify: true,
+    prerender: {
+      crawlLinks: true,
+      routes: ['/'],
+    },
+    storage: {
+      redis: {
+        driver: 'memory',
+      },
+    },
+  },
+
+  // Оптимизация Vite
   vite: {
+    build: {
+      target: 'esnext',
+      minify: 'esbuild',
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['vue', 'vue-router'],
+            ui: ['@nuxt/image'],
+            charts: ['chart.js'],
+          },
+        },
+      },
+    },
     css: {
       preprocessorOptions: {
         scss: {
@@ -17,18 +57,38 @@ export default defineNuxtConfig({
         },
       },
     },
+    optimizeDeps: {
+      include: ['vue', 'vue-router', '@nuxt/image', 'chart.js'],
+    },
   },
+
+  // Оптимизация изображений
   image: {
     screens: {
-        default: 320,
-        xxs: 480,
-        md: 996,
-        lg: 1280,
-        sm: 640,
+      default: 320,
+      xxs: 480,
+      md: 996,
+      lg: 1280,
+      sm: 640,
     },
     format: ['webp'],
-},
+    quality: 80,
+    provider: 'ipx',
+    presets: {
+      avatar: {
+        modifiers: {
+          format: 'webp',
+          width: 50,
+          height: 50,
+        },
+      },
+    },
+  },
 
+  // Оптимизация CSS
+  css: ["@/assets/styles/global/index.scss"],
+
+  // Supabase конфигурация
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
@@ -39,6 +99,8 @@ export default defineNuxtConfig({
       exclude: ["/*"],
     },
   },
+
+  // Runtime конфигурация
   runtimeConfig: {
     public: {
       supabaseUrl:
@@ -49,6 +111,8 @@ export default defineNuxtConfig({
       adminPassword: process.env.ADMIN_PASSWORD || "admin",
     },
   },
+
+  // Модули
   modules: [
     "@nuxtjs/device",
     "@nuxtjs/supabase",
@@ -67,11 +131,35 @@ export default defineNuxtConfig({
       // Можно добавить фильтрацию/исключения при необходимости
     }],
   ],
+
+  // Pinia конфигурация
   piniaPluginPersistedstate: {
     storage: "localStorage",
   },
+
+  // File storage конфигурация
   fileStorage: {
     // Используем переменную окружения для пути к хранилищу файлов
     mount: process.env.FILE_STORAGE_MOUNT || "./public/uploads",
   },
+
+  // Оптимизация загрузки
+  app: {
+    head: {
+      link: [
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.googleapis.com',
+        },
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: '',
+        },
+      ],
+    },
+  },
+
+  // Оптимизация devtools
+  devtools: { enabled: false },
 });

@@ -35,18 +35,13 @@ useSeoMeta({
 });
 </script>
 
-<style>
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+<style lang="scss">
+// Переменные CSS перенесены в collection/_colors.scss
+// Базовые стили перенесены в global/_base.scss
+// Grid стили перенесены в отдельный файл
 
+// Только специфичные для app.vue стили
 :root {
-  --primary-color: #e31e24;
-  --primary-hover: #c41820;
-  --text-color: #333;
-  --text-light: #666;
-  --bg-color: #fff;
-  --bg-light: #f5f5f5;
-  --border-color: #ddd;
-
   /* Modal overlay */
   --frog-modal-transition: visibility 0.2s, opacity 0.2s;
   --frog-modal-overlay-opacity: 0.5;
@@ -55,126 +50,5 @@ useSeoMeta({
   /* Animation timing */
   --frog-modal-animation-duration: 0.3s;
   --frog-modal-animation-timing: ease-in-out;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: "Roboto", Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--text-color);
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-ul,
-ol {
-  list-style: none;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font: inherit;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 15px;
-}
-
-.btn {
-  display: inline-block;
-  padding: 12px 16px;
-  border-radius: 4px;
-  font-weight: 500;
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-.btn-primary {
-  background: var(--primary-color);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-
-.section-title {
-  text-align: center;
-  margin-bottom: 40px;
-  font-size: 2rem;
-}
-
-.grid {
-  display: grid;
-  gap: 20px;
-}
-
-.grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-@media (max-width: 1200px) {
-  .container {
-    max-width: 960px;
-  }
-}
-
-@media (max-width: 992px) {
-  .container {
-    max-width: 720px;
-  }
-
-  .grid-4 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    max-width: 540px;
-  }
-
-  .grid-3,
-  .grid-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 576px) {
-  .container {
-    max-width: 100%;
-  }
-
-  .grid-2,
-  .grid-3,
-  .grid-4 {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
