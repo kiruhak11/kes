@@ -99,13 +99,12 @@ import AdminCategories from '~/components/AdminCategories.vue'
 import AdminStats from '~/components/AdminStats.vue'
 import AdminFilters from '~/components/AdminFilters.vue'
 import { ref, onMounted, watch, h } from 'vue'
-import { createClient } from '@supabase/supabase-js'
-import Chart from 'chart.js/auto'
 import { useStats } from '~/composables/useStats'
 import { useModalStore } from '~/stores/modal'
 import { useFileStorage } from '~/composables/useFileStorage'
 import { convertSpecsToCharacteristics, convertCharacteristicsToSpecs } from '~/utils/characteristics'
 import { useHead } from 'nuxt/app'
+import Chart from 'chart.js/auto'
 const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
 // Добавляем объявление переменной chart
 let chart: Chart | null = null
@@ -140,11 +139,10 @@ interface Characteristic {
 }
 
 interface Category {
-  id: number
-  title: string
-  slug: string
-  image: string
-  description: string
+  id: string;
+  name: string;
+  description?: string | null;
+  slug: string;
 }
 
 interface AdminCategory {
@@ -257,15 +255,14 @@ const presetImages = [
 // add after newProdSelectedFuels definitions
 const newProdGallery = ref<string[]>([])
 
-// Move product and category loading to top-level script setup
 // First load categories
-const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<Category[]>('/api/categories')
+const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<{ categories: Category[] }>('/api/categories')
 
-if (fetchedCategories.value) {
-  categories.value = fetchedCategories.value.map(cat => ({
+if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)) {
+  categories.value = fetchedCategories.value.categories.map(cat => ({
     id: String(cat.id),
-    name: cat.title,
-    description: cat.description,
+    name: cat.name,
+    description: cat.description ?? '',
     slug: cat.slug
   }))
 } else {
@@ -310,7 +307,13 @@ if (fetchedProducts.value) {
       slug: generateSlug(product.name || ''),
       specs: characteristics,
       additional_requirements: product.additional_requirements || '',
-      required_products: product.required_products || []
+      required_products: product.required_products || [],
+      description: product.description ?? '',
+      extendedDescription: product.extendedDescription ?? '',
+      price: typeof product.price === 'number' ? product.price : Number(product.price) || 0,
+      image: product.image ?? '',
+      category_id: product.category_id,
+      category_slug: product.category_slug,
     }
   })
 } else {
@@ -420,7 +423,7 @@ async function addProduct() {
         categories.value.push({
           id: String(newCategoryData.id),
           name: newCategoryData.name,
-          description: newCategoryData.description,
+          description: newCategoryData.description ?? '',
           slug: newCategoryData.slug
         })
         
@@ -429,8 +432,8 @@ async function addProduct() {
         if (updatedCategories.value) {
           categories.value = updatedCategories.value.map(cat => ({
             id: String(cat.id),
-            name: cat.title,
-            description: cat.description,
+            name: cat.name,
+            description: cat.description ?? '',
             slug: cat.slug
           }))
         }
@@ -601,16 +604,52 @@ async function updateWithSpecs(p: Product) {
     })
 
     // Обновляем specsList для этого продукта
-    if (updatedProduct && updatedProduct.specs) {
-      specsList.value[p.id] = convertSpecsToCharacteristics(updatedProduct.specs)
+    if (updatedProduct && updatedProduct.product) {
+      const rawSpecs = updatedProduct.product.specs;
+      specsList.value[p.id] = convertSpecsToCharacteristics(
+        (rawSpecs && typeof rawSpecs === 'object' && !Array.isArray(rawSpecs)) ? rawSpecs : {}
+      );
     }
     // Обновляем сам продукт в products
     const productIndex = products.value.findIndex(prod => prod.id === p.id)
-    if (productIndex !== -1 && updatedProduct) {
+    if (productIndex !== -1 && updatedProduct && updatedProduct.product) {
+      const rawSpecs = updatedProduct.product.specs;
+      const categoryValue =
+        updatedProduct.product.category_name ??
+        (categories.value.find(c => c.id === updatedProduct.product.category_id)?.name) ??
+        '';
+      const slugValue =
+        (categories.value.find(c => c.id === updatedProduct.product.category_id)?.slug) ??
+        '';
       products.value[productIndex] = {
         ...products.value[productIndex],
-        ...updatedProduct,
-        specs: convertSpecsToCharacteristics(updatedProduct.specs)
+        id: updatedProduct.product.id,
+        name: updatedProduct.product.name ?? '',
+        description: updatedProduct.product.description ?? '',
+        extendedDescription: updatedProduct.product.extendedDescription ?? '',
+        price: typeof updatedProduct.product.price === 'number'
+          ? updatedProduct.product.price
+          : Number(updatedProduct.product.price) || 0,
+        image: updatedProduct.product.image ?? '',
+        category: categoryValue,
+        category_name: updatedProduct.product.category_name ?? '',
+        category_id: updatedProduct.product.category_id ?? '',
+        category_slug: updatedProduct.product.category_slug ?? '',
+        slug: slugValue,
+        specs: Array.isArray(rawSpecs)
+          ? convertSpecsToCharacteristics(rawSpecs)
+          : [],
+        additional_images: Array.isArray(updatedProduct.product.additional_images)
+          ? updatedProduct.product.additional_images.filter((img: any) => typeof img === 'string' && img !== null)
+          : [],
+        delivery_set: updatedProduct.product.delivery_set ?? '',
+        connection_scheme: updatedProduct.product.connection_scheme ?? '',
+        additional_requirements: updatedProduct.product.additional_requirements ?? '',
+        required_products: Array.isArray(updatedProduct.product.required_products)
+          ? updatedProduct.product.required_products
+              .map((id: any) => typeof id === 'number' ? id : Number(id))
+              .filter((id: any) => typeof id === 'number' && !isNaN(id))
+          : [],
       }
     }
     activeId.value = null
@@ -777,17 +816,6 @@ async function handleEditGalleryUpload(event: Event, p: Product) {
 }
 
 const adminTab = ref('catalog')
-
-// Supabase client
-const supabaseUrl = config.public.supabaseUrl
-const supabaseKey = config.public.supabaseKey
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Supabase configuration is missing')
-  throw new Error('Supabase configuration is missing')
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Заменяем существующие переменные для статистики
 const { visits, requests, loading, error, fetchVisits, fetchRequests } = useStats()
@@ -1023,8 +1051,8 @@ async function addCategory() {
     const data = await response.json()
     categories.value.push({
       id: data.id,
-      name: data.title,
-      description: data.description,
+      name: data.name,
+      description: data.description ?? '',
       slug: data.slug
     })
 
@@ -1061,7 +1089,7 @@ async function saveCategory() {
       },
       body: JSON.stringify({
         title: editingCategory.value.name,
-        description: editingCategory.value.description || '',
+        description: editingCategory.value.description ?? '',
         slug: editingCategory.value.slug
       })
     })
@@ -1080,7 +1108,7 @@ async function saveCategory() {
         id: updatedCategory.id,
         name: updatedCategory.name,
         slug: updatedCategory.slug,
-        description: updatedCategory.description
+        description: updatedCategory.description ?? ''
       }
     }
 

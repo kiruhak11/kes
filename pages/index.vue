@@ -61,7 +61,9 @@
               <NuxtLink :to="`/catalog/${category.slug}`">
                 <img
                   :src="
-                    category.images[0] ?? '/images/placeholders/placeholder.png'
+                    Array.isArray(category.images) && category.images[0]
+                      ? category.images[0]
+                      : '/images/placeholders/placeholder.png'
                   "
                   :alt="`${category.title} - котельное оборудование`"
                 />

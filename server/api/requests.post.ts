@@ -1,27 +1,24 @@
-import { defineEventHandler, createError } from 'h3'
-import { serverSupabaseClient } from '#supabase/server'
-import type { Database } from '~/types/supabase'
+import { defineEventHandler, createError, readBody } from 'h3'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
-    const client = await serverSupabaseClient<Database>(event)
     const body = await readBody(event)
     // Ожидаем поля: phone, region, typeBuilding, fuelType, powerType, raw_text
     const { phone, region, typeBuilding, fuelType, powerType, raw_text } = body
-    
-    const { error } = await client
-      .from('requests')
-      .insert([{ phone, region, typeBuilding, fuelType, powerType, raw_text }])
-    
-    if (error) {
-      console.error('Error creating request:', error)
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to create request'
-      })
-    }
-    
-    return { success: true }
+    const request = await prisma.requests.create({
+      data: {
+        phone,
+        region,
+        type_building: typeBuilding,
+        fuel_type: fuelType,
+        power_type: powerType,
+        raw_text,
+        type: body.type || 'contact',
+        status: 'new',
+      }
+    })
+    return { success: true, request }
   } catch (e: any) {
     console.error('POST /api/requests error:', e)
     throw createError({

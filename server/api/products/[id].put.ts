@@ -1,5 +1,5 @@
-import { defineEventHandler, readBody, createError } from 'h3'
-import { serverSupabaseClient } from '#supabase/server'
+import { defineEventHandler, createError, readBody } from 'h3'
+import prisma from '~/server/utils/prisma'
 
 interface Characteristic {
   id: number
@@ -10,48 +10,21 @@ interface Characteristic {
 
 export default defineEventHandler(async (event) => {
   try {
-    const client = await serverSupabaseClient(event)
-    const id = Number(event.context.params?.id)
+    const productId = event.context.params?.id
+    if (!productId) {
+      throw createError({ statusCode: 400, statusMessage: 'Product ID is required' })
+    }
     const body = await readBody(event)
-
-    // Сохраняем характеристики в новом формате (массив объектов)
-    const specsArray = Array.isArray(body.specs) ? body.specs : []
-
-    // Map the incoming data to match the database schema
-    const updateData = {
-      name: body.name,
-      description: body.description,
-      extendedDescription: body.extendedDescription,
-      price: body.price,
-      image: body.image,
-      category_id: body.category_id,
-      specs: specsArray, // Сохраняем как массив объектов с show_in_filters
-      additional_images: Array.isArray(body.additional_images) ? body.additional_images : null,
-      delivery_set: body.delivery_set || null,
-      connection_scheme: body.connection_scheme || null,
-      additional_requirements: body.additional_requirements || null,
-      required_products: Array.isArray(body.required_products) ? body.required_products : null
-    }
- 
-
-    const { data, error } = await client.from('products')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Supabase update error:', error.message)
-      throw createError({ statusCode: 500, statusMessage: 'Failed to update product in Supabase' })
-    }
-
-    if (!data) {
-      throw createError({ statusCode: 404, statusMessage: 'Product not found' })
-    }
-
-    return data
+    const updated = await prisma.products.update({
+      where: { id: Number(productId) },
+      data: body
+    })
+    return { success: true, product: updated }
   } catch (e: any) {
-    console.error(`PUT /api/products/${event.context.params?.id} error:`, e)
-    throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
+    console.error('PUT /api/products/[id] error:', e)
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || 'Internal Server Error'
+    })
   }
 })

@@ -1,38 +1,19 @@
 import { defineEventHandler, createError } from 'h3'
-import { serverSupabaseClient } from '#supabase/server'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
-    const client = await serverSupabaseClient(event)
-    const id = Number(event.context.params?.id)
-
-    // Сначала получаем продукт, чтобы вернуть его после удаления
-    const { data: productToDelete, error: fetchError } = await client.from('products')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (fetchError) {
-      console.error('Supabase fetch error before delete:', fetchError.message)
-      throw createError({ statusCode: 500, statusMessage: 'Failed to fetch product for deletion from Supabase' })
+    const productId = event.context.params?.id
+    if (!productId) {
+      throw createError({ statusCode: 400, statusMessage: 'Product ID is required' })
     }
-
-    if (!productToDelete) {
-      throw createError({ statusCode: 404, statusMessage: 'Product not found' })
-    }
-
-    const { error: deleteError } = await client.from('products')
-      .delete()
-      .eq('id', id)
-
-    if (deleteError) {
-      console.error('Supabase delete error:', deleteError.message)
-      throw createError({ statusCode: 500, statusMessage: 'Failed to delete product from Supabase' })
-    }
-
-    return productToDelete
+    await prisma.products.delete({ where: { id: Number(productId) } })
+    return { success: true }
   } catch (e: any) {
-    console.error(`DELETE /api/products/${event.context.params?.id} error:`, e)
-    throw createError({ statusCode: e.statusCode || 500, statusMessage: e.statusMessage || 'Internal Server Error' })
+    console.error('DELETE /api/products/[id] error:', e)
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || 'Internal Server Error'
+    })
   }
 })

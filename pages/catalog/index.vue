@@ -73,13 +73,27 @@
   const { data: fetchedCategories, pending, error: fetchError } = await useFetch<Category[]>('/api/categories');
   
   const categories = ref<Category[]>([]);
-  if (fetchedCategories.value) {
-    categories.value = fetchedCategories.value.map(cat => ({
+  if (Array.isArray(fetchedCategories.value)) {
+    categories.value = (fetchedCategories.value as any[]).map((cat: any) => ({
       ...cat,
       currentImageIndex: 0
     }));
-  } else if (fetchError.value) {
-    console.error('Error loading categories:', fetchError.value);
+  } else if (
+    fetchedCategories.value &&
+    typeof fetchedCategories.value === 'object' &&
+    Array.isArray((fetchedCategories.value as any).categories)
+  ) {
+    categories.value = ((fetchedCategories.value as any).categories as any[]).map((cat: any) => ({
+      ...cat,
+      currentImageIndex: 0
+    }));
+  } else {
+    categories.value = [];
+    if (fetchError.value) {
+      console.error('Error loading categories:', fetchError.value);
+    } else {
+      console.error('Некорректный ответ от /api/categories:', fetchedCategories.value);
+    }
   }
   
   // Автоматическая смена изображений
@@ -88,7 +102,7 @@
   const startImageRotation = () => {
     intervalId = setInterval(() => {
       categories.value.forEach(category => {
-        if (category.images.length > 1) {
+        if (Array.isArray(category.images) && category.images.length > 1) {
           category.currentImageIndex = (category.currentImageIndex + 1) % category.images.length;
         }
       });

@@ -88,24 +88,9 @@ export default defineNuxtConfig({
   // Оптимизация CSS
   css: ["@/assets/styles/global/index.scss"],
 
-  // Supabase конфигурация
-  supabase: {
-    url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_KEY,
-    redirect: false,
-    redirectOptions: {
-      login: "/auth/login",
-      callback: "/confirm",
-      exclude: ["/*"],
-    },
-  },
-
   // Runtime конфигурация
   runtimeConfig: {
     public: {
-      supabaseUrl:
-        process.env.SUPABASE_URL || "https://your-project.supabase.co",
-      supabaseKey: process.env.SUPABASE_KEY || "your-anon-key",
       telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
       telegramChatId: process.env.TELEGRAM_CHAT_ID,
       adminPassword: process.env.ADMIN_PASSWORD || "admin",
@@ -115,7 +100,6 @@ export default defineNuxtConfig({
   // Модули
   modules: [
     "@nuxtjs/device",
-    "@nuxtjs/supabase",
     "@pinia/nuxt",
     "pinia-plugin-persistedstate/nuxt",
     "rubillex_frog-modal",
