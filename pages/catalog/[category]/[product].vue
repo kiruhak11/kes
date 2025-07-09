@@ -1,41 +1,95 @@
 <template>
   <div class="product-detail-page">
     <div class="container">
-      <nav class="breadcrumbs" v-scroll-reveal="'fade-in'">
+      <!-- Убираем v-scroll-reveal для мобильных -->
+      <nav
+        class="breadcrumbs"
+        :class="{ 'no-reveal': isMobile }"
+        v-scroll-reveal="!isMobile && 'fade-in'"
+      >
         <NuxtLink to="/">Главная</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
         <NuxtLink to="/catalog">Каталог</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
-        <NuxtLink :to="`/catalog/${categorySlug}`">{{ categoryInfo?.title || 'Категория' }}</NuxtLink>
+        <NuxtLink :to="`/catalog/${categorySlug}`">{{
+          categoryInfo?.title || "Категория"
+        }}</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
-        <span>{{ product?.name || 'Товар' }}</span>
+        <span>{{ product?.name || "Товар" }}</span>
       </nav>
-      <div v-if="product" class="product-detail-card" v-scroll-reveal="'fade-in-up'">
+
+      <!-- Индикатор загрузки -->
+      <div
+        v-if="isLoadingProducts || isLoadingCategory"
+        class="loading-container"
+      >
+        <UiLoader />
+        <p>Загрузка товара...</p>
+      </div>
+
+      <!-- Сообщение об ошибке -->
+      <div v-else-if="fetchError || categoryError" class="error-container">
+        <p class="error-message">
+          {{
+            fetchError?.message ||
+            categoryError?.message ||
+            "Произошла ошибка при загрузке данных"
+          }}
+        </p>
+        <button class="retry-button" @click="retryLoading">
+          Попробовать снова
+        </button>
+      </div>
+
+      <div
+        v-else-if="product"
+        class="product-detail-card"
+        :class="{ 'no-reveal': isMobile }"
+        v-scroll-reveal="!isMobile && 'fade-in-up'"
+      >
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
-          <div class="product-gallery" v-scroll-reveal="'slide-in-left'">
+          <div
+            class="product-gallery"
+            :class="{ 'no-reveal': isMobile }"
+            v-scroll-reveal="!isMobile && 'slide-in-left'"
+          >
             <!-- Основное изображение -->
             <div class="main-image-container">
-              <button v-if="imageList.length > 1" class="gallery-nav prev" @click="prevImage">
+              <button
+                v-if="imageList.length > 1"
+                class="gallery-nav prev"
+                @click="prevImage"
+              >
                 <i class="fas fa-chevron-left"></i>
               </button>
               <img
-                :src="imageList[currentImageIndex] || '/images/placeholders/placeholder.png'" 
-                :alt="product.name ? String(product.name) : ''" 
-                class="main-image" 
+                :src="
+                  imageList[currentImageIndex] ||
+                  '/images/placeholders/placeholder.png'
+                "
+                :alt="product.name ? String(product.name) : ''"
+                class="main-image"
               />
-              <button v-if="imageList.length > 1" class="gallery-nav next" @click="nextImage">
+              <button
+                v-if="imageList.length > 1"
+                class="gallery-nav next"
+                @click="nextImage"
+              >
                 <i class="fas fa-chevron-right"></i>
               </button>
             </div>
-            
+
             <!-- Миниатюры -->
             <div v-if="imageList.length > 1" class="thumbnails-container">
               <div class="thumbnails-scroll">
-                <button 
-                  v-for="(img, idx) in imageList" 
+                <button
+                  v-for="(img, idx) in imageList"
                   :key="idx"
-                  :class="['thumbnail-btn', { active: idx === currentImageIndex }]"
+                  :class="[
+                    'thumbnail-btn',
+                    { active: idx === currentImageIndex },
+                  ]"
                   @click="currentImageIndex = idx"
                 >
                   <img
@@ -47,14 +101,25 @@
             </div>
           </div>
 
-          <div class="product-info-block" v-scroll-reveal="'slide-in-right'">
+          <div
+            class="product-info-block"
+            :class="{ 'no-reveal': isMobile }"
+            v-scroll-reveal="!isMobile && 'slide-in-right'"
+          >
             <h1 class="product-title">{{ product.name }}</h1>
             <div class="product-main-row">
               <div class="product-main-description">
-                <div class="product-short-description extended-description-content" v-html="parseExtendedDescription(product.description)"></div>
+                <div
+                  class="product-short-description extended-description-content"
+                  v-html="parseExtendedDescription(product.description)"
+                ></div>
               </div>
               <div class="product-main-specs">
-                <div v-for="spec in displaySpecs.slice(0, 4)" :key="spec.id" class="spec-item">
+                <div
+                  v-for="spec in displaySpecs.slice(0, 4)"
+                  :key="spec.id"
+                  class="spec-item"
+                >
                   <span class="spec-label">{{ capitalize(spec.key) }}</span>
                   <span class="spec-dots"></span>
                   <span class="spec-value">{{ spec.value }}</span>
@@ -64,11 +129,27 @@
             <div class="product-main-actions">
               <div class="cart-action-wrap">
                 <div class="product-card__price-block">
-                  <span class="product-price">{{ product.price.toLocaleString() }} <span class="currency">₽</span></span>
+                  <span class="product-price"
+                    >{{ product.price.toLocaleString() }}
+                    <span class="currency">₽</span></span
+                  >
                   <span class="product-price-note">Цена с НДС</span>
                 </div>
-                <button v-if="!cartCount" class="buy-btn" @click="addToCart" v-scroll-reveal="'zoom-in'">
-                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z" stroke="#e31e24" stroke-width="2"/><circle cx="9" cy="20" r="1" fill="#e31e24"/><circle cx="18" cy="20" r="1" fill="#e31e24"/></svg>
+                <button
+                  v-if="!cartCount"
+                  class="buy-btn"
+                  @click="addToCart"
+                  v-scroll-reveal="'zoom-in'"
+                >
+                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                    <path
+                      d="M6 6h15l-1.5 9h-13z"
+                      stroke="#e31e24"
+                      stroke-width="2"
+                    />
+                    <circle cx="9" cy="20" r="1" fill="#e31e24" />
+                    <circle cx="18" cy="20" r="1" fill="#e31e24" />
+                  </svg>
                   <span>Положить в корзину</span>
                 </button>
                 <div v-else class="cart-counter">
@@ -78,11 +159,25 @@
                 </div>
               </div>
               <div class="product-main-actions-right">
-                <button class="offer-btn" @click="openCommercialOfferModal(product)" v-scroll-reveal="'zoom-in'">
+                <button
+                  class="offer-btn"
+                  @click="openCommercialOfferModal(product)"
+                  v-scroll-reveal="'zoom-in'"
+                >
                   Заказать коммерческое предложение
                 </button>
-                <a v-if="$device.isMobile" :href="`tel:${contacts.phone[0]}`" class="offer-btn">Уточнить наличие</a>
-                <button v-else class="offer-btn" @click="openOfferModal()" v-scroll-reveal="'zoom-in'">
+                <a
+                  v-if="$device.isMobile"
+                  :href="`tel:${contacts.phone[0]}`"
+                  class="offer-btn"
+                  >Уточнить наличие</a
+                >
+                <button
+                  v-else
+                  class="offer-btn"
+                  @click="openOfferModal()"
+                  v-scroll-reveal="'zoom-in'"
+                >
                   Уточнить наличие
                 </button>
               </div>
@@ -102,14 +197,30 @@
           </button>
         </div>
         <div class="tab-content" v-scroll-reveal="'fade-in-up'">
-          <div v-if="activeTab === 'description'" class="section-block" v-scroll-reveal="'slide-in-left'">
+          <div
+            v-if="activeTab === 'description'"
+            class="section-block"
+            v-scroll-reveal="'slide-in-left'"
+          >
             <h2 class="section-title">Описание товара</h2>
-            <div class="extended-description-content" v-html="parseExtendedDescription(product.extendedDescription)"></div>
+            <div
+              class="extended-description-content"
+              v-html="parseExtendedDescription(product.extendedDescription)"
+            ></div>
           </div>
-          <div v-if="activeTab === 'specs'" class="section-block" v-scroll-reveal="'slide-in-right'">
+          <div
+            v-if="activeTab === 'specs'"
+            class="section-block"
+            v-scroll-reveal="'slide-in-right'"
+          >
             <h2 class="section-title">Технические характеристики</h2>
             <ul class="specs-list">
-              <li v-if="displaySpecs.length > 0" v-for="spec in displaySpecs" :key="spec.id" class="spec-item">
+              <li
+                v-if="displaySpecs.length > 0"
+                v-for="spec in displaySpecs"
+                :key="spec.id"
+                class="spec-item"
+              >
                 <span class="spec-label">{{ capitalize(spec.key) }}</span>
                 <span class="spec-dots"></span>
                 <span class="spec-value">{{ spec.value }}</span>
@@ -122,34 +233,72 @@
               </li>
             </ul>
           </div>
-          <div v-if="activeTab === 'delivery'" class="section-block" v-scroll-reveal="'slide-in-left'">
+          <div
+            v-if="activeTab === 'delivery'"
+            class="section-block"
+            v-scroll-reveal="'slide-in-left'"
+          >
             <h2 class="section-title">Комплект поставки</h2>
-            <div v-if="product.delivery_set" class="delivery-set-content" v-html="product.delivery_set.replace(/\\n/g, '<br>')"></div>
-            <div v-else class="no-data-message">Информация о комплекте поставки уточняется.</div>
+            <div
+              v-if="product.delivery_set"
+              class="delivery-set-content"
+              v-html="product.delivery_set.replace(/\\n/g, '<br>')"
+            ></div>
+            <div v-else class="no-data-message">
+              Информация о комплекте поставки уточняется.
+            </div>
           </div>
-          <div v-if="activeTab === 'scheme'" class="section-block" v-scroll-reveal="'slide-in-right'">
+          <div
+            v-if="activeTab === 'scheme'"
+            class="section-block"
+            v-scroll-reveal="'slide-in-right'"
+          >
             <h2 class="section-title">Схема подключения</h2>
-            <div v-if="product.connection_scheme" class="scheme-image-container">
+            <div
+              v-if="product.connection_scheme"
+              class="scheme-image-container"
+            >
               <img
                 :src="product.connection_scheme"
                 alt="Схема подключения"
                 class="scheme-image"
               />
             </div>
-            <div v-else class="no-data-message">Схема подключения уточняется.</div>
+            <div v-else class="no-data-message">
+              Схема подключения уточняется.
+            </div>
           </div>
           <!-- Дополнительные требования -->
-          <div v-if="activeTab === 'additional'" class="section-block" v-scroll-reveal="'slide-in-right'">
+          <div
+            v-if="activeTab === 'additional'"
+            class="section-block"
+            v-scroll-reveal="'slide-in-right'"
+          >
             <h2 class="section-title">Дополнительно потребуется</h2>
-            <div v-if="product.additional_requirements || (product.required_products && product.required_products.length > 0)">
-              <div v-if="product.additional_requirements" class="additional-description">
+            <div
+              v-if="
+                product.additional_requirements ||
+                (product.required_products &&
+                  product.required_products.length > 0)
+              "
+            >
+              <div
+                v-if="product.additional_requirements"
+                class="additional-description"
+              >
                 {{ product.additional_requirements }}
               </div>
-              
-              <div v-if="product.required_products && product.required_products.length > 0" class="required-products-grid">
-                <div 
-                  v-for="prodId in product.required_products" 
-                  :key="prodId" 
+
+              <div
+                v-if="
+                  product.required_products &&
+                  product.required_products.length > 0
+                "
+                class="required-products-grid"
+              >
+                <div
+                  v-for="prodId in product.required_products"
+                  :key="prodId"
                   class="required-product-card"
                   @click="navigateToProduct(getProductById(prodId))"
                 >
@@ -163,12 +312,20 @@
                   </div>
                   <div class="required-product-card__content">
                     <div class="required-product-card__header">
-                      <h3 class="required-product-card__title">{{ getProductById(prodId)?.name }}</h3>
-                      <div class="required-product-card__price">{{ getProductById(prodId)?.price?.toLocaleString() }} ₽</div>
+                      <h3 class="required-product-card__title">
+                        {{ getProductById(prodId)?.name }}
+                      </h3>
+                      <div class="required-product-card__price">
+                        {{ getProductById(prodId)?.price?.toLocaleString() }} ₽
+                      </div>
                     </div>
-                    <p class="required-product-card__description">{{ getProductById(prodId)?.description }}</p>
+                    <p class="required-product-card__description">
+                      {{ getProductById(prodId)?.description }}
+                    </p>
                     <div class="required-product-card__footer">
-                      <button class="required-product-card__button">Подробнее →</button>
+                      <button class="required-product-card__button">
+                        Подробнее →
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -178,45 +335,102 @@
               Для данного товара не указаны дополнительные требования
             </div>
           </div>
-          <div v-if="activeTab === 'certificates'" class="section-block certificates-block" v-scroll-reveal="'fade-in-up'">
+          <div
+            v-if="activeTab === 'certificates'"
+            class="section-block certificates-block"
+            v-scroll-reveal="'fade-in-up'"
+          >
             <h2 class="section-title">Сертификаты и гарантии</h2>
             <div class="cert-gallery-slider-wrap">
               <div class="cert-gallery-scroll">
                 <div class="cert-gallery-track">
-                  <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
+                  <div
+                    v-for="certificate in certificates"
+                    :key="certificate.id"
+                    class="cert-gallery-card"
+                  >
                     <div class="cert-gallery-img-wrap">
-                      <img
-                        :src="certificate.image"
-                        :alt="certificate.title"
-                      />
+                      <img :src="certificate.image" :alt="certificate.title" />
                     </div>
-                    <div class="cert-gallery-title">{{ certificate.title }}</div>
-                    <button class="cert-gallery-btn" @click="openCertificateModal(certificate)">Просмотреть</button>
+                    <div class="cert-gallery-title">
+                      {{ certificate.title }}
+                    </div>
+                    <button
+                      class="cert-gallery-btn"
+                      @click="openCertificateModal(certificate)"
+                    >
+                      Просмотреть
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="cert-gallery-controls">
-              <div class="cert-gallery-arrow cert-gallery-arrow-left" :class="{ disabled: galleryActiveIndex === 0 }" @click="scrollGalleryBy(-1)">
-                <svg width="32" height="32" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div
+                class="cert-gallery-arrow cert-gallery-arrow-left"
+                :class="{ disabled: galleryActiveIndex === 0 }"
+                @click="scrollGalleryBy(-1)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24">
+                  <path
+                    d="M15 19l-7-7 7-7"
+                    stroke="#e31e24"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </div>
               <div class="cert-gallery-dots">
-                <span v-for="(c, idx) in certificates" :key="idx" :class="['cert-gallery-dot', { active: idx === galleryActiveIndex }]" @click="scrollToGalleryCard(idx)"></span>
+                <span
+                  v-for="(c, idx) in certificates"
+                  :key="idx"
+                  :class="[
+                    'cert-gallery-dot',
+                    { active: idx === galleryActiveIndex },
+                  ]"
+                  @click="scrollToGalleryCard(idx)"
+                ></span>
               </div>
-              <div class="cert-gallery-arrow cert-gallery-arrow-right" :class="{ disabled: galleryActiveIndex === certificates.length - 1 }" @click="scrollGalleryBy(1)">
-                <svg width="32" height="32" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div
+                class="cert-gallery-arrow cert-gallery-arrow-right"
+                :class="{
+                  disabled: galleryActiveIndex === certificates.length - 1,
+                }"
+                @click="scrollGalleryBy(1)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24">
+                  <path
+                    d="M9 5l7 7-7 7"
+                    stroke="#e31e24"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </div>
             </div>
           </div>
-          <div v-if="activeTab === 'reviews'" class="section-block reviews-block" v-scroll-reveal="'fade-in-up'">
+          <div
+            v-if="activeTab === 'reviews'"
+            class="section-block reviews-block"
+            v-scroll-reveal="'fade-in-up'"
+          >
             <h2 class="section-title">Отзывы о продукции</h2>
             <div class="review-card" v-scroll-reveal="'slide-in-left'">
               <div class="review-author">Иван Петров</div>
-              <div class="review-text">Отличный котел, быстро доставили и помогли с установкой!</div>
+              <div class="review-text">
+                Отличный котел, быстро доставили и помогли с установкой!
+              </div>
             </div>
             <div class="review-card" v-scroll-reveal="'slide-in-right'">
               <div class="review-author">ООО "ТеплоСервис"</div>
-              <div class="review-text">Работаем с этим заводом не первый год, всегда всё на высшем уровне.</div>
+              <div class="review-text">
+                Работаем с этим заводом не первый год, всегда всё на высшем
+                уровне.
+              </div>
             </div>
           </div>
         </div>
@@ -224,40 +438,100 @@
         <!-- О заводе -->
         <div class="about-factory-section" v-scroll-reveal="'fade-in-up'">
           <div class="factory-menu" v-scroll-reveal="'fade-in-up'">
-            <button v-for="tab in factoryTabs" :key="tab.key" :class="['factory-tab-btn', { active: activeFactoryTab === tab.key }]" @click="activeFactoryTab = tab.key">
+            <button
+              v-for="tab in factoryTabs"
+              :key="tab.key"
+              :class="[
+                'factory-tab-btn',
+                { active: activeFactoryTab === tab.key },
+              ]"
+              @click="activeFactoryTab = tab.key"
+            >
               {{ tab.label }}
             </button>
           </div>
           <div class="factory-content" v-scroll-reveal="'fade-in-up'">
             <div v-if="activeFactoryTab === 'certificates'">
               <section class="certificates-gallery-section">
-                <h2 class="certificates-gallery-title">Сертификаты и гарантии</h2>
-                <p class="certificates-gallery-desc">Вся продукция сертифицирована и сопровождается гарантией завода-изготовителя.</p>
+                <h2 class="certificates-gallery-title">
+                  Сертификаты и гарантии
+                </h2>
+                <p class="certificates-gallery-desc">
+                  Вся продукция сертифицирована и сопровождается гарантией
+                  завода-изготовителя.
+                </p>
                 <div class="cert-gallery-slider-wrap">
                   <div class="cert-gallery-scroll">
                     <div class="cert-gallery-track">
-                      <div v-for="certificate in certificates" :key="certificate.id" class="cert-gallery-card">
+                      <div
+                        v-for="certificate in certificates"
+                        :key="certificate.id"
+                        class="cert-gallery-card"
+                      >
                         <div class="cert-gallery-img-wrap">
                           <img
                             :src="certificate.image"
                             :alt="certificate.title"
                           />
                         </div>
-                        <div class="cert-gallery-title">{{ certificate.title }}</div>
-                        <button class="cert-gallery-btn" @click="openCertificateModal(certificate)">Просмотреть</button>
+                        <div class="cert-gallery-title">
+                          {{ certificate.title }}
+                        </div>
+                        <button
+                          class="cert-gallery-btn"
+                          @click="openCertificateModal(certificate)"
+                        >
+                          Просмотреть
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="cert-gallery-controls">
-                  <div class="cert-gallery-arrow cert-gallery-arrow-left" :class="{ disabled: galleryActiveIndex === 0 }" @click="scrollGalleryBy(-1)">
-                    <svg width="32" height="32" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <div
+                    class="cert-gallery-arrow cert-gallery-arrow-left"
+                    :class="{ disabled: galleryActiveIndex === 0 }"
+                    @click="scrollGalleryBy(-1)"
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24">
+                      <path
+                        d="M15 19l-7-7 7-7"
+                        stroke="#e31e24"
+                        stroke-width="2"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
                   </div>
                   <div class="cert-gallery-dots">
-                    <span v-for="(c, idx) in certificates" :key="idx" :class="['cert-gallery-dot', { active: idx === galleryActiveIndex }]" @click="scrollToGalleryCard(idx)"></span>
+                    <span
+                      v-for="(c, idx) in certificates"
+                      :key="idx"
+                      :class="[
+                        'cert-gallery-dot',
+                        { active: idx === galleryActiveIndex },
+                      ]"
+                      @click="scrollToGalleryCard(idx)"
+                    ></span>
                   </div>
-                  <div class="cert-gallery-arrow cert-gallery-arrow-right" :class="{ disabled: galleryActiveIndex === certificates.length - 1 }" @click="scrollGalleryBy(1)">
-                    <svg width="32" height="32" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="#e31e24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <div
+                    class="cert-gallery-arrow cert-gallery-arrow-right"
+                    :class="{
+                      disabled: galleryActiveIndex === certificates.length - 1,
+                    }"
+                    @click="scrollGalleryBy(1)"
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24">
+                      <path
+                        d="M9 5l7 7-7 7"
+                        stroke="#e31e24"
+                        stroke-width="2"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
                   </div>
                 </div>
               </section>
@@ -265,19 +539,31 @@
             <div v-else-if="activeFactoryTab === 'about'">
               <div class="factory-about-block">
                 <h3>О заводе</h3>
-                <p>Наш завод — один из лидеров отрасли, производящий современные котлы и оборудование для промышленности и ЖКХ. Мы гордимся своей историей, инновациями и командой профессионалов.</p>
+                <p>
+                  Наш завод — один из лидеров отрасли, производящий современные
+                  котлы и оборудование для промышленности и ЖКХ. Мы гордимся
+                  своей историей, инновациями и командой профессионалов.
+                </p>
               </div>
             </div>
             <div v-else-if="activeFactoryTab === 'production'">
               <div class="factory-production-block">
                 <h3>Производство</h3>
-                <p>Современные производственные линии, строгий контроль качества, автоматизация и экологичность — всё это позволяет нам выпускать продукцию мирового уровня.</p>
+                <p>
+                  Современные производственные линии, строгий контроль качества,
+                  автоматизация и экологичность — всё это позволяет нам
+                  выпускать продукцию мирового уровня.
+                </p>
               </div>
             </div>
             <div v-else-if="activeFactoryTab === 'team'">
               <div class="factory-team-block">
                 <h3>Наша команда</h3>
-                <p>В нашем коллективе работают инженеры, технологи, менеджеры и рабочие с многолетним опытом. Мы ценим каждого сотрудника и вместе достигаем новых высот!</p>
+                <p>
+                  В нашем коллективе работают инженеры, технологи, менеджеры и
+                  рабочие с многолетним опытом. Мы ценим каждого сотрудника и
+                  вместе достигаем новых высот!
+                </p>
               </div>
             </div>
           </div>
@@ -287,11 +573,17 @@
         <div class="related-products-section">
           <h2 class="section-title">Вам также может понравиться</h2>
           <div class="related-products-grid">
-            <div 
-              v-for="relatedProduct in relatedProducts" 
-              :key="relatedProduct.id" 
+            <div
+              v-for="relatedProduct in relatedProducts"
+              :key="relatedProduct.id"
               class="product-card"
-              @click="router.push(`/catalog/${relatedProduct.category_slug || categorySlug}/${generateProductSlug(relatedProduct)}`)"
+              @click="
+                router.push(
+                  `/catalog/${
+                    relatedProduct.category_slug || categorySlug
+                  }/${generateProductSlug(relatedProduct)}`
+                )
+              "
             >
               <img
                 :src="relatedProduct.image"
@@ -299,8 +591,17 @@
               />
               <div class="product-card__content">
                 <h3>{{ relatedProduct.name }}</h3>
-                <div class="related-category extended-description-content" v-html="parseExtendedDescription(relatedProduct.description.slice(0, 32) + '...')"></div>
-                <div class="related-price">{{ relatedProduct.price.toLocaleString() }} &#8381;</div>
+                <div
+                  class="related-category extended-description-content"
+                  v-html="
+                    parseExtendedDescription(
+                      relatedProduct.description.slice(0, 32) + '...'
+                    )
+                  "
+                ></div>
+                <div class="related-price">
+                  {{ relatedProduct.price.toLocaleString() }} &#8381;
+                </div>
               </div>
             </div>
           </div>
@@ -312,64 +613,142 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect, onUnmounted } from 'vue';
-import { useCartStore } from '~/stores/cart';
-import { contacts } from '~/data/contacts';
-import { useModalStore } from '~/stores/modal';
-import CommercialOfferModal from '~/components/CommercialOfferModal.vue';
-import { useRoute, useRouter } from 'vue-router';
-import type { Characteristic } from '~/types/product';
+import { ref, computed, watch, watchEffect, onUnmounted, onMounted } from "vue";
+import { useCartStore } from "~/stores/cart";
+import { contacts } from "~/data/contacts";
+import { useModalStore } from "~/stores/modal";
+import { useRoute, useRouter } from "vue-router";
+import type { Characteristic } from "~/types/product";
+
+interface ProductType {
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription: string;
+  price: number;
+  image: string;
+  category: string;
+  category_slug: string;
+  slug: string;
+  specs?: Characteristic[];
+  additional_images?: string[];
+  delivery_set?: string;
+  connection_scheme?: string;
+  additional_requirements?: string;
+  required_products?: number[];
+}
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
-    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
-    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
-    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
-    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
-    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
-    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "yo",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "kh",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    А: "A",
+    Б: "B",
+    В: "V",
+    Г: "G",
+    Д: "D",
+    Е: "E",
+    Ё: "Yo",
+    Ж: "Zh",
+    З: "Z",
+    И: "I",
+    Й: "Y",
+    К: "K",
+    Л: "L",
+    М: "M",
+    Н: "N",
+    О: "O",
+    П: "P",
+    Р: "R",
+    С: "S",
+    Т: "T",
+    У: "U",
+    Ф: "F",
+    Х: "Kh",
+    Ц: "Ts",
+    Ч: "Ch",
+    Ш: "Sh",
+    Щ: "Sch",
+    Ъ: "",
+    Ы: "Y",
+    Ь: "",
+    Э: "E",
+    Ю: "Yu",
+    Я: "Ya",
   };
-  return text.split('').map(char => mapping[char] || char).join('');
+  return text
+    .split("")
+    .map((char) => mapping[char] || char)
+    .join("");
 };
 
 interface ProductSpecs {
-  [key: string]: any
+  [key: string]: any;
 }
 
 interface APIProduct {
-  id: number
-  name: string | null
-  price: number | null
-  image: string | null
-  description: string | null
-  extendedDescription: string | null
-  category_id: string | null
-  additional_images: string[] | null
-  specs: Characteristic[] | ProductSpecs
-  delivery_set: string | null
-  connection_scheme: string | null
-  additional_requirements: string | null
-  required_products: number[] | null
+  id: number;
+  name: string | null;
+  price: number | null;
+  image: string | null;
+  description: string | null;
+  extendedDescription: string | null;
+  category_id: string | null;
+  additional_images: string[] | null;
+  specs: Characteristic[] | ProductSpecs;
+  delivery_set: string | null;
+  connection_scheme: string | null;
+  additional_requirements: string | null;
+  required_products: number[] | null;
 }
 
 interface Product {
-  id: number
-  name: string
-  description: string
-  extendedDescription: string
-  price: number
-  image: string
-  category: string
-  category_slug: string
-  slug: string
-  specs?: Characteristic[]
-  additional_images?: string[]
-  delivery_set?: string
-  connection_scheme?: string
-  additional_requirements?: string
-  required_products?: number[]
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription: string;
+  price: number;
+  image: string;
+  category: string;
+  category_slug: string;
+  slug: string;
+  specs?: Characteristic[];
+  additional_images?: string[];
+  delivery_set?: string;
+  connection_scheme?: string;
+  additional_requirements?: string;
+  required_products?: number[];
 }
 
 interface Certificate {
@@ -378,20 +757,20 @@ interface Certificate {
   image: string;
 }
 
-const route = useRoute()
-const router = useRouter()
-const config = useRuntimeConfig()
+const route = useRoute();
+const router = useRouter();
+const config = useRuntimeConfig();
 
 // Get category and product slugs from route
 const categorySlug = computed(() => {
-  const slug = route.params.category as string | undefined
-  return typeof slug === 'string' ? slug : Array.isArray(slug) ? slug[0] : ''
-})
+  const slug = route.params.category as string | undefined;
+  return typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : "";
+});
 
 const productSlug = computed(() => {
-  const slug = route.params.product
-  return typeof slug === 'string' ? slug : Array.isArray(slug) ? slug[0] : ''
-})
+  const slug = route.params.product;
+  return typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : "";
+});
 
 // Добавляем проверку, активен ли маршрут продукта
 const isProductRouteActive = computed(() => {
@@ -399,126 +778,204 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Fetch products
-const { data: fetchedProducts, error: fetchError } = await useFetch(`/api/products`, {
-  query: computed(() => ({
-    categorySlug: categorySlug.value
-  })),
-  transform: (response) => { 
-    if (!response || typeof response !== 'object' || !('products' in response)) {
-      console.error('Invalid response format:', response)
-      return []
+// Состояния загрузки
+const isLoadingProducts = ref(true);
+const isLoadingCategory = ref(true);
+
+// Инициализируем состояния
+const products = ref<ProductType[]>([]);
+const categoryInfo = ref<
+  { title: string; description: string; slug: string } | undefined
+>(undefined);
+const fetchError = ref<Error | null>(null);
+const categoryError = ref<Error | null>(null);
+
+// Функция для загрузки продуктов
+const fetchProducts = async () => {
+  isLoadingProducts.value = true;
+  try {
+    const { data: response, error } = await useFetch<{
+      products: APIProduct[];
+    }>(`/api/products`, {
+      query: {
+        categorySlug: categorySlug.value,
+      },
+    });
+
+    if (error.value) {
+      console.error("Error fetching products:", error.value);
+      fetchError.value = new Error(error.value.message);
+      products.value = [];
+    } else if (response.value) {
+      products.value = response.value.products.map((product: APIProduct) => ({
+        id: product.id,
+        name: product.name || "",
+        description: product.description || "",
+        extendedDescription: product.extendedDescription || "",
+        price: product.price || 0,
+        image: product.image || "",
+        category: "", // Will be filled from category data
+        category_slug: "", // Will be filled from category data
+        slug: "", // Will be generated
+        additional_images: product.additional_images || [],
+        specs: Array.isArray(product.specs) ? product.specs : [],
+        delivery_set: product.delivery_set || "",
+        connection_scheme: product.connection_scheme || "",
+        additional_requirements: product.additional_requirements || "",
+        required_products: product.required_products || [],
+      }));
     }
-    return response.products
+  } catch (err) {
+    console.error("Failed to fetch products:", err);
+    fetchError.value =
+      err instanceof Error ? err : new Error("Failed to fetch products");
+    products.value = [];
+  } finally {
+    isLoadingProducts.value = false;
   }
-})
+};
 
-// Initialize products as an empty array
-const products = ref<Product[]>([])
+// Функция для загрузки категории
+const fetchCategory = async () => {
+  isLoadingCategory.value = true;
+  try {
+    const { data: response, error } = await useFetch<{
+      category: { name: string; description: string };
+    }>(`/api/categories/${categorySlug.value}`);
 
-watchEffect(() => {
-  if (fetchError.value) {
-    console.error('Error fetching products:', fetchError.value)
-    products.value = []
-  } else if (fetchedProducts.value) {
-    // Cast the response to unknown first, then to APIProduct[]
-    const apiProducts = fetchedProducts.value as unknown as APIProduct[]
-    products.value = apiProducts.map(product => ({
-      id: product.id,
-      name: product.name || '',
-      description: product.description || '',
-      extendedDescription: product.extendedDescription || '',
-      price: product.price || 0,
-      image: product.image || '',
-      category: '', // Will be filled from category data
-      category_slug: '', // Will be filled from category data
-      slug: '', // Will be generated
-      additional_images: product.additional_images || [],
-      specs: Array.isArray(product.specs) ? product.specs : [],
-      delivery_set: product.delivery_set || '',
-      connection_scheme: product.connection_scheme || '',
-      additional_requirements: product.additional_requirements || '',
-      required_products: product.required_products || []
-    }))
-  } else {
-    products.value = []
+    if (error.value) {
+      console.error("Failed to fetch category:", error.value);
+      categoryError.value = new Error(error.value.message);
+    } else if (response.value?.category) {
+      categoryInfo.value = {
+        title: response.value.category.name || "",
+        description: response.value.category.description || "",
+        slug: categorySlug.value,
+      };
+    }
+  } catch (err) {
+    console.error("Failed to fetch category:", err);
+    categoryError.value =
+      err instanceof Error ? err : new Error("Failed to fetch category");
+  } finally {
+    isLoadingCategory.value = false;
   }
-})
+};
+
+// Определяем, является ли устройство мобильным
+const isMobile = ref(false);
+
+onMounted(async () => {
+  // Проверяем ширину экрана при монтировании
+  isMobile.value = window.innerWidth <= 768;
+
+  // Слушаем изменение размера окна
+  window.addEventListener("resize", () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
+
+  await Promise.all([fetchProducts(), fetchCategory()]);
+});
+
+onUnmounted(() => {
+  // Удаляем слушатель при размонтировании
+  window.removeEventListener("resize", () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
+});
 
 const openOfferModal = () => {
-  modalStore.openModal('Уточнить наличие', `Пожалуйста, уточните наличие товара у нашего менеджера. \n\n${contacts.phone[0]}`, 'Я позвоню', () => {
-    router.push(`tel:${contacts.phone[0]}`)
-  })
-}
+  modalStore.openModal(
+    "Уточнить наличие",
+    `Пожалуйста, уточните наличие товара у нашего менеджера. \n\n${contacts.phone[0]}`,
+    "Я позвоню",
+    () => {
+      router.push(`tel:${contacts.phone[0]}`);
+    }
+  );
+};
 
 // Заменяем currentProduct на ref, чтобы избежать мигания при навигации
-const product = ref<Product | null>(null);
+const product = ref<ProductType | null>(null);
 
 // Вычисляемое свойство для поиска товара по slug
 const searchedProduct = computed(() => {
   if (!productSlug.value || !products.value || products.value.length === 0) {
     return null;
   }
-  return products.value.find(p => {
-    const generatedSlug = transliterate((p.name || '').toLowerCase())
-      .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-    return p.slug === productSlug.value || generatedSlug === productSlug.value;
-  }) || null;
+  return (
+    products.value.find((p) => {
+      const generatedSlug = transliterate((p.name || "").toLowerCase())
+        .toLowerCase()
+        .replace(/[^a-z0-9 -]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+      return (
+        p.slug === productSlug.value || generatedSlug === productSlug.value
+      );
+    }) || null
+  );
 });
 
 // Обновляем `product` только когда это необходимо
-watch(searchedProduct, (newProduct) => {
-  if (newProduct) {
-    product.value = newProduct;
-  } else if (productSlug.value) {
-    // Если есть slug, но товар не найден
-    product.value = null;
-  }
-  // Если slug пуст (навигация), ничего не делаем, `product` сохраняет значение
-}, { immediate: true });
+watch(
+  searchedProduct,
+  (newProduct) => {
+    if (newProduct) {
+      product.value = newProduct;
+    } else if (productSlug.value) {
+      // Если есть slug, но товар не найден
+      product.value = null;
+    }
+    // Если slug пуст (навигация), ничего не делаем, `product` сохраняет значение
+  },
+  { immediate: true }
+);
 
 // Handle product not found
 watch(product, (newProduct, oldProduct) => {
   // Перенаправляем, только если мы на странице товара и товар не найден
-  if (!isLoadingProducts.value && !newProduct && products.value.length > 0 && isProductRouteActive.value) {
+  if (
+    !isLoadingProducts.value &&
+    !newProduct &&
+    products.value.length > 0 &&
+    isProductRouteActive.value
+  ) {
     router.push(`/catalog/${categorySlug.value}`);
   }
 });
 
 const capitalize = (s: string) => {
-  if (typeof s !== 'string') return ''
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
+  if (typeof s !== "string") return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 const cartStore = useCartStore();
-const modalStore = useModalStore()
+const modalStore = useModalStore();
 // Текущий индекс изображения
-const currentImageIndex = ref(0)
+const currentImageIndex = ref(0);
 
 // Сброс индекса при изменении продукта
 watch(product, () => {
-  currentImageIndex.value = 0
-})
+  currentImageIndex.value = 0;
+});
 
 // Навигация по галерее
 const nextImage = () => {
   if (currentImageIndex.value < imageList.value.length - 1) {
-    currentImageIndex.value++
+    currentImageIndex.value++;
   } else {
-    currentImageIndex.value = 0
+    currentImageIndex.value = 0;
   }
-}
+};
 
 const prevImage = () => {
   if (currentImageIndex.value > 0) {
-    currentImageIndex.value--
+    currentImageIndex.value--;
   } else {
-    currentImageIndex.value = imageList.value.length - 1
+    currentImageIndex.value = imageList.value.length - 1;
   }
-}
+};
 
 const addToCart = () => {
   if (!product.value) return;
@@ -529,74 +986,81 @@ const addToCart = () => {
     price: product.value.price,
     image: product.value.image,
     quantity: 1,
-    category: product.value.category || 'Без категории',
-    category_slug: product.value.category_slug || (route.params.category as string) || 'unknown',
-    slug: product.value.slug || generateProductSlug(product.value)
+    category: product.value.category || "Без категории",
+    category_slug:
+      product.value.category_slug ||
+      (route.params.category as string) ||
+      "unknown",
+    slug: product.value.slug || generateProductSlug(product.value),
   };
 
   cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
-}
+};
 
 // Заменим вычисление displaySpecs, чтобы корректно работать с новым форматом
 const displaySpecs = computed(() => {
-  if (!product.value?.specs) return []
-  
+  if (!product.value?.specs) return [];
+
   // Проверяем, что specs это массив
   if (!Array.isArray(product.value.specs)) {
-    console.error('Product specs is not an array:', product.value.specs)
-    return []
+    console.error("Product specs is not an array:", product.value.specs);
+    return [];
   }
-  
+
   // Фильтруем характеристики
-  const filtered = product.value.specs.filter(spec => {
+  const filtered = product.value.specs.filter((spec) => {
     // Проверяем, что spec это объект с нужными полями
-    if (!spec || typeof spec !== 'object') {
-      console.error('Invalid spec object:', spec)
-      return false
+    if (!spec || typeof spec !== "object") {
+      console.error("Invalid spec object:", spec);
+      return false;
     }
-    
-    return spec.key && 
-           spec.value && 
-           spec.value !== null && 
-           spec.value !== undefined && 
-           spec.value !== ''
-  })
-  
-  return filtered
-})
+
+    return (
+      spec.key &&
+      spec.value &&
+      spec.value !== null &&
+      spec.value !== undefined &&
+      spec.value !== ""
+    );
+  });
+
+  return filtered;
+});
 
 // Похожие товары
 const relatedProducts = computed(() => {
-  if (!product.value || !products.value) return []
+  if (!product.value || !products.value) return [];
   // Фильтруем товары, исключая текущий
-  const filteredProducts = products.value.filter(p => p.id !== product.value?.id)
+  const filteredProducts = products.value.filter(
+    (p) => p.id !== product.value?.id
+  );
   // Сортируем по id (или по алфавиту, если нужно)
-  const sorted = [...filteredProducts].sort((a, b) => a.id - b.id)
-  return sorted.slice(0, 3)
-})
+  const sorted = [...filteredProducts].sort((a, b) => a.id - b.id);
+  return sorted.slice(0, 3);
+});
 
-const generateProductSlug = (product: Product): string => {
-  if (!product || !product.name) return ''
+const generateProductSlug = (product: ProductType): string => {
+  if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-}
+    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+};
 
 const productTabs = [
-  { key: 'description', label: 'Описание товара' },
-  { key: 'specs', label: 'Технические характеристики' },
-  { key: 'delivery', label: 'Комплект поставки' },
-  { key: 'scheme', label: 'Схема подключения' },
-  { key: 'additional', label: 'Дополнительно потребуется' },
-  { key: 'certificates', label: 'Сертификаты и гарантии' }
+  { key: "description", label: "Описание товара" },
+  { key: "specs", label: "Технические характеристики" },
+  { key: "delivery", label: "Комплект поставки" },
+  { key: "scheme", label: "Схема подключения" },
+  { key: "additional", label: "Дополнительно потребуется" },
+  { key: "certificates", label: "Сертификаты и гарантии" },
 ];
-const activeTab = ref('description');
+const activeTab = ref("description");
 
 const showCommercialOfferModal = ref(false);
 const selectedProduct = ref<any>(null);
-const openCommercialOfferModal = (product: any) => {
+const openCommercialOfferModal = (product: ProductType) => {
   selectedProduct.value = product;
   showCommercialOfferModal.value = true;
 };
@@ -606,48 +1070,52 @@ const closeCommercialOfferModal = () => {
 };
 
 const factoryTabs = [
-  { key: 'certificates', label: 'Сертификаты' },
-  { key: 'about', label: 'О заводе' },
-  { key: 'production', label: 'Производство' },
-  { key: 'team', label: 'Команда' },
+  { key: "certificates", label: "Сертификаты" },
+  { key: "about", label: "О заводе" },
+  { key: "production", label: "Производство" },
+  { key: "team", label: "Команда" },
 ];
-const activeFactoryTab = ref('certificates');
+const activeFactoryTab = ref("certificates");
 
 const certificates = [
-{
+  {
     id: 1,
-    title: 'Сертификат на газовые котлы',
-    image: '/certificates/dek_gaz.png'
+    title: "Сертификат на газовые котлы",
+    image: "/certificates/dek_gaz.png",
   },
   {
     id: 2,
-    title: 'Сертификат на водогрейные котлы на твердом и жидком топливе',
-    image: '/certificates/dek_kotly.png'
+    title: "Сертификат на водогрейные котлы на твердом и жидком топливе",
+    image: "/certificates/dek_kotly.png",
   },
   {
     id: 3,
-    title: 'Декларация о соответствии тягодутьевые машины',
-    image: '/certificates/dek_tyag.png'
+    title: "Декларация о соответствии тягодутьевые машины",
+    image: "/certificates/dek_tyag.png",
   },
   {
     id: 4,
-    title: 'Декларация о соответствии оборудование пылеулавливающее',
-    image: '/certificates/dek_pil.png'
+    title: "Декларация о соответствии оборудование пылеулавливающее",
+    image: "/certificates/dek_pil.png",
   },
   {
     id: 5,
-    title: 'Декларация о соответствии блочно-модульной котельной',
-    image: '/certificates/dek_mod.png'
-  }
+    title: "Декларация о соответствии блочно-модульной котельной",
+    image: "/certificates/dek_mod.png",
+  },
 ];
 const selectedCertificate = ref<Certificate | null>(null);
-const openCertificateModal = (certificate: Certificate) => { selectedCertificate.value = certificate; };
-const closeCertificateModal = () => { selectedCertificate.value = null; };
+const openCertificateModal = (certificate: Certificate) => {
+  selectedCertificate.value = certificate;
+};
+const closeCertificateModal = () => {
+  selectedCertificate.value = null;
+};
 
 const galleryActiveIndex = ref(0);
 function scrollToGalleryCard(idx: number) {
-  const scrollContainer = document.querySelector('.cert-gallery-scroll');
-  const track = document.querySelector('.cert-gallery-track');
+  const scrollContainer = document.querySelector(".cert-gallery-scroll");
+  const track = document.querySelector(".cert-gallery-track");
   if (scrollContainer && track) {
     const maxScroll = track.scrollWidth - scrollContainer.clientWidth;
     const dotsCount = certificates.length;
@@ -655,23 +1123,27 @@ function scrollToGalleryCard(idx: number) {
     if (dotsCount > 1) {
       scrollLeft = (maxScroll * idx) / (dotsCount - 1);
     }
-    scrollContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    scrollContainer.scrollTo({ left: scrollLeft, behavior: "smooth" });
     galleryActiveIndex.value = idx;
   }
 }
 
 const imageList = computed<string[]>(() => {
-  if (!product.value) return []
+  if (!product.value) return [];
   // Основное изображение
-  const mainImage = product.value.image
+  const mainImage = product.value.image;
   // Дополнительные изображения
-  const additionalImages = product.value.additional_images || []
+  const additionalImages = product.value.additional_images || [];
   // Объединяем основное изображение и дополнительные
-  return [mainImage, ...additionalImages].filter(Boolean)
-})
+  return [mainImage, ...additionalImages].filter(Boolean);
+});
 
-const cartItem = computed(() => cartStore.items.find((item: any) => item.id === product.value?.id));
-const cartCount = computed(() => cartItem.value ? cartItem.value.quantity : 0);
+const cartItem = computed(() =>
+  cartStore.items.find((item: any) => item.id === product.value?.id)
+);
+const cartCount = computed(() =>
+  cartItem.value ? cartItem.value.quantity : 0
+);
 const incrementCart = () => {
   if (product.value) {
     const cartItem = {
@@ -680,9 +1152,12 @@ const incrementCart = () => {
       price: product.value.price,
       image: product.value.image,
       quantity: 1,
-      category: product.value.category || 'Без категории',
-      category_slug: product.value.category_slug || (route.params.category as string) || 'unknown',
-      slug: product.value.slug || generateProductSlug(product.value)
+      category: product.value.category || "Без категории",
+      category_slug:
+        product.value.category_slug ||
+        (route.params.category as string) ||
+        "unknown",
+      slug: product.value.slug || generateProductSlug(product.value),
     };
     cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
   }
@@ -697,11 +1172,11 @@ const decrementCart = () => {
   }
 };
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setTimeout(() => {
-    const track = document.querySelector('.cert-gallery-track');
+    const track = document.querySelector(".cert-gallery-track");
     if (track) {
-      track.addEventListener('scroll', () => {
+      track.addEventListener("scroll", () => {
         const cards = Array.from(track.children) as HTMLElement[];
         let minDiff = Infinity;
         let activeIdx = 0;
@@ -724,29 +1199,15 @@ function scrollGalleryBy(delta: number) {
   scrollToGalleryCard(newIdx);
 }
 
-const categoryInfo = ref<{ title: string; description: string; slug: string } | undefined>(undefined);
-
-// Получаем инфу о категории
-const { data: fetchedCategory, error: categoryError } = await useFetch(`/api/categories/${categorySlug.value}`)
-if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
-  categoryInfo.value = {
-    title: (fetchedCategory.value as any).category.name || '',
-    description: (fetchedCategory.value as any).category.description || '',
-    slug: categorySlug.value
-  }
-} else {
-  console.error('Failed to fetch category info:', categoryError.value)
-}
-
 function escapeHtml(text: string): string {
   const map: { [key: string]: string } = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
   };
-  const result = text.replace(/[&<>"']/g, m => map[m]);
+  const result = text.replace(/[&<>"']/g, (m) => map[m]);
   return result;
 }
 
@@ -763,14 +1224,13 @@ function parseInlineMarkdown(text: string): string {
 }
 
 function parseExtendedDescription(description: string | null): string {
-  
   if (!description) {
-    return '';
+    return "";
   }
 
-  const lines = description.split('\n');
+  const lines = description.split("\n");
 
-  let html = '';
+  let html = "";
   let inList = false;
 
   for (let i = 0; i < lines.length; i++) {
@@ -779,90 +1239,90 @@ function parseExtendedDescription(description: string | null): string {
     // Пропускаем пустые строки, но добавляем разрыв строки
     if (!line) {
       if (inList) {
-        html += '</ul>';
+        html += "</ul>";
         inList = false;
       }
       if (i > 0 && i < lines.length - 1) {
-        html += '<br>';
+        html += "<br>";
       }
       continue;
     }
 
     // Обработка заголовков и других элементов
-    if (line.startsWith('### ')) {
+    if (line.startsWith("### ")) {
       if (inList) {
-        html += '</ul>';
+        html += "</ul>";
         inList = false;
       }
       const text = escapeHtml(line.substring(4));
       html += `<h3 class="description-h3">${parseInlineMarkdown(text)}</h3>`;
-    } else if (line.startsWith('## ')) {
+    } else if (line.startsWith("## ")) {
       if (inList) {
-        html += '</ul>';
+        html += "</ul>";
         inList = false;
       }
       const text = escapeHtml(line.substring(3));
       html += `<h2 class="description-h2">${parseInlineMarkdown(text)}</h2>`;
-    } else if (line.startsWith('# ')) {
+    } else if (line.startsWith("# ")) {
       if (inList) {
-        html += '</ul>';
+        html += "</ul>";
         inList = false;
       }
       const text = escapeHtml(line.substring(2));
       html += `<h1 class="description-h1">${parseInlineMarkdown(text)}</h1>`;
-    } else if (line.startsWith('- ')) {
+    } else if (line.startsWith("- ")) {
       if (!inList) {
         html += '<ul class="description-list">';
         inList = true;
       }
       const text = escapeHtml(line.substring(2));
-      html += `<li class="description-list-item">${parseInlineMarkdown(text)}</li>`;
+      html += `<li class="description-list-item">${parseInlineMarkdown(
+        text
+      )}</li>`;
     } else {
       if (inList) {
-        html += '</ul>';
+        html += "</ul>";
         inList = false;
       }
       const text = escapeHtml(line);
-      html += `<p class="description-paragraph">${parseInlineMarkdown(text)}</p>`;
+      html += `<p class="description-paragraph">${parseInlineMarkdown(
+        text
+      )}</p>`;
     }
   }
 
   if (inList) {
-    html += '</ul>';
+    html += "</ul>";
   }
 
   return html;
 }
 
 // Add helper function to get product by ID
-const getProductById = (id: number) => {
-  return products.value.find(p => p.id === id)
-}
+const getProductById = (id: number): ProductType | undefined => {
+  return products.value.find((p) => p.id === id);
+};
 
 // Add helper function for navigation
-const navigateToProduct = (product: Product | undefined) => {
-  if (!product) return
-  router.push(`/catalog/${product.category_slug}/${generateProductSlug(product)}`)
-}
+const navigateToProduct = (product: ProductType | undefined) => {
+  if (!product) return;
+  router.push(
+    `/catalog/${product.category_slug}/${generateProductSlug(product)}`
+  );
+};
 
-onUnmounted(() => {
-  products.value = [];
-  currentImageIndex.value = 0;
-  activeTab.value = 'description';
-  showCommercialOfferModal.value = false;
-  selectedProduct.value = null;
-  activeFactoryTab.value = 'certificates';
-  selectedCertificate.value = null;
-  galleryActiveIndex.value = 0;
-  categoryInfo.value = undefined;
-});
-
-const isLoadingProducts = ref(true);
 watchEffect(() => {
-  if (fetchedProducts.value || fetchError.value) {
+  if (!isLoadingProducts.value || fetchError.value) {
     isLoadingProducts.value = false;
   }
 });
+
+// Функция для повторной загрузки данных
+const retryLoading = async () => {
+  fetchError.value = null;
+  categoryError.value = null;
+  await Promise.all([fetchProducts(), fetchCategory()]);
+};
 </script>
 
 <style scoped lang="scss">
@@ -879,11 +1339,16 @@ watchEffect(() => {
 .product-detail-page {
   padding: 40px 0;
   background: #fafbfc;
+  min-height: 100vh; // Добавляем минимальную высоту
+  position: relative; // Добавляем позиционирование
+  z-index: 1; // Устанавливаем z-index
 }
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px;
+  position: relative; // Добавляем позиционирование
+  z-index: 2; // Устанавливаем z-index выше, чем у страницы
 }
 .back-link {
   display: inline-block;
@@ -898,137 +1363,110 @@ watchEffect(() => {
 .product-detail-card {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
   padding: 32px 24px 24px 24px;
   margin-bottom: 32px;
+  position: relative; // Добавляем позиционирование
+  z-index: 3; // Устанавливаем z-index выше, чем у контейнера
+
+  @media (max-width: 768px) {
+    padding: 16px 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
 }
 .product-top-row {
   display: flex;
   gap: 40px;
   align-items: flex-start;
   margin-bottom: 32px;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 768px) {
+    gap: 16px;
+    margin-bottom: 16px;
+  }
 }
 .product-gallery {
   flex: 0 0 50%;
   max-width: 50%;
   padding: 1rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     flex: 0 0 100%;
     max-width: 100%;
-  }
+    padding: 0;
 
-  .main-image-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 75%; 
-    margin-bottom: 1rem;
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--bg-light);
-
-    img.main-image {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: opacity 0.3s ease;
-    }
-
-    .gallery-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 40px;
-      height: 40px;
-      border: none;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--text);
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      z-index: 2;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-      &:hover {
-        background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      }
-
-      &.prev {
-        left: 1rem;
-      }
-
-      &.next {
-        right: 1rem;
-      }
-
-      i {
-        font-size: 0.8rem;
-      }
-    }
-  }
-
-  .thumbnails-container {
-    margin-top: 1rem;
-    width: 100%;
-    overflow: hidden;
-
-    .thumbnails-scroll {
-      display: flex;
-      gap: 0.5rem;
-      overflow-x: auto;
-      padding: 0.5rem 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary) transparent;
-
-      &::-webkit-scrollbar {
-        height: 6px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background-color: var(--primary);
-        border-radius: 3px;
-      }
-    }
-
-    .thumbnail-btn {
-      flex: 0 0 80px;
-      height: 80px;
-      padding: 0;
-      border: 2px solid transparent;
-      border-radius: 4px;
+    .main-image-container {
+      margin: 0;
+      border-radius: 8px;
       overflow: hidden;
-      cursor: pointer;
-      background: none;
-      transition: all 0.2s ease;
+      background: var(--bg-light);
 
-      img {
+      img.main-image {
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: opacity 0.2s ease;
+        object-fit: contain;
+        padding: 0;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0;
+    margin-bottom: 1rem;
+
+    .main-image-container {
+      margin: 0;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      img.main-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 1rem;
       }
 
-      &:hover img {
-        opacity: 0.8;
+      .gallery-nav {
+        width: 36px;
+        height: 36px;
+
+        &.prev {
+          left: 8px;
+        }
+
+        &.next {
+          right: 8px;
+        }
       }
+    }
 
-      &.active {
-        border-color: var(--primary);
+    .thumbnails-container {
+      margin-top: 0.75rem;
 
-        img {
-          opacity: 1;
+      .thumbnails-scroll {
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+
+        .thumbnail-btn {
+          flex: 0 0 64px;
+          height: 64px;
+          border-width: 1px;
+
+          &.active {
+            border-width: 2px;
+          }
+
+          img {
+            padding: 0.25rem;
+          }
         }
       }
     }
@@ -1090,7 +1528,7 @@ watchEffect(() => {
   padding: 12px 24px;
   flex: 1 1 50%;
   min-width: 0;
-  box-shadow: 0 2px 12px rgba(227,30,36,0.04);
+  box-shadow: 0 2px 12px rgba(227, 30, 36, 0.04);
   margin: 0;
   justify-content: center;
 }
@@ -1122,7 +1560,7 @@ watchEffect(() => {
   font-size: 1.18rem;
   font-weight: 600;
   height: 54px;
-  box-shadow: 0 2px 16px rgba(227,30,36,0.07);
+  box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
@@ -1139,19 +1577,24 @@ watchEffect(() => {
   background: #fff6f6;
   color: #e31e24;
   border-color: #e31e24;
-  box-shadow: 0 4px 24px rgba(227,30,36,0.13);
+  box-shadow: 0 4px 24px rgba(227, 30, 36, 0.13);
 }
 .buy-btn::after {
-  content: '';
+  content: "";
   display: block;
   position: absolute;
   left: -60%;
   top: 0;
   width: 60%;
   height: 100%;
-  background: linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.38) 50%, rgba(255,255,255,0.12) 100%);
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.38) 50%,
+    rgba(255, 255, 255, 0.12) 100%
+  );
   transform: skewX(-25deg);
-  transition: left 0.4s cubic-bezier(.4,0,.2,1);
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 .buy-btn:hover::after {
@@ -1178,7 +1621,7 @@ watchEffect(() => {
   font-weight: 700;
   cursor: pointer;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.10);
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
   transition: all 0.3s;
 }
 .offer-btn:hover {
@@ -1232,7 +1675,7 @@ watchEffect(() => {
 .product-card {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: visible;
   transition: transform 0.25s, box-shadow 0.25s;
   position: relative;
@@ -1244,7 +1687,7 @@ watchEffect(() => {
 }
 .product-card:hover {
   transform: translateY(-7px) scale(1.03);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 .product-card img {
   position: absolute;
@@ -1312,7 +1755,8 @@ watchEffect(() => {
   padding: 40px 0;
 }
 @media (max-width: 1024px) {
-  .product-top-row, .product-middle-row {
+  .product-top-row,
+  .product-middle-row {
     flex-direction: column;
     gap: 24px;
   }
@@ -1349,7 +1793,8 @@ watchEffect(() => {
     max-width: 100%;
     min-width: 0;
   }
-  .buy-btn, .cart-counter {
+  .buy-btn,
+  .cart-counter {
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -1360,7 +1805,8 @@ watchEffect(() => {
     align-items: stretch;
     gap: 18px;
   }
-  .cart-action-wrap, .product-card__price-block {
+  .cart-action-wrap,
+  .product-card__price-block {
     width: 100%;
     min-width: 0;
     flex: 1 1 100%;
@@ -1469,7 +1915,7 @@ watchEffect(() => {
 .section-block {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   padding: 32px 24px;
   margin-bottom: 24px;
 }
@@ -1503,7 +1949,7 @@ watchEffect(() => {
   font-size: 1.1rem;
   margin: 0 auto;
   max-width: 420px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   gap: 8px;
 }
 .scheme-icon {
@@ -1542,7 +1988,7 @@ watchEffect(() => {
   object-fit: contain;
   border-radius: 8px;
   background: #f7f7fa;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 .reviews-block {
   background: #f7f7fa;
@@ -1550,7 +1996,7 @@ watchEffect(() => {
 .review-card {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   padding: 18px 16px;
   margin-bottom: 12px;
 }
@@ -1575,7 +2021,8 @@ watchEffect(() => {
   font-size: 1.1rem;
   color: #333;
 }
-.contacts-phone, .contacts-email {
+.contacts-phone,
+.contacts-email {
   color: #ff6b6b;
   text-decoration: underline;
 }
@@ -1674,12 +2121,13 @@ watchEffect(() => {
   display: flex;
   align-items: center;
   gap: 0;
-  box-shadow: 0 2px 16px rgba(227,30,36,0.07);
+  box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   overflow: hidden;
   position: relative;
   transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
 }
-.cart-minus, .cart-plus {
+.cart-minus,
+.cart-plus {
   background: transparent;
   border: none;
   color: #e31e24;
@@ -1694,7 +2142,8 @@ watchEffect(() => {
   transition: background 0.18s, color 0.18s;
   border-radius: 0;
 }
-.cart-minus:hover, .cart-plus:hover {
+.cart-minus:hover,
+.cart-plus:hover {
   background: #fff6f6;
   color: #b71c1c;
 }
@@ -1711,7 +2160,7 @@ watchEffect(() => {
   gap: 32px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   margin: 48px 0;
   padding: 32px 24px;
   min-height: unset !important;
@@ -1794,7 +2243,7 @@ watchEffect(() => {
   width: 44px;
   height: 44px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(227,30,36,0.07);
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
   font-size: 1.2rem;
   transition: background 0.2s, border 0.2s, opacity 0.2s;
   opacity: 0.92;
@@ -1851,7 +2300,7 @@ watchEffect(() => {
 .cert-gallery-card {
   background: #fff;
   border-radius: 22px;
-  box-shadow: 0 6px 32px rgba(227,30,36,0.10);
+  box-shadow: 0 6px 32px rgba(227, 30, 36, 0.1);
   min-width: 240px;
   max-width: 260px;
   height: 220px;
@@ -1867,7 +2316,8 @@ watchEffect(() => {
   z-index: 10;
 }
 .cert-gallery-card:hover {
-  box-shadow: 0 16px 48px 0 rgba(227,30,36,0.18), 0 2px 12px 0 rgba(0,0,0,0.10);
+  box-shadow: 0 16px 48px 0 rgba(227, 30, 36, 0.18),
+    0 2px 12px 0 rgba(0, 0, 0, 0.1);
   transform: translateY(-10px) scale(1.04);
   opacity: 1;
   border-color: #ffeaea;
@@ -1882,7 +2332,7 @@ watchEffect(() => {
   height: 72px;
   background: #fff6f6;
   border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(227,30,36,0.18);
+  box-shadow: 0 6px 24px rgba(227, 30, 36, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1920,7 +2370,7 @@ watchEffect(() => {
   font-size: 0.98rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.10);
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
   transition: all 0.3s;
   margin-top: auto;
 }
@@ -1939,8 +2389,9 @@ watchEffect(() => {
   border-radius: 8px;
   background: #fff;
   border: 2px solid #e31e24;
-  box-shadow: 0 2px 8px rgba(227,30,36,0.10);
-  transition: background 0.35s, transform 0.35s, border 0.35s, width 0.35s, box-shadow 0.35s;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
+  transition: background 0.35s, transform 0.35s, border 0.35s, width 0.35s,
+    box-shadow 0.35s;
   cursor: pointer;
   opacity: 0.7;
   position: relative;
@@ -1956,14 +2407,14 @@ watchEffect(() => {
   width: 36px;
   background: linear-gradient(90deg, #e31e24 60%, #ff6b6b 100%);
   border-color: #ff6b6b;
-  box-shadow: 0 0 16px #e31e24, 0 2px 8px rgba(227,30,36,0.13);
+  box-shadow: 0 0 16px #e31e24, 0 2px 8px rgba(227, 30, 36, 0.13);
   opacity: 1;
   transform: scale(1.18);
 }
 .cert-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1975,7 +2426,7 @@ watchEffect(() => {
   padding: 32px 24px 24px 24px;
   max-width: 96vw;
   max-height: 90vh;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2003,7 +2454,7 @@ watchEffect(() => {
   max-width: 80vw;
   max-height: 60vh;
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(227,30,36,0.13);
+  box-shadow: 0 2px 16px rgba(227, 30, 36, 0.13);
   background: #fff6f6;
   border: 2px solid #e31e24;
 }
@@ -2023,358 +2474,180 @@ watchEffect(() => {
 .breadcrumbs {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 1rem;
   margin-bottom: 24px;
   gap: 8px;
-}
-.breadcrumbs-separator {
-  color: #aaa;
-  margin: 0 4px;
-}
-.breadcrumbs a {
-  color: #e31e24;
-  text-decoration: none;
-  transition: text-decoration 0.2s;
-}
-.breadcrumbs a:hover {
-  text-decoration: underline;
-}
+  line-height: 1.4;
 
-/* Стили для расширенного описания */
-.extended-description-content {
-  line-height: 1.6;
-  color: var(--text-color);
-}
-
-.extended-description-content .description-h1,
-.extended-description-content .description-h2,
-.extended-description-content .description-h3 {
-  margin: 1.5em 0 0.5em;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.extended-description-content .description-h1 {
-  font-size: 2rem;
-  color: var(--primary-color);
-  border-bottom: 2px solid var(--primary-hover);
-  padding-bottom: 0.5rem;
-}
-
-.extended-description-content .description-h2 {
-  font-size: 1.5rem;
-  color: var(--text-color);
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.25rem;
-}
-
-.extended-description-content .description-h3 {
-  font-size: 1.25rem;
-  color: var(--text-color);
-}
-
-.extended-description-content .description-paragraph {
-  margin: 1em 0;
-  line-height: 1.6;
-}
-
-.extended-description-content .description-list {
-  margin: 1em 0;
-  padding-left: 2em;
-  list-style-type: disc;
-}
-
-.extended-description-content .description-list-item {
-  margin: 0.5em 0;
-  line-height: 1.5;
-}
-
-.extended-description-content .description-list-item::marker {
-  color: var(--primary-color);
-}
-
-.extended-description-content strong {
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.extended-description-content em {
-  font-style: italic;
-  color: var(--text-light);
-}
-
-.extended-description-content br {
-  display: block;
-  content: "";
-  margin: 1em 0;
-}
-
-.section-block {
-  margin-bottom: 2rem;
-}
-
-.additional-description {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--text);
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--bg-light);
-  border-radius: 1rem;
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  white-space: pre-line;
-}
-
-.required-products-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-  margin-top: 2.5rem;
-  padding: 1.5rem;
-}
-
-.required-product-card {
-  position: relative;
-  display: flex;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 1.5rem;
-  overflow: visible;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  min-height: 240px;
-  margin-top: 2rem;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary);
-
-    .required-product-card__image img {
-      transform: scale(1.05) translateY(-5px);
-    }
-
-    .required-product-card__button {
-      background: var(--primary);
-      color: white;
-      padding-right: 2rem;
-      
-      &::after {
-        transform: translateX(5px);
-        opacity: 1;
-      }
-    }
-  }
-
-  &__image-wrapper {
-    position: relative;
-    width: 300px;
-    min-width: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-
-  &__image {
-    position: absolute;
-    width: 340px;
-    height: 340px;
-    left: -40px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: transform 0.3s ease;
-      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1));
-    }
-  }
-
-  &__content {
-    flex: 1;
-    padding: 2.5rem;
-    padding-left: 3rem;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 15%);
-    position: relative;
-    z-index: 1;
-  }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-  }
-
-  &__title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0;
-    flex: 1;
-    line-height: 1.3;
-  }
-
-  &__price {
-    font-size: 1.75rem;
-    font-weight: 800;
+  a {
     color: var(--primary);
-    white-space: nowrap;
-    background: rgba(227, 30, 36, 0.1);
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-  }
-
-  &__description {
-    font-size: 1.1rem;
-    color: var(--text-light);
-    line-height: 1.6;
-    margin: 0;
-    flex: 1;
-  }
-
-  &__footer {
-    margin-top: 2rem;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  &__button {
-    padding: 1rem 2rem;
-    border: 2px solid var(--primary);
-    border-radius: 1rem;
-    background: transparent;
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    &::after {
-      content: "→";
-      position: absolute;
-      right: 1.5rem;
-      opacity: 0;
-      transition: all 0.3s ease;
-    }
+    text-decoration: none;
+    transition: color 0.2s;
 
     &:hover {
-      background: var(--primary);
-      color: white;
-      padding-right: 3rem;
+      color: var(--primary-hover);
+      text-decoration: underline;
+    }
+  }
 
-      &::after {
-        transform: translateX(5px);
-        opacity: 1;
+  span {
+    color: var(--text-light);
+
+    &.breadcrumbs-separator {
+      color: var(--text-light);
+      margin: 0;
+      opacity: 0.5;
+    }
+
+    &:last-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin: 0 -12px 16px;
+    padding: 12px;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+
+    a {
+      display: flex;
+      align-items: center;
+      color: var(--text);
+      font-weight: 500;
+
+      &:first-child {
+        &::before {
+          content: "";
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          margin-right: 8px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 18l-6-6 6-6'/%3E%3C/svg%3E");
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.7;
+        }
       }
     }
+
+    // Показываем только "Назад в категорию"
+    a,
+    span {
+      display: none;
+
+      &:nth-last-child(4) {
+        // Ссылка на категорию
+        display: flex;
+        width: 100%;
+      }
+    }
+
+    // Скрываем все разделители
+    .breadcrumbs-separator {
+      display: none;
+    }
   }
-}
 
-@media (max-width: 1024px) {
-  .required-product-card {
-    flex-direction: column;
-    align-items: center;
-    padding-top: 180px;
-    margin-top: 4rem;
+  @media (max-width: 480px) {
+    font-size: 0.875rem;
+    padding: 10px 12px;
 
-    &__image-wrapper {
-      position: absolute;
-      top: -120px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 260px;
-      min-width: 260px;
-    }
-
-    &__image {
-      width: 280px;
-      height: 280px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    &__content {
-      width: 100%;
-      padding: 2rem;
-      background: white;
-    }
-
-    &__header {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 1rem;
-    }
-
-    &__title {
-      font-size: 1.5rem;
-    }
-
-    &__price {
-      font-size: 1.5rem;
-    }
-
-    &__description {
-      text-align: center;
-    }
-
-    &__footer {
-      justify-content: center;
+    a:first-child::before {
+      width: 18px;
+      height: 18px;
+      margin-right: 6px;
     }
   }
 }
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  padding: 32px;
+  margin: 20px 0;
 
+  p {
+    margin-top: 16px;
+    color: var(--text-light);
+    font-size: 1.1rem;
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  padding: 32px;
+  margin: 20px 0;
+
+  .error-message {
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+
+  .retry-button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Добавляем стили для мобильной версии
+.no-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+
+// Оптимизация для мобильных устройств
 @media (max-width: 768px) {
-  .required-product-card {
-    padding-top: 160px;
-    margin-top: 3rem;
+  .product-detail-page {
+    padding: 20px 0;
+  }
 
-    &__image-wrapper {
-      top: -100px;
-      width: 220px;
-      min-width: 220px;
-    }
+  .container {
+    padding: 0 12px;
+  }
 
-    &__image {
-      width: 240px;
-      height: 240px;
-    }
+  .product-gallery,
+  .product-info-block {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+  }
 
-    &__content {
-      padding: 1.5rem;
-    }
-
-    &__title {
-      font-size: 1.25rem;
-    }
-
-    &__price {
-      font-size: 1.25rem;
-    }
-
-    &__description {
-      font-size: 1rem;
-    }
-
-    &__button {
-      width: 100%;
-      justify-content: center;
-    }
+  .product-top-row {
+    gap: 16px;
   }
 }
-</style> 
+</style>

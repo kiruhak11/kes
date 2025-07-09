@@ -2,7 +2,7 @@ import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
   typescript: { strict: true },
-  
+
   // Экспериментальные функции для производительности
   experimental: {
     payloadExtraction: false,
@@ -19,11 +19,11 @@ export default defineNuxtConfig({
     minify: true,
     prerender: {
       crawlLinks: true,
-      routes: ['/'],
+      routes: ["/"],
     },
     storage: {
       redis: {
-        driver: 'memory',
+        driver: "memory",
       },
     },
   },
@@ -31,15 +31,15 @@ export default defineNuxtConfig({
   // Оптимизация Vite
   vite: {
     build: {
-      target: 'esnext',
-      minify: 'esbuild',
+      target: "esnext",
+      minify: "esbuild",
       cssMinify: true,
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['vue', 'vue-router'],
-            ui: ['@nuxt/image'],
-            charts: ['chart.js'],
+            vendor: ["vue", "vue-router"],
+            ui: ["@nuxt/image"],
+            charts: ["chart.js"],
           },
         },
       },
@@ -58,7 +58,7 @@ export default defineNuxtConfig({
       },
     },
     optimizeDeps: {
-      include: ['vue', 'vue-router', '@nuxt/image', 'chart.js'],
+      include: ["vue", "vue-router", "@nuxt/image", "chart.js"],
     },
   },
 
@@ -71,13 +71,13 @@ export default defineNuxtConfig({
       lg: 1280,
       sm: 640,
     },
-    format: ['webp'],
+    format: ["webp"],
     quality: 80,
-    provider: 'ipx',
+    provider: "ipx",
     presets: {
       avatar: {
         modifiers: {
-          format: 'webp',
+          format: "webp",
           width: 50,
           height: 50,
         },
@@ -121,15 +121,18 @@ export default defineNuxtConfig({
     "rubillex_frog-modal",
     "nuxt-file-storage",
     "@nuxt/image",
-    ["@nuxtjs/sitemap", {
-      siteUrl: 'https://kes-sib.ru',
-      xsl: false,
-      defaults: {
-        changefreq: 'weekly',
-        priority: 0.7,
+    [
+      "@nuxtjs/sitemap",
+      {
+        siteUrl: "https://kes-sib.ru",
+        xsl: false,
+        defaults: {
+          changefreq: "weekly",
+          priority: 0.7,
+        },
+        // Можно добавить фильтрацию/исключения при необходимости
       },
-      // Можно добавить фильтрацию/исключения при необходимости
-    }],
+    ],
   ],
 
   // Pinia конфигурация
@@ -148,18 +151,18 @@ export default defineNuxtConfig({
     head: {
       link: [
         {
-          rel: 'preconnect',
-          href: 'https://fonts.googleapis.com',
+          rel: "preconnect",
+          href: "https://fonts.googleapis.com",
         },
         {
-          rel: 'preconnect',
-          href: 'https://fonts.gstatic.com',
-          crossorigin: '',
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
         },
       ],
     },
   },
 
   // Оптимизация devtools
-  devtools: { enabled: false },
+  devtools: { enabled: true },
 });

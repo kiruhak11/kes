@@ -2,7 +2,11 @@
   <div class="home">
     <!-- Hero Section -->
     <client-only>
-      <section class="hero" :class="{ 'hero--mobile': $device.isMobile }" v-scroll-reveal="'fade-in'">
+      <section
+        class="hero"
+        :class="{ 'hero--mobile': $device.isMobile }"
+        v-scroll-reveal="'fade-in'"
+      >
         <div
           v-for="(img, idx) in heroImages"
           :key="img"
@@ -24,11 +28,18 @@
         <div class="container">
           <div class="hero__content">
             <h1 class="hero__title">
-              <span>Котельный завод «КЭС» — Проектирование, производство, монтаж, пуско-наладка котлов и котельного оборудования</span>
+              <span
+                >Котельный завод «КЭС» — Проектирование, производство, монтаж,
+                пуско-наладка котлов и котельного оборудования</span
+              >
             </h1>
             <div class="hero__title__bt">
-              <NuxtLink to="/about" class="btn btn-primary">Подробнее о заводе</NuxtLink>
-              <NuxtLink to="/catalog" class="btn btn-primary">Перейти в Каталог</NuxtLink>
+              <NuxtLink to="/about" class="btn btn-primary"
+                >Подробнее о заводе</NuxtLink
+              >
+              <NuxtLink to="/catalog" class="btn btn-primary"
+                >Перейти в Каталог</NuxtLink
+              >
             </div>
           </div>
         </div>
@@ -41,21 +52,34 @@
         <h2 class="section-title">Каталог продукции</h2>
         <client-only>
           <div :class="['grid', $device.isMobile ? 'grid-1' : 'grid-3']">
-            <div class="catalog-card" v-for="category in mainCategories" :key="category.slug" v-scroll-reveal="'zoom-in'">
+            <div
+              class="catalog-card"
+              v-for="category in mainCategories"
+              :key="category.slug"
+              v-scroll-reveal="'zoom-in'"
+            >
               <NuxtLink :to="`/catalog/${category.slug}`">
                 <img
-                  :src="category.images[0] ?? '/images/placeholders/placeholder.png'" 
+                  :src="
+                    category.images[0] ?? '/images/placeholders/placeholder.png'
+                  "
                   :alt="`${category.title} - котельное оборудование`"
                 />
                 <h3>{{ category.title }}</h3>
                 <p v-if="!$device.isMobile">{{ category.description }}</p>
-                <NuxtLink :to="`/catalog/${category.slug}`" class="btn btn-primary">Подробнее</NuxtLink>
+                <NuxtLink
+                  :to="`/catalog/${category.slug}`"
+                  class="btn btn-primary"
+                  >Подробнее</NuxtLink
+                >
               </NuxtLink>
             </div>
           </div>
         </client-only>
         <div class="text-center">
-          <NuxtLink to="/catalog" class="btn btn-primary">Все категории</NuxtLink>
+          <NuxtLink to="/catalog" class="btn btn-primary"
+            >Все категории</NuxtLink
+          >
         </div>
       </div>
     </section>
@@ -67,19 +91,43 @@
           <div class="about__text">
             <h2>О заводе котельного оборудования</h2>
             <ul class="about__list">
-              <li>Наше котельное оборудование успешно работает практически во всех регионах России от Крыма до Камчатки.</li>
-              <li>Разработки проектного отдела завода имеют патенты. Котельное оборудование производится по типовым проектам и по техническим заданиям.</li>
-              <li>Вся продукция котельного завода сертифицирована и соответствует ГОСТ.</li>
-              <li>Аттестованная технология сварки позволяет выпускать поднадзорную продукцию для котельных.</li>
-              <li>Выполняем разделы проектов теплоснабжения для прохождения экспертизы и составления проектно-сметной документации. Состоим в реестре членов СРО для выполнения проектных и строительных работ.</li>
-              <li>Выполняем инженерно-консультационные услуги по эксплуатации и наладке котельных установок.</li>
-              <li>Котельный завод производит пуско-наладку котельных и котельного оборудования.</li>
+              <li>
+                Наше котельное оборудование успешно работает практически во всех
+                регионах России от Крыма до Камчатки.
+              </li>
+              <li>
+                Разработки проектного отдела завода имеют патенты. Котельное
+                оборудование производится по типовым проектам и по техническим
+                заданиям.
+              </li>
+              <li>
+                Вся продукция котельного завода сертифицирована и соответствует
+                ГОСТ.
+              </li>
+              <li>
+                Аттестованная технология сварки позволяет выпускать поднадзорную
+                продукцию для котельных.
+              </li>
+              <li>
+                Выполняем разделы проектов теплоснабжения для прохождения
+                экспертизы и составления проектно-сметной документации. Состоим
+                в реестре членов СРО для выполнения проектных и строительных
+                работ.
+              </li>
+              <li>
+                Выполняем инженерно-консультационные услуги по эксплуатации и
+                наладке котельных установок.
+              </li>
+              <li>
+                Котельный завод производит пуско-наладку котельных и котельного
+                оборудования.
+              </li>
             </ul>
           </div>
           <div class="about__media" v-scroll-reveal="'slide-in-right'">
             <div class="factory-slider">
-              <div 
-                v-for="(img, idx) in factoryImages" 
+              <div
+                v-for="(img, idx) in factoryImages"
                 :key="img"
                 class="factory-slide"
                 :class="{ active: idx === currentFactorySlide }"
@@ -105,8 +153,8 @@
                 </button>
               </div>
               <div class="factory-slider__dots">
-                <button 
-                  v-for="(_, idx) in factoryImages" 
+                <button
+                  v-for="(_, idx) in factoryImages"
                   :key="idx"
                   class="dot"
                   :class="{ active: idx === currentFactorySlide }"
@@ -125,7 +173,9 @@
         <h2 class="section-title">Услуги завода</h2>
         <div class="grid grid-4">
           <NuxtLink
-            :to="`/contact?service=${encodeURIComponent(service.title.replace(/<br>/g, ' '))}`"
+            :to="`/contact?service=${encodeURIComponent(
+              service.title.replace(/<br>/g, ' ')
+            )}`"
             class="service-card"
             v-for="(service, idx) in services"
             :key="service.title"
@@ -140,8 +190,20 @@
             />
             <h3 v-html="service.title"></h3>
             <div class="service-card__arrow">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 12H19M19 12L12 5M19 12L12 19"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </div>
           </NuxtLink>
@@ -154,15 +216,30 @@
       <div class="container">
         <div class="cta-card">
           <div class="cta-content">
-            
             <div class="cta-text">
               <h3>Дополнительные услуги!</h3>
-              <p>Наши специалисты подберут оптимальное решение для вашего объекта и предложат выгодную цену. Получите бесплатную консультацию и расчет стоимости.</p>
+              <p>
+                Наши специалисты подберут оптимальное решение для вашего объекта
+                и предложат выгодную цену. Получите бесплатную консультацию и
+                расчет стоимости.
+              </p>
             </div>
             <div class="cta-actions">
               <a href="tel:+73852500000" class="btn btn-primary btn-large">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
                 {{ contacts.phone[0] }}
               </a>
@@ -174,24 +251,60 @@
           <div class="cta-features">
             <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </div>
               <span>Бесплатная консультация</span>
             </div>
             <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </div>
               <span>Индивидуальный подход</span>
             </div>
             <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </div>
               <span>Быстрый расчет стоимости</span>
@@ -214,16 +327,20 @@
             <div class="input-with-select">
               <select v-model="typeBuilding">
                 <option value="">Выберите тип здания</option>
-                <option v-for="building in buildingTypes" :key="building" :value="building">
+                <option
+                  v-for="building in buildingTypes"
+                  :key="building"
+                  :value="building"
+                >
                   {{ building }}
                 </option>
               </select>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 v-model="typeBuilding"
                 placeholder="Или введите свой вариант"
                 class="manual-input"
-              >
+              />
             </div>
           </div>
 
@@ -236,12 +353,12 @@
                   {{ fuel }}
                 </option>
               </select>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 v-model="fuelType"
                 placeholder="Или введите свой вариант"
                 class="manual-input"
-              >
+              />
             </div>
           </div>
 
@@ -254,27 +371,30 @@
                   {{ power }}
                 </option>
               </select>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 v-model="powerType"
                 placeholder="Или введите свой вариант"
                 class="manual-input"
-              >
+              />
             </div>
           </div>
 
           <div class="form-group">
             <label>Регион</label>
             <div class="region-select">
-              <input 
-                type="text" 
-                v-model="regionSearch" 
+              <input
+                type="text"
+                v-model="regionSearch"
                 placeholder="Поиск региона..."
                 class="region-search"
+              />
+              <div
+                class="region-dropdown"
+                v-if="regionSearch && filteredRegions.length"
               >
-              <div class="region-dropdown" v-if="regionSearch && filteredRegions.length">
-                <div 
-                  v-for="region in filteredRegions" 
+                <div
+                  v-for="region in filteredRegions"
                   :key="region"
                   class="region-option"
                   @click="selectRegion(region)"
@@ -289,13 +409,13 @@
             <label>Телефон для связи</label>
             <div class="phone-input">
               <span class="phone-prefix">+7</span>
-              <input 
-                type="tel" 
+              <input
+                type="tel"
                 v-model="phoneNumber"
                 placeholder="(___) ___-__-__"
                 @input="formatPhoneNumber"
                 class="phone-field"
-              >
+              />
             </div>
           </div>
 
@@ -307,95 +427,99 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useModalStore } from '~/stores/modal'
-import BackIcon from '~/components/icons/back.vue'
-import NextIcon from '~/components/icons/next.vue'
-import TypeWriter from '~/components/TypeWriter.vue'
-import { contacts } from '~/data/contacts'
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { useModalStore } from "~/stores/modal";
+import BackIcon from "~/components/icons/back.vue";
+import NextIcon from "~/components/icons/next.vue";
+import TypeWriter from "~/components/TypeWriter.vue";
+import { contacts } from "~/data/contacts";
 // SEO Meta Tags
 useHead({
-  title: 'КотлоЭнергоСнаб — Котельный завод КЭС Барнаул',
+  title: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
   meta: [
     {
-      name: 'description',
-      content: 'КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Производство, монтаж, сервис, проектирование, пуско-наладка.'
+      name: "description",
+      content:
+        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Производство, монтаж, сервис, проектирование, пуско-наладка.",
     },
     {
-      name: 'keywords',
-      content: 'КотлоЭнергоСнаб, котельный завод, котельное оборудование, котлы, модульные котельные, Барнаул, производство котлов, монтаж, пуско-наладка'
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, котельный завод, котельное оборудование, котлы, модульные котельные, Барнаул, производство котлов, монтаж, пуско-наладка",
     },
     {
-      name: 'author',
-      content: 'КотлоЭнергоСнаб'
+      name: "author",
+      content: "КотлоЭнергоСнаб",
     },
     {
-      property: 'og:site_name',
-      content: 'КотлоЭнергоСнаб'
+      property: "og:site_name",
+      content: "КотлоЭнергоСнаб",
     },
     {
-      property: 'og:title',
-      content: 'КотлоЭнергоСнаб — Котельный завод КЭС Барнаул'
+      property: "og:title",
+      content: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
     },
     {
-      property: 'og:description',
-      content: 'КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Производство, монтаж, сервис.'
+      property: "og:description",
+      content:
+        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Производство, монтаж, сервис.",
     },
     {
-      property: 'og:type',
-      content: 'website'
+      property: "og:type",
+      content: "website",
     },
     {
-      property: 'og:url',
-      content: 'https://kes-sib.ru/'
+      property: "og:url",
+      content: "https://kes-sib.ru/",
     },
     {
-      property: 'og:image',
-      content: '/images/hero1.jpg'
+      property: "og:image",
+      content: "/images/hero1.jpg",
     },
     {
-      name: 'twitter:card',
-      content: 'summary_large_image'
+      name: "twitter:card",
+      content: "summary_large_image",
     },
     {
-      name: 'twitter:title',
-      content: 'КотлоЭнергоСнаб — Котельный завод КЭС Барнаул'
+      name: "twitter:title",
+      content: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
     },
     {
-      name: 'twitter:description',
-      content: 'КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле.'
+      name: "twitter:description",
+      content:
+        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле.",
     },
     {
-      name: 'robots',
-      content: 'index, follow'
-    }
+      name: "robots",
+      content: "index, follow",
+    },
   ],
   link: [
     {
-      rel: 'icon',
-      href: '/favicon.ico',
-      type: 'image/x-icon'
+      rel: "icon",
+      href: "/favicon.ico",
+      type: "image/x-icon",
     },
     {
-      rel: 'canonical',
-      href: 'https://kes-sib.ru/'
-    }
+      rel: "canonical",
+      href: "https://kes-sib.ru/",
+    },
   ],
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: JSON.stringify({
         "@context": "http://schema.org",
         "@type": "Organization",
-        "name": "КотлоЭнергоСнаб",
-        "url": "https://kes-sib.ru/",
-        "logo": "https://kes-sib.ru/favicon.ico"
-      })
-    }
-  ]
-})
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
+});
 
-const { $device } = useNuxtApp()
+const { $device } = useNuxtApp();
 // Получаем реальные категории для каталога на главной
 interface Category {
   title: string;
@@ -404,155 +528,149 @@ interface Category {
   description: string;
 }
 const mainCategories = ref<Category[]>([]);
-const { data: fetchedCategories, error: fetchError } = await useFetch<Category[]>('/api/categories');
+const { data: fetchedCategories, error: fetchError } = await useFetch<
+  Category[]
+>("/api/categories");
 if (fetchedCategories.value) {
   mainCategories.value = fetchedCategories.value.slice(0, 3);
 } else if (fetchError.value) {
-  console.error('Error loading categories:', fetchError.value);
+  console.error("Error loading categories:", fetchError.value);
 }
 
-const typeBuilding = ref('')
-const fuelType = ref('')
-const powerType = ref('')
-const phoneNumber = ref('')
+const typeBuilding = ref("");
+const fuelType = ref("");
+const powerType = ref("");
+const phoneNumber = ref("");
 
 const regions = [
-  'Алтайский край',
-  'Амурская область',
-  'Архангельская область',
-  'Астраханская область',
-  'Белгородская область',
-  'Брянская область',
-  'Владимирская область',
-  'Волгоградская область',
-  'Вологодская область',
-  'Воронежская область',
-  'Еврейская автономная область',
-  'Забайкальский край',
-  'Ивановская область',
-  'Иркутская область',
-  'Кабардино-Балкарская Республика',
-  'Калининградская область',
-  'Калужская область',
-  'Камчатский край',
-  'Карачаево-Черкесская Республика',
-  'Кемеровская область',
-  'Кировская область',
-  'Костромская область',
-  'Краснодарский край',
-  'Красноярский край',
-  'Курганская область',
-  'Курская область',
-  'Ленинградская область',
-  'Липецкая область',
-  'Магаданская область',
-  'Москва',
-  'Московская область',
-  'Мурманская область',
-  'Ненецкий автономный округ',
-  'Нижегородская область',
-  'Новгородская область',
-  'Новосибирская область',
-  'Омская область',
-  'Оренбургская область',
-  'Орловская область',
-  'Пензенская область',
-  'Пермский край',
-  'Приморский край',
-  'Псковская область',
-  'Республика Адыгея',
-  'Республика Алтай',
-  'Республика Башкортостан',
-  'Республика Бурятия',
-  'Республика Дагестан',
-  'Республика Ингушетия',
-  'Республика Калмыкия',
-  'Республика Карелия',
-  'Республика Коми',
-  'Республика Крым',
-  'Республика Марий Эл',
-  'Республика Мордовия',
-  'Республика Саха (Якутия)',
-  'Республика Северная Осетия - Алания',
-  'Республика Татарстан',
-  'Республика Тыва',
-  'Республика Хакасия',
-  'Ростовская область',
-  'Рязанская область',
-  'Самарская область',
-  'Санкт-Петербург',
-  'Саратовская область',
-  'Сахалинская область',
-  'Свердловская область',
-  'Смоленская область',
-  'Ставропольский край',
-  'Тамбовская область',
-  'Тверская область',
-  'Томская область',
-  'Тульская область',
-  'Тюменская область',
-  'Удмуртская Республика',
-  'Ульяновская область',
-  'Хабаровский край',
-  'Ханты-Мансийский автономный округ - Югра',
-  'Челябинская область',
-  'Чеченская Республика',
-  'Чувашская Республика',
-  'Чукотский автономный округ',
-  'Ямало-Ненецкий автономный округ',
-  'Ярославская область'
-]
+  "Алтайский край",
+  "Амурская область",
+  "Архангельская область",
+  "Астраханская область",
+  "Белгородская область",
+  "Брянская область",
+  "Владимирская область",
+  "Волгоградская область",
+  "Вологодская область",
+  "Воронежская область",
+  "Еврейская автономная область",
+  "Забайкальский край",
+  "Ивановская область",
+  "Иркутская область",
+  "Кабардино-Балкарская Республика",
+  "Калининградская область",
+  "Калужская область",
+  "Камчатский край",
+  "Карачаево-Черкесская Республика",
+  "Кемеровская область",
+  "Кировская область",
+  "Костромская область",
+  "Краснодарский край",
+  "Красноярский край",
+  "Курганская область",
+  "Курская область",
+  "Ленинградская область",
+  "Липецкая область",
+  "Магаданская область",
+  "Москва",
+  "Московская область",
+  "Мурманская область",
+  "Ненецкий автономный округ",
+  "Нижегородская область",
+  "Новгородская область",
+  "Новосибирская область",
+  "Омская область",
+  "Оренбургская область",
+  "Орловская область",
+  "Пензенская область",
+  "Пермский край",
+  "Приморский край",
+  "Псковская область",
+  "Республика Адыгея",
+  "Республика Алтай",
+  "Республика Башкортостан",
+  "Республика Бурятия",
+  "Республика Дагестан",
+  "Республика Ингушетия",
+  "Республика Калмыкия",
+  "Республика Карелия",
+  "Республика Коми",
+  "Республика Крым",
+  "Республика Марий Эл",
+  "Республика Мордовия",
+  "Республика Саха (Якутия)",
+  "Республика Северная Осетия - Алания",
+  "Республика Татарстан",
+  "Республика Тыва",
+  "Республика Хакасия",
+  "Ростовская область",
+  "Рязанская область",
+  "Самарская область",
+  "Санкт-Петербург",
+  "Саратовская область",
+  "Сахалинская область",
+  "Свердловская область",
+  "Смоленская область",
+  "Ставропольский край",
+  "Тамбовская область",
+  "Тверская область",
+  "Томская область",
+  "Тульская область",
+  "Тюменская область",
+  "Удмуртская Республика",
+  "Ульяновская область",
+  "Хабаровский край",
+  "Ханты-Мансийский автономный округ - Югра",
+  "Челябинская область",
+  "Чеченская Республика",
+  "Чувашская Республика",
+  "Чукотский автономный округ",
+  "Ямало-Ненецкий автономный округ",
+  "Ярославская область",
+];
 
 const buildingTypes = [
-  'Административные здания',
-  'Бани',
-  'Больницы',
-  'Гаражи',
-  'Гостиницы',
-  'Детские сады',
-  'Жилые постройки 1930-1958 г.г',
-  'Жилые постройки после 1958 г.',
-  'Кафе рестораны',
-  'Кинотеатр',
-  'Клубы',
-  'Магазины',
-  'Пожарные Депо',
-  'Поликлиники',
-  'Школы'
-]
+  "Административные здания",
+  "Бани",
+  "Больницы",
+  "Гаражи",
+  "Гостиницы",
+  "Детские сады",
+  "Жилые постройки 1930-1958 г.г",
+  "Жилые постройки после 1958 г.",
+  "Кафе рестораны",
+  "Кинотеатр",
+  "Клубы",
+  "Магазины",
+  "Пожарные Депо",
+  "Поликлиники",
+  "Школы",
+];
 
-const fuelTypes = [
-  'Газ',
-  'Твердое топливо',
-  'Жидкое топливо',
-  'Электричество'
-]
+const fuelTypes = ["Газ", "Твердое топливо", "Жидкое топливо", "Электричество"];
 
-const powerTypes = [
-  'Паровая',
-  'Водогрейная'
-]
+const powerTypes = ["Паровая", "Водогрейная"];
 
 const selectRegion = (region: string) => {
-  regionSearch.value = region
-}
+  regionSearch.value = region;
+};
 
 const formatPhoneNumber = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  let value = input.value.replace(/\D/g, '')
-  
+  const input = event.target as HTMLInputElement;
+  let value = input.value.replace(/\D/g, "");
+
   if (value.length > 0) {
-    value = value.match(new RegExp('.{1,3}', 'g'))?.join(' ') || value
+    value = value.match(new RegExp(".{1,3}", "g"))?.join(" ") || value;
   }
-  
-  phoneNumber.value = value
-}
+
+  phoneNumber.value = value;
+};
 const modalStore = useModalStore();
 async function calculate() {
   // Валидация телефона: минимум 10 цифр (без кода страны)
-  const phoneDigits = phoneNumber.value.replace(/\D/g, '');
+  const phoneDigits = phoneNumber.value.replace(/\D/g, "");
   if (!phoneDigits || phoneDigits.length < 10) {
-    modalStore.showError('Пожалуйста, введите корректный номер телефона.');
+    modalStore.showError("Пожалуйста, введите корректный номер телефона.");
     return;
   }
   const payload = {
@@ -569,116 +687,120 @@ async function calculate() {
       method: "POST",
       body: payload,
     });
-    modalStore.showSuccess("Обращение успешно отправлено!")
-    phoneNumber.value = '';
-    regionSearch.value = '';
-    typeBuilding.value = '';
-    fuelType.value = '';
-    powerType.value = '';
+    modalStore.showSuccess("Обращение успешно отправлено!");
+    phoneNumber.value = "";
+    regionSearch.value = "";
+    typeBuilding.value = "";
+    fuelType.value = "";
+    powerType.value = "";
   } catch (err) {
     console.error("Ошибка отправки:", err);
-    modalStore.showError(`Ошибка отправки: ${err}`)
+    modalStore.showError(`Ошибка отправки: ${err}`);
   }
 }
 
-const regionSearch = ref('')
+const regionSearch = ref("");
 const filteredRegions = computed(() => {
-  if (!regionSearch.value) return regions
-  return regions.filter(region => 
+  if (!regionSearch.value) return regions;
+  return regions.filter((region) =>
     region.toLowerCase().includes(regionSearch.value.toLowerCase())
-  )
-})
+  );
+});
 
 const heroImages = [
-  '/images/hero1.png',
-  '/images/hero2.png',
-  '/images/hero3.png',
-  '/images/hero4.png',
-]
-const currentHero = ref(0)
-let intervalId: number | undefined
+  "/images/hero1.png",
+  "/images/hero2.png",
+  "/images/hero3.png",
+  "/images/hero4.png",
+];
+const currentHero = ref(0);
+let intervalId: number | undefined;
 
 const factoryImages = [
-  '/images/hero1x.png',
-  '/images/hero2x.png',
-  '/images/hero3x.png',
-  '/images/hero4x.png',
-]
-const currentFactorySlide = ref(0)
-let factoryIntervalId: number | undefined
+  "/images/hero1x.png",
+  "/images/hero2x.png",
+  "/images/hero3x.png",
+  "/images/hero4x.png",
+];
+const currentFactorySlide = ref(0);
+let factoryIntervalId: number | undefined;
 
 const prevSlide = () => {
-  currentFactorySlide.value = (currentFactorySlide.value - 1 + factoryImages.length) % factoryImages.length
-}
+  currentFactorySlide.value =
+    (currentFactorySlide.value - 1 + factoryImages.length) %
+    factoryImages.length;
+};
 
 const nextSlide = () => {
-  currentFactorySlide.value = (currentFactorySlide.value + 1) % factoryImages.length
-}
+  currentFactorySlide.value =
+    (currentFactorySlide.value + 1) % factoryImages.length;
+};
 
 // Pause auto-sliding when user interacts with controls
 const pauseAutoSlide = () => {
   if (factoryIntervalId) {
-    clearInterval(factoryIntervalId)
-    factoryIntervalId = undefined
+    clearInterval(factoryIntervalId);
+    factoryIntervalId = undefined;
   }
-}
+};
 
 const resumeAutoSlide = () => {
   if (!factoryIntervalId) {
     factoryIntervalId = window.setInterval(() => {
-      currentFactorySlide.value = (currentFactorySlide.value + 1) % factoryImages.length
-    }, 4000)
+      currentFactorySlide.value =
+        (currentFactorySlide.value + 1) % factoryImages.length;
+    }, 4000);
   }
-}
+};
 
 onMounted(() => {
   // Hero slider interval
   intervalId = window.setInterval(() => {
-    currentHero.value = (currentHero.value + 1) % heroImages.length
-  }, 5000)
+    currentHero.value = (currentHero.value + 1) % heroImages.length;
+  }, 5000);
 
   // Factory slider interval
-  resumeAutoSlide()
-})
+  resumeAutoSlide();
+});
 
 onBeforeUnmount(() => {
-  if (intervalId) clearInterval(intervalId)
-  if (factoryIntervalId) clearInterval(factoryIntervalId)
-})
+  if (intervalId) clearInterval(intervalId);
+  if (factoryIntervalId) clearInterval(factoryIntervalId);
+});
 
 function handleImageError(e: Event | string) {
-  if (typeof e === 'string') {
+  if (typeof e === "string") {
     // NuxtImg может передавать строку с ошибкой
-    console.error('Image error:', e)
-    return
+    console.error("Image error:", e);
+    return;
   }
-  
-  const img = e.target as HTMLImageElement
+
+  const img = e.target as HTMLImageElement;
   if (img) {
-    img.src = '/images/placeholders/placeholder.png'
+    img.src = "/images/placeholders/placeholder.png";
   }
 }
 
 const services = [
   {
-    img: '/images/services/installation.png',
-    title: 'Монтаж | Демонтаж <br>котлов',
-    animation: 'slide-in-left',
+    img: "/images/services/installation.png",
+    title: "Монтаж | Демонтаж <br>котлов",
+    animation: "slide-in-left",
   },
   {
-    img: '/images/services/design.png',
-    title: 'Проектирование котельной',
-    animation: 'fade-in-up',
+    img: "/images/services/design.png",
+    title: "Проектирование котельной",
+    animation: "fade-in-up",
   },
   {
-    img: '/images/services/startup.png',
-    title: 'Пуско-наладка котельной',
-    animation: 'zoom-in',
+    img: "/images/services/startup.png",
+    title: "Пуско-наладка котельной",
+    animation: "zoom-in",
   },
   {
-  img: '/images/services/turnkey.png',
-    title: 'Котельная под ключ',
-    animation: 'slide-in-right',
+    img: "/images/services/turnkey.png",
+    title: "Котельная под ключ",
+    animation: "slide-in-right",
   },
 ];
 </script>
@@ -715,7 +837,7 @@ const services = [
 .hero__bg-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5));
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
   z-index: 1;
 }
 .hero__bg.active {
@@ -871,7 +993,7 @@ const services = [
   left: 0;
   right: 0;
   padding: 30px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
   color: white;
   text-align: center;
   z-index: 2;
@@ -914,12 +1036,12 @@ const services = [
   transition: all 0.3s ease;
   backdrop-filter: blur(4px);
   color: white;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
   }
-  
+
   .arrow-icon {
     width: 24px;
     height: 24px;
@@ -945,11 +1067,11 @@ const services = [
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.3);
   }
-  
+
   &.active {
     background: white;
     transform: scale(1.2);
@@ -981,7 +1103,7 @@ const services = [
 }
 
 .service-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -1036,7 +1158,7 @@ const services = [
 }
 
 .service-card h3::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -8px;
   left: 50%;
@@ -1092,7 +1214,7 @@ const services = [
 }
 
 .cta-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -1288,7 +1410,7 @@ const services = [
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .region-option {
@@ -1363,12 +1485,12 @@ const services = [
   .factory-slider {
     min-height: 400px;
   }
-  
+
   .about__text h2,
   .factory-slider__caption h3 {
     font-size: 1.8rem;
   }
-  
+
   .factory-slider__caption p {
     font-size: 1.1rem;
   }
@@ -1382,36 +1504,36 @@ const services = [
   .factory-slider {
     min-height: 300px;
   }
-  
+
   .about__text h2,
   .factory-slider__caption h3 {
     font-size: 1.4rem;
     margin-bottom: 16px;
   }
-  
+
   .about__list li {
     font-size: 0.9rem;
     margin-bottom: 12px;
   }
-  
+
   .factory-slider__caption {
     padding: 20px;
   }
-  
+
   .factory-slider__caption p {
     font-size: 1rem;
   }
-  
+
   .slider-control {
     width: 40px;
     height: 40px;
-    
+
     .arrow-icon {
       width: 20px;
       height: 20px;
     }
   }
-  
+
   .dot {
     width: 10px;
     height: 10px;
@@ -1424,24 +1546,24 @@ const services = [
     gap: 24px;
     text-align: center;
   }
-  
+
   .cta-actions {
     justify-content: center;
     flex-wrap: wrap;
   }
-  
+
   .cta-features {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
-  
+
   .service-card {
     padding: 24px 20px;
   }
-  
+
   .service-card h3 {
     font-size: 1.2rem;
   }
-  
+
   .service-card__arrow {
     width: 28px;
     height: 28px;
@@ -1454,58 +1576,58 @@ const services = [
   .cta-card {
     padding: 32px 24px;
   }
-  
+
   .cta-text h3 {
     font-size: 1.6rem;
   }
-  
+
   .cta-text p {
     font-size: 1rem;
   }
-  
+
   .cta-actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .btn-large {
     width: 100%;
     justify-content: center;
   }
-  
+
   .cta-features {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .feature-item {
     padding: 12px;
   }
-  
+
   .cta-icon {
     width: 60px;
     height: 60px;
   }
-  
+
   .service-card {
     padding: 20px 16px;
     margin-bottom: 20px;
   }
-  
+
   .service-card img {
     height: 160px;
     margin-bottom: 20px;
   }
-  
+
   .service-card h3 {
     font-size: 1.1rem;
     margin-bottom: 12px;
   }
-  
+
   .service-card:hover {
     transform: translateY(-4px);
   }
-  
+
   .service-card__arrow {
     width: 24px;
     height: 24px;
