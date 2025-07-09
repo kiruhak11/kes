@@ -20,7 +20,7 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
       - FILE_STORAGE_MOUNT=/app/public/uploads
-      - DATABASE_URL=mysql://root:rootpassword@db/kes-site
+      - DATABASE_URL=mysql://root:rootpassword@db:3306/kes-site
     depends_on:
       - db
 
@@ -28,7 +28,7 @@ services:
     image: mysql:8.0
     container_name: kes-site-mysql
     ports:
-      - "3306:3306" # Проброс порта для внешнего доступа
+      - "3307:3306" # Изменен внешний порт на 3307
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: kes-site
