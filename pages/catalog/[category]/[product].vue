@@ -720,9 +720,10 @@ interface ProductSpecs {
 interface APIProduct {
   id: number;
   name: string | null;
-  price: number | null;
-  image: string | null;
   description: string | null;
+  image: string | null;
+  slug?: string;
+  price: number | null;
   extendedDescription: string | null;
   category_id: string | null;
   additional_images: string[] | null;
@@ -759,18 +760,8 @@ interface Certificate {
 
 const route = useRoute();
 const router = useRouter();
-const config = useRuntimeConfig();
-
-// Get category and product slugs from route
-const categorySlug = computed(() => {
-  const slug = route.params.category as string | undefined;
-  return typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : "";
-});
-
-const productSlug = computed(() => {
-  const slug = route.params.product;
-  return typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : "";
-});
+const categorySlug = computed(() => route.params.category as string);
+const productSlug = computed(() => route.params.product as string);
 
 // Добавляем проверку, активен ли маршрут продукта
 const isProductRouteActive = computed(() => {
@@ -790,16 +781,67 @@ const categoryInfo = ref<
 const fetchError = ref<Error | null>(null);
 const categoryError = ref<Error | null>(null);
 
-// Функция для загрузки продуктов
+// Загружаем данные сразу при создании компонента
+const { data: initialProducts } = await useFetch<{
+  products: APIProduct[];
+}>("/api/products", {
+  key: `products-${categorySlug.value}`,
+  query: {
+    categorySlug: categorySlug.value,
+  },
+});
+
+const { data: initialCategory } = await useFetch<{
+  category: { name: string; description: string };
+}>(`/api/categories/${categorySlug.value}`, {
+  key: `category-${categorySlug.value}`,
+});
+
+// Инициализируем начальные данные
+if (initialProducts.value) {
+  products.value = initialProducts.value.products.map(
+    (product: APIProduct) => ({
+      id: product.id,
+      name: product.name || "",
+      description: product.description || "",
+      extendedDescription: product.extendedDescription || "",
+      price: product.price || 0,
+      image: product.image || "",
+      category: initialCategory.value?.category?.name || "",
+      category_slug: categorySlug.value,
+      slug: product.slug || "",
+      additional_images: product.additional_images || [],
+      specs: Array.isArray(product.specs) ? product.specs : [],
+      delivery_set: product.delivery_set || "",
+      connection_scheme: product.connection_scheme || "",
+      additional_requirements: product.additional_requirements || "",
+      required_products: product.required_products || [],
+    })
+  );
+}
+
+if (initialCategory.value?.category) {
+  categoryInfo.value = {
+    title: initialCategory.value.category.name || "",
+    description: initialCategory.value.category.description || "",
+    slug: categorySlug.value,
+  };
+}
+
+isLoadingProducts.value = false;
+isLoadingCategory.value = false;
+
+// Функция для загрузки продуктов (используется для обновления)
 const fetchProducts = async () => {
   isLoadingProducts.value = true;
   try {
     const { data: response, error } = await useFetch<{
       products: APIProduct[];
-    }>(`/api/products`, {
+    }>("/api/products", {
       query: {
         categorySlug: categorySlug.value,
       },
+      key: `products-${categorySlug.value}`,
     });
 
     if (error.value) {
@@ -814,9 +856,9 @@ const fetchProducts = async () => {
         extendedDescription: product.extendedDescription || "",
         price: product.price || 0,
         image: product.image || "",
-        category: "", // Will be filled from category data
-        category_slug: "", // Will be filled from category data
-        slug: "", // Will be generated
+        category: categoryInfo.value?.title || "",
+        category_slug: categorySlug.value,
+        slug: product.slug || "",
         additional_images: product.additional_images || [],
         specs: Array.isArray(product.specs) ? product.specs : [],
         delivery_set: product.delivery_set || "",
@@ -841,7 +883,9 @@ const fetchCategory = async () => {
   try {
     const { data: response, error } = await useFetch<{
       category: { name: string; description: string };
-    }>(`/api/categories/${categorySlug.value}`);
+    }>(`/api/categories/${categorySlug.value}`, {
+      key: `category-${categorySlug.value}`, // Добавляем уникальный ключ
+    });
 
     if (error.value) {
       console.error("Failed to fetch category:", error.value);
@@ -862,10 +906,17 @@ const fetchCategory = async () => {
   }
 };
 
+// Загружаем данные при изменении маршрута
+watchEffect(async () => {
+  if (categorySlug.value && productSlug.value) {
+    await Promise.all([fetchProducts(), fetchCategory()]);
+  }
+});
+
 // Определяем, является ли устройство мобильным
 const isMobile = ref(false);
 
-onMounted(async () => {
+onMounted(() => {
   // Проверяем ширину экрана при монтировании
   isMobile.value = window.innerWidth <= 768;
 
@@ -873,8 +924,6 @@ onMounted(async () => {
   window.addEventListener("resize", () => {
     isMobile.value = window.innerWidth <= 768;
   });
-
-  await Promise.all([fetchProducts(), fetchCategory()]);
 });
 
 onUnmounted(() => {
@@ -1130,10 +1179,20 @@ function scrollToGalleryCard(idx: number) {
 
 const imageList = computed<string[]>(() => {
   if (!product.value) return [];
+
   // Основное изображение
   const mainImage = product.value.image;
+
   // Дополнительные изображения
-  const additionalImages = product.value.additional_images || [];
+  let additionalImages: string[] = [];
+  if (product.value.additional_images) {
+    if (Array.isArray(product.value.additional_images)) {
+      additionalImages = product.value.additional_images;
+    } else if (typeof product.value.additional_images === "string") {
+      additionalImages = [product.value.additional_images];
+    }
+  }
+
   // Объединяем основное изображение и дополнительные
   return [mainImage, ...additionalImages].filter(Boolean);
 });
@@ -1323,6 +1382,33 @@ const retryLoading = async () => {
   categoryError.value = null;
   await Promise.all([fetchProducts(), fetchCategory()]);
 };
+
+// Загружаем рекомендованные товары
+const { data: recommendedProducts } = await useFetch<{
+  products: APIProduct[];
+}>("/api/products", {
+  key: `recommended-${categorySlug.value}`,
+  query: {
+    categorySlug: categorySlug.value,
+    exclude: productSlug.value,
+    limit: 4,
+  },
+});
+
+// Преобразуем рекомендованные товары
+const similarProducts = computed(() => {
+  if (!recommendedProducts.value?.products) return [];
+  return recommendedProducts.value.products.map((product: APIProduct) => ({
+    id: product.id,
+    name: product.name || "",
+    description: product.description || "",
+    image: product.image || "",
+    category_slug: categorySlug.value,
+    slug: product.slug || `product-${product.id}`,
+  }));
+});
+
+// ... existing code ...
 </script>
 
 <style scoped lang="scss">
@@ -1338,7 +1424,6 @@ const retryLoading = async () => {
 }
 .product-detail-page {
   padding: 40px 0;
-  background: #fafbfc;
   min-height: 100vh; // Добавляем минимальную высоту
   position: relative; // Добавляем позиционирование
   z-index: 1; // Устанавливаем z-index
@@ -2650,4 +2735,53 @@ const retryLoading = async () => {
     gap: 16px;
   }
 }
+
+.related-products {
+  margin-top: 4rem;
+  padding: 2rem 0;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+}
+
+.related-product {
+  &__link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+  }
+
+  &__image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    margin: 0;
+    text-align: center;
+    color: var(--text-primary);
+  }
+}
+
+// ... existing code ...
 </style>

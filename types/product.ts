@@ -18,11 +18,11 @@ export interface Product {
   category?: string;
   slug?: string;
   specs?: Characteristic[];
-  additional_images?: string[] | null;
+  additional_images?: string | string[] | null;
   images?: string[];
   delivery_set?: string | null;
   connection_scheme?: string | null;
   gallery?: {
     images?: string[];
   };
-} 
+}

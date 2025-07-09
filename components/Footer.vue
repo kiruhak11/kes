@@ -1,35 +1,34 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from "vue";
 const { $device } = useNuxtApp();
 import { contacts } from "~/data/contacts";
 
 const sections = [
   {
-    title: 'О нас',
-    type: 'text',
-    content: 'Котлы и котельное оборудование Барнаул — надёжность с 1998 года'
+    title: "О нас",
+    type: "text",
+    content: "Котлы и котельное оборудование Барнаул — надёжность с 1998 года",
   },
   {
-    title: 'Разделы',
-    type: 'links',
+    title: "Разделы",
+    type: "links",
     content: [
-      { text: 'Главная', to: '/' },
-      { text: 'Каталог', to: '/catalog' },
-      { text: 'О компании', to: '/about' },
-      { text: 'Контакты', to: '/about/contacts' }
-
-    ]
+      { text: "Главная", to: "/" },
+      { text: "Каталог", to: "/catalog" },
+      { text: "О компании", to: "/about" },
+      { text: "Контакты", to: "/about/contacts" },
+    ],
   },
   {
-    title: 'Контакты',
-    type: 'contacts',
-    content: null
+    title: "Контакты",
+    type: "contacts",
+    content: null,
   },
   {
-    title: 'Мы в соцсетях',
-    type: 'text',
-    content: 'Следите за нашими новостями'
-  }
+    title: "Мы в соцсетях",
+    type: "text",
+    content: "Следите за нашими новостями",
+  },
 ];
 
 const openSections = ref(sections.map((_, index) => index === 0)); // Открыт только первый раздел по умолчанию
@@ -40,17 +39,31 @@ const toggleSection = (index: number) => {
 
 // Получаем категории для футера
 interface Category {
-  title: string;
+  id: number;
+  name: string;
   slug: string;
-  image: string;
-  description: string;
+  image?: string;
+  description?: string;
 }
-const { data: fetchedCategories, error: fetchError } = await useFetch<{ categories: Category[] }>('/api/categories');
-const footerCategories = ref<Category[]>([]);
-if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)) {
-  footerCategories.value = fetchedCategories.value.categories.slice(0, 5);
-} else if (fetchError.value) {
-  console.error('Error loading categories:', fetchError.value);
+
+const { data: fetchedCategories, error: fetchError } = await useFetch<{
+  categories: Category[];
+}>("/api/categories", {
+  key: "footer-categories",
+});
+
+const footerCategories = computed(() => {
+  if (!fetchedCategories.value?.categories) return [];
+  return fetchedCategories.value.categories.slice(0, 5).map((cat) => ({
+    title: cat.name,
+    slug: cat.slug,
+    image: cat.image,
+    description: cat.description,
+  }));
+});
+
+if (fetchError.value) {
+  console.error("Error loading categories:", fetchError.value);
 }
 </script>
 
@@ -59,8 +72,16 @@ if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)
     <div class="container">
       <div v-if="$device.isMobile" class="footer__mobile">
         <div class="footer__logo">
-          <NuxtImg :src="'/images/logo-white.png'" :placeholder="true" sizes="400px xxs:900px md:1200px" format="webp" alt="ООО «КотлоЭнергоСнаб»" />
-          <p class="footer__slogan">Производим котлы для тех, кто выбирает качество</p>
+          <NuxtImg
+            :src="'/images/logo-white.png'"
+            :placeholder="true"
+            sizes="400px xxs:900px md:1200px"
+            format="webp"
+            alt="ООО «КотлоЭнергоСнаб»"
+          />
+          <p class="footer__slogan">
+            Производим котлы для тех, кто выбирает качество
+          </p>
         </div>
         <nav class="footer__mobile-nav">
           <NuxtLink to="/catalog">Каталог</NuxtLink>
@@ -72,18 +93,24 @@ if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)
           <a href="tel:{{ contacts.phone[0] }}">{{ contacts.phone[0] }}</a>
         </div>
         <div class="footer__bottom">
-          <p class="footer__copyright">
-            © Котельный завод "КЭС" 2009—2025.
-          </p>
+          <p class="footer__copyright">© Котельный завод "КЭС" 2009—2025.</p>
         </div>
       </div>
       <div v-else>
         <div class="footer__content">
           <div class="footer__logo">
-            <NuxtImg :src="'/images/logo-white.png'" :placeholder="true" sizes="400px xxs:900px md:1200px" format="webp" alt="ООО «КотлоЭнергоСнаб»" />
-            <p class="footer__slogan">Котлы и котельное оборудование Барнаул — надёжность с 2009 года</p>
+            <NuxtImg
+              :src="'/images/logo-white.png'"
+              :placeholder="true"
+              sizes="400px xxs:900px md:1200px"
+              format="webp"
+              alt="ООО «КотлоЭнергоСнаб»"
+            />
+            <p class="footer__slogan">
+              Котлы и котельное оборудование Барнаул — надёжность с 2009 года
+            </p>
           </div>
-          
+
           <div class="footer__nav">
             <div class="footer__nav-column">
               <h3 class="footer__nav-title">О заводе</h3>
@@ -101,21 +128,29 @@ if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)
               <ul class="footer__nav-list">
                 <li><NuxtLink to="/catalog">Все категории</NuxtLink></li>
                 <li v-for="category in footerCategories" :key="category.slug">
-                  <NuxtLink :to="`/catalog/${category.slug}`">{{ category.title }}</NuxtLink>
+                  <NuxtLink :to="`/catalog/${category.slug}`">{{
+                    category.title
+                  }}</NuxtLink>
                 </li>
               </ul>
             </div>
 
-           
-
             <div class="footer__nav-column">
               <h3 class="footer__nav-title">Контакты</h3>
               <div class="footer__phones" v-if="contacts.phone.length > 0">
-                <a v-for="phone in contacts.phone" :key="phone" href="tel:{{ phone }}">{{ phone }}</a>
+                <a
+                  v-for="phone in contacts.phone"
+                  :key="phone"
+                  href="tel:{{ phone }}"
+                  >{{ phone }}</a
+                >
               </div>
-              <a href="mailto:{{ contacts.email }}" class="footer__email">{{ contacts.email }}</a>
-              <NuxtLink to="/contact" class="btn footer__callback">Заказать звонок</NuxtLink>
-        
+              <a href="mailto:{{ contacts.email }}" class="footer__email">{{
+                contacts.email
+              }}</a>
+              <NuxtLink to="/contact" class="btn footer__callback"
+                >Заказать звонок</NuxtLink
+              >
             </div>
           </div>
         </div>
@@ -299,7 +334,10 @@ if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)
   .footer {
     padding: 10px 0 20px;
   }
-  .footer__content, .footer__nav, .footer__nav-column, .footer__contacts {
+  .footer__content,
+  .footer__nav,
+  .footer__nav-column,
+  .footer__contacts {
     display: none !important;
   }
 }

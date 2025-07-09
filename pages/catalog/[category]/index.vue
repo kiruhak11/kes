@@ -1018,13 +1018,14 @@ function addToCart(product: Product, e: Event) {
 }
 
 // Получаем инфу о категории
-const { data: fetchedCategory, error: categoryError } = await useFetch(
-  `/api/categories/${categorySlug.value}`
-);
-if ((fetchedCategory.value as any) && (fetchedCategory.value as any).category) {
+const { data: fetchedCategory, error: categoryError } = await useFetch<{
+  category: { name: string; description: string };
+}>(`/api/categories/${categorySlug.value}`);
+
+if (fetchedCategory.value && fetchedCategory.value.category) {
   categoryInfo.value = {
-    title: (fetchedCategory.value as any).category.name || "",
-    description: (fetchedCategory.value as any).category.description || "",
+    title: fetchedCategory.value.category.name || "",
+    description: fetchedCategory.value.category.description || "",
     slug: categorySlug.value,
   };
 } else {

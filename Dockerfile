@@ -21,6 +21,8 @@ RUN npm install --production=false
 
 COPY . .
 
+COPY prisma ./prisma
+RUN npx prisma generate
 RUN npm run build
 RUN npm prune
 
@@ -35,4 +37,4 @@ COPY --from=build /app /app
 RUN mkdir -p /app/public/uploads && chmod 755 /app/public/uploads
 
 # Применение миграций при запуске контейнера
-CMD ["sh", "-c", "node .output/server/index.mjs"] 
+CMD ["sh", "-c", "npx prisma migrate deploy && node .output/server/index.mjs"] 

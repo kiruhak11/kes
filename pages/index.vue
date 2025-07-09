@@ -530,11 +530,14 @@ interface Category {
   description: string;
 }
 const mainCategories = ref<Category[]>([]);
-const { data: fetchedCategories, error: fetchError } = await useFetch<
-  Category[]
->("/api/categories");
-if (fetchedCategories.value) {
-  mainCategories.value = fetchedCategories.value.slice(0, 3);
+const { data: fetchedCategories, error: fetchError } = await useFetch<{
+  categories: Category[];
+}>("/api/categories");
+if (
+  fetchedCategories.value &&
+  Array.isArray(fetchedCategories.value.categories)
+) {
+  mainCategories.value = fetchedCategories.value.categories.slice(0, 3);
 } else if (fetchError.value) {
   console.error("Error loading categories:", fetchError.value);
 }
