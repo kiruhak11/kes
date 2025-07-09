@@ -38,7 +38,6 @@ export default defineNuxtConfig({
         output: {
           manualChunks: {
             vendor: ["vue", "vue-router"],
-            ui: ["@nuxt/image"],
             charts: ["chart.js"],
           },
         },
@@ -58,7 +57,10 @@ export default defineNuxtConfig({
       },
     },
     optimizeDeps: {
-      include: ["vue", "vue-router", "@nuxt/image", "chart.js"],
+      include: ["vue", "vue-router", "chart.js"],
+    },
+    ssr: {
+      noExternal: ["@nuxt/image"],
     },
   },
 

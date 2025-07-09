@@ -21,8 +21,16 @@ RUN npm install --production=false
 
 COPY . .
 
+# Генерация Prisma
 COPY prisma ./prisma
 RUN npx prisma generate
+
+# Очистка кэша npm и node_modules перед сборкой
+RUN npm cache clean --force
+RUN rm -rf node_modules
+RUN npm install --production=false
+
+# Сборка приложения
 RUN npm run build
 RUN npm prune
 
