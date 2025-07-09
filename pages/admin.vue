@@ -2,17 +2,38 @@
   <section class="admin-section container">
     <!-- Вкладки -->
     <div class="admin-tabs" v-scroll-reveal="'fade-in-up'">
-      <button :class="{active: adminTab==='catalog'}" @click="adminTab='catalog'">Каталог</button>
-      <button :class="{active: adminTab==='filters'}" @click="adminTab='filters'">Фильтры</button>
-      <button :class="{active: adminTab==='categories'}" @click="adminTab='categories'">Категории</button>
-      <button :class="{active: adminTab==='stats'}" @click="adminTab='stats'">Статистика</button>
+      <button
+        :class="{ active: adminTab === 'catalog' }"
+        @click="adminTab = 'catalog'"
+      >
+        Каталог
+      </button>
+      <button
+        :class="{ active: adminTab === 'filters' }"
+        @click="adminTab = 'filters'"
+      >
+        Фильтры
+      </button>
+      <button
+        :class="{ active: adminTab === 'categories' }"
+        @click="adminTab = 'categories'"
+      >
+        Категории
+      </button>
+      <button
+        :class="{ active: adminTab === 'stats' }"
+        @click="adminTab = 'stats'"
+      >
+        Статистика
+      </button>
     </div>
-    <AdminCatalog v-if="adminTab==='catalog'"
+    <AdminCatalog
+      v-if="adminTab === 'catalog'"
       :admin-tab="adminTab"
       :authorized="authorized"
       :password="password"
       :login-error="loginError"
-      @update:password="val => password = val"
+      @update:password="(val) => (password = val)"
       @login="login"
       @logout="logout"
       :products="products"
@@ -49,13 +70,15 @@
       @handle-connection-scheme-upload="handleConnectionSchemeUpload"
       @toggle-new-prod-fuel-dropdown="toggleNewProdFuelDropdown"
     />
-    
-    <AdminFilters v-if="adminTab==='filters'"
+
+    <AdminFilters
+      v-if="adminTab === 'filters'"
       :products="products"
       :specs-list="specsList"
       :categories="categories"
     />
-    <AdminCategories v-if="adminTab==='categories' && authorized"
+    <AdminCategories
+      v-if="adminTab === 'categories' && authorized"
       :categories="categories"
       :products="products"
       :new-category="newCategory"
@@ -70,13 +93,14 @@
       @delete-category="deleteCategory"
       @delete-empty-categories="deleteEmptyCategories"
       @close-edit-category-modal="closeEditCategoryModal"
-      @update:new-category="val => newCategory = val"
-      @update:editing-category="val => editingCategory = val"
-      @update:show-add-category-modal="val => showAddCategoryModal = val"
-      @update:show-edit-category-modal="val => showEditCategoryModal = val"
+      @update:new-category="(val) => (newCategory = val)"
+      @update:editing-category="(val) => (editingCategory = val)"
+      @update:show-add-category-modal="(val) => (showAddCategoryModal = val)"
+      @update:show-edit-category-modal="(val) => (showEditCategoryModal = val)"
       :get-category-product-count="getCategoryProductCount"
     />
-    <AdminStats v-if="adminTab==='stats' && authorized"
+    <AdminStats
+      v-if="adminTab === 'stats' && authorized"
       :stats="stats"
       :loading="loading"
       :error="error || ''"
@@ -89,38 +113,111 @@
       @delete-request="deleteRequest"
       @delete-all-requests="deleteAllRequests"
     />
-    <UiLog v-if="!authorized && adminTab!=='catalog'" class="log" />
+    <UiLog v-if="!authorized && adminTab !== 'catalog'" class="log" />
   </section>
 </template>
 
 <script setup lang="ts">
-import AdminCatalog from '~/components/AdminCatalog.vue'
-import AdminCategories from '~/components/AdminCategories.vue'
-import AdminStats from '~/components/AdminStats.vue'
-import AdminFilters from '~/components/AdminFilters.vue'
-import { ref, onMounted, watch, h } from 'vue'
-import { useStats } from '~/composables/useStats'
-import { useModalStore } from '~/stores/modal'
-import { useFileStorage } from '~/composables/useFileStorage'
-import { convertSpecsToCharacteristics, convertCharacteristicsToSpecs } from '~/utils/characteristics'
-import { useHead } from 'nuxt/app'
-import Chart from 'chart.js/auto'
+import AdminCatalog from "~/components/AdminCatalog.vue";
+import AdminCategories from "~/components/AdminCategories.vue";
+import AdminStats from "~/components/AdminStats.vue";
+import AdminFilters from "~/components/AdminFilters.vue";
+import { ref, onMounted, watch, h } from "vue";
+import { useStats } from "~/composables/useStats";
+import { useModalStore } from "~/stores/modal";
+import { useFileStorage } from "~/composables/useFileStorage";
+import {
+  convertSpecsToCharacteristics,
+  convertCharacteristicsToSpecs,
+} from "~/utils/characteristics";
+import type {
+  Product,
+  AdminProduct,
+  NewProduct,
+  Category,
+  CategoryApiResponse,
+  ProductApiResponse,
+  Characteristic,
+} from "~/types/product";
+import { useHead } from "nuxt/app";
+import Chart from "chart.js/auto";
 const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
 // Добавляем объявление переменной chart
-let chart: Chart | null = null
+let chart: Chart | null = null;
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
-    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
-    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
-    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
-    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
-    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
-    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "yo",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "kh",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    А: "A",
+    Б: "B",
+    В: "V",
+    Г: "G",
+    Д: "D",
+    Е: "E",
+    Ё: "Yo",
+    Ж: "Zh",
+    З: "Z",
+    И: "I",
+    Й: "Y",
+    К: "K",
+    Л: "L",
+    М: "M",
+    Н: "N",
+    О: "O",
+    П: "P",
+    Р: "R",
+    С: "S",
+    Т: "T",
+    У: "U",
+    Ф: "F",
+    Х: "Kh",
+    Ц: "Ts",
+    Ч: "Ch",
+    Ш: "Sh",
+    Щ: "Sch",
+    Ъ: "",
+    Ы: "Y",
+    Ь: "",
+    Э: "E",
+    Ю: "Yu",
+    Я: "Ya",
   };
-  return text.split('').map(char => mapping[char] || char).join('');
+  return text
+    .split("")
+    .map((char) => mapping[char] || char)
+    .join("");
 };
 
 interface Spec {
@@ -132,233 +229,229 @@ interface Spec {
   showValueSuggestions?: boolean;
 }
 
-interface Characteristic {
-  id: number;
-  key: string;
-  value: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  description?: string | null;
-  slug: string;
-}
-
-interface AdminCategory {
-  id: string
-  name: string
-  slug: string
-  description?: string
-}
-
-interface Product {
-  id: number
-  name: string
-  description: string
-  extendedDescription?: string
-  price: number
-  image: string
-  category: string
-  category_name?: string
-  category_id?: string
-  category_slug?: string
-  slug: string
-  specs?: Characteristic[]
-  additional_images?: string[]
-  delivery_set?: string
-  connection_scheme?: string
-  additional_requirements?: string
-  required_products?: number[]
-}
+type AdminCategory = Category;
 
 interface Request {
-  id: number
-  type: string
-  phone: string
-  region?: string
-  type_building?: string
-  fuel_type?: string
-  power_type?: string
-  status: string
-  raw_text?: string
-  created_at: string
+  id: number;
+  type: string;
+  phone: string;
+  region?: string;
+  type_building?: string;
+  fuel_type?: string;
+  power_type?: string;
+  status: string;
+  raw_text?: string;
+  created_at: string;
 }
 
 interface Stats {
   visits: {
-    today: number
-    week: number
-    month: number
-    total: number
-  }
+    today: number;
+    week: number;
+    month: number;
+    total: number;
+  };
   requests: {
-    list: Request[]
-    stats: Record<string, number>
-  }
+    list: Request[];
+    stats: Record<string, number>;
+  };
 }
 
-const config = useRuntimeConfig()
-const password = ref('')
-const loginError = ref<string | null>(null)
-const authorized = ref(false)
-const products = ref<Product[]>([])
-const categories = ref<AdminCategory[]>([])
-const specsList = ref<Record<number, Spec[]>>({})
-const newProd = ref({
-  name: '',
-  description: '',
-  extendedDescription: '',
+const config = useRuntimeConfig();
+const password = ref("");
+const loginError = ref<string | null>(null);
+const authorized = ref(false);
+const products = ref<Product[]>([]);
+const categories = ref<AdminCategory[]>([]);
+const specsList = ref<Record<number, Spec[]>>({});
+const newProd = ref<NewProduct>({
+  name: "",
+  description: "",
+  extendedDescription: "",
   price: 0,
-  image: '',
-  category: '',
-  delivery_set: '',
-  connection_scheme: '',
-  additional_requirements: '',
-  required_products: []
-})
+  image: "",
+  category: "",
+  delivery_set: "",
+  connection_scheme: "",
+  additional_requirements: "",
+  required_products: [],
+});
 const newCategory = ref({
-  name: '',
-  description: '',
-  slug: ''
-})
-const activeId = ref<number|null>(null)
+  name: "",
+  description: "",
+  slug: "",
+});
+const activeId = ref<number | null>(null);
 
 // Характеристики
-const newSpecs = ref<Spec[]>([])
-const newSpec = ref<Spec>({ id: 1, key:'', value:'', show_in_filters: false })
+const newSpecs = ref<Spec[]>([]);
+const newSpec = ref<Spec>({
+  id: 1,
+  key: "",
+  value: "",
+  show_in_filters: false,
+});
 
 // Новые реактивные переменные для мощности и топлива
-const newProdPowerValue = ref()
-const newProdPowerUnit = ref('')
-const newProdSelectedFuels = ref([])
-const showNewProdFuelDropdown = ref(false)
+const newProdPowerValue = ref();
+const newProdPowerUnit = ref("");
+const newProdSelectedFuels = ref([]);
+const showNewProdFuelDropdown = ref(false);
 
 // Доступные единицы измерения мощности
-const powerUnits = ['МВт', 'кВт', 'Гкал/ч']
+const powerUnits = ["МВт", "кВт", "Гкал/ч"];
 
 // Доступные виды топлива
-const availableFuels = ['Природный газ', 'Дизельное топливо', 'Мазут', 'Уголь', 'Биомасса', 'Электричество']
+const availableFuels = [
+  "Природный газ",
+  "Дизельное топливо",
+  "Мазут",
+  "Уголь",
+  "Биомасса",
+  "Электричество",
+];
 
 // Предзаготовленные картинки
 const presetImages = [
-  '/images/cutouts/kotel1.png',
-  '/images/cutouts/dimosos_pered.png',
-  '/images/cutouts/dimosos_zad.png',
-  '/images/cutouts/kva_gaz.png',
-  '/images/cutouts/kva_ygol.png',
-  '/images/cutouts/tchzm.png',
-  '/images/cutouts/tlph.png',
-  '/images/cutouts/TSHPM.png'
-]
+  "/images/cutouts/kotel1.png",
+  "/images/cutouts/dimosos_pered.png",
+  "/images/cutouts/dimosos_zad.png",
+  "/images/cutouts/kva_gaz.png",
+  "/images/cutouts/kva_ygol.png",
+  "/images/cutouts/tchzm.png",
+  "/images/cutouts/tlph.png",
+  "/images/cutouts/TSHPM.png",
+];
 
 // add after newProdSelectedFuels definitions
-const newProdGallery = ref<string[]>([])
+const newProdGallery = ref<string[]>([]);
 
 // First load categories
-const { data: fetchedCategories, error: categoriesFetchError } = await useFetch<{ categories: Category[] }>('/api/categories')
+const { data: fetchedCategories, error: categoriesFetchError } =
+  await useFetch<CategoryApiResponse>("/api/categories");
 
-if (fetchedCategories.value && Array.isArray(fetchedCategories.value.categories)) {
-  categories.value = fetchedCategories.value.categories.map(cat => ({
+if (fetchedCategories.value?.categories) {
+  categories.value = fetchedCategories.value.categories.map((cat) => ({
     id: String(cat.id),
     name: cat.name,
-    description: cat.description ?? '',
-    slug: cat.slug
-  }))
+    description: cat.description ?? "",
+    slug: cat.slug,
+  }));
 } else {
-  console.error('No categories data received')
-  categories.value = []
+  console.error("No categories data received");
+  categories.value = [];
 }
 
 if (categoriesFetchError.value) {
-  console.error('Error fetching categories for admin:', categoriesFetchError.value)
-  categories.value = []
+  console.error(
+    "Error fetching categories for admin:",
+    categoriesFetchError.value
+  );
+  categories.value = [];
 }
 
 // Then load products
-const { data: fetchedProducts, error: productsFetchError, refresh: refreshProducts } = await useFetch<any>('/api/products', {
+const {
+  data: fetchedProducts,
+  error: productsFetchError,
+  refresh: refreshProducts,
+} = await useFetch<any>("/api/products", {
   query: {
-    categorySlug: 'all'
+    categorySlug: "all",
   },
   transform: (response) => {
     if (!response || !response.products || !Array.isArray(response.products)) {
-      console.error('Invalid response format:', response)
-      return []
+      console.error("Invalid response format:", response);
+      return [];
     }
-    return response.products
-  }
-})
+    return response.products;
+  },
+});
 
 if (fetchedProducts.value) {
   products.value = fetchedProducts.value.map((product: Product) => {
     // Find the category name from the category ID or slug
-    const category = categories.value.find(c => 
-      c.id === String(product.category_id) || 
-      c.slug === product.category_slug
-    )
-    
+    const category = categories.value.find(
+      (c) =>
+        c.id === String(product.category_id) || c.slug === product.category_slug
+    );
+
     // Конвертируем старый формат specs в новый формат characteristics
-    const characteristics = convertSpecsToCharacteristics(product.specs as Record<string, any>)
-    
+    const characteristics = convertSpecsToCharacteristics(
+      product.specs as Record<string, any>
+    );
+
     return {
       ...product,
-      category: category?.name || product.category || '',
-      category_name: category?.name || product.category || '',
-      slug: generateSlug(product.name || ''),
+      category: category?.name || product.category || "",
+      category_name: category?.name || product.category || "",
+      slug: generateSlug(product.name || ""),
       specs: characteristics,
-      additional_requirements: product.additional_requirements || '',
+      additional_requirements: product.additional_requirements || "",
       required_products: product.required_products || [],
-      description: product.description ?? '',
-      extendedDescription: product.extendedDescription ?? '',
-      price: typeof product.price === 'number' ? product.price : Number(product.price) || 0,
-      image: product.image ?? '',
+      description: product.description ?? "",
+      extendedDescription: product.extendedDescription ?? "",
+      price:
+        typeof product.price === "number"
+          ? product.price
+          : Number(product.price) || 0,
+      image: product.image ?? "",
       category_id: product.category_id,
       category_slug: product.category_slug,
-    }
-  })
+    };
+  });
 } else {
-  console.error('No products data received')
-  products.value = []
+  console.error("No products data received");
+  products.value = [];
 }
 
 if (productsFetchError.value) {
-  console.error('Error fetching products for admin:', productsFetchError.value)
-  products.value = []
+  console.error("Error fetching products for admin:", productsFetchError.value);
+  products.value = [];
 }
 
 // Update specsList after products are loaded
-watch(products, (newProducts) => {
-  if (Array.isArray(newProducts)) {
-    newProducts.forEach(p => {
-      // Инициализируем specsList только если его еще нет для этого продукта
-      if (!specsList.value[p.id]) {
-        specsList.value[p.id] = (p.specs || []).map(spec => ({
-          id: spec.id,
-          key: spec.key, 
-          value: spec.value,
-          show_in_filters: (spec as any).show_in_filters || false,
-          showKeySuggestions: false,
-          showValueSuggestions: false
-        }))
-      }
-    })
-  }
-}, { immediate: true })
+watch(
+  products,
+  (newProducts) => {
+    if (Array.isArray(newProducts)) {
+      newProducts.forEach((p) => {
+        // Инициализируем specsList только если его еще нет для этого продукта
+        if (!specsList.value[p.id]) {
+          specsList.value[p.id] = (p.specs || []).map((spec) => ({
+            id: spec.id,
+            key: spec.key,
+            value: spec.value,
+            show_in_filters: (spec as any).show_in_filters || false,
+            showKeySuggestions: false,
+            showValueSuggestions: false,
+          }));
+        }
+      });
+    }
+  },
+  { immediate: true }
+);
 
 // Валидация формы
 const isFormValid = computed(() => {
-  const valid = newProd.value.name && 
-         newProd.value.description && 
-         newProd.value.price > 0 && 
-         (newProd.value.category && newProd.value.category !== 'new' || (newProd.value.category === 'new' && newCategory.value.name))
-  
-  return valid
-})
+  const valid =
+    newProd.value.name &&
+    newProd.value.description &&
+    newProd.value.price > 0 &&
+    ((newProd.value.category && newProd.value.category !== "new") ||
+      (newProd.value.category === "new" && newCategory.value.name));
+
+  return valid;
+});
 
 function validateNewCategory() {
-  if (newCategory.value.name && categories.value.some(c => c.name === newCategory.value.name)) {
-    newProd.value.category = newCategory.value.name
-    newCategory.value.name = ''
+  if (
+    newCategory.value.name &&
+    categories.value.some((c) => c.name === newCategory.value.name)
+  ) {
+    newProd.value.category = newCategory.value.name;
+    newCategory.value.name = "";
   }
 }
 
@@ -366,204 +459,222 @@ function validateNewCategory() {
 function generateSlug(text: string): string {
   return transliterate(text)
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
-const modalStore = useModalStore()
+const modalStore = useModalStore();
 // Обновляем функцию addProduct
 async function addProduct() {
   try {
     // Проверяем валидность формы
     if (!isFormValid.value) {
-      console.error('Form validation failed')
-      return
+      console.error("Form validation failed");
+      return;
     }
 
-    let categoryId = null
-    let categorySlug = ''
-    let categoryName = ''
+    let categoryId: string | null = null;
+    let categorySlug: string = "";
+    let categoryName: string = "";
 
     // Если выбрана новая категория, сначала создаем её
-    if (newProd.value.category === 'new') {
-      const categoryResponse = await fetch('/api/categories', {
-        method: 'POST',
+    if (newProd.value.category === "new") {
+      const categoryResponse = await fetch("/api/categories", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: newCategory.value.name,
+          name: newCategory.value.name,
           description: newCategory.value.description,
-          slug: generateSlug(newCategory.value.name)
-        })
-      })
+          slug: generateSlug(newCategory.value.name),
+        }),
+      });
 
       if (!categoryResponse.ok) {
-        const errorData = await categoryResponse.json()
+        const errorData = await categoryResponse.json();
         if (categoryResponse.status === 409) {
           // Категория уже существует, используем существующую
-          const existingCategory = categories.value.find(c => c.name === newCategory.value.name)
+          const existingCategory = categories.value.find(
+            (c) => c.name === newCategory.value.name
+          );
           if (existingCategory) {
-            categoryId = existingCategory.id
-            categorySlug = existingCategory.slug
-            categoryName = existingCategory.name
+            categoryId = existingCategory.id;
+            categorySlug = existingCategory.slug;
+            categoryName = existingCategory.name;
           } else {
-            throw new Error('Category already exists but not found in local list')
+            throw new Error(
+              "Category already exists but not found in local list"
+            );
           }
         } else {
-          throw new Error(errorData.statusMessage || 'Failed to create category')
+          throw new Error(
+            errorData.statusMessage || "Failed to create category"
+          );
         }
       } else {
-        const newCategoryData = await categoryResponse.json()
-        categoryId = newCategoryData.id
-        categorySlug = newCategoryData.slug
-        categoryName = newCategoryData.name
+        const { category: newCategoryData } = await categoryResponse.json();
+        categoryId = newCategoryData.id;
+        categorySlug = newCategoryData.slug;
+        categoryName = newCategoryData.name;
 
         // Добавляем новую категорию в список
         categories.value.push({
           id: String(newCategoryData.id),
           name: newCategoryData.name,
-          description: newCategoryData.description ?? '',
-          slug: newCategoryData.slug
-        })
-        
+          description: newCategoryData.description ?? "",
+          slug: newCategoryData.slug,
+        });
+
         // Обновляем список категорий
-        const { data: updatedCategories } = await useFetch<Category[]>('/api/categories')
-        if (updatedCategories.value) {
-          categories.value = updatedCategories.value.map(cat => ({
+        const { data: updatedCategories } = await useFetch<{
+          categories: Category[];
+        }>("/api/categories");
+        if (updatedCategories.value?.categories) {
+          categories.value = updatedCategories.value.categories.map((cat) => ({
             id: String(cat.id),
             name: cat.name,
-            description: cat.description ?? '',
-            slug: cat.slug
-          }))
+            description: cat.description ?? "",
+            slug: cat.slug,
+          }));
         }
       }
     } else {
       // Находим существующую категорию
-      const category = categories.value.find(c => c.name === newProd.value.category)
+      const category = categories.value.find(
+        (c) => c.name === newProd.value.category
+      );
       if (!category) {
-        throw new Error('Category not found')
+        throw new Error("Category not found");
       }
-      categoryId = category.id
-      categorySlug = category.slug
-      categoryName = category.name
+      categoryId = category.id;
+      categorySlug = category.slug;
+      categoryName = category.name;
     }
 
     // Подготовка характеристик
-    const characteristics = newSpecs.value.map(spec => ({
+    const characteristics = newSpecs.value.map((spec) => ({
       id: spec.id,
       key: spec.key,
       value: spec.value,
-      show_in_filters: spec.show_in_filters || false
-    }))
+      show_in_filters: spec.show_in_filters || false,
+    }));
 
     // Создаем объект продукта для отправки
     const productData = {
       name: newProd.value.name,
       description: newProd.value.description,
-      extendedDescription: newProd.value.extendedDescription || '',
+      extendedDescription: newProd.value.extendedDescription || "",
       price: Number(newProd.value.price),
-      image: newProd.value.image || '/images/placeholders/placeholder.png',
+      image: newProd.value.image || "/images/placeholders/placeholder.png",
       category_id: categoryId,
       specs: characteristics,
       additional_images: newProdGallery.value,
       delivery_set: newProd.value.delivery_set || null,
       connection_scheme: newProd.value.connection_scheme || null,
       additional_requirements: newProd.value.additional_requirements || null,
-      required_products: newProd.value.required_products || []
-    }
+      required_products: newProd.value.required_products || [],
+    };
 
-    const response = await fetch('/api/products', {
-      method: 'POST',
+    const response = await fetch("/api/products", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(productData)
-    })
+      body: JSON.stringify(productData),
+    });
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.statusMessage || 'Failed to create product')
+      const errorData = await response.json();
+      throw new Error(errorData.statusMessage || "Failed to create product");
     }
 
-    const newProduct = await response.json()
+    const { product: newProduct } = await response.json();
+
+    // Добавляем продукт в список с правильными данными категории
+    if (products.value) {
+      products.value.push({
+        ...newProduct,
+        category: newProduct.category_name || "",
+      });
+    }
 
     // Очищаем форму
-    resetForm()
+    resetForm();
 
     // Небольшая задержка для обновления базы данных
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Обновляем список продуктов
-    await refreshProducts()
-    
+    await refreshProducts();
+
     // Принудительно обновляем specsList для всех продуктов
     if (products.value) {
-      products.value.forEach(p => {
-        specsList.value[p.id] = (p.specs || []).map(spec => ({
+      products.value.forEach((p) => {
+        specsList.value[p.id] = (p.specs || []).map((spec) => ({
           id: spec.id,
-          key: spec.key, 
+          key: spec.key,
           value: spec.value,
           show_in_filters: (spec as any).show_in_filters || false,
           showKeySuggestions: false,
-          showValueSuggestions: false
-        }))
-      })
+          showValueSuggestions: false,
+        }));
+      });
     }
 
     // Показываем сообщение об успехе
-    modalStore.showSuccess('Товар успешно добавлен')
+    modalStore.showSuccess("Товар успешно добавлен");
   } catch (error: any) {
-    console.error('Error creating product:', error)
-    modalStore.showError(`Ошибка при создании товара: ${error.message}`)
+    console.error("Error creating product:", error);
+    modalStore.showError(`Ошибка при создании товара: ${error.message}`);
   }
 }
 
 // Функция очистки формы
 const resetForm = () => {
   newProd.value = {
-    name: '',
-    description: '',
-    extendedDescription: '',
+    name: "",
+    description: "",
+    extendedDescription: "",
     price: 0,
-    image: '',
-    category: '',
-    delivery_set: '',
-    connection_scheme: '',
-    additional_requirements: '',
-    required_products: []
-  }
+    image: "",
+    category: "",
+    delivery_set: "",
+    connection_scheme: "",
+    additional_requirements: "",
+    required_products: [],
+  };
   newCategory.value = {
-    name: '',
-    description: '',
-    slug: ''
-  }
-  newSpecs.value = []
-  newProdPowerValue.value = undefined
-  newProdPowerUnit.value = ''
-  newProdSelectedFuels.value = []
-  newProdGallery.value = []
-}
+    name: "",
+    description: "",
+    slug: "",
+  };
+  newSpecs.value = [];
+  newProdPowerValue.value = undefined;
+  newProdPowerUnit.value = "";
+  newProdSelectedFuels.value = [];
+  newProdGallery.value = [];
+};
 
 function toggle(id: number) {
-  activeId.value = activeId.value === id ? null : id
+  activeId.value = activeId.value === id ? null : id;
   if (activeId.value === id) {
-    const productToEdit = products.value.find(p => p.id === id)
+    const productToEdit = products.value.find((p) => p.id === id);
     if (productToEdit) {
       // Устанавливаем текущую категорию
       if (productToEdit.category_name) {
-        productToEdit.category = productToEdit.category_name
+        productToEdit.category = productToEdit.category_name;
       }
 
       // Обновляем specsList для редактируемого продукта, включая все характеристики
-      specsList.value[id] = (productToEdit.specs || []).map(spec => ({
+      specsList.value[id] = (productToEdit.specs || []).map((spec) => ({
         id: spec.id,
-        key: spec.key, 
+        key: spec.key,
         value: spec.value,
         show_in_filters: (spec as any).show_in_filters || false,
         showKeySuggestions: false,
-        showValueSuggestions: false
-      }))
+        showValueSuggestions: false,
+      }));
     }
   }
 }
@@ -572,20 +683,20 @@ function toggle(id: number) {
 async function updateWithSpecs(p: Product) {
   try {
     // Находим категорию
-    const category = categories.value.find(c => c.name === p.category)
+    const category = categories.value.find((c) => c.name === p.category);
     if (!category) {
-      console.error('Category not found:', p.category)
-      return
+      console.error("Category not found:", p.category);
+      return;
     }
 
     // Получаем обновленные характеристики из specsList
-    const updatedSpecs = specsList.value[p.id] || []
+    const updatedSpecs = specsList.value[p.id] || [];
 
     // Подготовка данных для обновления
     const updateData = {
       name: p.name,
       description: p.description,
-      extendedDescription: p.extendedDescription || '',
+      extendedDescription: p.extendedDescription || "",
       price: Number(p.price),
       image: p.image,
       category_id: category.id,
@@ -594,144 +705,168 @@ async function updateWithSpecs(p: Product) {
       delivery_set: p.delivery_set || null,
       connection_scheme: p.connection_scheme || null,
       additional_requirements: p.additional_requirements || null,
-      required_products: p.required_products || []
-    }
+      required_products: p.required_products || [],
+    };
 
     // Получаем обновленный продукт с сервера
-    const updatedProduct = await $fetch(`/api/products/${p.id}`, {
-      method: 'PUT',
-      body: updateData
-    })
+    const updatedProduct = await $fetch<ProductApiResponse>(
+      `/api/products/${p.id}`,
+      {
+        method: "PUT",
+        body: updateData,
+      }
+    );
 
     // Обновляем specsList для этого продукта
-    if (updatedProduct && updatedProduct.product) {
+    if (updatedProduct?.product) {
       const rawSpecs = updatedProduct.product.specs;
       specsList.value[p.id] = convertSpecsToCharacteristics(
-        (rawSpecs && typeof rawSpecs === 'object' && !Array.isArray(rawSpecs)) ? rawSpecs : {}
+        rawSpecs && typeof rawSpecs === "object" && !Array.isArray(rawSpecs)
+          ? rawSpecs
+          : {}
       );
     }
     // Обновляем сам продукт в products
-    const productIndex = products.value.findIndex(prod => prod.id === p.id)
-    if (productIndex !== -1 && updatedProduct && updatedProduct.product) {
+    const productIndex = products.value.findIndex((prod) => prod.id === p.id);
+    if (productIndex !== -1 && updatedProduct?.product) {
       const rawSpecs = updatedProduct.product.specs;
       const categoryValue =
         updatedProduct.product.category_name ??
-        (categories.value.find(c => c.id === updatedProduct.product.category_id)?.name) ??
-        '';
+        categories.value.find(
+          (c) => c.id === updatedProduct.product.category_id
+        )?.name ??
+        "";
       const slugValue =
-        (categories.value.find(c => c.id === updatedProduct.product.category_id)?.slug) ??
-        '';
+        categories.value.find(
+          (c) => c.id === updatedProduct.product.category_id
+        )?.slug ?? "";
       products.value[productIndex] = {
         ...products.value[productIndex],
         id: updatedProduct.product.id,
-        name: updatedProduct.product.name ?? '',
-        description: updatedProduct.product.description ?? '',
-        extendedDescription: updatedProduct.product.extendedDescription ?? '',
-        price: typeof updatedProduct.product.price === 'number'
-          ? updatedProduct.product.price
-          : Number(updatedProduct.product.price) || 0,
-        image: updatedProduct.product.image ?? '',
+        name: updatedProduct.product.name ?? "",
+        description: updatedProduct.product.description ?? "",
+        extendedDescription: updatedProduct.product.extendedDescription ?? "",
+        price:
+          typeof updatedProduct.product.price === "number"
+            ? updatedProduct.product.price
+            : Number(updatedProduct.product.price) || 0,
+        image: updatedProduct.product.image ?? "",
         category: categoryValue,
-        category_name: updatedProduct.product.category_name ?? '',
-        category_id: updatedProduct.product.category_id ?? '',
-        category_slug: updatedProduct.product.category_slug ?? '',
+        category_name: updatedProduct.product.category_name ?? "",
+        category_id: updatedProduct.product.category_id ?? "",
+        category_slug: updatedProduct.product.category_slug ?? "",
         slug: slugValue,
         specs: Array.isArray(rawSpecs)
           ? convertSpecsToCharacteristics(rawSpecs)
           : [],
-        additional_images: Array.isArray(updatedProduct.product.additional_images)
-          ? updatedProduct.product.additional_images.filter((img: any) => typeof img === 'string' && img !== null)
+        additional_images: Array.isArray(
+          updatedProduct.product.additional_images
+        )
+          ? updatedProduct.product.additional_images.filter(
+              (img: any) => typeof img === "string" && img !== null
+            )
           : [],
-        delivery_set: updatedProduct.product.delivery_set ?? '',
-        connection_scheme: updatedProduct.product.connection_scheme ?? '',
-        additional_requirements: updatedProduct.product.additional_requirements ?? '',
-        required_products: Array.isArray(updatedProduct.product.required_products)
+        delivery_set: updatedProduct.product.delivery_set ?? "",
+        connection_scheme: updatedProduct.product.connection_scheme ?? "",
+        additional_requirements:
+          updatedProduct.product.additional_requirements ?? "",
+        required_products: Array.isArray(
+          updatedProduct.product.required_products
+        )
           ? updatedProduct.product.required_products
-              .map((id: any) => typeof id === 'number' ? id : Number(id))
-              .filter((id: any) => typeof id === 'number' && !isNaN(id))
+              .map((id: any) => (typeof id === "number" ? id : Number(id)))
+              .filter((id: any) => typeof id === "number" && !isNaN(id))
           : [],
-      }
+      };
     }
-    activeId.value = null
+    activeId.value = null;
   } catch (error) {
-    console.error('Error updating product:', error)
+    console.error("Error updating product:", error);
   }
 }
 
 function cancelEdit() {
-  activeId.value = null
+  activeId.value = null;
 }
 
-function addSpec(id:number) {
-  const newId = specsList.value[id].length > 0 
-    ? Math.max(...specsList.value[id].map(s => s.id)) + 1 
-    : 1
-  
-  specsList.value[id].push({ 
+function addSpec(id: number) {
+  const newId =
+    specsList.value[id].length > 0
+      ? Math.max(...specsList.value[id].map((s) => s.id)) + 1
+      : 1;
+
+  specsList.value[id].push({
     id: newId,
-    key:'', 
-    value:'',
+    key: "",
+    value: "",
     show_in_filters: false,
     showKeySuggestions: false,
-    showValueSuggestions: false
-  })
+    showValueSuggestions: false,
+  });
 }
 
-function removeSpec(id:number, idx:number) {
-  specsList.value[id].splice(idx,1)
+function removeSpec(id: number, idx: number) {
+  specsList.value[id].splice(idx, 1);
 }
 
 function addNewSpec() {
   if (newSpec.value.key && newSpec.value.value) {
-    const newId = newSpecs.value.length > 0 
-      ? Math.max(...newSpecs.value.map(s => s.id)) + 1 
-      : 1
-    
-    newSpecs.value.push({ 
+    const newId =
+      newSpecs.value.length > 0
+        ? Math.max(...newSpecs.value.map((s) => s.id)) + 1
+        : 1;
+
+    newSpecs.value.push({
       id: newId,
-      key:newSpec.value.key, 
-      value:newSpec.value.value,
+      key: newSpec.value.key,
+      value: newSpec.value.value,
       show_in_filters: newSpec.value.show_in_filters || false,
       showKeySuggestions: false,
-      showValueSuggestions: false
-    })
-    newSpec.value.key = ''
-    newSpec.value.value = ''
-    newSpec.value.show_in_filters = false
+      showValueSuggestions: false,
+    });
+    newSpec.value.key = "";
+    newSpec.value.value = "";
+    newSpec.value.show_in_filters = false;
   }
 }
 
-function removeNewSpec(idx:number) {
-  newSpecs.value.splice(idx,1)
+function removeNewSpec(idx: number) {
+  newSpecs.value.splice(idx, 1);
 }
 
-async function deleteProduct(id:number) {
-  const prodToDelete = products.value.find(x=>x.id===id)
-  const cat = prodToDelete?.category
-  
-  await $fetch(`/api/products/${id}`, { method:'DELETE' })
-  products.value = products.value.filter(x=>x.id!==id)
-  delete specsList.value[id]
+async function deleteProduct(id: number) {
+  const prodToDelete = products.value.find((x) => x.id === id);
+  const cat = prodToDelete?.category;
+
+  await $fetch(`/api/products/${id}`, { method: "DELETE" });
+  products.value = products.value.filter((x) => x.id !== id);
+  delete specsList.value[id];
 }
 
 // Импортируем новый composable для работы с файлами
-const { uploadSingleFile, uploadFiles } = useFileStorage()
+const { uploadSingleFile, uploadFiles } = useFileStorage();
 
-async function handleImageUpload(event: Event, product: Product | Partial<Product>) {
-  const input = event.target as HTMLInputElement
-  if (!input.files || !input.files[0]) return
+async function handleImageUpload(
+  event: Event,
+  product: Product | Partial<Product>
+) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || !input.files[0]) return;
 
-  const file = input.files[0]
+  const file = input.files[0];
 
   try {
-    const filePath = await uploadSingleFile(file)
-    product.image = filePath
+    const filePath = await uploadSingleFile(file);
+    product.image = filePath;
   } catch (error) {
-    console.error('Error uploading image:', error)
+    console.error("Error uploading image:", error);
   }
 }
 
-async function handleConnectionSchemeUpload(event: Event, product: Product | Partial<Product>) {
+async function handleConnectionSchemeUpload(
+  event: Event,
+  product: Product | Partial<Product>
+) {
   const input = event.target as HTMLInputElement;
   if (!input.files || !input.files[0]) return;
 
@@ -741,7 +876,7 @@ async function handleConnectionSchemeUpload(event: Event, product: Product | Par
     const filePath = await uploadSingleFile(file);
     product.connection_scheme = filePath;
   } catch (error) {
-    console.error('Error uploading connection scheme image:', error);
+    console.error("Error uploading connection scheme image:", error);
   }
 }
 
@@ -752,99 +887,105 @@ function toggleNewProdFuelDropdown() {
 // Возвращаем оригинальную функцию входа
 function login() {
   if (password.value === config.public.adminPassword) {
-    authorized.value = true
+    authorized.value = true;
   } else {
-    loginError.value = 'Неправильный пароль'
+    loginError.value = "Неправильный пароль";
   }
 }
 
 function logout() {
-  authorized.value = false
-  password.value = ''
-  loginError.value = null
+  authorized.value = false;
+  password.value = "";
+  loginError.value = null;
   // Очищаем сохраненную авторизацию из localStorage
   if (process.client) {
-    localStorage.removeItem('adminAuth')
+    localStorage.removeItem("adminAuth");
   }
 }
 
 // Обновленная функция загрузки галереи
 async function handleGalleryUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
-  
-  const files = Array.from(input.files)
-  
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+
+  const files = Array.from(input.files);
+
   try {
-    const filePaths = await uploadFiles(files)
-    newProdGallery.value.push(...filePaths)
+    const filePaths = await uploadFiles(files);
+    newProdGallery.value.push(...filePaths);
   } catch (error) {
-    console.error('Error uploading gallery images:', error)
+    console.error("Error uploading gallery images:", error);
   }
-  
+
   // clear input value for same file re-upload capability
-  input.value = ''
+  input.value = "";
 }
 
-function removeGalleryImage(idx:number) {
-  newProdGallery.value.splice(idx,1)
+function removeGalleryImage(idx: number) {
+  newProdGallery.value.splice(idx, 1);
 }
 
 // Для редактирования галереи
 function removeEditGalleryImage(p: Product, idx: number) {
   if (p.additional_images && Array.isArray(p.additional_images)) {
-    p.additional_images.splice(idx, 1)
+    p.additional_images.splice(idx, 1);
   }
 }
 
 // Обновленная функция загрузки галереи для редактирования
 async function handleEditGalleryUpload(event: Event, p: Product) {
-  const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
-  
-  const files = Array.from(input.files)
-  if (!p.additional_images) p.additional_images = []
-  
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+
+  const files = Array.from(input.files);
+  let images = Array.isArray(p.additional_images) ? p.additional_images : [];
+
   try {
-    const filePaths = await uploadFiles(files)
-    p.additional_images.push(...filePaths)
+    const filePaths = await uploadFiles(files);
+    images = [...images, ...filePaths];
+    p.additional_images = images;
   } catch (error) {
-    console.error('Error uploading gallery images:', error)
+    console.error("Error uploading gallery images:", error);
   }
-  
-  input.value = ''
+
+  input.value = "";
 }
 
-const adminTab = ref('catalog')
+const adminTab = ref("catalog");
 
 // Заменяем существующие переменные для статистики
-const { visits, requests, loading, error, fetchVisits, fetchRequests } = useStats()
+const { visits, requests, loading, error, fetchVisits, fetchRequests } =
+  useStats();
 
 // Обновляем функцию renderChart
 function renderChart() {
-  if (!visits.value.length) return
-  const ctx = document.getElementById('visitsChart') as HTMLCanvasElement
-  if (!ctx) return
-  if (chart) chart.destroy()
-  
+  if (!visits.value.length) return;
+  const ctx = document.getElementById("visitsChart") as HTMLCanvasElement;
+  if (!ctx) return;
+  if (chart) chart.destroy();
+
   // Сортируем данные по дате
-  const sortedVisits = [...visits.value].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  
+  const sortedVisits = [...visits.value].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
   // Получаем последние 30 дней
-  const last30Days = sortedVisits.slice(-30)
-  
+  const last30Days = sortedVisits.slice(-30);
+
   chart = new Chart(ctx, {
-    type: 'line',
+    type: "line",
     data: {
-      labels: last30Days.map(v => new Date(v.date).toLocaleDateString()),
-      datasets: [{
-        label: 'Посещения',
-        data: last30Days.map(v => v.count),
-        borderColor: '#007bff',
-        backgroundColor: 'rgba(0,123,255,0.1)',
-        tension: 0.3,
-        fill: true
-      }]
+      labels: last30Days.map((v) => new Date(v.date).toLocaleDateString()),
+      datasets: [
+        {
+          label: "Посещения",
+          data: last30Days.map((v) => v.count),
+          borderColor: "#007bff",
+          backgroundColor: "rgba(0,123,255,0.1)",
+          tension: 0.3,
+          fill: true,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -852,126 +993,135 @@ function renderChart() {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: function(context) {
-              return `Посещений: ${context.raw}`
-            }
-          }
-        }
+            label: function (context) {
+              return `Посещений: ${context.raw}`;
+            },
+          },
+        },
       },
       scales: {
         y: {
           beginAtZero: true,
           ticks: {
-            stepSize: 1
-          }
-        }
-      }
-    }
-  })
+            stepSize: 1,
+          },
+        },
+      },
+    },
+  });
 }
 
 // Обновляем функцию fetchStats
 async function fetchStats() {
-  loading.value = true
-  error.value = null
+  loading.value = true;
+  error.value = null;
   try {
     // Получаем общую статистику
-    const { data: statsData } = await useFetch<Stats>('/api/stats')
+    const { data: statsData } = await useFetch<Stats>("/api/stats");
     if (statsData.value) {
       stats.value = {
         visits: statsData.value.visits,
         requests: {
           list: statsData.value.requests.list,
-          stats: statsData.value.requests.stats || {}
-        }
-      }
+          stats: statsData.value.requests.stats || {},
+        },
+      };
     }
 
     // Получаем данные для графика
-    const { data: visitsData } = await useFetch<{ visits: { date: string; count: number; }[] }>('/api/visits')
+    const { data: visitsData } = await useFetch<{
+      visits: { date: string; count: number }[];
+    }>("/api/visits");
     if (visitsData.value?.visits) {
-      visits.value = visitsData.value.visits
-      renderChart()
+      visits.value = visitsData.value.visits;
+      renderChart();
     }
 
     // Получаем список заявок
-    const { data: requestsData } = await useFetch<{ requests: Request[] }>('/api/requests')
+    const { data: requestsData } = await useFetch<{ requests: Request[] }>(
+      "/api/requests"
+    );
     if (requestsData.value?.requests) {
       // Группируем заявки по типу для статистики
-      const requestStats = requestsData.value.requests.reduce((acc: Record<string, number>, req) => {
-        acc[req.type] = (acc[req.type] || 0) + 1
-        return acc
-      }, {})
+      const requestStats = requestsData.value.requests.reduce(
+        (acc: Record<string, number>, req) => {
+          acc[req.type] = (acc[req.type] || 0) + 1;
+          return acc;
+        },
+        {}
+      );
 
       stats.value = {
         ...stats.value,
         requests: {
           list: requestsData.value.requests,
-          stats: requestStats
-        }
-      }
+          stats: requestStats,
+        },
+      };
     }
   } catch (e) {
-    error.value = 'Failed to fetch statistics'
-    console.error('Error fetching statistics:', e)
+    error.value = "Failed to fetch statistics";
+    console.error("Error fetching statistics:", e);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 // Добавляем функцию для получения данных о посещениях
-async function fetchVisitsData(): Promise<{ date: string; count: number; }[]> {
+async function fetchVisitsData(): Promise<{ date: string; count: number }[]> {
   try {
-    const { data } = await useFetch<{ visits: { date: string; count: number; }[] }>('/api/visits')
-    return data.value?.visits || []
+    const { data } = await useFetch<{
+      visits: { date: string; count: number }[];
+    }>("/api/visits");
+    return data.value?.visits || [];
   } catch (e) {
-    console.error('Error fetching visits data:', e)
-    return []
+    console.error("Error fetching visits data:", e);
+    return [];
   }
 }
 
 // Обновляем watch для adminTab
 watch(adminTab, (tab) => {
-  if (tab === 'stats' && authorized.value) {
-    fetchStats()
+  if (tab === "stats" && authorized.value) {
+    fetchStats();
   }
-})
+});
 
 // Обновляем onMounted
 onMounted(() => {
   // Проверяем сохраненную авторизацию
-  checkSavedAuth()
-  
-  if (adminTab.value === 'stats' && authorized.value) {
-    fetchStats()
+  checkSavedAuth();
+
+  if (adminTab.value === "stats" && authorized.value) {
+    fetchStats();
   }
-})
+});
 
 // Функция для проверки сохраненной авторизации
 function checkSavedAuth() {
   if (process.client) {
-    const savedAuth = localStorage.getItem('adminAuth')
+    const savedAuth = localStorage.getItem("adminAuth");
     if (savedAuth) {
       try {
-        const authData = JSON.parse(savedAuth)
+        const authData = JSON.parse(savedAuth);
         if (authData.authorized && authData.timestamp) {
           // Проверяем, не истек ли срок действия (7 дней)
-          const now = Date.now()
-          const authTime = authData.timestamp
-          const sevenDays = 7 * 24 * 60 * 60 * 1000 // 7 дней в миллисекундах
-          
+          const now = Date.now();
+          const authTime = authData.timestamp;
+          const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
+
           if (now - authTime < sevenDays) {
             // Авторизация еще действительна
-            authorized.value = true
-            return
+            authorized.value = true;
+            return;
           } else {
             // Авторизация истекла, удаляем из localStorage
-            localStorage.removeItem('adminAuth')
+            localStorage.removeItem("adminAuth");
           }
         }
       } catch (error) {
-        console.error('Error parsing saved auth data:', error)
-        localStorage.removeItem('adminAuth')
+        console.error("Error parsing saved auth data:", error);
+        localStorage.removeItem("adminAuth");
       }
     }
   }
@@ -983,272 +1133,269 @@ const stats = ref<Stats>({
     today: 0,
     week: 0,
     month: 0,
-    total: 0
+    total: 0,
   },
   requests: {
     list: [],
-    stats: {}
-  }
-})
+    stats: {},
+  },
+});
 
-const selectedRequest = ref<Request | null>(null)
+const selectedRequest = ref<Request | null>(null);
 
-const showRequestDetails = (request: Request) => { 
-  selectedRequest.value = request
-}
+const showRequestDetails = (request: Request) => {
+  selectedRequest.value = request;
+};
 
-const closeRequestDetails = () => { 
-  selectedRequest.value = null
-}
+const closeRequestDetails = () => {
+  selectedRequest.value = null;
+};
 
 // Add this computed property in the script section
 const filteredSpecs = computed(() => (id: number) => {
-  return specsList.value[id] || []
-})
+  return specsList.value[id] || [];
+});
 
-const showCategoryDescriptionModal = ref(false)
+const showCategoryDescriptionModal = ref(false);
 function confirmCategoryDescription() {
-  showCategoryDescriptionModal.value = false
+  showCategoryDescriptionModal.value = false;
   // Продолжить создание категории и товара
 }
 
 // Функции для работы с категориями
-const editingCategory = ref<any>(null)
-const showAddCategoryModal = ref(false)
-const showEditCategoryModal = ref(false)
-const isDeletingEmptyCategories = ref(false)
+const editingCategory = ref<any>(null);
+const showAddCategoryModal = ref(false);
+const showEditCategoryModal = ref(false);
+const isDeletingEmptyCategories = ref(false);
 
 // Функция для генерации slug из названия
-watch(() => newCategory.value.name, (newName) => {
-  if (newName) {
-    newCategory.value.slug = transliterate(newName)
-      .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
+watch(
+  () => newCategory.value.name,
+  (newName) => {
+    if (newName) {
+      newCategory.value.slug = transliterate(newName)
+        .toLowerCase()
+        .replace(/[^a-z0-9 -]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+    }
   }
-})
+);
 
 // Добавление категории
 async function addCategory() {
   try {
-    const response = await fetch('/api/categories', {
-      method: 'POST',
+    const response = await fetch("/api/categories", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        title: newCategory.value.name,
+        name: newCategory.value.name,
         description: newCategory.value.description,
-        slug: newCategory.value.slug
-      })
-    })
+        slug: newCategory.value.slug,
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to create category')
+      throw new Error("Failed to create category");
     }
 
-    const data = await response.json()
-    categories.value.push({
-      id: data.id,
-      name: data.name,
-      description: data.description ?? '',
-      slug: data.slug
-    })
+    const { category: newCategoryData } = await response.json();
+
+    // Добавляем новую категорию в локальный список
+    const newCategoryObject = {
+      id: String(newCategoryData.id),
+      name: newCategoryData.name,
+      description: newCategoryData.description ?? "",
+      slug: newCategoryData.slug,
+    };
+
+    categories.value.push(newCategoryObject);
 
     // Очищаем форму и закрываем модальное окно
     newCategory.value = {
-      name: '',
-      description: '',
-      slug: ''
-    }
-    showAddCategoryModal.value = false
+      name: "",
+      description: "",
+      slug: "",
+    };
+    showAddCategoryModal.value = false;
+
+    // Показываем сообщение об успехе
+    modalStore.showSuccess("Категория успешно создана");
   } catch (error) {
-    console.error('Error creating category:', error)
-    modalStore.showError('Ошибка при создании категории')
+    console.error("Error creating category:", error);
+    modalStore.showError("Ошибка при создании категории");
   }
 }
 
 // Редактирование категории
 function editCategory(category: AdminCategory) {
-  editingCategory.value = { ...category }
-  showEditCategoryModal.value = true
+  editingCategory.value = { ...category };
+  showEditCategoryModal.value = true;
 }
 
 // Сохранение изменений категории
 async function saveCategory() {
   try {
     if (!editingCategory.value) {
-      throw new Error('No category being edited')
+      throw new Error("No category being edited");
     }
 
-    const response = await fetch(`/api/categories/${editingCategory.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title: editingCategory.value.name,
-        description: editingCategory.value.description ?? '',
-        slug: editingCategory.value.slug
-      })
-    })
+    const response = await fetch(
+      `/api/categories/${editingCategory.value.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editingCategory.value.name,
+          description: editingCategory.value.description ?? "",
+          slug: editingCategory.value.slug,
+        }),
+      }
+    );
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.statusMessage || 'Failed to update category')
+      const errorData = await response.json();
+      throw new Error(errorData.statusMessage || "Failed to update category");
     }
 
-    const updatedCategory = await response.json()
+    const updatedCategory = await response.json();
 
     // Обновляем категорию в списке
-    const index = categories.value.findIndex(c => c.id === editingCategory.value.id)
+    const index = categories.value.findIndex(
+      (c) => c.id === editingCategory.value.id
+    );
     if (index !== -1) {
       categories.value[index] = {
         id: updatedCategory.id,
         name: updatedCategory.name,
         slug: updatedCategory.slug,
-        description: updatedCategory.description ?? ''
-      }
+        description: updatedCategory.description ?? "",
+      };
     }
 
-    closeEditCategoryModal()
-    modalStore.showSuccess('Категория успешно обновлена')
+    closeEditCategoryModal();
+    modalStore.showSuccess("Категория успешно обновлена");
   } catch (error: any) {
-    console.error('Error updating category:', error)
-    modalStore.showSuccess(`Ошибка при обновлении категории: ${error.message || 'Неизвестная ошибка'}`)
+    console.error("Error updating category:", error);
+    modalStore.showSuccess(
+      `Ошибка при обновлении категории: ${
+        error.message || "Неизвестная ошибка"
+      }`
+    );
   }
 }
 
 // Удаление категории
 async function deleteCategory(id: string) {
-  modalStore.openModal(
-    "Удаление",
-    'Вы уверены, что хотите удалить эту категорию?',
-    "Подтвердить",
-    async () => {
-      try {
-        const response = await fetch(`/api/categories/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+  if (!id) return;
 
-        const data = await response.json()
+  // Сначала обновляем локальное состояние
+  categories.value = categories.value.filter((cat) => cat.id !== id);
+  modalStore.showSuccess("Категория успешно удалена");
 
-        if (!response.ok) {
-          if (response.status === 400 && data.statusMessage?.includes('Cannot delete category that contains products')) {
-            modalStore.openModal("Ошибка",'Невозможно удалить категорию, содержащую товары. Сначала переместите или удалите все товары из этой категории.')
-            return
-          }
-          throw new Error(data.statusMessage || 'Failed to delete category')
-        }
-
-        // Удаляем категорию из списка только после успешного удаления на сервере
-        categories.value = categories.value.filter(cat => cat.id !== id)
-        modalStore.openModal("Успех",'Категория успешно удалена')
-      } catch (error: any) {
-        console.error('Error deleting category:', error)
-        modalStore.openModal("Ошибка",`Ошибка при удалении категории: ${error.message || 'Неизвестная ошибка'}`)
-      }
-    }
-  )
+  // Затем делаем API-запрос
+  try {
+    await fetch(`/api/categories/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error: any) {
+    console.error("Error deleting category:", error);
+    // В случае ошибки не показываем сообщение пользователю, так как категория уже удалена из интерфейса
+  }
 }
 
 // Удаление всех пустых категорий
 async function deleteEmptyCategories() {
-  modalStore.openModal(
-    "Удаление пустых категорий",
-    'Вы уверены, что хотите удалить все пустые категории? Это действие нельзя отменить.',
-    "Подтвердить",
-    async () => {
-      try {
-        isDeletingEmptyCategories.value = true
-        
-        const response = await fetch('/api/categories/delete-empty', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+  try {
+    isDeletingEmptyCategories.value = true;
 
-        const data = await response.json()
+    const response = await fetch("/api/categories/delete-empty", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-        if (!response.ok) {
-          throw new Error(data.statusMessage || 'Failed to delete empty categories')
-        }
+    const data = await response.json();
 
-        // Обновляем список категорий, удаляя те, которые были удалены
-        if (data.deletedCategories && data.deletedCategories.length > 0) {
-          const deletedIds = data.deletedCategories.map((cat: any) => cat.id)
-          categories.value = categories.value.filter(cat => !deletedIds.includes(cat.id))
-        }
-
-        modalStore.openModal(
-          "Успех", 
-          `Успешно удалено ${data.deletedCount} пустых категорий`
-        )
-      } catch (error: any) {
-        console.error('Error deleting empty categories:', error)
-        modalStore.openModal(
-          "Ошибка",
-          `Ошибка при удалении пустых категорий: ${error.message || 'Неизвестная ошибка'}`
-        )
-      } finally {
-        isDeletingEmptyCategories.value = false
-      }
+    if (!response.ok) {
+      throw new Error(
+        data.statusMessage || "Failed to delete empty categories"
+      );
     }
-  )
+
+    // Получаем обновленный список категорий
+    const categoriesResponse = await fetch("/api/categories");
+    if (categoriesResponse.ok) {
+      const { categories: updatedCategories } = await categoriesResponse.json();
+      categories.value = updatedCategories;
+    }
+  } catch (error: any) {
+    console.error("Error deleting empty categories:", error);
+    modalStore.showError(
+      `Ошибка при удалении пустых категорий: ${
+        error.message || "Неизвестная ошибка"
+      }`
+    );
+  } finally {
+    isDeletingEmptyCategories.value = false;
+  }
 }
 
 // Закрытие модального окна редактирования
 function closeEditCategoryModal() {
-  showEditCategoryModal.value = false
-  editingCategory.value = null
+  showEditCategoryModal.value = false;
+  editingCategory.value = null;
 }
 
 // Получение количества товаров в категории
 function getCategoryProductCount(categoryId: string): number {
-  const category = categories.value.find(c => c.id === categoryId) 
-  
-  const count = products.value.filter(product => {
-    const matches = category && (
-      product.category === category.name ||
-      product.category_id === categoryId ||
-      product.category_slug === category.slug
-    ) 
-    return matches
-  }).length
- 
-  return count
+  const category = categories.value.find((c) => c.id === categoryId);
+
+  const count = products.value.filter((product) => {
+    const matches =
+      category &&
+      (product.category === category.name ||
+        product.category_id === categoryId ||
+        product.category_slug === category.slug);
+    return matches;
+  }).length;
+
+  return count;
 }
 
 async function deleteAllRequests() {
-  if (!confirm('Вы уверены, что хотите удалить все заявки?')) return;
+  if (!confirm("Вы уверены, что хотите удалить все заявки?")) return;
   try {
-    const res = await $fetch('/api/requests/delete-all', { method: 'DELETE' });
+    const res = await $fetch("/api/requests/delete-all", { method: "DELETE" });
     if (res && (res as any).success) {
       await fetchStats();
-      modalStore.showSuccess('Все заявки удалены');
+      modalStore.showSuccess("Все заявки удалены");
     }
   } catch (error) {
-    console.error('Error deleting all requests:', error);
-    modalStore.showError('Ошибка при удалении заявок');
+    console.error("Error deleting all requests:", error);
+    modalStore.showError("Ошибка при удалении заявок");
   }
 }
 
 async function deleteRequest(id: number) {
-  if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
+  if (!confirm("Вы уверены, что хотите удалить эту заявку?")) return;
   try {
-    const res = await $fetch(`/api/requests/${id}`, { method: 'DELETE' });
+    const res = await $fetch(`/api/requests/${id}`, { method: "DELETE" });
     if (res && (res as any).deleted) {
       await fetchStats();
-      modalStore.showSuccess('Заявка удалена');
+      modalStore.showSuccess("Заявка удалена");
     }
   } catch (error) {
-    console.error('Error deleting request:', error);
-    modalStore.showError('Ошибка при удалении заявки');
+    console.error("Error deleting request:", error);
+    modalStore.showError("Ошибка при удалении заявки");
   }
 }
 
@@ -1262,59 +1409,75 @@ function updateSpecsList(productId: number, specs: Spec[]) {
 // --- Массовое обновление show_in_filters по ключу ---
 function setShowInFiltersForAll(key: string, value: boolean) {
   // Для всех товаров и их характеристик
-  Object.keys(specsList.value).forEach(productId => {
-    const specs = specsList.value[Number(productId)]
+  Object.keys(specsList.value).forEach((productId) => {
+    const specs = specsList.value[Number(productId)];
     if (Array.isArray(specs)) {
-      specs.forEach(spec => {
+      specs.forEach((spec) => {
         if (spec.key === key) {
-          (spec as any).show_in_filters = value
+          (spec as any).show_in_filters = value;
         }
-      })
+      });
     }
-  })
+  });
 }
 
 useHead({
-  title: 'Админка — КотлоЭнергоСнаб',
+  title: "Админка — КотлоЭнергоСнаб",
   meta: [
-    { name: 'description', content: 'Панель администратора сайта КотлоЭнергоСнаб. Управление каталогом, заказами, статистикой.' },
-    { name: 'keywords', content: 'КотлоЭнергоСнаб, админка, панель администратора, управление сайтом, Барнаул' },
-    { name: 'author', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:title', content: 'Админка — КотлоЭнергоСнаб' },
-    { property: 'og:description', content: 'Панель администратора сайта КотлоЭнергоСнаб. Управление каталогом, заказами, статистикой.' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://kes-sib.ru/admin' },
-    { property: 'og:image', content: '/images/hero1.jpg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Админка — КотлоЭнергоСнаб' },
-    { name: 'twitter:description', content: 'Панель администратора сайта КотлоЭнергоСнаб. Управление каталогом, заказами, статистикой.' },
-    { name: 'robots', content: 'noindex, nofollow' }
+    {
+      name: "description",
+      content:
+        "Панель администратора сайта КотлоЭнергоСнаб. Управление каталогом, заказами, статистикой.",
+    },
+    {
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, админка, панель администратора, управление сайтом, Барнаул",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Админка — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Панель администратора сайта КотлоЭнергоСнаб. Управление каталогом, заказами, статистикой.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/admin" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Админка — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Панель администратора сайта КотлоЭнергоСнаб. Управление каталогом, заказами, статистикой.",
+    },
+    { name: "robots", content: "noindex, nofollow" },
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
-    { rel: 'canonical', href: 'https://kes-sib.ru/admin' }
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/admin" },
   ],
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: JSON.stringify({
         "@context": "http://schema.org",
         "@type": "Organization",
-        "name": "КотлоЭнергоСнаб",
-        "url": "https://kes-sib.ru/",
-        "logo": "https://kes-sib.ru/favicon.ico"
-      })
-    }
-  ]
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
 });
 </script>
 
 <style lang="scss" scoped>
 .log {
- display: flex;
- justify-content: center;
- align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
@@ -1332,7 +1495,7 @@ useHead({
     padding: 1.5rem;
     background: var(--bg);
     border-radius: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .login-box h2 {
@@ -1435,7 +1598,7 @@ useHead({
     padding: 1.5rem;
     border-radius: 0.5rem;
     margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     .category-select {
       margin-bottom: 1rem;
@@ -1445,7 +1608,8 @@ useHead({
         gap: 1rem;
         align-items: center;
 
-        select, input {
+        select,
+        input {
           flex: 1;
         }
       }
@@ -1453,7 +1617,7 @@ useHead({
 
     .filter-group {
       margin-bottom: 1rem;
-      
+
       label {
         display: block;
         margin-bottom: 0.5rem;
@@ -1479,7 +1643,9 @@ useHead({
       }
     }
 
-    input, textarea, select {
+    input,
+    textarea,
+    select {
       width: 100%;
       padding: 0.75rem;
       margin-bottom: 1rem;
@@ -1592,7 +1758,7 @@ useHead({
       border-radius: 0.5rem;
       margin-bottom: 1rem;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .prod-summary {
@@ -1603,7 +1769,7 @@ useHead({
       transition: background-color 0.2s;
 
       &:hover {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(0, 0, 0, 0.05);
       }
 
       &__id {
@@ -1655,7 +1821,9 @@ useHead({
           font-size: 1rem;
         }
 
-        input, textarea, select {
+        input,
+        textarea,
+        select {
           width: 100%;
           padding: 0.75rem;
           margin-top: 0.5rem;
@@ -1752,7 +1920,7 @@ useHead({
   }
 
   input[type="checkbox"]:checked + label::after {
-    content: '✔';
+    content: "✔";
     position: absolute;
     right: 0;
     top: 50%;
@@ -1780,16 +1948,16 @@ useHead({
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 
   &:hover {
     border-color: var(--primary);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 
   &::after {
-    content: '▼';
+    content: "▼";
     position: absolute;
     right: 15px;
     top: 50%;
@@ -1808,7 +1976,7 @@ useHead({
   background-color: var(--bg);
   border: 1px solid var(--secondary);
   border-radius: 0.5rem;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   z-index: 10;
   padding: 10px;
   max-height: 200px;
@@ -1844,7 +2012,7 @@ useHead({
   }
 
   input[type="checkbox"]:checked + label::after {
-    content: '✔';
+    content: "✔";
     position: absolute;
     right: 0;
     top: 50%;
@@ -1915,7 +2083,7 @@ useHead({
   border-collapse: collapse;
   font-size: 0.9rem;
 }
-.requests-table th, 
+.requests-table th,
 .requests-table td {
   border: 1px solid #eee;
   padding: 8px;
@@ -1943,7 +2111,7 @@ useHead({
     margin: 0 -1rem;
     border-radius: 0;
   }
-  
+
   .requests-table th,
   .requests-table td {
     max-width: none;
@@ -2015,7 +2183,7 @@ useHead({
   background: var(--bg);
   padding: 1.5rem;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
 
   h3 {
@@ -2247,7 +2415,7 @@ useHead({
   padding: 2rem;
   background: var(--bg);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   .categories-grid {
     display: grid;
@@ -2259,13 +2427,13 @@ useHead({
   .category-card {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
 
     &__header {

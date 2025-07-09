@@ -650,7 +650,7 @@ if (fetchError.value) {
   console.error("Error fetching products:", fetchError.value);
   allProducts.value = [];
 } else if (fetchedAllProducts.value) {
-  allProducts.value = fetchedAllProducts.value;
+  allProducts.value = fetchedAllProducts.value as unknown as Product[];
 } else {
   allProducts.value = [];
 }
