@@ -15,20 +15,26 @@ WORKDIR /app
 # Build
 FROM base as build
 
+# Копируем файлы package.json и package-lock.json
 COPY package*.json ./
+COPY prisma ./prisma
 
+# Устанавливаем зависимости
 RUN npm install --production=false
 
+# Копируем все остальные файлы проекта
 COPY . .
 
-# Генерация Prisma
-COPY prisma ./prisma
+# Генерируем Prisma Client
 RUN npx prisma generate
 
-# Очистка кэша npm и node_modules перед сборкой
+# Очистка кэша и пересборка для уверенности
 RUN npm cache clean --force
 RUN rm -rf node_modules
 RUN npm install --production=false
+
+# Проверяем наличие Prisma Client
+RUN ls -la node_modules/.prisma/client
 
 # Сборка приложения
 RUN npm run build
@@ -44,5 +50,8 @@ COPY --from=build /app /app
 # Создаем папку для загрузок
 RUN mkdir -p /app/public/uploads && chmod 755 /app/public/uploads
 
+# Проверяем наличие Prisma Client в финальном образе
+RUN ls -la /app/node_modules/.prisma/client || echo "Prisma client not found in final image"
+
 # Применение миграций при запуске контейнера
-CMD ["sh", "-c", "npx prisma migrate deploy && node .output/server/index.mjs"] 
+CMD ["sh", "-c", "cd /app && npx prisma generate && npx prisma migrate deploy && node .output/server/index.mjs"] 

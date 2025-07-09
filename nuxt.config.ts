@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     minify: true,
     prerender: {
-      crawlLinks: true,
+      crawlLinks: false,
       routes: ["/"],
     },
     storage: {
