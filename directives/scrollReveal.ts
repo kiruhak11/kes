@@ -1,11 +1,11 @@
-import type { DirectiveBinding } from 'vue';
+import type { DirectiveBinding } from "vue";
 
-const animateClass = 'scroll-reveal-animate';
+const animateClass = "scroll-reveal-animate";
 
 const ScrollReveal = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
-    const animation = binding.value || 'fade-in-up';
-    el.classList.add('scroll-reveal');
+    const animation = binding.value || "fade-in-up";
+    el.classList.add("scroll-reveal");
     el.classList.add(`scroll-reveal--${animation}`);
     const observer = new IntersectionObserver(
       ([entry], obs) => {
@@ -21,8 +21,10 @@ const ScrollReveal = {
   },
   unmounted(el: HTMLElement) {
     const observer = (el as any).__scrollRevealObserver;
-    if (observer) observer.disconnect();
+    if (observer && typeof observer.disconnect === "function") {
+      observer.disconnect();
+    }
   },
 };
 
-export default ScrollReveal; 
+export default ScrollReveal;

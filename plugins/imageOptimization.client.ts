@@ -1,32 +1,40 @@
 export default defineNuxtPlugin((nuxtApp) => {
   if (process.client) {
-    // Intersection Observer для lazy loading
-    const imageObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target as HTMLImageElement;
-            const src = img.dataset.src;
+    let imageObserver: IntersectionObserver | null = null;
 
-            if (src) {
-              img.src = src;
-              img.removeAttribute("data-src");
-              imageObserver.unobserve(img);
+    // Intersection Observer для lazy loading
+    const createImageObserver = () => {
+      imageObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target as HTMLImageElement;
+              const src = img.dataset.src;
+
+              if (src) {
+                img.src = src;
+                img.removeAttribute("data-src");
+                if (imageObserver) {
+                  imageObserver.unobserve(img);
+                }
+              }
             }
-          }
-        });
-      },
-      {
-        rootMargin: "50px",
-        threshold: 0.1,
-      }
-    );
+          });
+        },
+        {
+          rootMargin: "50px",
+          threshold: 0.1,
+        }
+      );
+    };
 
     // Автоматическое добавление lazy loading для изображений
     const addLazyLoading = () => {
+      if (!imageObserver) return;
+
       const images = document.querySelectorAll("img[data-src]");
       images.forEach((img) => {
-        imageObserver.observe(img);
+        imageObserver!.observe(img);
       });
     };
 
@@ -64,6 +72,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     // Инициализация при загрузке страницы
     const initializeImageOptimization = () => {
+      createImageObserver();
       addLazyLoading();
       preloadCriticalImages();
       document.addEventListener("error", handleImageError, true);
@@ -71,17 +80,16 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     // Очистка
     const cleanup = () => {
-      imageObserver.disconnect();
+      if (imageObserver && typeof imageObserver.disconnect === "function") {
+        imageObserver.disconnect();
+        imageObserver = null;
+      }
       document.removeEventListener("error", handleImageError, true);
     };
 
-    // Добавляем инициализацию и очистку к хукам nuxtApp
+    // Добавляем инициализацию при загрузке страницы
     nuxtApp.hook("app:mounted", () => {
       initializeImageOptimization();
-    });
-
-    nuxtApp.hook("app:beforeMount", () => {
-      cleanup();
     });
   }
 });

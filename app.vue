@@ -12,27 +12,37 @@
 import { useTheme } from "@/composables/useTheme";
 import { useVisitTracking } from "~/composables/useVisitTracking";
 
-const { theme, setTheme } = useTheme();
+const { theme, setTheme } = process.client
+  ? useTheme()
+  : { theme: ref("light"), setTheme: () => {} };
 
 // Инициализируем отслеживание посещений
-const { trackVisit, error: trackingError } = useVisitTracking();
+const { trackVisit, error: trackingError } = process.client
+  ? useVisitTracking()
+  : { trackVisit: () => {}, error: ref(null) };
 import { contacts } from "~/data/contacts";
 
 // Отслеживаем посещение при загрузке приложения
 onMounted(() => {
-  trackVisit();
-});
-
-// Логируем ошибки отслеживания
-watch(trackingError, (error) => {
-  if (error) {
-    console.error("Visit tracking error:", error);
+  if (process.client) {
+    trackVisit();
   }
 });
 
-useSeoMeta({
-  titleTemplate: (title) => "КотлоЭнергоСнаб",
-});
+// Логируем ошибки отслеживания
+if (process.client) {
+  watch(trackingError, (error) => {
+    if (error) {
+      console.error("Visit tracking error:", error);
+    }
+  });
+}
+
+if (process.client) {
+  useSeoMeta({
+    titleTemplate: (title) => "КотлоЭнергоСнаб",
+  });
+}
 </script>
 
 <style lang="scss">

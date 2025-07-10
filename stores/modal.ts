@@ -10,10 +10,15 @@ export const useModalStore = defineStore("modal", () => {
   const buttonText = ref("Закрыть");
   const onButtonClick = ref<(() => void) | null>(null);
 
-  const modal = useFrogModal({
-    closeOnOverlayClick: false,
-    closeOnEsc: false,
-  });
+  const modal = process.client
+    ? useFrogModal({
+        closeOnOverlayClick: false,
+        closeOnEsc: false,
+      })
+    : {
+        setModal: () => {},
+        closeModal: () => {},
+      };
 
   function openModal(
     modalTitle: string,

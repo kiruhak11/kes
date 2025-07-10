@@ -1,5 +1,4 @@
 <template>
-
   <div class="modal-overlay">
     <div class="modal-content">
       <header class="modal-header">
@@ -19,7 +18,14 @@
 </template>
 
 <script setup lang="ts">
-const { setModal, closeModal, clearModals, isOpen } = useFrogModal();
+const { setModal, closeModal, clearModals, isOpen } = process.client
+  ? useFrogModal()
+  : {
+      setModal: () => {},
+      closeModal: () => {},
+      clearModals: () => {},
+      isOpen: ref(false),
+    };
 const props = defineProps({
   modalTitle: {
     type: String,
@@ -29,7 +35,7 @@ const props = defineProps({
     type: String,
     default: "Основной текст",
   },
-  modalButtonText: { 
+  modalButtonText: {
     type: String,
     default: "Закрыть",
   },
@@ -38,7 +44,6 @@ const props = defineProps({
     default: null,
   },
 });
-
 
 const handleButtonClick = () => {
   if (typeof props.onButtonClick === "function") {
@@ -104,7 +109,6 @@ const handleButtonClick = () => {
   cursor: pointer;
   color: #333;
   transition: color 0.2s;
-  
 }
 
 .modal-close:hover {
@@ -123,7 +127,6 @@ const handleButtonClick = () => {
   text-align: right;
   border-top: 1px solid #333;
 }
-
 
 .modal-button:hover {
   background: #0056b3;
