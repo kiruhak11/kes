@@ -708,6 +708,12 @@ async function updateWithSpecs(p: Product) {
       required_products: p.required_products || [],
     };
 
+    // Отладочная информация
+    console.log(
+      "Updating product with additional_images:",
+      updateData.additional_images
+    );
+
     // Получаем обновленный продукт с сервера
     const updatedProduct = await $fetch<ProductApiResponse>(
       `/api/products/${p.id}`,
@@ -740,6 +746,21 @@ async function updateWithSpecs(p: Product) {
         categories.value.find(
           (c) => c.id === updatedProduct.product.category_id
         )?.slug ?? "";
+
+      // Обрабатываем additional_images
+      let additionalImages: string[] = [];
+      if (updatedProduct.product.additional_images) {
+        if (Array.isArray(updatedProduct.product.additional_images)) {
+          additionalImages = updatedProduct.product.additional_images.filter(
+            (img: any) => typeof img === "string" && img !== null
+          );
+        } else if (
+          typeof updatedProduct.product.additional_images === "string"
+        ) {
+          additionalImages = [updatedProduct.product.additional_images];
+        }
+      }
+
       products.value[productIndex] = {
         ...products.value[productIndex],
         id: updatedProduct.product.id,
@@ -751,7 +772,7 @@ async function updateWithSpecs(p: Product) {
             ? updatedProduct.product.price
             : Number(updatedProduct.product.price) || 0,
         image: updatedProduct.product.image ?? "",
-        category: categoryValue,
+        category: categoryValue || "",
         category_name: updatedProduct.product.category_name ?? "",
         category_id: updatedProduct.product.category_id ?? "",
         category_slug: updatedProduct.product.category_slug ?? "",
@@ -759,13 +780,7 @@ async function updateWithSpecs(p: Product) {
         specs: Array.isArray(rawSpecs)
           ? convertSpecsToCharacteristics(rawSpecs)
           : [],
-        additional_images: Array.isArray(
-          updatedProduct.product.additional_images
-        )
-          ? updatedProduct.product.additional_images.filter(
-              (img: any) => typeof img === "string" && img !== null
-            )
-          : [],
+        additional_images: additionalImages,
         delivery_set: updatedProduct.product.delivery_set ?? "",
         connection_scheme: updatedProduct.product.connection_scheme ?? "",
         additional_requirements:
@@ -938,16 +953,30 @@ async function handleEditGalleryUpload(event: Event, p: Product) {
   if (!input.files || input.files.length === 0) return;
 
   const files = Array.from(input.files);
-  let images = Array.isArray(p.additional_images) ? p.additional_images : [];
+
+  // Инициализируем массив additional_images, если его нет
+  if (!p.additional_images) {
+    p.additional_images = [];
+  }
+
+  // Убеждаемся, что additional_images это массив
+  if (!Array.isArray(p.additional_images)) {
+    p.additional_images = [];
+  }
 
   try {
+    console.log("Uploading files:", files.length);
     const filePaths = await uploadFiles(files);
-    images = [...images, ...filePaths];
-    p.additional_images = images;
+    console.log("Uploaded file paths:", filePaths);
+
+    // Добавляем новые пути к существующим
+    p.additional_images = [...p.additional_images, ...filePaths];
+    console.log("Updated additional_images:", p.additional_images);
   } catch (error) {
     console.error("Error uploading gallery images:", error);
   }
 
+  // Очищаем input
   input.value = "";
 }
 

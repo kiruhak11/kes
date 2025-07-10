@@ -687,7 +687,11 @@
                     />
                     <div class="gallery-previews">
                       <div
-                        v-for="(gimg, gidx) in p.additional_images || []"
+                        v-for="(gimg, gidx) in (
+                          editGalleryLocal[p.id] ||
+                          p.additional_images ||
+                          []
+                        ).filter((img) => img && typeof img === 'string')"
                         :key="gidx"
                         class="gallery-item"
                       >
@@ -1036,35 +1040,31 @@ const emit = defineEmits<{
   (e: "logout"): void;
   (e: "addProduct"): void;
   (e: "resetForm"): void;
-  (e: "toggle", id: number): void;
-  (e: "updateWithSpecs", product: Product): void;
+  (e: "toggle", ...args: any[]): void;
+  (e: "updateWithSpecs", ...args: any[]): void;
   (e: "cancelEdit"): void;
-  (e: "addSpec", id: number): void;
-  (e: "removeSpec", id: number, idx: number): void;
+  (e: "addSpec", ...args: any[]): void;
+  (e: "removeSpec", ...args: any[]): void;
   (e: "addNewSpec"): void;
-  (e: "removeNewSpec", idx: number): void;
-  (e: "deleteProduct", id: number): void;
-  (
-    e: "handleImageUpload",
-    event: Event,
-    product: Product | Partial<Product>
-  ): void;
+  (e: "removeNewSpec", ...args: any[]): void;
+  (e: "deleteProduct", ...args: any[]): void;
+  (e: "handleImageUpload", ...args: any[]): void;
   (e: "toggleNewProdFuelDropdown"): void;
-  (e: "handleGalleryUpload", event: Event): void;
-  (e: "removeGalleryImage", idx: number): void;
-  (e: "removeEditGalleryImage", product: Product, idx: number): void;
-  (e: "handleEditGalleryUpload", event: Event, product: Product): void;
-  (e: "handleConnectionSchemeUpload", event: Event, product: Product): void;
-  (e: "update:password", val: string): void;
-  (e: "update:newCategory", val: any): void;
-  (e: "update:newProdPowerValue", val: any): void;
-  (e: "update:newProdPowerUnit", val: string): void;
-  (e: "update:newProdSelectedFuels", val: any[]): void;
-  (e: "update:newProd", val: any): void;
-  (e: "update:newSpec", val: Spec): void;
-  (e: "update:newSpecs", val: Spec[]): void;
-  (e: "updateSpecsList", productId: number, specs: Spec[]): void;
-  (e: "update:newProdGallery", val: string[]): void;
+  (e: "handleGalleryUpload", ...args: any[]): void;
+  (e: "removeGalleryImage", ...args: any[]): void;
+  (e: "removeEditGalleryImage", ...args: any[]): void;
+  (e: "handleEditGalleryUpload", ...args: any[]): void;
+  (e: "handleConnectionSchemeUpload", ...args: any[]): void;
+  (e: "update:password", ...args: any[]): void;
+  (e: "update:newCategory", ...args: any[]): void;
+  (e: "update:newProdPowerValue", ...args: any[]): void;
+  (e: "update:newProdPowerUnit", ...args: any[]): void;
+  (e: "update:newProdSelectedFuels", ...args: any[]): void;
+  (e: "update:newProd", ...args: any[]): void;
+  (e: "update:newSpec", ...args: any[]): void;
+  (e: "update:newSpecs", ...args: any[]): void;
+  (e: "updateSpecsList", ...args: any[]): void;
+  (e: "update:newProdGallery", ...args: any[]): void;
 }>();
 
 // Локальная переменная для пароля
@@ -1538,9 +1538,29 @@ const addProduct = () => {
   emit("addProduct");
 };
 const resetForm = () => emit("resetForm");
-const toggle = (id: number) => emit("toggle", id);
-const updateWithSpecs = (product: Product) => emit("updateWithSpecs", product);
-const cancelEdit = () => emit("cancelEdit");
+const toggle = (id: number) => {
+  // Инициализируем галерею при начале редактирования
+  const product = props.products.find((p) => p.id === id);
+  if (product) {
+    console.log("Product found for edit:", product);
+    console.log("Product additional_images:", product.additional_images);
+    console.log("Type of additional_images:", typeof product.additional_images);
+    console.log("Is array:", Array.isArray(product.additional_images));
+
+    initializeEditGallery(id, product.additional_images || []);
+  }
+  emit("toggle", id);
+};
+const updateWithSpecs = (product: Product) => {
+  // Очищаем локальную галерею после сохранения
+  delete editGalleryLocal.value[product.id];
+  emit("updateWithSpecs", product);
+};
+const cancelEdit = () => {
+  // Очищаем локальную галерею при отмене редактирования
+  editGalleryLocal.value = {};
+  emit("cancelEdit");
+};
 const addSpec = (id: number) => emit("addSpec", id);
 const removeSpec = (id: number, idx: number) => emit("removeSpec", id, idx);
 const addNewSpec = () => {
@@ -1567,10 +1587,61 @@ const deleteProduct = (id: number) => emit("deleteProduct", id);
 const handleImageUpload = (event: Event, product: Product | Partial<Product>) =>
   emit("handleImageUpload", event, product);
 const toggleNewProdFuelDropdown = () => emit("toggleNewProdFuelDropdown");
-const removeEditGalleryImage = (product: Product, idx: number) =>
-  emit("removeEditGalleryImage", product, idx);
-const handleEditGalleryUpload = (event: Event, product: Product) =>
-  emit("handleEditGalleryUpload", event, product);
+const removeEditGalleryImage = (product: Product, idx: number) => {
+  // Инициализируем галерею, если её нет
+  if (!editGalleryLocal.value[product.id]) {
+    console.log("Initializing gallery for removal, product:", product.id);
+    console.log("Product additional_images:", product.additional_images);
+    initializeEditGallery(product.id, product.additional_images || []);
+  }
+
+  // Удаляем изображение из локальной галереи
+  removeEditGalleryImageLocal(product.id, idx);
+
+  // Обновляем additional_images в продукте
+  product.additional_images = [...editGalleryLocal.value[product.id]];
+
+  console.log(
+    "After removal, product additional_images:",
+    product.additional_images
+  );
+};
+
+const handleEditGalleryUpload = async (event: Event, product: Product) => {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+
+  const files = Array.from(input.files);
+
+  // Инициализируем галерею, если её нет
+  if (!editGalleryLocal.value[product.id]) {
+    console.log("Initializing gallery for product:", product.id);
+    console.log("Product additional_images:", product.additional_images);
+    initializeEditGallery(product.id, product.additional_images || []);
+  }
+
+  try {
+    console.log("Uploading files for edit:", files.length);
+    const filePaths = await uploadFiles(files);
+    console.log("Uploaded file paths for edit:", filePaths);
+
+    // Добавляем новые изображения в локальную галерею
+    addEditGalleryImages(product.id, filePaths);
+
+    // Обновляем additional_images в продукте
+    product.additional_images = [...editGalleryLocal.value[product.id]];
+
+    console.log(
+      "Updated product additional_images:",
+      product.additional_images
+    );
+  } catch (error) {
+    console.error("Error uploading gallery images for edit:", error);
+  }
+
+  // Очищаем input
+  input.value = "";
+};
 const handleConnectionSchemeUpload = (event: Event, product: Product) =>
   emit("handleConnectionSchemeUpload", event, product);
 
@@ -2022,7 +2093,7 @@ const handleGalleryUpload = async (event: Event) => {
 const { uploadFiles } = useFileStorage();
 
 const getImageUrl = (path: string) => {
-  if (!path) return "";
+  if (!path || typeof path !== "string") return "";
   if (path.startsWith("/api/uploads/")) return path;
   if (path.startsWith("/uploads/"))
     return path.replace("/uploads/", "/api/uploads/");
@@ -2112,6 +2183,52 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
   }
 
   draggedProductId.value = null;
+};
+
+// Локальные переменные для галереи в режиме редактирования
+const editGalleryLocal = ref<Record<number, string[]>>({});
+
+// Инициализируем галерею для каждого товара при редактировании
+const initializeEditGallery = (
+  productId: number,
+  additionalImages: any = []
+) => {
+  // Проверяем тип additionalImages и преобразуем в массив
+  let imagesArray: string[] = [];
+
+  if (additionalImages) {
+    if (Array.isArray(additionalImages)) {
+      imagesArray = additionalImages.filter(
+        (img) => typeof img === "string" && img
+      );
+    } else if (typeof additionalImages === "string") {
+      imagesArray = [additionalImages];
+    } else if (typeof additionalImages === "object") {
+      // Если это объект, попробуем извлечь массив
+      const keys = Object.keys(additionalImages);
+      if (keys.length > 0) {
+        imagesArray = keys
+          .map((key) => additionalImages[key])
+          .filter((img) => typeof img === "string" && img);
+      }
+    }
+  }
+
+  editGalleryLocal.value[productId] = [...imagesArray];
+};
+
+// Функции для работы с галереей в режиме редактирования
+const addEditGalleryImages = (productId: number, images: string[]) => {
+  if (!editGalleryLocal.value[productId]) {
+    editGalleryLocal.value[productId] = [];
+  }
+  editGalleryLocal.value[productId].push(...images);
+};
+
+const removeEditGalleryImageLocal = (productId: number, idx: number) => {
+  if (editGalleryLocal.value[productId]) {
+    editGalleryLocal.value[productId].splice(idx, 1);
+  }
 };
 </script>
 
@@ -2339,7 +2456,9 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
         max-height: 150px;
         border-radius: 0.5rem;
         border: 2px solid var(--border);
-        object-fit: cover;
+        object-fit: contain;
+        padding: 0.5rem;
+        background: #f8f9fa;
       }
     }
 
@@ -2354,12 +2473,15 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
         border-radius: 0.5rem;
         overflow: hidden;
         border: 2px solid var(--border);
+        background: #f8f9fa;
+        min-height: 100px;
 
         .img-preview {
           width: 100%;
           height: 100px;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
+          padding: 0.5rem;
         }
 
         .gallery-remove-btn {
@@ -2379,6 +2501,7 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
           color: white;
           cursor: pointer;
           transition: all 0.2s ease;
+          z-index: 10;
 
           &:hover {
             background: rgb(220, 38, 38);
@@ -2686,7 +2809,9 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
           max-height: 150px;
           border-radius: 0.5rem;
           border: 2px solid var(--border);
-          object-fit: cover;
+          object-fit: contain;
+          padding: 0.5rem;
+          background: #f8f9fa;
         }
       }
 
@@ -2701,12 +2826,15 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
           border-radius: 0.5rem;
           overflow: hidden;
           border: 2px solid var(--border);
+          background: #f8f9fa;
+          min-height: 100px;
 
           .img-preview {
             width: 100%;
             height: 100px;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
+            padding: 0.5rem;
           }
 
           .gallery-remove-btn {
@@ -2726,6 +2854,7 @@ const onProductDrop = async (event: DragEvent, targetId: number) => {
             color: white;
             cursor: pointer;
             transition: all 0.2s ease;
+            z-index: 10;
 
             &:hover {
               background: rgb(220, 38, 38);

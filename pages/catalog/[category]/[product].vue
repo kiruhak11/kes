@@ -130,7 +130,11 @@
               <div class="cart-action-wrap">
                 <div class="product-card__price-block">
                   <span class="product-price"
-                    >{{ product.price.toLocaleString() }}
+                    >{{
+                      product.price
+                        .toLocaleString()
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                    }}
                     <span class="currency">₽</span></span
                   >
                   <span class="product-price-note">Цена с НДС</span>
@@ -600,7 +604,12 @@
                   "
                 ></div>
                 <div class="related-price">
-                  {{ relatedProduct.price.toLocaleString() }} &#8381;
+                  {{
+                    relatedProduct.price
+                      .toLocaleString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                  }}
+                  &#8381;
                 </div>
               </div>
             </div>
@@ -1193,8 +1202,15 @@ const imageList = computed<string[]>(() => {
     }
   }
 
+  // Отладочная информация
+  console.log("Product additional_images:", product.value.additional_images);
+  console.log("Processed additionalImages:", additionalImages);
+
   // Объединяем основное изображение и дополнительные
-  return [mainImage, ...additionalImages].filter(Boolean);
+  const result = [mainImage, ...additionalImages].filter(Boolean);
+  console.log("Final imageList:", result);
+
+  return result;
 });
 
 const cartItem = computed(() =>
@@ -1482,6 +1498,118 @@ const similarProducts = computed(() => {
   max-width: 50%;
   padding: 1rem;
 
+  // Добавляем стили для основного изображения в десктопной версии
+  .main-image-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8f9fa;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      &.prev {
+        left: 12px;
+      }
+
+      &.next {
+        right: 12px;
+      }
+
+      i {
+        color: #333;
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  // Стили для миниатюр
+  .thumbnails-container {
+    margin-top: 1rem;
+
+    .thumbnails-scroll {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      padding: 0.25rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: #ccc transparent;
+
+      &::-webkit-scrollbar {
+        height: 4px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 2px;
+      }
+
+      .thumbnail-btn {
+        flex: 0 0 80px;
+        height: 80px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f8f9fa;
+
+        &:hover {
+          border-color: #e31e24;
+          transform: scale(1.05);
+        }
+
+        &.active {
+          border-color: #e31e24;
+          box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
+        }
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          padding: 0.5rem;
+        }
+      }
+    }
+  }
+
   @media (max-width: 1024px) {
     flex: 0 0 100%;
     max-width: 100%;
@@ -1492,10 +1620,11 @@ const similarProducts = computed(() => {
       border-radius: 8px;
       overflow: hidden;
       background: var(--bg-light);
+      height: 350px;
 
       img.main-image {
-        width: 100%;
         height: 100%;
+        width: 100%;
         object-fit: contain;
         padding: 0;
       }
@@ -1511,6 +1640,7 @@ const similarProducts = computed(() => {
       border-radius: 8px;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      height: 250px;
 
       img.main-image {
         width: 100%;
@@ -1809,7 +1939,7 @@ const similarProducts = computed(() => {
   margin-bottom: 10px;
 }
 .related-price {
-  color: #007bff;
+  color: #e31e24;
   font-size: 1.15rem;
   font-weight: bold;
   margin-bottom: 0;

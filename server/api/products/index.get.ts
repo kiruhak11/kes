@@ -6,7 +6,8 @@ interface Product {
   id: number;
   name: string | null;
   categories: any;
-  specs: Record<string, any>;
+  specs: any;
+  additional_images?: any;
   [key: string]: any;
 }
 
@@ -137,6 +138,12 @@ export default defineEventHandler(async (event) => {
         const finalSpecs = Array.isArray(characteristics)
           ? characteristics
           : [];
+
+        // Отладочная информация
+        console.log(
+          "Raw product additional_images:",
+          product.additional_images
+        );
 
         return {
           ...product,
