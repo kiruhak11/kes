@@ -3,7 +3,11 @@
     <section class="container">
       <h1 v-scroll-reveal="'fade-in-up'">Корзина</h1>
 
-      <div v-if="cartStore.items.length === 0" class="empty-cart" v-scroll-reveal="'fade-in-up'">
+      <div
+        v-if="cartStore.items.length === 0"
+        class="empty-cart"
+        v-scroll-reveal="'fade-in-up'"
+      >
         <p>Ваша корзина пуста</p>
         <NuxtLink to="/catalog" class="btn btn-primary"
           >Перейти в каталог</NuxtLink
@@ -12,11 +16,13 @@
 
       <div v-else class="cart-content">
         <div class="cart-items" v-scroll-reveal="'fade-in-up'">
-          <div 
-            v-for="(item, index) in cartStore.items" 
-            :key="item.id" 
+          <div
+            v-for="(item, index) in cartStore.items"
+            :key="item.id"
             class="cart-item"
-            v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
+            v-scroll-reveal="
+              index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'
+            "
           >
             <NuxtImg
               :placeholder="true"
@@ -24,11 +30,19 @@
               format="webp"
               :src="item.image"
               :alt="item.name"
-              class="cart-item-image" />
+              class="cart-item-image"
+            />
             <div class="cart-item-details">
               <h3>{{ item.name }}</h3>
               <p class="cart-item-price">
-                {{ (typeof item.price === 'number' && typeof item.quantity === 'number' ? item.price : 0).toLocaleString() }} &#8381;
+                {{
+                  (typeof item.price === "number" &&
+                  typeof item.quantity === "number"
+                    ? item.price
+                    : 0
+                  ).toLocaleString()
+                }}
+                &#8381;
               </p>
               <div class="cart-item-quantity">
                 <button
@@ -58,7 +72,11 @@
             <span>Товары ({{ cartStore.totalItems }}):</span>
             <span>{{ cartStore.totalPrice.toLocaleString() }} &#8381;</span>
           </div>
-          <form @submit.prevent="submitOrder" class="order-form" v-scroll-reveal="'fade-in-up'">
+          <form
+            @submit.prevent="submitOrder"
+            class="order-form"
+            v-scroll-reveal="'fade-in-up'"
+          >
             <div class="form-group" v-scroll-reveal="'slide-in-left'">
               <label for="name">Имя *</label>
               <input
@@ -126,7 +144,7 @@
 import { ref } from "vue";
 import { useCartStore } from "~/stores/cart";
 import { useModalStore } from "~/stores/modal";
-import { useHead } from 'nuxt/app';
+import { useHead } from "nuxt/app";
 
 const modalStore = useModalStore();
 const cartStore = useCartStore();
@@ -141,38 +159,53 @@ const orderForm = ref({
 });
 
 useHead({
-  title: 'Корзина — КотлоЭнергоСнаб',
+  title: "Корзина — КотлоЭнергоСнаб",
   meta: [
-    { name: 'description', content: 'Корзина заказов на сайте КотлоЭнергоСнаб. Оформление и покупка котлов и оборудования.' },
-    { name: 'keywords', content: 'КотлоЭнергоСнаб, корзина, заказ, купить котел, Барнаул' },
-    { name: 'author', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:title', content: 'Корзина — КотлоЭнергоСнаб' },
-    { property: 'og:description', content: 'Корзина заказов на сайте КотлоЭнергоСнаб. Оформление и покупка котлов и оборудования.' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://kes-sib.ru/cart' },
-    { property: 'og:image', content: '/images/hero1.jpg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Корзина — КотлоЭнергоСнаб' },
-    { name: 'twitter:description', content: 'Корзина заказов на сайте КотлоЭнергоСнаб. Оформление и покупка котлов и оборудования.' },
-    { name: 'robots', content: 'index, follow' }
+    {
+      name: "description",
+      content:
+        "Корзина заказов на сайте КотлоЭнергоСнаб. Оформление и покупка котлов и оборудования.",
+    },
+    {
+      name: "keywords",
+      content: "КотлоЭнергоСнаб, корзина, заказ, купить котел, Барнаул",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Корзина — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Корзина заказов на сайте КотлоЭнергоСнаб. Оформление и покупка котлов и оборудования.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/cart" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Корзина — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Корзина заказов на сайте КотлоЭнергоСнаб. Оформление и покупка котлов и оборудования.",
+    },
+    { name: "robots", content: "index, follow" },
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
-    { rel: 'canonical', href: 'https://kes-sib.ru/cart' }
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/cart" },
   ],
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: JSON.stringify({
         "@context": "http://schema.org",
         "@type": "Organization",
-        "name": "КотлоЭнергоСнаб",
-        "url": "https://kes-sib.ru/",
-        "logo": "https://kes-sib.ru/favicon.ico"
-      })
-    }
-  ]
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
 });
 
 async function submitOrder() {
@@ -235,6 +268,9 @@ ${orderItems
 </script>
 
 <style scoped>
+.btn {
+  color: white;
+}
 .container {
   padding: 2rem 1rem;
   max-width: 1200px;

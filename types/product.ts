@@ -3,6 +3,9 @@ export interface Characteristic {
   key: string;
   value: string;
   show_in_filters?: boolean;
+  showKeySuggestions?: boolean;
+  showValueSuggestions?: boolean;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface BaseProduct {
@@ -29,7 +32,7 @@ export interface BaseProduct {
   };
 }
 
-export interface Product extends Omit<BaseProduct, "category"> {
+export interface Product extends BaseProduct {
   category?: string | null;
   category_id?: string;
   category_name?: string;

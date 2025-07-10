@@ -2564,7 +2564,7 @@ const similarProducts = computed(() => {
   margin-bottom: 24px;
   gap: 8px;
   line-height: 1.4;
-
+  color: var(--primary-hover);
   a {
     color: var(--primary);
     text-decoration: none;

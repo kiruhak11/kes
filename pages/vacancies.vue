@@ -3,29 +3,50 @@
     <div class="container">
       <h1 class="section-title" v-scroll-reveal="'slide-in-left'">Вакансии</h1>
       <div class="vacancies-grid">
-        <div class="card vacancy-card" v-for="vacancy in vacancies" :key="vacancy.title" v-scroll-reveal="'zoom-in'" @click="openVacancyModal(vacancy)" style="cursor:pointer;">
+        <div
+          class="card vacancy-card"
+          v-for="vacancy in vacancies"
+          :key="vacancy.title"
+          v-scroll-reveal="'zoom-in'"
+          @click="openVacancyModal(vacancy)"
+          style="cursor: pointer"
+        >
           <NuxtImg
             :placeholder="true"
             sizes="400px xxs:900px md:1200px"
             format="webp"
             :src="vacancy.img"
             :alt="vacancy.title"
-            class="vacancy-img" />
+            class="vacancy-img"
+          />
           <h2 class="vacancy-title">{{ vacancy.title }}</h2>
           <p class="vacancy-short">{{ vacancy.short }}</p>
           <div class="vacancy-card-spacer"></div>
-          <div class="price">Зарплата от: <span>{{ vacancy.price.toLocaleString() }} ₽</span></div>
+          <div class="price">
+            Зарплата от: <span>{{ vacancy.price.toLocaleString() }} ₽</span>
+          </div>
         </div>
       </div>
       <div class="vacancy-motivation card" v-scroll-reveal="'fade-in-up'">
         <h2>Поможем освоиться новичкам!</h2>
-        <p>Главное — ваше желание работать и развиваться. Мы поддержим и обучим на старте!</p>
+        <p>
+          Главное — ваше желание работать и развиваться. Мы поддержим и обучим
+          на старте!
+        </p>
         <div class="vacancy-motivation-phone">
-          <button class="btn btn-primary" @click="callPhone(contacts.phone[0])">Телефон: {{ contacts.phone[0] }}</button>
-          <NuxtLink class="btn btn-primary" to="/contact">Заказать звонок</NuxtLink>
+          <button class="btn btn-primary" @click="callPhone(contacts.phone[0])">
+            Телефон: {{ contacts.phone[0] }}
+          </button>
+          <NuxtLink class="btn btn-primary" to="/contact"
+            >Заказать звонок</NuxtLink
+          >
         </div>
       </div>
-      <div v-if="showModal && selectedVacancy" class="vacancy-modal-overlay" @click.self="closeVacancyModal">
+      <div
+        v-if="showModal && selectedVacancy"
+        class="vacancy-modal-overlay"
+        @click.self="closeVacancyModal"
+      >
         <div class="vacancy-modal">
           <button class="modal-close" @click="closeVacancyModal">×</button>
           <NuxtImg
@@ -34,7 +55,8 @@
             format="webp"
             :src="selectedVacancy.img"
             :alt="selectedVacancy.title"
-            class="vacancy-modal-img" />
+            class="vacancy-modal-img"
+          />
           <h2 class="vacancy-modal-title">{{ selectedVacancy.title }}</h2>
           <div class="vacancy-info">
             <div v-if="selectedVacancy.duties" class="vacancy-block">
@@ -42,7 +64,9 @@
                 <span class="icon-svg" v-html="dutyIcon"></span> Обязанности
               </div>
               <ul>
-                <li v-for="duty in selectedVacancy.duties" :key="duty">{{ duty }}</li>
+                <li v-for="duty in selectedVacancy.duties" :key="duty">
+                  {{ duty }}
+                </li>
               </ul>
             </div>
             <div v-if="selectedVacancy.requirements" class="vacancy-block">
@@ -50,7 +74,9 @@
                 <span class="icon-svg" v-html="reqIcon"></span> Требования
               </div>
               <ul>
-                <li v-for="req in selectedVacancy.requirements" :key="req">{{ req }}</li>
+                <li v-for="req in selectedVacancy.requirements" :key="req">
+                  {{ req }}
+                </li>
               </ul>
             </div>
           </div>
@@ -61,9 +87,9 @@
 </template>
 
 <script setup lang="ts">
-import { contacts } from '~/data/contacts';
-import { ref } from 'vue';
-import { useHead } from 'nuxt/app';
+import { contacts } from "~/data/contacts";
+import { ref } from "vue";
+import { useHead } from "nuxt/app";
 
 interface Vacancy {
   title: string;
@@ -80,51 +106,48 @@ const callPhone = (phone: any) => {
 
 const vacancies: Vacancy[] = [
   {
-    title: 'Сварщик',
-    img: '/vac/svarshik.png',
-    short: 'Выполнение сварочных работ под давлением на производстве.',
+    title: "Сварщик",
+    img: "/vac/svarshik.png",
+    short: "Выполнение сварочных работ под давлением на производстве.",
+    duties: ["Сварка под давлением"],
+    requirements: ["Знание техники безопасности"],
+    price: 50000,
+  },
+  {
+    title: "Конструктор (создание чертежей)",
+    img: "/vac/inj.jpg",
+    short:
+      "Разработка и создание чертежей в Компас 3D, проектирование новых изделий.",
     duties: [
-      'Сварка под давлением',
+      "Моделирование в КОМПАС-3D существующих проектов;",
+      "Выполнение деталировок в соответствии с техническим заданием и исходными данными (чертежами, моделями, макетами и т.д.);",
+      "Оформление чертежей по эскизам;",
+      "Внесение изменений в существующие проекты в связи с корректировкой технологических процессов.",
     ],
     requirements: [
-      'Знание техники безопасности',
+      "Базовое знание КОМПАС-3D;",
+      "Знание основ машиностроения, технологии металлообработки.",
     ],
     price: 50000,
   },
   {
-    title: 'Конструктор (создание чертежей)',
-    img: '/vac/inj.jpg',
-    short: 'Разработка и создание чертежей в Компас 3D, проектирование новых изделий.',
+    title: "Слесарь",
+    img: "/vac/slesar.png",
+    short: "Сборка, резка, монтаж и работа с инструментом на производстве.",
     duties: [
-      'Моделирование в КОМПАС-3D существующих проектов;',
-      'Выполнение деталировок в соответствии с техническим заданием и исходными данными (чертежами, моделями, макетами и т.д.);',
-      'Оформление чертежей по эскизам;',
-      'Внесение изменений в существующие проекты в связи с корректировкой технологических процессов.',
+      "Резка уголка болгаркой",
+      "Укладка теплоизоляционных материалов",
+      "Установка стальных листов обшивки",
+      "Крепление обшивки заклепками и электродрелью",
+      "Сборка элементов изоляции",
+      "Сборка деталей под прихватку и сварку",
+      "Работа с ручным электроинструментом",
     ],
     requirements: [
-      'Базовое знание КОМПАС-3D;',
-      'Знание основ машиностроения, технологии металлообработки.'
-    ],
-    price: 50000,
-  },
-  {
-    title: 'Слесарь',
-    img: '/vac/slesar.png',
-    short: 'Сборка, резка, монтаж и работа с инструментом на производстве.',
-    duties: [
-      'Резка уголка болгаркой',
-      'Укладка теплоизоляционных материалов',
-      'Установка стальных листов обшивки',
-      'Крепление обшивки заклепками и электродрелью',
-      'Сборка элементов изоляции',
-      'Сборка деталей под прихватку и сварку',
-      'Работа с ручным электроинструментом',
-    ],
-    requirements: [
-      'Умение читать чертежи',
-      'Навык работы с электроинструментом',
-      'Навык сварочных работ (прихватки)',
-      'Опыт не обязателен. ОБУЧЕНИЕ НА МЕСТЕ.'
+      "Умение читать чертежи",
+      "Навык работы с электроинструментом",
+      "Навык сварочных работ (прихватки)",
+      "Опыт не обязателен. ОБУЧЕНИЕ НА МЕСТЕ.",
     ],
     price: 50000,
   },
@@ -145,38 +168,53 @@ const dutyIcon = `<svg width='20' height='20' fill='none' xmlns='http://www.w3.o
 const reqIcon = `<svg width='20' height='20' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='2' y='2' width='16' height='16' rx='4' fill='#28a745'/><path d='M7 8h6M7 12h6' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg>`;
 
 useHead({
-  title: 'Вакансии — КотлоЭнергоСнаб',
+  title: "Вакансии — КотлоЭнергоСнаб",
   meta: [
-    { name: 'description', content: 'Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.' },
-    { name: 'keywords', content: 'КотлоЭнергоСнаб, вакансии, работа, Барнаул, котельный завод' },
-    { name: 'author', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:title', content: 'Вакансии — КотлоЭнергоСнаб' },
-    { property: 'og:description', content: 'Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://kes-sib.ru/vacancies' },
-    { property: 'og:image', content: '/images/hero1.jpg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Вакансии — КотлоЭнергоСнаб' },
-    { name: 'twitter:description', content: 'Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.' },
-    { name: 'robots', content: 'index, follow' }
+    {
+      name: "description",
+      content:
+        "Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.",
+    },
+    {
+      name: "keywords",
+      content: "КотлоЭнергоСнаб, вакансии, работа, Барнаул, котельный завод",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Вакансии — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/vacancies" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Вакансии — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Актуальные вакансии КотлоЭнергоСнаб. Работа на котельном заводе в Барнауле.",
+    },
+    { name: "robots", content: "index, follow" },
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
-    { rel: 'canonical', href: 'https://kes-sib.ru/vacancies' }
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/vacancies" },
   ],
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: JSON.stringify({
         "@context": "http://schema.org",
         "@type": "Organization",
-        "name": "КотлоЭнергоСнаб",
-        "url": "https://kes-sib.ru/",
-        "logo": "https://kes-sib.ru/favicon.ico"
-      })
-    }
-  ]
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
 });
 </script>
 
@@ -188,12 +226,13 @@ useHead({
   margin-top: 1rem;
 }
 .btn {
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
-    margin-bottom: 1rem;
-    text-align: center;
-    border-radius: 0.5rem;
+  width: 100%;
+  max-width: 420px;
+  color: white;
+  margin: 0 auto;
+  margin-bottom: 1rem;
+  text-align: center;
+  border-radius: 0.5rem;
 }
 
 .vacancies-page {
@@ -219,7 +258,7 @@ useHead({
   margin: 0 auto;
   background: #fff;
   border-radius: 1rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   padding: 1.5rem 1.2rem 2rem 1.2rem;
   justify-content: flex-start;
   transition: box-shadow 0.2s, transform 0.2s;
@@ -263,7 +302,7 @@ useHead({
   object-fit: cover;
   border-radius: 0.75rem;
   margin-bottom: 1.2rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 .vacancy-title {
   font-size: 1.5rem;
@@ -285,7 +324,7 @@ useHead({
   max-width: 600px;
   text-align: center;
   padding: 2rem 1.5rem;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   font-size: 1.2rem;
 }
 .vacancy-motivation h2 {
@@ -306,7 +345,7 @@ useHead({
   background: #f7faff;
   border-radius: 8px;
   padding: 1rem 1.2rem;
-  box-shadow: 0 2px 8px rgba(0,123,255,0.06);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.06);
   min-height: 120px;
   display: flex;
   flex-direction: column;
@@ -351,8 +390,11 @@ useHead({
 }
 .vacancy-modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.35);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -360,13 +402,17 @@ useHead({
   animation: fadeInModal 0.3s;
 }
 @keyframes fadeInModal {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .vacancy-modal {
   background: #fff;
   border-radius: 1.2rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   padding: 2.2rem 2rem 2rem 2rem;
   max-width: 420px;
   width: 100%;
@@ -374,8 +420,14 @@ useHead({
   animation: modalPop 0.25s;
 }
 @keyframes modalPop {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .modal-close {
   position: absolute;
@@ -398,7 +450,7 @@ useHead({
   object-fit: cover;
   border-radius: 0.75rem;
   margin-bottom: 1.2rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: block;
   margin-left: auto;
   margin-right: auto;

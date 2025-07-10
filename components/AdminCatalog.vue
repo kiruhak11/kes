@@ -1,6 +1,6 @@
 <template>
   <!-- Каталог -->
-  <div v-if="adminTab==='catalog'">
+  <div v-if="adminTab === 'catalog'">
     <!-- Вход в админ-панель -->
     <div v-if="!authorized" class="login-box">
       <h2>Вход в админ-панель</h2>
@@ -13,19 +13,18 @@
       />
       <div class="remember-me">
         <label class="remember-me__label">
-          <input 
-            type="checkbox" 
-            v-model="rememberMe"
-          />
+          <input type="checkbox" v-model="rememberMe" />
           <svg viewBox="0 0 64 64" height="1.5em" width="1.5em">
-    <path d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16" pathLength="575.0541381835938" class="path"></path>
-  </svg>
+            <path
+              d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16"
+              pathLength="575.0541381835938"
+              class="path"
+            ></path>
+          </svg>
           <span class="remember-me__text">Запомнить меня</span>
         </label>
       </div>
-      <button class="btn btn-primary" @click="login">
-        Войти
-      </button>
+      <button class="btn btn-primary btn-sm" @click="login">Войти</button>
       <p v-if="loginError" class="error">{{ loginError }}</p>
     </div>
 
@@ -33,10 +32,8 @@
     <div v-else class="catalog-manager">
       <div class="catalog-header">
         <h1>Управление каталогом</h1>
-        
-          <UiLogout @click="logout"/>
-  
-      
+
+        <UiLogout @click="logout" />
       </div>
 
       <!-- Форма добавления нового товара -->
@@ -49,13 +46,23 @@
               <div class="form-group">
                 <label class="required">Категория:</label>
                 <div class="category-input">
-                  <select 
-                    v-model="newProdLocal.category" 
+                  <select
+                    v-model="newProdLocal.category"
                     class="form-control"
-                    :class="{ 'required-field': showValidationErrors && (!newProdLocal.category || (newProdLocal.category === 'new' && !newCategoryLocal.name)) }"
+                    :class="{
+                      'required-field':
+                        showValidationErrors &&
+                        (!newProdLocal.category ||
+                          (newProdLocal.category === 'new' &&
+                            !newCategoryLocal.name)),
+                    }"
                   >
                     <option value="">Выберите категорию</option>
-                    <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                    <option
+                      v-for="cat in categories"
+                      :key="cat.id"
+                      :value="cat.name"
+                    >
                       {{ cat.name }}
                     </option>
                     <option value="new">+ Добавить новую категорию</option>
@@ -65,7 +72,12 @@
                     v-model="newCategoryLocal.name"
                     placeholder="Название новой категории"
                     class="form-control"
-                    :class="{ 'required-field': showValidationErrors && newProdLocal.category === 'new' && !newCategoryLocal.name }"
+                    :class="{
+                      'required-field':
+                        showValidationErrors &&
+                        newProdLocal.category === 'new' &&
+                        !newCategoryLocal.name,
+                    }"
                   />
                 </div>
               </div>
@@ -75,11 +87,15 @@
                   v-model="newProdLocal.name"
                   placeholder="Название товара"
                   class="form-control"
-                  :class="{ 'required-field': showValidationErrors && (!newProdLocal.name || newProdLocal.name.trim() === '') }"
+                  :class="{
+                    'required-field':
+                      showValidationErrors &&
+                      (!newProdLocal.name || newProdLocal.name.trim() === ''),
+                  }"
                 />
               </div>
             </div>
-            
+
             <div class="form-group">
               <label class="required">Краткое описание:</label>
               <textarea
@@ -87,17 +103,20 @@
                 placeholder="Краткое описание товара"
                 rows="2"
                 class="form-control"
-                :class="{ 'required-field': showValidationErrors && (!newProdLocal.description || newProdLocal.description.trim() === '') }"
+                :class="{
+                  'required-field':
+                    showValidationErrors &&
+                    (!newProdLocal.description ||
+                      newProdLocal.description.trim() === ''),
+                }"
               ></textarea>
             </div>
-            
+
             <div class="form-group">
               <label>Расширенное описание:</label>
-              <MarkdownEditor
-                v-model="newProdLocal.extendedDescription"
-              />
+              <MarkdownEditor v-model="newProdLocal.extendedDescription" />
             </div>
-            
+
             <div class="form-group">
               <label class="required">Цена (₽):</label>
               <input
@@ -105,7 +124,11 @@
                 type="number"
                 placeholder="0"
                 class="form-control"
-                :class="{ 'required-field': showValidationErrors && (!newProdLocal.price || newProdLocal.price <= 0) }"
+                :class="{
+                  'required-field':
+                    showValidationErrors &&
+                    (!newProdLocal.price || newProdLocal.price <= 0),
+                }"
               />
             </div>
           </div>
@@ -118,14 +141,13 @@
             <div class="form-group">
               <label>Основное изображение:</label>
               <div class="image-upload">
-                <select v-model="newProdLocal.image" class="image-select form-control">
+                <select
+                  v-model="newProdLocal.image"
+                  class="image-select form-control"
+                >
                   <option value="">Выберите изображение</option>
-                  <option
-                    v-for="img in presetImages"
-                    :key="img"
-                    :value="img"
-                  >
-                    {{ img.split('/').pop() }}
+                  <option v-for="img in presetImages" :key="img" :value="img">
+                    {{ img.split("/").pop() }}
                   </option>
                   <option value="custom">Загрузить своё изображение</option>
                 </select>
@@ -138,27 +160,49 @@
                 />
               </div>
               <!-- Новый блок: превью основного изображения как в галерее -->
-              <div v-if="newProdLocal.image && newProdLocal.image !== 'custom'" class="gallery-previews" style="margin-top: 0.5rem;">
+              <div
+                v-if="newProdLocal.image && newProdLocal.image !== 'custom'"
+                class="gallery-previews"
+                style="margin-top: 0.5rem"
+              >
                 <div class="gallery-item">
                   <img
                     :src="getImageUrl(newProdLocal.image)"
                     class="img-preview"
                     alt="Основное изображение"
                   />
-                  <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeMainImage">✕</button>
+                  <button
+                    class="btn btn-danger btn-sm gallery-remove-btn"
+                    @click.prevent="removeMainImage"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
             </div>
 
             <div class="form-group">
               <label>Дополнительные изображения:</label>
-              <input type="file" multiple accept="image/*" @change="handleGalleryUpload" class="form-control" />
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                @change="handleGalleryUpload"
+                class="form-control"
+              />
               <div class="gallery-previews">
-                <div v-for="(gimg, gidx) in newProdGalleryLocal" :key="gidx" class="gallery-item">
-                    <img
-                    :src="getImageUrl(gimg)"
-                    class="img-preview" />
-                  <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeGalleryImage(gidx)">✕</button>
+                <div
+                  v-for="(gimg, gidx) in newProdGalleryLocal"
+                  :key="gidx"
+                  class="gallery-item"
+                >
+                  <img :src="getImageUrl(gimg)" class="img-preview" />
+                  <button
+                    class="btn btn-danger btn-sm gallery-remove-btn"
+                    @click.prevent="removeGalleryImage(gidx)"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
             </div>
@@ -187,7 +231,10 @@
                 @change="(e) => handleConnectionSchemeUpload(e, newProdLocal)"
                 class="form-control"
               />
-              <div v-if="newProdLocal.connection_scheme" class="image-preview-container">
+              <div
+                v-if="newProdLocal.connection_scheme"
+                class="image-preview-container"
+              >
                 <img
                   :src="getImageUrl(newProdLocal.connection_scheme)"
                   class="img-preview"
@@ -214,33 +261,35 @@
 
             <div class="form-group">
               <label>Связанные товары:</label>
-              <select 
-                v-model="selectedProduct" 
+              <select
+                v-model="selectedProduct"
                 class="form-control"
                 @change="addRequiredProduct"
               >
                 <option value="">Выберите товар</option>
-                <option 
-                  v-for="prod in products.filter(p => p.id !== newProdLocal.id)" 
-                  :key="prod.id" 
+                <option
+                  v-for="prod in products.filter(
+                    (p) => p.id !== newProdLocal.id
+                  )"
+                  :key="prod.id"
                   :value="prod.id"
                 >
                   {{ prod.name }}
                 </option>
               </select>
 
-              <div v-if="newProdLocal.required_products.length > 0" class="required-products-list">
-                <div 
-                  v-for="prodId in newProdLocal.required_products" 
-                  :key="prodId" 
+              <div
+                v-if="newProdLocal.required_products.length > 0"
+                class="required-products-list"
+              >
+                <div
+                  v-for="prodId in newProdLocal.required_products"
+                  :key="prodId"
                   class="required-product-item"
                 >
-                  <span>{{ products.find(p => p.id === prodId)?.name }}</span>
-                  <button 
-                    class="btn-sm" 
-                    @click="removeRequiredProduct(prodId)"
-                  >
-                    <UiDeleteSmall/>
+                  <span>{{ products.find((p) => p.id === prodId)?.name }}</span>
+                  <button class="btn-sm" @click="removeRequiredProduct(prodId)">
+                    <UiDeleteSmall />
                   </button>
                 </div>
               </div>
@@ -256,33 +305,43 @@
             <div class="quick-specs-copy">
               <label>Быстрое копирование характеристик:</label>
               <div class="copy-controls">
-                <select v-model="selectedProductForCopy" @change="previewSpecsFromProduct" class="form-control">
-                  <option value="">Выберите товар для копирования характеристик</option>
+                <select
+                  v-model="selectedProductForCopy"
+                  @change="previewSpecsFromProduct"
+                  class="form-control"
+                >
+                  <option value="">
+                    Выберите товар для копирования характеристик
+                  </option>
                   <option v-for="p in products" :key="p.id" :value="p.id">
                     {{ p.name }} ({{ p.category_name }})
                   </option>
                 </select>
-                <button 
-                  v-if="selectedProductForCopy && previewedSpecs.length > 0" 
-                  @click="confirmCopySpecs" 
+                <button
+                  v-if="selectedProductForCopy && previewedSpecs.length > 0"
+                  @click="confirmCopySpecs"
                   class="btn btn-primary btn-sm"
                 >
                   Подтвердить копирование
                 </button>
-                <button 
-                  v-if="selectedProductForCopy" 
-                  @click="clearCopySelection" 
+                <button
+                  v-if="selectedProductForCopy"
+                  @click="clearCopySelection"
                   class="btn btn-secondary btn-sm"
                 >
                   Отмена
                 </button>
               </div>
-              
+
               <!-- Предварительный просмотр характеристик -->
               <div v-if="previewedSpecs.length > 0" class="preview-specs">
                 <h4>Предварительный просмотр характеристик:</h4>
                 <div class="preview-specs-list">
-                  <div v-for="(spec, idx) in previewedSpecs" :key="idx" class="preview-spec-item">
+                  <div
+                    v-for="(spec, idx) in previewedSpecs"
+                    :key="idx"
+                    class="preview-spec-item"
+                  >
                     <strong>{{ spec.key }}:</strong> {{ spec.value }}
                   </div>
                 </div>
@@ -292,39 +351,45 @@
             <table class="specs-table">
               <thead>
                 <tr>
-                                          <th style="width: 40px;"></th>
-                        <th style="width: 40%;">Параметр</th>
-                        <th style="width: 40%;">Значение</th>
-                        <th style="width: 60px;"></th>
+                  <th style="width: 40px"></th>
+                  <th style="width: 40%">Параметр</th>
+                  <th style="width: 40%">Значение</th>
+                  <th style="width: 60px"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr 
-                  v-for="(spec, idx) in props.newSpecs" 
+                <tr
+                  v-for="(spec, idx) in props.newSpecs"
                   :key="spec.id"
                   :draggable="true"
                   @dragstart="onDragStart($event, idx)"
                   @dragover.prevent
                   @drop="onDrop($event, idx)"
                   class="spec-row"
-                  :class="{ 'dragging': draggedIndex === idx }"
+                  :class="{ dragging: draggedIndex === idx }"
                 >
                   <td class="drag-handle">
                     <div class="drag-icon">⋮⋮</div>
                   </td>
                   <td>
                     <div class="spec-input-container">
-                      <input 
-                        v-model="spec.key" 
-                        placeholder="Параметр" 
+                      <input
+                        v-model="spec.key"
+                        placeholder="Параметр"
                         @input="onSpecKeyInput(spec, $event)"
                         @focus="showSpecSuggestions(spec)"
                         @blur="hideSpecSuggestions"
                         class="form-control spec-input"
                       />
-                      <div v-if="spec.showKeySuggestions && specKeySuggestions.length > 0" class="spec-suggestions">
-                        <div 
-                          v-for="suggestion in specKeySuggestions" 
+                      <div
+                        v-if="
+                          spec.showKeySuggestions &&
+                          specKeySuggestions.length > 0
+                        "
+                        class="spec-suggestions"
+                      >
+                        <div
+                          v-for="suggestion in specKeySuggestions"
                           :key="suggestion"
                           @click="selectSpecKey(spec, suggestion)"
                           class="spec-suggestion-item"
@@ -336,17 +401,23 @@
                   </td>
                   <td>
                     <div class="spec-input-container">
-                      <input 
-                        v-model="spec.value" 
-                        placeholder="Значение" 
+                      <input
+                        v-model="spec.value"
+                        placeholder="Значение"
                         @input="onSpecValueInput(spec, $event)"
                         @focus="showValueSuggestions(spec)"
                         @blur="hideValueSuggestions"
                         class="form-control spec-input"
                       />
-                      <div v-if="spec.showValueSuggestions && specValueSuggestions.length > 0" class="spec-suggestions">
-                        <div 
-                          v-for="suggestion in specValueSuggestions" 
+                      <div
+                        v-if="
+                          spec.showValueSuggestions &&
+                          specValueSuggestions.length > 0
+                        "
+                        class="spec-suggestions"
+                      >
+                        <div
+                          v-for="suggestion in specValueSuggestions"
                           :key="suggestion"
                           @click="selectSpecValue(spec, suggestion)"
                           class="spec-suggestion-item"
@@ -357,24 +428,32 @@
                     </div>
                   </td>
                   <td>
-                    <button class="btn-sm" @click.prevent="removeNewSpec(idx)"><UiDeleteSmall/></button>
+                    <button class="btn-sm" @click.prevent="removeNewSpec(idx)">
+                      <UiDeleteSmall />
+                    </button>
                   </td>
                 </tr>
                 <tr>
                   <td></td>
                   <td>
                     <div class="spec-input-container">
-                      <input 
-                        v-model="newSpecLocal.key" 
-                        placeholder="Новая характеристика" 
+                      <input
+                        v-model="newSpecLocal.key"
+                        placeholder="Новая характеристика"
                         @input="onNewSpecKeyInput($event)"
                         @focus="showNewSpecKeySuggestions"
                         @blur="hideNewSpecKeySuggestions"
                         class="form-control"
                       />
-                      <div v-if="showNewSpecKeySuggestionsFlag && newSpecKeySuggestions.length > 0" class="spec-suggestions">
-                        <div 
-                          v-for="suggestion in newSpecKeySuggestions" 
+                      <div
+                        v-if="
+                          showNewSpecKeySuggestionsFlag &&
+                          newSpecKeySuggestions.length > 0
+                        "
+                        class="spec-suggestions"
+                      >
+                        <div
+                          v-for="suggestion in newSpecKeySuggestions"
                           :key="suggestion"
                           @click="selectNewSpecKey(suggestion)"
                           class="spec-suggestion-item"
@@ -386,17 +465,23 @@
                   </td>
                   <td>
                     <div class="spec-input-container">
-                      <input 
-                        v-model="newSpecLocal.value" 
-                        placeholder="Значение" 
+                      <input
+                        v-model="newSpecLocal.value"
+                        placeholder="Значение"
                         @input="onNewSpecValueInput($event)"
                         @focus="showNewSpecValueSuggestions"
                         @blur="hideNewSpecValueSuggestions"
                         class="form-control"
                       />
-                      <div v-if="showNewSpecValueSuggestionsFlag && newSpecValueSuggestions.length > 0" class="spec-suggestions">
-                        <div 
-                          v-for="suggestion in newSpecValueSuggestions" 
+                      <div
+                        v-if="
+                          showNewSpecValueSuggestionsFlag &&
+                          newSpecValueSuggestions.length > 0
+                        "
+                        class="spec-suggestions"
+                      >
+                        <div
+                          v-for="suggestion in newSpecValueSuggestions"
                           :key="suggestion"
                           @click="selectNewSpecValue(suggestion)"
                           class="spec-suggestion-item"
@@ -406,11 +491,13 @@
                       </div>
                     </div>
                   </td>
-                  <td style="text-align:center;">
-                    <input type="checkbox" v-model="newSpecLocal.show_in_filters" />
-                  </td>
                   <td>
-                    <button class="btn btn-secondary btn-sm" @click.prevent="addNewSpec">Добавить</button>
+                    <button
+                      class="btn btn-secondary btn-sm"
+                      @click.prevent="addNewSpec"
+                    >
+                      Добавить
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -421,24 +508,41 @@
         <!-- Действия -->
         <div class="edit-section edit-section--actions">
           <div class="edit-section__content">
-            <button 
-              class="btn btn-primary" 
-              @click="syncSpecsAndAddProduct" 
+            <button
+              class="btn btn-primary"
+              @click="syncSpecsAndAddProduct"
               :disabled="!isFormValid"
               :class="{ 'btn--disabled': !isFormValid }"
             >
-              {{ isFormValid ? 'Добавить товар' : 'Заполните обязательные поля' }}
+              {{
+                isFormValid ? "Добавить товар" : "Заполните обязательные поля"
+              }}
             </button>
-            <div v-if="!isFormValid && showValidationErrors" class="validation-hint">
+            <div
+              v-if="!isFormValid && showValidationErrors"
+              class="validation-hint"
+            >
               <p>Для добавления товара необходимо заполнить:</p>
               <ul>
-                <li v-if="!newProdLocal.category || (newProdLocal.category === 'new' && !newCategoryLocal.name)">
+                <li
+                  v-if="
+                    !newProdLocal.category ||
+                    (newProdLocal.category === 'new' && !newCategoryLocal.name)
+                  "
+                >
                   • Категорию товара
                 </li>
-                <li v-if="!newProdLocal.name || newProdLocal.name.trim() === ''">
+                <li
+                  v-if="!newProdLocal.name || newProdLocal.name.trim() === ''"
+                >
                   • Название товара
                 </li>
-                <li v-if="!newProdLocal.description || newProdLocal.description.trim() === ''">
+                <li
+                  v-if="
+                    !newProdLocal.description ||
+                    newProdLocal.description.trim() === ''
+                  "
+                >
                   • Краткое описание
                 </li>
                 <li v-if="!newProdLocal.price || newProdLocal.price <= 0">
@@ -456,27 +560,25 @@
           v-for="p in products"
           :key="p.id"
           class="prod-item"
+          draggable="true"
+          @dragstart="onProductDragStart($event, p.id)"
+          @dragover.prevent
+          @drop="onProductDrop($event, p.id)"
+          :class="{ dragging: draggedProductId === p.id }"
         >
           <!-- Сводная строка -->
-          <div
-            class="prod-summary"
-            @click="toggle(p.id)"
-          >
+          <div class="prod-summary" @click="toggle(p.id)">
+            <div class="drag-handle">⋮⋮</div>
             <span class="prod-summary__id">{{ p.id }}</span>
             <span class="prod-summary__category">{{ p.category_name }}</span>
             <span class="prod-summary__name">{{ p.name }}</span>
             <span class="prod-summary__price">{{ p.price }} ₽</span>
-            <button
-              @click.stop="deleteProduct(p.id)"
-            ><UiDeleteSmall /></button>
+            <button @click.stop="deleteProduct(p.id)"><UiDeleteSmall /></button>
           </div>
 
           <!-- Детальная форма редактирования -->
           <transition name="slide">
-            <div
-              v-if="activeId === p.id"
-              class="prod-details"
-            >
+            <div v-if="activeId === p.id" class="prod-details">
               <!-- Основная информация -->
               <div class="edit-section">
                 <h3 class="edit-section__title">Основная информация</h3>
@@ -486,7 +588,11 @@
                       <label>Категория:</label>
                       <select v-model="p.category" class="form-control">
                         <option value="">Выберите категорию</option>
-                        <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+                        <option
+                          v-for="cat in categories"
+                          :key="cat.id"
+                          :value="cat.name"
+                        >
                           {{ cat.name }}
                         </option>
                       </select>
@@ -496,23 +602,33 @@
                       <input v-model="p.name" class="form-control" />
                     </div>
                   </div>
-                  
+
                   <div class="form-group">
                     <label>Краткое описание:</label>
-                    <textarea v-model="p.description" rows="2" class="form-control"></textarea>
+                    <textarea
+                      v-model="p.description"
+                      rows="2"
+                      class="form-control"
+                    ></textarea>
                   </div>
-                  
-                                      <div class="form-group">
-                      <label>Расширенное описание:</label>
-                      <MarkdownEditor
-                        :model-value="p.extendedDescription || ''"
-                        @update:model-value="val => p.extendedDescription = val"
-                      />
+
+                  <div class="form-group">
+                    <label>Расширенное описание:</label>
+                    <MarkdownEditor
+                      :model-value="p.extendedDescription || ''"
+                      @update:model-value="
+                        (val) => (p.extendedDescription = val)
+                      "
+                    />
                   </div>
-                  
+
                   <div class="form-group">
                     <label>Цена (₽):</label>
-                    <input type="number" v-model.number="p.price" class="form-control" />
+                    <input
+                      type="number"
+                      v-model.number="p.price"
+                      class="form-control"
+                    />
                   </div>
                 </div>
               </div>
@@ -524,16 +640,21 @@
                   <div class="form-group">
                     <label>Основное изображение:</label>
                     <div class="image-upload">
-                      <select v-model="p.image" class="image-select form-control">
+                      <select
+                        v-model="p.image"
+                        class="image-select form-control"
+                      >
                         <option value="">Выберите изображение</option>
                         <option
                           v-for="img in presetImages"
                           :key="img"
                           :value="img"
                         >
-                          {{ img.split('/').pop() }}
+                          {{ img.split("/").pop() }}
                         </option>
-                        <option value="custom">Загрузить своё изображение</option>
+                        <option value="custom">
+                          Загрузить своё изображение
+                        </option>
                       </select>
                       <input
                         v-if="p.image === 'custom'"
@@ -543,7 +664,10 @@
                         class="image-input"
                       />
                     </div>
-                    <div v-if="p.image && p.image !== 'custom'" class="image-preview-container">
+                    <div
+                      v-if="p.image && p.image !== 'custom'"
+                      class="image-preview-container"
+                    >
                       <img
                         :src="getImageUrl(p.image)"
                         class="img-preview"
@@ -554,14 +678,26 @@
 
                   <div class="form-group">
                     <label>Дополнительные изображения:</label>
-                    <input type="file" multiple accept="image/*" @change="(e: Event) => handleEditGalleryUpload(e, p)" class="form-control" />
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      @change="(e: Event) => handleEditGalleryUpload(e, p)"
+                      class="form-control"
+                    />
                     <div class="gallery-previews">
-                      <div v-for="(gimg, gidx) in (p.additional_images || [])" :key="gidx" class="gallery-item">
-                        <img
-                          :src="getImageUrl(gimg)"
-                          class="img-preview"
-                        />
-                        <button class="btn btn-danger btn-sm gallery-remove-btn" @click.prevent="removeEditGalleryImage(p, gidx)">✕</button>
+                      <div
+                        v-for="(gimg, gidx) in p.additional_images || []"
+                        :key="gidx"
+                        class="gallery-item"
+                      >
+                        <img :src="getImageUrl(gimg)" class="img-preview" />
+                        <button
+                          class="btn btn-danger btn-sm gallery-remove-btn"
+                          @click.prevent="removeEditGalleryImage(p, gidx)"
+                        >
+                          ✕
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -590,7 +726,10 @@
                       @change="(e) => handleConnectionSchemeUpload(e, p)"
                       class="form-control"
                     />
-                    <div v-if="p.connection_scheme" class="image-preview-container">
+                    <div
+                      v-if="p.connection_scheme"
+                      class="image-preview-container"
+                    >
                       <img
                         :src="getImageUrl(p.connection_scheme)"
                         class="img-preview"
@@ -608,86 +747,104 @@
                   <table class="specs-table">
                     <thead>
                       <tr>
-                        <th style="width: 40px;"></th>
-                        <th style="width: 40%;">Параметр</th>
-                        <th style="width: 40%;">Значение</th>
-                        <th style="width: 60px;"></th>
+                        <th style="width: 40px"></th>
+                        <th style="width: 40%">Параметр</th>
+                        <th style="width: 40%">Значение</th>
+                        <th style="width: 60px"></th>
                       </tr>
                     </thead>
                     <tbody>
-                    <tr
-                      v-for="(spec, idx) in filteredSpecs(p.id)"
-                      :key="spec.id"
-                      :draggable="true"
-                      @dragstart="onEditDragStart($event, p.id, idx)"
-                      @dragover.prevent
-                      @drop="onEditDrop($event, p.id, idx)"
-                      class="spec-row"
-                      :class="{ 'dragging': draggedEditIndex === idx && draggedEditProductId === p.id }"
-                    >
-                      <td class="drag-handle">
-                        <div class="drag-icon">⋮⋮</div>
-                      </td>
-                      <td>
-                        <div class="spec-input-container">
-                          <input
-                            v-model="spec.key"
-                            placeholder="Параметр"
-                            @input="onEditSpecKeyInput(spec, $event)"
-                            @focus="showEditSpecSuggestions(spec)"
-                            @blur="hideEditSpecSuggestions"
-                            class="form-control spec-input"
-                          />
-                          <div v-if="spec.showKeySuggestions && editSpecKeySuggestions.length > 0" class="spec-suggestions">
-                            <div 
-                              v-for="suggestion in editSpecKeySuggestions" 
-                              :key="suggestion"
-                              @click="selectEditSpecKey(spec, suggestion)"
-                              class="spec-suggestion-item"
+                      <tr
+                        v-for="(spec, idx) in filteredSpecs(p.id)"
+                        :key="spec.id"
+                        :draggable="true"
+                        @dragstart="onEditDragStart($event, p.id, idx)"
+                        @dragover.prevent
+                        @drop="onEditDrop($event, p.id, idx)"
+                        class="spec-row"
+                        :class="{
+                          dragging:
+                            draggedEditIndex === idx &&
+                            draggedEditProductId === p.id,
+                        }"
+                      >
+                        <td class="drag-handle">
+                          <div class="drag-icon">⋮⋮</div>
+                        </td>
+                        <td>
+                          <div class="spec-input-container">
+                            <input
+                              v-model="spec.key"
+                              placeholder="Параметр"
+                              @input="onEditSpecKeyInput(spec, $event)"
+                              @focus="showEditSpecSuggestions(spec)"
+                              @blur="hideEditSpecSuggestions"
+                              class="form-control spec-input"
+                            />
+                            <div
+                              v-if="
+                                spec.showKeySuggestions &&
+                                editSpecKeySuggestions.length > 0
+                              "
+                              class="spec-suggestions"
                             >
-                              {{ suggestion }}
+                              <div
+                                v-for="suggestion in editSpecKeySuggestions"
+                                :key="suggestion"
+                                @click="selectEditSpecKey(spec, suggestion)"
+                                class="spec-suggestion-item"
+                              >
+                                {{ suggestion }}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="spec-input-container">
-                          <input
-                            v-model="spec.value"
-                            placeholder="Значение"
-                            @input="onEditSpecValueInput(spec, $event)"
-                            @focus="showEditValueSuggestions(spec)"
-                            @blur="hideEditValueSuggestions"
-                            class="form-control spec-input"
-                          />
-                          <div v-if="spec.showValueSuggestions && editSpecValueSuggestions.length > 0" class="spec-suggestions">
-                            <div 
-                              v-for="suggestion in editSpecValueSuggestions" 
-                              :key="suggestion"
-                              @click="selectEditSpecValue(spec, suggestion)"
-                              class="spec-suggestion-item"
+                        </td>
+                        <td>
+                          <div class="spec-input-container">
+                            <input
+                              v-model="spec.value"
+                              placeholder="Значение"
+                              @input="onEditSpecValueInput(spec, $event)"
+                              @focus="showEditValueSuggestions(spec)"
+                              @blur="hideEditValueSuggestions"
+                              class="form-control spec-input"
+                            />
+                            <div
+                              v-if="
+                                spec.showValueSuggestions &&
+                                editSpecValueSuggestions.length > 0
+                              "
+                              class="spec-suggestions"
                             >
-                              {{ suggestion }}
+                              <div
+                                v-for="suggestion in editSpecValueSuggestions"
+                                :key="suggestion"
+                                @click="selectEditSpecValue(spec, suggestion)"
+                                class="spec-suggestion-item"
+                              >
+                                {{ suggestion }}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td>
-                        <button
-                          @click.prevent="removeSpec(p.id, idx)"
-                        ><UiDeleteSmall /></button>
-                      </td>
-                    </tr>
-                    <tr class="new-spec-row">
-                      <td></td>
-                      <td colspan="2">
-                        <button
-                          class="btn btn-secondary btn-sm"
-                          @click.prevent="addSpec(p.id)"
-                        >Добавить характеристику</button>
-                      </td>
-                    </tr>
+                        <td>
+                          <button @click.prevent="removeSpec(p.id, idx)">
+                            <UiDeleteSmall />
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="new-spec-row">
+                        <td></td>
+                        <td colspan="2">
+                          <button
+                            class="btn btn-secondary btn-sm"
+                            @click.prevent="addSpec(p.id)"
+                          >
+                            Добавить характеристику
+                          </button>
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -709,44 +866,66 @@
 
                   <div class="form-group">
                     <label>Связанные товары:</label>
-                    <select 
-                      v-model="selectedProduct" 
+                    <select
+                      v-model="selectedProduct"
                       class="form-control"
                       @change="(e) => addRequiredProductToExisting(e, p)"
                     >
                       <option value="">Выберите товар</option>
-                      <option 
-                        v-for="prod in products.filter(prod => prod.id !== p.id)" 
-                        :key="prod.id" 
+                      <option
+                        v-for="prod in products.filter(
+                          (prod) => prod.id !== p.id
+                        )"
+                        :key="prod.id"
                         :value="prod.id"
                       >
                         {{ prod.name }}
                       </option>
                     </select>
 
-                    <div v-if="p.required_products && p.required_products.length > 0" class="required-products-list">
-                      <div 
-                        v-for="prodId in p.required_products" 
-                        :key="prodId" 
+                    <div
+                      v-if="
+                        p.required_products && p.required_products.length > 0
+                      "
+                      class="required-products-list"
+                    >
+                      <div
+                        v-for="prodId in p.required_products"
+                        :key="prodId"
                         class="required-product-item"
                       >
                         <div class="required-product-item__info">
-                            <img
-                            :src="getImageUrl(products.find(prod => prod.id === prodId)?.image || '')"
-                            :alt="products.find(prod => prod.id === prodId)?.name"
+                          <img
+                            :src="
+                              getImageUrl(
+                                products.find((prod) => prod.id === prodId)
+                                  ?.image || ''
+                              )
+                            "
+                            :alt="
+                              products.find((prod) => prod.id === prodId)?.name
+                            "
                             class="required-product-item__image"
                           />
                           <div class="required-product-item__details">
-                            <span class="required-product-item__name">{{ products.find(prod => prod.id === prodId)?.name }}</span>
-                            <span class="required-product-item__price">{{ products.find(prod => prod.id === prodId)?.price }} ₽</span>
+                            <span class="required-product-item__name">{{
+                              products.find((prod) => prod.id === prodId)?.name
+                            }}</span>
+                            <span class="required-product-item__price"
+                              >{{
+                                products.find((prod) => prod.id === prodId)
+                                  ?.price
+                              }}
+                              ₽</span
+                            >
                           </div>
                         </div>
-                        <button 
+                        <button
                           class="required-product-item__remove"
                           @click="removeRequiredProductFromExisting(p, prodId)"
                           title="Удалить"
                         >
-                          <UiDeleteSmall/>
+                          <UiDeleteSmall />
                         </button>
                       </div>
                     </div>
@@ -757,16 +936,10 @@
               <!-- Действия -->
               <div class="edit-section edit-section--actions">
                 <div class="prod-details__actions">
-                  <button
-                    class="btn btn-primary"
-                    @click="updateWithSpecs(p)"
-                  >
+                  <button class="btn btn-primary" @click="updateWithSpecs(p)">
                     Сохранить изменения
                   </button>
-                  <button
-                    class="btn btn-secondary"
-                    @click="cancelEdit"
-                  >
+                  <button class="btn btn-secondary" @click="cancelEdit">
                     Отмена
                   </button>
                 </div>
@@ -780,9 +953,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
-import { useFileStorage } from '@/composables/useFileStorage'
-import MarkdownEditor from './MarkdownEditor.vue'
+import { ref, computed, watch, nextTick, onMounted } from "vue";
+import { useFileStorage } from "@/composables/useFileStorage";
+import MarkdownEditor from "./MarkdownEditor.vue";
 
 interface Spec {
   id: number;
@@ -794,240 +967,299 @@ interface Spec {
 }
 
 interface AdminCategory {
-  id: string
-  name: string
-  slug: string
-  description?: string
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
 }
 
 interface Product {
-  id: number
-  name: string
-  description: string
-  extendedDescription?: string
-  price: number
-  image: string
-  category: string
-  category_name?: string
-  category_id?: string
-  category_slug?: string
-  slug: string
-  specs?: Characteristic[]
-  additional_images?: string[]
-  connection_scheme?: string
-  delivery_set?: string
-  additional_requirements?: string
-  required_products?: number[]
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription?: string;
+  price: number;
+  image: string;
+  category: string;
+  category_name?: string;
+  category_id?: string;
+  category_slug?: string;
+  slug: string;
+  specs?: Characteristic[];
+  additional_images?: string[];
+  connection_scheme?: string;
+  delivery_set?: string;
+  additional_requirements?: string;
+  required_products?: number[];
 }
 
 interface Characteristic {
-  id: number
-  key: string
-  value: string
-  showKeySuggestions?: boolean
-  showValueSuggestions?: boolean
-  show_in_filters?: boolean
+  id: number;
+  key: string;
+  value: string;
+  showKeySuggestions?: boolean;
+  showValueSuggestions?: boolean;
+  show_in_filters?: boolean;
 }
 
 // Props
 const props = defineProps<{
-  adminTab: string
-  authorized: boolean
-  password: string
-  loginError: string | null
-  products: Product[]
-  categories: AdminCategory[]
-  specsList: Record<number, Spec[]>
-  newProd: any
-  newCategory: any
-  activeId: number | null
-  newSpecs: Spec[]
-  newSpec: Spec
-  newProdPowerValue: any
-  newProdPowerUnit: string
-  newProdSelectedFuels: any[]
-  showNewProdFuelDropdown: boolean
-  powerUnits: string[]
-  availableFuels: string[]
-  presetImages: string[]
-  newProdGallery: string[]
-  isFormValid: boolean
-  modalStore: any
-  filteredSpecs: (id: number) => Spec[]
-  setShowInFiltersForAll: (key: string, value: boolean) => void
-}>()
+  adminTab: string;
+  authorized: boolean;
+  password: string;
+  loginError: string | null;
+  products: Product[];
+  categories: AdminCategory[];
+  specsList: Record<number, Spec[]>;
+  newProd: any;
+  newCategory: any;
+  activeId: number | null;
+  newSpecs: Spec[];
+  newSpec: Spec;
+  newProdPowerValue: any;
+  newProdPowerUnit: string;
+  newProdSelectedFuels: any[];
+  showNewProdFuelDropdown: boolean;
+  powerUnits: string[];
+  availableFuels: string[];
+  presetImages: string[];
+  newProdGallery: string[];
+  isFormValid: boolean;
+  modalStore: any;
+  filteredSpecs: (id: number) => Spec[];
+  setShowInFiltersForAll: (key: string, value: boolean) => void;
+}>();
 
 // Emits
 const emit = defineEmits<{
-  (e: 'login'): void
-  (e: 'logout'): void
-  (e: 'addProduct'): void
-  (e: 'resetForm'): void
-  (e: 'toggle', id: number): void
-  (e: 'updateWithSpecs', product: Product): void
-  (e: 'cancelEdit'): void
-  (e: 'addSpec', id: number): void
-  (e: 'removeSpec', id: number, idx: number): void
-  (e: 'addNewSpec'): void
-  (e: 'removeNewSpec', idx: number): void
-  (e: 'deleteProduct', id: number): void
-  (e: 'handleImageUpload', event: Event, product: Product | Partial<Product>): void
-  (e: 'toggleNewProdFuelDropdown'): void
-  (e: 'handleGalleryUpload', event: Event): void
-  (e: 'removeGalleryImage', idx: number): void
-  (e: 'removeEditGalleryImage', product: Product, idx: number): void
-  (e: 'handleEditGalleryUpload', event: Event, product: Product): void
-  (e: 'handleConnectionSchemeUpload', event: Event, product: Product): void
-  (e: 'update:password', val: string): void
-  (e: 'update:newCategory', val: any): void
-  (e: 'update:newProdPowerValue', val: any): void
-  (e: 'update:newProdPowerUnit', val: string): void
-  (e: 'update:newProdSelectedFuels', val: any[]): void
-  (e: 'update:newProd', val: any): void
-  (e: 'update:newSpec', val: Spec): void
-  (e: 'update:newSpecs', val: Spec[]): void
-  (e: 'updateSpecsList', productId: number, specs: Spec[]): void
-  (e: 'update:newProdGallery', val: string[]): void
-}>()
+  (e: "login"): void;
+  (e: "logout"): void;
+  (e: "addProduct"): void;
+  (e: "resetForm"): void;
+  (e: "toggle", id: number): void;
+  (e: "updateWithSpecs", product: Product): void;
+  (e: "cancelEdit"): void;
+  (e: "addSpec", id: number): void;
+  (e: "removeSpec", id: number, idx: number): void;
+  (e: "addNewSpec"): void;
+  (e: "removeNewSpec", idx: number): void;
+  (e: "deleteProduct", id: number): void;
+  (
+    e: "handleImageUpload",
+    event: Event,
+    product: Product | Partial<Product>
+  ): void;
+  (e: "toggleNewProdFuelDropdown"): void;
+  (e: "handleGalleryUpload", event: Event): void;
+  (e: "removeGalleryImage", idx: number): void;
+  (e: "removeEditGalleryImage", product: Product, idx: number): void;
+  (e: "handleEditGalleryUpload", event: Event, product: Product): void;
+  (e: "handleConnectionSchemeUpload", event: Event, product: Product): void;
+  (e: "update:password", val: string): void;
+  (e: "update:newCategory", val: any): void;
+  (e: "update:newProdPowerValue", val: any): void;
+  (e: "update:newProdPowerUnit", val: string): void;
+  (e: "update:newProdSelectedFuels", val: any[]): void;
+  (e: "update:newProd", val: any): void;
+  (e: "update:newSpec", val: Spec): void;
+  (e: "update:newSpecs", val: Spec[]): void;
+  (e: "updateSpecsList", productId: number, specs: Spec[]): void;
+  (e: "update:newProdGallery", val: string[]): void;
+}>();
 
 // Локальная переменная для пароля
-const passwordLocal = ref(props.password)
-watch(() => props.password, (val) => { passwordLocal.value = val })
-watch(passwordLocal, (val) => { emit('update:password', val) })
+const passwordLocal = ref(props.password);
+watch(
+  () => props.password,
+  (val) => {
+    passwordLocal.value = val;
+  }
+);
+watch(passwordLocal, (val) => {
+  emit("update:password", val);
+});
 
 // Локальная переменная для newCategory
-const newCategoryLocal = ref(props.newCategory)
-watch(() => props.newCategory, (val) => { newCategoryLocal.value = val })
-watch(newCategoryLocal, (val) => { emit('update:newCategory', val) })
-watch(() => newCategoryLocal.value.name, () => {
-  validateNewCategory()
-})
+const newCategoryLocal = ref(props.newCategory);
+watch(
+  () => props.newCategory,
+  (val) => {
+    newCategoryLocal.value = val;
+  }
+);
+watch(newCategoryLocal, (val) => {
+  emit("update:newCategory", val);
+});
+watch(
+  () => newCategoryLocal.value.name,
+  () => {
+    validateNewCategory();
+  }
+);
 
 // Локальные переменные для power и fuel props
-const newProdPowerValueLocal = ref(props.newProdPowerValue)
-watch(() => props.newProdPowerValue, (val) => { newProdPowerValueLocal.value = val })
-watch(newProdPowerValueLocal, (val) => { emit('update:newProdPowerValue', val) })
+const newProdPowerValueLocal = ref(props.newProdPowerValue);
+watch(
+  () => props.newProdPowerValue,
+  (val) => {
+    newProdPowerValueLocal.value = val;
+  }
+);
+watch(newProdPowerValueLocal, (val) => {
+  emit("update:newProdPowerValue", val);
+});
 
-const newProdPowerUnitLocal = ref(props.newProdPowerUnit)
-watch(() => props.newProdPowerUnit, (val) => { newProdPowerUnitLocal.value = val })
-watch(newProdPowerUnitLocal, (val) => { emit('update:newProdPowerUnit', val) })
+const newProdPowerUnitLocal = ref(props.newProdPowerUnit);
+watch(
+  () => props.newProdPowerUnit,
+  (val) => {
+    newProdPowerUnitLocal.value = val;
+  }
+);
+watch(newProdPowerUnitLocal, (val) => {
+  emit("update:newProdPowerUnit", val);
+});
 
-const newProdSelectedFuelsLocal = ref(props.newProdSelectedFuels)
-watch(() => props.newProdSelectedFuels, (val) => { newProdSelectedFuelsLocal.value = val })
-watch(newProdSelectedFuelsLocal, (val) => { emit('update:newProdSelectedFuels', val) })
+const newProdSelectedFuelsLocal = ref(props.newProdSelectedFuels);
+watch(
+  () => props.newProdSelectedFuels,
+  (val) => {
+    newProdSelectedFuelsLocal.value = val;
+  }
+);
+watch(newProdSelectedFuelsLocal, (val) => {
+  emit("update:newProdSelectedFuels", val);
+});
 
 // Локальные переменные для newProd, newSpec, newSpecs
-const newProdLocal = ref(props.newProd)
-watch(() => props.newProd, (val) => { newProdLocal.value = val })
-watch(newProdLocal, (val) => { emit('update:newProd', val) })
+const newProdLocal = ref(props.newProd);
+watch(
+  () => props.newProd,
+  (val) => {
+    newProdLocal.value = val;
+  }
+);
+watch(newProdLocal, (val) => {
+  emit("update:newProd", val);
+});
 
-const newSpecLocal = ref(props.newSpec)
-watch(() => props.newSpec, (val) => { newSpecLocal.value = val })
-watch(newSpecLocal, (val) => { emit('update:newSpec', val) })
+const newSpecLocal = ref(props.newSpec);
+watch(
+  () => props.newSpec,
+  (val) => {
+    newSpecLocal.value = val;
+  }
+);
+watch(newSpecLocal, (val) => {
+  emit("update:newSpec", val);
+});
 
 // Initialize additional requirements if not present
 if (!newProdLocal.value.additional_requirements) {
-  newProdLocal.value.additional_requirements = ''
+  newProdLocal.value.additional_requirements = "";
 }
 if (!newProdLocal.value.required_products) {
-  newProdLocal.value.required_products = []
+  newProdLocal.value.required_products = [];
 }
 
 // Selected product for additional requirements
-const selectedProduct = ref('')
+const selectedProduct = ref("");
 
 // Add required product
 const addRequiredProduct = () => {
-  if (!selectedProduct.value) return
-  
-  const productId = Number(selectedProduct.value)
+  if (!selectedProduct.value) return;
+
+  const productId = Number(selectedProduct.value);
   if (!newProdLocal.value.required_products?.includes(productId)) {
     if (!newProdLocal.value.required_products) {
-      newProdLocal.value.required_products = []
+      newProdLocal.value.required_products = [];
     }
-    newProdLocal.value.required_products.push(productId)
+    newProdLocal.value.required_products.push(productId);
   }
-  selectedProduct.value = ''
-}
+  selectedProduct.value = "";
+};
 
 // Remove required product
 const removeRequiredProduct = (productId: number) => {
-  if (!newProdLocal.value.required_products) return
-  newProdLocal.value.required_products = newProdLocal.value.required_products.filter((id: number) => id !== productId)
-}
-
-
+  if (!newProdLocal.value.required_products) return;
+  newProdLocal.value.required_products =
+    newProdLocal.value.required_products.filter(
+      (id: number) => id !== productId
+    );
+};
 
 // Переменные для системы подсказок
-const selectedProductForCopy = ref('')
-const specKeySuggestions = ref<string[]>([])
-const specValueSuggestions = ref<string[]>([])
-const newSpecKeySuggestions = ref<string[]>([])
-const newSpecValueSuggestions = ref<string[]>([])
-const showNewSpecKeySuggestionsFlag = ref(false)
-const showNewSpecValueSuggestionsFlag = ref(false)
+const selectedProductForCopy = ref("");
+const specKeySuggestions = ref<string[]>([]);
+const specValueSuggestions = ref<string[]>([]);
+const newSpecKeySuggestions = ref<string[]>([]);
+const newSpecValueSuggestions = ref<string[]>([]);
+const showNewSpecKeySuggestionsFlag = ref(false);
+const showNewSpecValueSuggestionsFlag = ref(false);
 
 // Переменные для подсказок в редактировании
-const editSpecKeySuggestions = ref<string[]>([])
-const editSpecValueSuggestions = ref<string[]>([])
+const editSpecKeySuggestions = ref<string[]>([]);
+const editSpecValueSuggestions = ref<string[]>([]);
 
 // Переменные для предварительного просмотра характеристик
-const previewedSpecs = ref<{key: string, value: string}[]>([])
+const previewedSpecs = ref<{ key: string; value: string }[]>([]);
 
 // Получение всех уникальных ключей характеристик из существующих товаров
 const getAllSpecKeys = computed(() => {
-  const keys = new Set<string>()
-  props.products.forEach(product => {
+  const keys = new Set<string>();
+  props.products.forEach((product) => {
     if (product.specs && Array.isArray(product.specs)) {
-      product.specs.forEach(spec => {
+      product.specs.forEach((spec) => {
         if (spec.key) {
-          keys.add(spec.key)
+          keys.add(spec.key);
         }
-      })
+      });
     }
-  })
-  return Array.from(keys).sort()
-})
+  });
+  return Array.from(keys).sort();
+});
 
 // Получение всех уникальных значений для конкретного ключа
 const getSpecValuesForKey = (key: string) => {
-  const values = new Set<string>()
-  props.products.forEach(product => {
+  const values = new Set<string>();
+  props.products.forEach((product) => {
     if (product.specs && Array.isArray(product.specs)) {
-      product.specs.forEach(spec => {
+      product.specs.forEach((spec) => {
         if (spec.key === key && spec.value) {
-          values.add(spec.value)
+          values.add(spec.value);
         }
-      })
+      });
     }
-  })
-  return Array.from(values).sort()
-}
+  });
+  return Array.from(values).sort();
+};
 
 // Предварительный просмотр характеристик из существующего товара
 const previewSpecsFromProduct = () => {
   if (!selectedProductForCopy.value) {
-    clearPreview()
-    return
+    clearPreview();
+    return;
   }
-  
-  const product = props.products.find(p => p.id === Number(selectedProductForCopy.value))
+
+  const product = props.products.find(
+    (p) => p.id === Number(selectedProductForCopy.value)
+  );
   if (!product || !product.specs || !Array.isArray(product.specs)) {
-    clearPreview()
-    return
+    clearPreview();
+    return;
   }
-  
+
   // Подготавливаем характеристики для предварительного просмотра
-  previewedSpecs.value = product.specs.map(spec => ({
+  previewedSpecs.value = product.specs.map((spec) => ({
     key: spec.key,
-    value: spec.value
-  }))
-}
+    value: spec.value,
+  }));
+};
 
 // Подтверждение копирования характеристик
 const confirmCopySpecs = () => {
   // Очищаем текущие характеристики
-  props.newSpecs.splice(0, props.newSpecs.length)
+  props.newSpecs.splice(0, props.newSpecs.length);
   // Копируем характеристики с id
   previewedSpecs.value.forEach((spec, index) => {
     props.newSpecs.push({
@@ -1036,771 +1268,851 @@ const confirmCopySpecs = () => {
       value: spec.value,
       showKeySuggestions: false,
       showValueSuggestions: false,
-      show_in_filters: false
-    })
-  })
-  emit('update:newSpecs', [...props.newSpecs])
-  clearCopySelection()
-}
+      show_in_filters: false,
+    });
+  });
+  emit("update:newSpecs", [...props.newSpecs]);
+  clearCopySelection();
+};
 
 // Очистка выбора товара для копирования
 const clearCopySelection = () => {
-  selectedProductForCopy.value = ''
-  clearPreview()
-}
+  selectedProductForCopy.value = "";
+  clearPreview();
+};
 
 // Очистка предварительного просмотра
 const clearPreview = () => {
-  previewedSpecs.value = []
-}
+  previewedSpecs.value = [];
+};
 
 // Обработчики для подсказок ключей характеристик
 const onSpecKeyInput = (spec: any, event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value.toLowerCase()
-  
+  const target = event.target as HTMLInputElement;
+  const value = target.value.toLowerCase();
+
   if (value.length > 0) {
-    specKeySuggestions.value = getAllSpecKeys.value.filter(key => 
+    specKeySuggestions.value = getAllSpecKeys.value.filter((key) =>
       key.toLowerCase().includes(value)
-    )
+    );
   } else {
-    specKeySuggestions.value = getAllSpecKeys.value
+    specKeySuggestions.value = getAllSpecKeys.value;
   }
-}
+};
 
 const showSpecSuggestions = (spec: any) => {
-  spec.showKeySuggestions = true
-  specKeySuggestions.value = getAllSpecKeys.value
-}
+  spec.showKeySuggestions = true;
+  specKeySuggestions.value = getAllSpecKeys.value;
+};
 
 const hideSpecSuggestions = () => {
   setTimeout(() => {
-    specKeySuggestions.value = []
-    props.newSpecs.forEach(spec => {
-      spec.showKeySuggestions = false
-    })
-  }, 200)
-}
+    specKeySuggestions.value = [];
+    props.newSpecs.forEach((spec) => {
+      spec.showKeySuggestions = false;
+    });
+  }, 200);
+};
 
 const selectSpecKey = (spec: any, key: string) => {
-  spec.key = key
-  spec.showKeySuggestions = false
-  specKeySuggestions.value = []
-}
+  spec.key = key;
+  spec.showKeySuggestions = false;
+  specKeySuggestions.value = [];
+};
 
 // Обработчики для подсказок значений характеристик
 const onSpecValueInput = (spec: any, event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value.toLowerCase()
-  
+  const target = event.target as HTMLInputElement;
+  const value = target.value.toLowerCase();
+
   if (spec.key) {
-    const allValues = getSpecValuesForKey(spec.key)
+    const allValues = getSpecValuesForKey(spec.key);
     if (value.length > 0) {
-      specValueSuggestions.value = allValues.filter(val => 
+      specValueSuggestions.value = allValues.filter((val) =>
         val.toLowerCase().includes(value)
-      )
+      );
     } else {
-      specValueSuggestions.value = allValues
+      specValueSuggestions.value = allValues;
     }
   }
-}
+};
 
 const showValueSuggestions = (spec: Spec) => {
-  spec.showValueSuggestions = true
+  spec.showValueSuggestions = true;
   if (spec.key) {
-    specValueSuggestions.value = getSpecValuesForKey(spec.key)
+    specValueSuggestions.value = getSpecValuesForKey(spec.key);
   }
-}
+};
 
 const hideValueSuggestions = () => {
   setTimeout(() => {
-    specValueSuggestions.value = []
-    props.newSpecs.forEach(spec => {
-      spec.showValueSuggestions = false
-    })
-  }, 200)
-}
+    specValueSuggestions.value = [];
+    props.newSpecs.forEach((spec) => {
+      spec.showValueSuggestions = false;
+    });
+  }, 200);
+};
 
 const selectSpecValue = (spec: Spec, value: string) => {
-  spec.value = value
-  spec.showValueSuggestions = false
-  specValueSuggestions.value = []
-}
+  spec.value = value;
+  spec.showValueSuggestions = false;
+  specValueSuggestions.value = [];
+};
 
 // Обработчики для новой характеристики
 const onNewSpecKeyInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value.toLowerCase()
-  
+  const target = event.target as HTMLInputElement;
+  const value = target.value.toLowerCase();
+
   if (value.length > 0) {
-    newSpecKeySuggestions.value = getAllSpecKeys.value.filter(key => 
+    newSpecKeySuggestions.value = getAllSpecKeys.value.filter((key) =>
       key.toLowerCase().includes(value)
-    )
+    );
   } else {
-    newSpecKeySuggestions.value = getAllSpecKeys.value
+    newSpecKeySuggestions.value = getAllSpecKeys.value;
   }
-}
+};
 
 const showNewSpecKeySuggestions = () => {
-  showNewSpecKeySuggestionsFlag.value = true
-  newSpecKeySuggestions.value = getAllSpecKeys.value
-}
+  showNewSpecKeySuggestionsFlag.value = true;
+  newSpecKeySuggestions.value = getAllSpecKeys.value;
+};
 
 const hideNewSpecKeySuggestions = () => {
   setTimeout(() => {
-    showNewSpecKeySuggestionsFlag.value = false
-    newSpecKeySuggestions.value = []
-  }, 200)
-}
+    showNewSpecKeySuggestionsFlag.value = false;
+    newSpecKeySuggestions.value = [];
+  }, 200);
+};
 
 const selectNewSpecKey = (key: string) => {
-  newSpecLocal.value.key = key
-  showNewSpecKeySuggestionsFlag.value = false
-  newSpecKeySuggestions.value = []
-}
+  newSpecLocal.value.key = key;
+  showNewSpecKeySuggestionsFlag.value = false;
+  newSpecKeySuggestions.value = [];
+};
 
 const onNewSpecValueInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value.toLowerCase()
-  
+  const target = event.target as HTMLInputElement;
+  const value = target.value.toLowerCase();
+
   if (newSpecLocal.value.key) {
-    const allValues = getSpecValuesForKey(newSpecLocal.value.key)
+    const allValues = getSpecValuesForKey(newSpecLocal.value.key);
     if (value.length > 0) {
-      newSpecValueSuggestions.value = allValues.filter(val => 
+      newSpecValueSuggestions.value = allValues.filter((val) =>
         val.toLowerCase().includes(value)
-      )
+      );
     } else {
-      newSpecValueSuggestions.value = allValues
+      newSpecValueSuggestions.value = allValues;
     }
   }
-}
+};
 
 const showNewSpecValueSuggestions = () => {
-  showNewSpecValueSuggestionsFlag.value = true
+  showNewSpecValueSuggestionsFlag.value = true;
   if (newSpecLocal.value.key) {
-    newSpecValueSuggestions.value = getSpecValuesForKey(newSpecLocal.value.key)
+    newSpecValueSuggestions.value = getSpecValuesForKey(newSpecLocal.value.key);
   }
-}
+};
 
 const hideNewSpecValueSuggestions = () => {
   setTimeout(() => {
-    showNewSpecValueSuggestionsFlag.value = false
-    newSpecValueSuggestions.value = []
-  }, 200)
-}
+    showNewSpecValueSuggestionsFlag.value = false;
+    newSpecValueSuggestions.value = [];
+  }, 200);
+};
 
 const selectNewSpecValue = (value: string) => {
-  newSpecLocal.value.value = value
-  showNewSpecValueSuggestionsFlag.value = false
-  newSpecValueSuggestions.value = []
-}
+  newSpecLocal.value.value = value;
+  showNewSpecValueSuggestionsFlag.value = false;
+  newSpecValueSuggestions.value = [];
+};
 
 // Обработчики для подсказок в редактировании
 const onEditSpecKeyInput = (spec: Spec, event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value.toLowerCase()
-  
+  const target = event.target as HTMLInputElement;
+  const value = target.value.toLowerCase();
+
   if (value.length > 0) {
-    editSpecKeySuggestions.value = getAllSpecKeys.value.filter(key => 
+    editSpecKeySuggestions.value = getAllSpecKeys.value.filter((key) =>
       key.toLowerCase().includes(value)
-    )
+    );
   } else {
-    editSpecKeySuggestions.value = getAllSpecKeys.value
+    editSpecKeySuggestions.value = getAllSpecKeys.value;
   }
-}
+};
 
 const showEditSpecSuggestions = (spec: Spec) => {
-  spec.showKeySuggestions = true
-  editSpecKeySuggestions.value = getAllSpecKeys.value
-}
+  spec.showKeySuggestions = true;
+  editSpecKeySuggestions.value = getAllSpecKeys.value;
+};
 
 const hideEditSpecSuggestions = () => {
   setTimeout(() => {
-    editSpecKeySuggestions.value = []
+    editSpecKeySuggestions.value = [];
     // Очищаем флаги для всех характеристик в редактировании
-    props.products.forEach(product => {
+    props.products.forEach((product) => {
       if (product.specs && Array.isArray(product.specs)) {
-        product.specs.forEach(spec => {
-          spec.showKeySuggestions = false
-        })
+        product.specs.forEach((spec) => {
+          spec.showKeySuggestions = false;
+        });
       }
-    })
-  }, 200)
-}
+    });
+  }, 200);
+};
 
 const selectEditSpecKey = (spec: Spec, key: string) => {
-  spec.key = key
-  spec.showKeySuggestions = false
-  editSpecKeySuggestions.value = []
-}
+  spec.key = key;
+  spec.showKeySuggestions = false;
+  editSpecKeySuggestions.value = [];
+};
 
 const onEditSpecValueInput = (spec: Spec, event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value.toLowerCase()
-  
+  const target = event.target as HTMLInputElement;
+  const value = target.value.toLowerCase();
+
   if (spec.key) {
-    const allValues = getSpecValuesForKey(spec.key)
+    const allValues = getSpecValuesForKey(spec.key);
     if (value.length > 0) {
-      editSpecValueSuggestions.value = allValues.filter(val => 
+      editSpecValueSuggestions.value = allValues.filter((val) =>
         val.toLowerCase().includes(value)
-      )
+      );
     } else {
-      editSpecValueSuggestions.value = allValues
+      editSpecValueSuggestions.value = allValues;
     }
   }
-}
+};
 
 const showEditValueSuggestions = (spec: Spec) => {
-  spec.showValueSuggestions = true
+  spec.showValueSuggestions = true;
   if (spec.key) {
-    editSpecValueSuggestions.value = getSpecValuesForKey(spec.key)
+    editSpecValueSuggestions.value = getSpecValuesForKey(spec.key);
   }
-}
+};
 
 const hideEditValueSuggestions = () => {
   setTimeout(() => {
-    editSpecValueSuggestions.value = []
+    editSpecValueSuggestions.value = [];
     // Очищаем флаги для всех характеристик в редактировании
-    props.products.forEach(product => {
+    props.products.forEach((product) => {
       if (product.specs && Array.isArray(product.specs)) {
-        product.specs.forEach(spec => {
-          spec.showValueSuggestions = false
-        })
+        product.specs.forEach((spec) => {
+          spec.showValueSuggestions = false;
+        });
       }
-    })
-  }, 200)
-}
+    });
+  }, 200);
+};
 
 const selectEditSpecValue = (spec: Spec, value: string) => {
-  spec.value = value
-  spec.showValueSuggestions = false
-  editSpecValueSuggestions.value = []
-}
+  spec.value = value;
+  spec.showValueSuggestions = false;
+  editSpecValueSuggestions.value = [];
+};
 
 // Обработчик изменений флажка show_in_filters
-const onShowInFiltersChange = (productId: number, specIndex: number, event: Event) => {
-  const target = event.target as HTMLInputElement | null
-  if (!target) return
-  const value = target.checked
+const onShowInFiltersChange = (
+  productId: number,
+  specIndex: number,
+  event: Event
+) => {
+  const target = event.target as HTMLInputElement | null;
+  if (!target) return;
+  const value = target.checked;
   if (props.specsList[productId] && props.specsList[productId][specIndex]) {
-    const key = props.specsList[productId][specIndex].key
-    if (typeof props.setShowInFiltersForAll === 'function') {
-      props.setShowInFiltersForAll(key, value)
+    const key = props.specsList[productId][specIndex].key;
+    if (typeof props.setShowInFiltersForAll === "function") {
+      props.setShowInFiltersForAll(key, value);
     }
   }
-}
+};
 
 // Methods
 const login = () => {
-  emit('login')
+  emit("login");
   // Сохраняем авторизацию, если включен чекбокс "Запомнить меня"
   if (rememberMe.value) {
-    saveAuth()
+    saveAuth();
   }
-}
+};
 const addProduct = () => {
-  emit('addProduct')
-}
-const resetForm = () => emit('resetForm')
-const toggle = (id: number) => emit('toggle', id)
-const updateWithSpecs = (product: Product) => emit('updateWithSpecs', product)
-const cancelEdit = () => emit('cancelEdit')
-const addSpec = (id: number) => emit('addSpec', id)
-const removeSpec = (id: number, idx: number) => emit('removeSpec', id, idx)
+  emit("addProduct");
+};
+const resetForm = () => emit("resetForm");
+const toggle = (id: number) => emit("toggle", id);
+const updateWithSpecs = (product: Product) => emit("updateWithSpecs", product);
+const cancelEdit = () => emit("cancelEdit");
+const addSpec = (id: number) => emit("addSpec", id);
+const removeSpec = (id: number, idx: number) => emit("removeSpec", id, idx);
 const addNewSpec = () => {
   if (newSpecLocal.value.key && newSpecLocal.value.value) {
-    const newId = props.newSpecs.length > 0 
-      ? Math.max(...props.newSpecs.map(s => s.id)) + 1 
-      : 1
-    
-    props.newSpecs.push({ 
+    const newId =
+      props.newSpecs.length > 0
+        ? Math.max(...props.newSpecs.map((s) => s.id)) + 1
+        : 1;
+
+    props.newSpecs.push({
       id: newId,
-      key: newSpecLocal.value.key, 
+      key: newSpecLocal.value.key,
       value: newSpecLocal.value.value,
       showKeySuggestions: false,
       showValueSuggestions: false,
-      show_in_filters: false
-    })
-    newSpecLocal.value.key = ''
-    newSpecLocal.value.value = ''
+      show_in_filters: false,
+    });
+    newSpecLocal.value.key = "";
+    newSpecLocal.value.value = "";
   }
-}
-const removeNewSpec = (idx: number) => emit('removeNewSpec', idx)
-const deleteProduct = (id: number) => emit('deleteProduct', id)
-const handleImageUpload = (event: Event, product: Product | Partial<Product>) => emit('handleImageUpload', event, product)
-const toggleNewProdFuelDropdown = () => emit('toggleNewProdFuelDropdown')
-const removeEditGalleryImage = (product: Product, idx: number) => emit('removeEditGalleryImage', product, idx)
-const handleEditGalleryUpload = (event: Event, product: Product) => emit('handleEditGalleryUpload', event, product)
-const handleConnectionSchemeUpload = (event: Event, product: Product) => emit('handleConnectionSchemeUpload', event, product)
+};
+const removeNewSpec = (idx: number) => emit("removeNewSpec", idx);
+const deleteProduct = (id: number) => emit("deleteProduct", id);
+const handleImageUpload = (event: Event, product: Product | Partial<Product>) =>
+  emit("handleImageUpload", event, product);
+const toggleNewProdFuelDropdown = () => emit("toggleNewProdFuelDropdown");
+const removeEditGalleryImage = (product: Product, idx: number) =>
+  emit("removeEditGalleryImage", product, idx);
+const handleEditGalleryUpload = (event: Event, product: Product) =>
+  emit("handleEditGalleryUpload", event, product);
+const handleConnectionSchemeUpload = (event: Event, product: Product) =>
+  emit("handleConnectionSchemeUpload", event, product);
 
 function onPasswordInput(e: Event) {
-  const target = e.target as HTMLInputElement | null
-  if (target) passwordLocal.value = target.value
+  const target = e.target as HTMLInputElement | null;
+  if (target) passwordLocal.value = target.value;
 }
 
 function onNewCategoryInput(e: Event) {
-  const target = e.target as HTMLInputElement | null
-  if (target) newCategoryLocal.value.name = target.value
+  const target = e.target as HTMLInputElement | null;
+  if (target) newCategoryLocal.value.name = target.value;
 }
 
 const validateNewCategory = () => {
-  if (newCategoryLocal.value.name && props.categories.some(c => c.name === newCategoryLocal.value.name)) {
-    newProdLocal.value.category = newCategoryLocal.value.name
-    newCategoryLocal.value.name = ''
+  if (
+    newCategoryLocal.value.name &&
+    props.categories.some((c) => c.name === newCategoryLocal.value.name)
+  ) {
+    newProdLocal.value.category = newCategoryLocal.value.name;
+    newCategoryLocal.value.name = "";
   }
-}
+};
 
 // Состояние для валидации
-const showValidationErrors = ref(false)
+const showValidationErrors = ref(false);
 
 // Валидация формы добавления товара
 const isFormValid = computed(() => {
   // Проверяем базовые обязательные поля
-  const hasCategory = newProdLocal.value.category && 
-    (newProdLocal.value.category !== 'new' || newCategoryLocal.value.name)
-  const hasName = newProdLocal.value.name && newProdLocal.value.name.trim() !== ''
-  const hasDescription = newProdLocal.value.description && newProdLocal.value.description.trim() !== ''
-  const hasValidPrice = newProdLocal.value.price && newProdLocal.value.price > 0
-  
-  return hasCategory && hasName && hasDescription && hasValidPrice
-})
+  const hasCategory =
+    newProdLocal.value.category &&
+    (newProdLocal.value.category !== "new" || newCategoryLocal.value.name);
+  const hasName =
+    newProdLocal.value.name && newProdLocal.value.name.trim() !== "";
+  const hasDescription =
+    newProdLocal.value.description &&
+    newProdLocal.value.description.trim() !== "";
+  const hasValidPrice =
+    newProdLocal.value.price && newProdLocal.value.price > 0;
+
+  return hasCategory && hasName && hasDescription && hasValidPrice;
+});
 
 // Функция для показа ошибок валидации
 const showValidation = () => {
-  showValidationErrors.value = true
-}
+  showValidationErrors.value = true;
+};
 
 // Функция для скрытия ошибок валидации
 const hideValidation = () => {
-  showValidationErrors.value = false
-}
+  showValidationErrors.value = false;
+};
 
 // Состояние редактора
-const showPreview = ref(false)
-const extendedDescriptionTextarea = ref<HTMLTextAreaElement | null>(null)
+const showPreview = ref(false);
+const extendedDescriptionTextarea = ref<HTMLTextAreaElement | null>(null);
 
 // Общие функции для редактирования markdown
-function insertTextIntoTextarea(textarea: HTMLTextAreaElement, before: string, after: string = '') {
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
-  const text = textarea.value
-  const selectedText = text.substring(start, end)
+function insertTextIntoTextarea(
+  textarea: HTMLTextAreaElement,
+  before: string,
+  after: string = ""
+) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const selectedText = text.substring(start, end);
 
-  const beforeText = text.substring(0, start)
-  const afterText = text.substring(end)
+  const beforeText = text.substring(0, start);
+  const afterText = text.substring(end);
 
-  const newText = beforeText + before + selectedText + after + afterText
-  textarea.value = newText
+  const newText = beforeText + before + selectedText + after + afterText;
+  textarea.value = newText;
 
   // Восстанавливаем фокус и выделение
   nextTick(() => {
-    textarea.focus()
-    textarea.setSelectionRange(
-      start + before.length,
-      end + before.length
-    )
-  })
+    textarea.focus();
+    textarea.setSelectionRange(start + before.length, end + before.length);
+  });
 
   // Вызываем событие input для обновления v-model
-  textarea.dispatchEvent(new Event('input'))
+  textarea.dispatchEvent(new Event("input"));
 }
 
 // Функции для работы с markdown
 function insertMarkdownHeading(textarea: HTMLTextAreaElement, level: number) {
-  const prefix = '#'.repeat(level) + ' '
-  insertTextIntoTextarea(textarea, prefix)
+  const prefix = "#".repeat(level) + " ";
+  insertTextIntoTextarea(textarea, prefix);
 }
 
 function insertMarkdownBold(textarea: HTMLTextAreaElement) {
-  insertTextIntoTextarea(textarea, '**', '**')
+  insertTextIntoTextarea(textarea, "**", "**");
 }
 
 function insertMarkdownItalic(textarea: HTMLTextAreaElement) {
-  insertTextIntoTextarea(textarea, '*', '*')
+  insertTextIntoTextarea(textarea, "*", "*");
 }
 
 function insertMarkdownList(textarea: HTMLTextAreaElement) {
-  insertTextIntoTextarea(textarea, '- ')
+  insertTextIntoTextarea(textarea, "- ");
 }
 
 // Функции для работы с редактором
 function getEditorTextarea(event: Event): HTMLTextAreaElement | null {
-  const target = event.target as HTMLElement
-  const editor = target.closest('.extended-description-editor')
-  return editor?.querySelector('textarea') || null
+  const target = event.target as HTMLElement;
+  const editor = target.closest(".extended-description-editor");
+  return editor?.querySelector("textarea") || null;
 }
 
 // Функции для работы с редактором нового товара
 function insertHeading(level: number) {
-  if (!extendedDescriptionTextarea.value) return
-  insertMarkdownHeading(extendedDescriptionTextarea.value, level)
+  if (!extendedDescriptionTextarea.value) return;
+  insertMarkdownHeading(extendedDescriptionTextarea.value, level);
 }
 
 function insertBold() {
-  if (!extendedDescriptionTextarea.value) return
-  insertMarkdownBold(extendedDescriptionTextarea.value)
+  if (!extendedDescriptionTextarea.value) return;
+  insertMarkdownBold(extendedDescriptionTextarea.value);
 }
 
 function insertItalic() {
-  if (!extendedDescriptionTextarea.value) return
-  insertMarkdownItalic(extendedDescriptionTextarea.value)
+  if (!extendedDescriptionTextarea.value) return;
+  insertMarkdownItalic(extendedDescriptionTextarea.value);
 }
 
 function insertList() {
-  if (!extendedDescriptionTextarea.value) return
-  insertMarkdownList(extendedDescriptionTextarea.value)
+  if (!extendedDescriptionTextarea.value) return;
+  insertMarkdownList(extendedDescriptionTextarea.value);
 }
 
 // Функции для работы с редактором существующего товара
 function insertEditHeading(product: Product, level: number, event: Event) {
-  const textarea = getEditorTextarea(event)
-  if (!textarea) return
-  insertMarkdownHeading(textarea, level)
-  product.extendedDescription = textarea.value
+  const textarea = getEditorTextarea(event);
+  if (!textarea) return;
+  insertMarkdownHeading(textarea, level);
+  product.extendedDescription = textarea.value;
 }
 
 function insertEditBold(product: Product, event: Event) {
-  const textarea = getEditorTextarea(event)
-  if (!textarea) return
-  insertMarkdownBold(textarea)
-  product.extendedDescription = textarea.value
+  const textarea = getEditorTextarea(event);
+  if (!textarea) return;
+  insertMarkdownBold(textarea);
+  product.extendedDescription = textarea.value;
 }
 
 function insertEditItalic(product: Product, event: Event) {
-  const textarea = getEditorTextarea(event)
-  if (!textarea) return
-  insertMarkdownItalic(textarea)
-  product.extendedDescription = textarea.value
+  const textarea = getEditorTextarea(event);
+  if (!textarea) return;
+  insertMarkdownItalic(textarea);
+  product.extendedDescription = textarea.value;
 }
 
 function insertEditList(product: Product, event: Event) {
-  const textarea = getEditorTextarea(event)
-  if (!textarea) return
-  insertMarkdownList(textarea)
-  product.extendedDescription = textarea.value
+  const textarea = getEditorTextarea(event);
+  if (!textarea) return;
+  insertMarkdownList(textarea);
+  product.extendedDescription = textarea.value;
 }
 
 function togglePreview() {
-  showPreview.value = !showPreview.value
+  showPreview.value = !showPreview.value;
 }
 
 // Функция для предварительного просмотра
 function parseMarkdown(text: string | undefined): string {
-  if (!text) return ''
-  
-  const lines = text.split('\n')
-  let html = ''
-  let inList = false
+  if (!text) return "";
+
+  const lines = text.split("\n");
+  let html = "";
+  let inList = false;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
+    const line = lines[i].trim();
 
     if (!line) {
       if (inList) {
-        html += '</ul>'
-        inList = false
+        html += "</ul>";
+        inList = false;
       }
-      html += '<br>'
-      continue
+      html += "<br>";
+      continue;
     }
 
-    if (line.startsWith('### ')) {
+    if (line.startsWith("### ")) {
       if (inList) {
-        html += '</ul>'
-        inList = false
+        html += "</ul>";
+        inList = false;
       }
-      const text = line.substring(4)
-      html += `<h3>${parseInlineMarkdown(text)}</h3>`
-    } else if (line.startsWith('## ')) {
+      const text = line.substring(4);
+      html += `<h3>${parseInlineMarkdown(text)}</h3>`;
+    } else if (line.startsWith("## ")) {
       if (inList) {
-        html += '</ul>'
-        inList = false
+        html += "</ul>";
+        inList = false;
       }
-      const text = line.substring(3)
-      html += `<h2>${parseInlineMarkdown(text)}</h2>`
-    } else if (line.startsWith('# ')) {
+      const text = line.substring(3);
+      html += `<h2>${parseInlineMarkdown(text)}</h2>`;
+    } else if (line.startsWith("# ")) {
       if (inList) {
-        html += '</ul>'
-        inList = false
+        html += "</ul>";
+        inList = false;
       }
-      const text = line.substring(2)
-      html += `<h1>${parseInlineMarkdown(text)}</h1>`
-    } else if (line.startsWith('- ')) {
+      const text = line.substring(2);
+      html += `<h1>${parseInlineMarkdown(text)}</h1>`;
+    } else if (line.startsWith("- ")) {
       if (!inList) {
-        html += '<ul>'
-        inList = true
+        html += "<ul>";
+        inList = true;
       }
-      const text = line.substring(2)
-      html += `<li>${parseInlineMarkdown(text)}</li>`
+      const text = line.substring(2);
+      html += `<li>${parseInlineMarkdown(text)}</li>`;
     } else {
       if (inList) {
-        html += '</ul>'
-        inList = false
+        html += "</ul>";
+        inList = false;
       }
-      html += `<p>${parseInlineMarkdown(line)}</p>`
+      html += `<p>${parseInlineMarkdown(line)}</p>`;
     }
   }
 
   if (inList) {
-    html += '</ul>'
+    html += "</ul>";
   }
 
-  return html
+  return html;
 }
 
 function parseInlineMarkdown(text: string): string {
   // Обработка жирного текста
-  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   // Обработка курсива
-  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>')
-  return text
+  text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  return text;
 }
 
 // Функция для создания вычисляемого свойства для extendedDescription
 function useExtendedDescription(product: Product) {
   return computed({
-    get: () => product.extendedDescription || '',
+    get: () => product.extendedDescription || "",
     set: (value: string) => {
-      product.extendedDescription = value
-    }
-  })
+      product.extendedDescription = value;
+    },
+  });
 }
 
 // Functions for handling required products
 const addRequiredProductToExisting = (event: Event, product: Product) => {
-  const target = event.target as HTMLSelectElement
-  const productId = Number(target.value)
-  if (!productId) return
+  const target = event.target as HTMLSelectElement;
+  const productId = Number(target.value);
+  if (!productId) return;
 
   if (!product.required_products) {
-    product.required_products = []
+    product.required_products = [];
   }
-  
-  if (!product.required_products.includes(productId)) {
-    product.required_products.push(productId)
-  }
-  
-  target.value = '' // Reset select
-}
 
-const removeRequiredProductFromExisting = (product: Product, productId: number) => {
-  if (!product.required_products) return
-  product.required_products = product.required_products.filter((id: number) => id !== productId)
-}
+  if (!product.required_products.includes(productId)) {
+    product.required_products.push(productId);
+  }
+
+  target.value = ""; // Reset select
+};
+
+const removeRequiredProductFromExisting = (
+  product: Product,
+  productId: number
+) => {
+  if (!product.required_products) return;
+  product.required_products = product.required_products.filter(
+    (id: number) => id !== productId
+  );
+};
 
 // Drag & Drop функциональность для характеристик
-const draggedIndex = ref<number | null>(null)
-const draggedEditIndex = ref<number | null>(null)
-const draggedEditProductId = ref<number | null>(null)
+const draggedIndex = ref<number | null>(null);
+const draggedEditIndex = ref<number | null>(null);
+const draggedEditProductId = ref<number | null>(null);
 
 // Drag & Drop для новых характеристик
 const onDragStart = (event: DragEvent, index: number) => {
-  draggedIndex.value = index
+  draggedIndex.value = index;
   if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', index.toString())
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", index.toString());
   }
-}
+};
 
 const onDrop = (event: DragEvent, dropIndex: number) => {
-  event.preventDefault()
-  if (draggedIndex.value === null || draggedIndex.value === dropIndex) return
-  
-  const specs = [...props.newSpecs]
-  const draggedSpec = specs[draggedIndex.value]
-  specs.splice(draggedIndex.value, 1)
-  specs.splice(dropIndex, 0, draggedSpec)
-  
+  event.preventDefault();
+  if (draggedIndex.value === null || draggedIndex.value === dropIndex) return;
+
+  const specs = [...props.newSpecs];
+  const draggedSpec = specs[draggedIndex.value];
+  specs.splice(draggedIndex.value, 1);
+  specs.splice(dropIndex, 0, draggedSpec);
+
   // Обновляем ID для правильного порядка
   specs.forEach((spec, index) => {
-    spec.id = index + 1
-  })
-  props.newSpecs.splice(0, props.newSpecs.length, ...specs)
+    spec.id = index + 1;
+  });
+  props.newSpecs.splice(0, props.newSpecs.length, ...specs);
   // props.newSpecs = specs
-  draggedIndex.value = null
-}
+  draggedIndex.value = null;
+};
 
 // Drag & Drop для редактирования характеристик
-const onEditDragStart = (event: DragEvent, productId: number, index: number) => {
-  draggedEditIndex.value = index
-  draggedEditProductId.value = productId
+const onEditDragStart = (
+  event: DragEvent,
+  productId: number,
+  index: number
+) => {
+  draggedEditIndex.value = index;
+  draggedEditProductId.value = productId;
   if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', `${productId}-${index}`)
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", `${productId}-${index}`);
   }
-}
+};
 
 const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
-  event.preventDefault()
-  if (draggedEditIndex.value === null || draggedEditIndex.value === dropIndex || draggedEditProductId.value !== productId) return
-  
+  event.preventDefault();
+  if (
+    draggedEditIndex.value === null ||
+    draggedEditIndex.value === dropIndex ||
+    draggedEditProductId.value !== productId
+  )
+    return;
+
   // Получаем текущие характеристики из filteredSpecs
-  const currentSpecs = props.filteredSpecs(productId)
-  if (!currentSpecs || currentSpecs.length === 0) return
-  
-  const specs = [...currentSpecs]
-  const draggedSpec = specs[draggedEditIndex.value]
-  specs.splice(draggedEditIndex.value, 1)
-  specs.splice(dropIndex, 0, draggedSpec)
-  
+  const currentSpecs = props.filteredSpecs(productId);
+  if (!currentSpecs || currentSpecs.length === 0) return;
+
+  const specs = [...currentSpecs];
+  const draggedSpec = specs[draggedEditIndex.value];
+  specs.splice(draggedEditIndex.value, 1);
+  specs.splice(dropIndex, 0, draggedSpec);
+
   // Обновляем ID для правильного порядка
   specs.forEach((spec, index) => {
-    spec.id = index + 1
-  })
-  
+    spec.id = index + 1;
+  });
+
   // Обновляем specsList через emit или напрямую через props
   // Поскольку specsList передается как prop, нам нужно обновить его в родительском компоненте
   // Для этого создадим emit событие
-  emit('updateSpecsList', productId, specs)
-  draggedEditIndex.value = null
-  draggedEditProductId.value = null
-}
+  emit("updateSpecsList", productId, specs);
+  draggedEditIndex.value = null;
+  draggedEditProductId.value = null;
+};
 
 // Переменная для "Запомнить меня"
-const rememberMe = ref(false)
+const rememberMe = ref(false);
 
 // Проверяем сохраненную авторизацию при загрузке компонента
 onMounted(() => {
-  checkSavedAuth()
-})
+  checkSavedAuth();
+});
 
 // Функция для проверки сохраненной авторизации
 const checkSavedAuth = () => {
   if (process.client) {
-    const savedAuth = localStorage.getItem('adminAuth')
+    const savedAuth = localStorage.getItem("adminAuth");
     if (savedAuth) {
       try {
-        const authData = JSON.parse(savedAuth)
+        const authData = JSON.parse(savedAuth);
         if (authData.authorized && authData.timestamp) {
           // Проверяем, не истек ли срок действия (7 дней)
-          const now = Date.now()
-          const authTime = authData.timestamp
-          const sevenDays = 7 * 24 * 60 * 60 * 1000 // 7 дней в миллисекундах
-          
+          const now = Date.now();
+          const authTime = authData.timestamp;
+          const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
+
           if (now - authTime < sevenDays) {
             // Авторизация еще действительна
-            emit('login')
-            return
+            emit("login");
+            return;
           } else {
             // Авторизация истекла, удаляем из localStorage
-            localStorage.removeItem('adminAuth')
+            localStorage.removeItem("adminAuth");
           }
         }
       } catch (error) {
-        console.error('Error parsing saved auth data:', error)
-        localStorage.removeItem('adminAuth')
+        console.error("Error parsing saved auth data:", error);
+        localStorage.removeItem("adminAuth");
       }
     }
   }
-}
+};
 
 // Функция для сохранения авторизации
 const saveAuth = () => {
   if (process.client && rememberMe.value) {
     const authData = {
       authorized: true,
-      timestamp: Date.now()
-    }
-    localStorage.setItem('adminAuth', JSON.stringify(authData))
+      timestamp: Date.now(),
+    };
+    localStorage.setItem("adminAuth", JSON.stringify(authData));
   }
-}
+};
 
 // Функция для удаления сохраненной авторизации
 const clearSavedAuth = () => {
   if (process.client) {
-    localStorage.removeItem('adminAuth')
+    localStorage.removeItem("adminAuth");
   }
-}
+};
 
 const logout = () => {
-  emit('logout')
+  emit("logout");
   // Очищаем сохраненную авторизацию при выходе
-  clearSavedAuth()
-}
+  clearSavedAuth();
+};
 
 // Добавляю метод для удаления основного изображения
 const removeMainImage = () => {
-  newProdLocal.value.image = ''
-}
+  newProdLocal.value.image = "";
+};
 
-const newProdGalleryLocal = ref([...props.newProdGallery])
+const newProdGalleryLocal = ref([...props.newProdGallery]);
 
-watch(() => props.newProdGallery, (val) => {
-  newProdGalleryLocal.value = [...val]
-})
+watch(
+  () => props.newProdGallery,
+  (val) => {
+    newProdGalleryLocal.value = [...val];
+  }
+);
 
 const addGalleryImages = (images: string[]) => {
-  newProdGalleryLocal.value.push(...images)
-  emit('update:newProdGallery', [...newProdGalleryLocal.value])
-}
+  newProdGalleryLocal.value.push(...images);
+  emit("update:newProdGallery", [...newProdGalleryLocal.value]);
+};
 
 const removeGalleryImage = (idx: number) => {
-  newProdGalleryLocal.value.splice(idx, 1)
-  emit('update:newProdGallery', [...newProdGalleryLocal.value])
-}
+  newProdGalleryLocal.value.splice(idx, 1);
+  emit("update:newProdGallery", [...newProdGalleryLocal.value]);
+};
 
 const handleGalleryUpload = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
-  const files = Array.from(input.files)
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+  const files = Array.from(input.files);
   try {
-    const filePaths = await uploadFiles(files)
-    addGalleryImages(filePaths)
+    const filePaths = await uploadFiles(files);
+    addGalleryImages(filePaths);
   } catch (error) {
-    console.error('Error uploading gallery images:', error)
+    console.error("Error uploading gallery images:", error);
   }
-  input.value = ''
-}
+  input.value = "";
+};
 
-const { uploadFiles } = useFileStorage()
+const { uploadFiles } = useFileStorage();
 
 const getImageUrl = (path: string) => {
-  if (!path) return ''
-  if (path.startsWith('/api/uploads/')) return path
-  if (path.startsWith('/uploads/')) return path.replace('/uploads/', '/api/uploads/')
-  return `/api/uploads/${path.replace(/^\/+/, '')}`
-}
+  if (!path) return "";
+  if (path.startsWith("/api/uploads/")) return path;
+  if (path.startsWith("/uploads/"))
+    return path.replace("/uploads/", "/api/uploads/");
+  return `/api/uploads/${path.replace(/^\/+/, "")}`;
+};
 
 // Для основного изображения
 const {
   files: mainImageFiles,
   handleFileInput: handleMainImageInput,
-  uploadFiles: uploadMainImageFiles
-} = useFileStorage({ clearOldFiles: true })
+  uploadFiles: uploadMainImageFiles,
+} = useFileStorage({ clearOldFiles: true });
 
 // Для галереи
 const {
   files: galleryFiles,
   handleFileInput: handleGalleryInput,
-  uploadFiles: uploadGalleryFiles
-} = useFileStorage({ clearOldFiles: true })
+  uploadFiles: uploadGalleryFiles,
+} = useFileStorage({ clearOldFiles: true });
 
 // Функция для загрузки основного изображения
 const uploadMainImage = async () => {
-  if (!mainImageFiles.value.length) return
-  const paths = await uploadMainImageFiles(mainImageFiles.value)
-  newProdLocal.value.image = paths[0] || ''
-}
+  if (!mainImageFiles.value.length) return;
+  const paths = await uploadMainImageFiles(mainImageFiles.value);
+  newProdLocal.value.image = paths[0] || "";
+};
 
 // Функция для загрузки галереи
 const uploadGallery = async () => {
-  if (!galleryFiles.value.length) return
-  const paths = await uploadGalleryFiles(galleryFiles.value)
-  addGalleryImages(paths)
-}
+  if (!galleryFiles.value.length) return;
+  const paths = await uploadGalleryFiles(galleryFiles.value);
+  addGalleryImages(paths);
+};
 
 // Добавьте функцию для сброса характеристик
 function resetNewSpecsLocal() {
-  props.newSpecs.splice(0, props.newSpecs.length)
+  props.newSpecs.splice(0, props.newSpecs.length);
 }
 
 function syncSpecsAndAddProduct() {
-  emit('update:newSpecs', [...props.newSpecs])
+  emit("update:newSpecs", [...props.newSpecs]);
   nextTick(() => {
-    showValidation()
-    addProduct()
-  })
+    showValidation();
+    addProduct();
+  });
 }
+
+// Drag & Drop для товаров
+const draggedProductId = ref<number | null>(null);
+
+const onProductDragStart = (event: DragEvent, productId: number) => {
+  draggedProductId.value = productId;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", productId.toString());
+  }
+};
+
+const onProductDrop = async (event: DragEvent, targetId: number) => {
+  event.preventDefault();
+  if (!draggedProductId.value || draggedProductId.value === targetId) return;
+
+  try {
+    // Отправляем запрос на сервер для изменения порядка
+    const response = await fetch("/api/products/reorder", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        productId: draggedProductId.value,
+        targetId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to reorder products");
+    }
+
+    // Обновляем список товаров после успешного изменения порядка
+    const productsResponse = await fetch("/api/products");
+    const data = await productsResponse.json();
+    props.products.splice(0, props.products.length, ...data.products);
+  } catch (error) {
+    console.error("Error reordering products:", error);
+    // Здесь можно добавить уведомление об ошибке
+  }
+
+  draggedProductId.value = null;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -1810,7 +2122,7 @@ function syncSpecsAndAddProduct() {
   padding: 1.5rem;
   background: var(--bg);
   border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
 
@@ -1819,6 +2131,15 @@ function syncSpecsAndAddProduct() {
   text-align: center;
   font-size: 1.5rem;
   color: var(--text);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  color: white;
 }
 
 .login-box input {
@@ -1874,7 +2195,7 @@ function syncSpecsAndAddProduct() {
   padding: 1.5rem;
   border-radius: 0.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   .edit-section {
     background: var(--bg-light);
@@ -1907,7 +2228,7 @@ function syncSpecsAndAddProduct() {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      
+
       @media (max-width: 768px) {
         grid-template-columns: 1fr;
       }
@@ -1927,7 +2248,7 @@ function syncSpecsAndAddProduct() {
       }
 
       label.required::after {
-        content: ' *';
+        content: " *";
         color: #dc2626;
         font-weight: bold;
       }
@@ -1954,7 +2275,7 @@ function syncSpecsAndAddProduct() {
         &.required-field {
           border-color: #dc2626;
           background-color: #fef2f2;
-          
+
           &:focus {
             border-color: #dc2626;
             box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
@@ -2012,7 +2333,7 @@ function syncSpecsAndAddProduct() {
       margin-top: 0.5rem;
       display: flex;
       justify-content: center;
-      
+
       .img-preview {
         max-width: 200px;
         max-height: 150px;
@@ -2095,7 +2416,7 @@ function syncSpecsAndAddProduct() {
         width: 40px;
         text-align: center;
         cursor: grab;
-        
+
         &:active {
           cursor: grabbing;
         }
@@ -2106,7 +2427,7 @@ function syncSpecsAndAddProduct() {
         font-size: 1.2rem;
         user-select: none;
         cursor: grab;
-        
+
         &:active {
           cursor: grabbing;
         }
@@ -2114,11 +2435,11 @@ function syncSpecsAndAddProduct() {
 
       .spec-row {
         transition: background-color 0.2s ease;
-        
+
         &:hover {
           background-color: rgba(var(--primary-rgb), 0.05);
         }
-        
+
         &.dragging {
           opacity: 0.5;
           background-color: rgba(var(--primary-rgb), 0.1);
@@ -2150,7 +2471,7 @@ function syncSpecsAndAddProduct() {
     .edit-section--actions {
       background: var(--bg);
       border: 1px solid var(--primary);
-      
+
       .edit-section__title {
         background: var(--primary);
         border-radius: 0.5rem;
@@ -2165,7 +2486,18 @@ function syncSpecsAndAddProduct() {
     border-radius: 0.5rem;
     margin-bottom: 1rem;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: grab;
+    transition: all 0.2s ease;
+
+    &.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
   }
 
   .prod-summary {
@@ -2176,7 +2508,18 @@ function syncSpecsAndAddProduct() {
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: rgba(0,0,0,0.05);
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .drag-handle {
+      margin-right: 1rem;
+      color: var(--text-light);
+      cursor: grab;
+      user-select: none;
+
+      &:active {
+        cursor: grabbing;
+      }
     }
 
     &__id {
@@ -2250,7 +2593,7 @@ function syncSpecsAndAddProduct() {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
-        
+
         @media (max-width: 768px) {
           grid-template-columns: 1fr;
         }
@@ -2291,7 +2634,7 @@ function syncSpecsAndAddProduct() {
           &.required-field {
             border-color: #dc2626;
             background-color: #fef2f2;
-            
+
             &:focus {
               border-color: #dc2626;
               box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
@@ -2337,7 +2680,7 @@ function syncSpecsAndAddProduct() {
         margin-top: 0.5rem;
         display: flex;
         justify-content: center;
-        
+
         .img-preview {
           max-width: 200px;
           max-height: 150px;
@@ -2420,7 +2763,7 @@ function syncSpecsAndAddProduct() {
           width: 40px;
           text-align: center;
           cursor: grab;
-          
+
           &:active {
             cursor: grabbing;
           }
@@ -2431,7 +2774,7 @@ function syncSpecsAndAddProduct() {
           font-size: 1.2rem;
           user-select: none;
           cursor: grab;
-          
+
           &:active {
             cursor: grabbing;
           }
@@ -2439,11 +2782,11 @@ function syncSpecsAndAddProduct() {
 
         .spec-row {
           transition: background-color 0.2s ease;
-          
+
           &:hover {
             background-color: rgba(var(--primary-rgb), 0.05);
           }
-          
+
           &.dragging {
             opacity: 0.5;
             background-color: rgba(var(--primary-rgb), 0.1);
@@ -2488,6 +2831,7 @@ function syncSpecsAndAddProduct() {
           cursor: pointer;
           border: none;
           font-size: 0.95rem;
+          color: white;
           min-width: 120px;
 
           &.btn-primary {
@@ -2587,7 +2931,7 @@ function syncSpecsAndAddProduct() {
   }
 
   input[type="checkbox"]:checked + label::after {
-    content: '✔';
+    content: "✔";
     position: absolute;
     right: 0;
     top: 50%;
@@ -2615,16 +2959,16 @@ function syncSpecsAndAddProduct() {
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 
   &:hover {
     border-color: var(--primary);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 
   &::after {
-    content: '▼';
+    content: "▼";
     position: absolute;
     right: 15px;
     top: 50%;
@@ -2643,7 +2987,7 @@ function syncSpecsAndAddProduct() {
   background-color: var(--bg);
   border: 1px solid var(--secondary);
   border-radius: 0.5rem;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   z-index: 10;
   padding: 10px;
   max-height: 200px;
@@ -2679,7 +3023,7 @@ function syncSpecsAndAddProduct() {
   }
 
   input[type="checkbox"]:checked + label::after {
-    content: '✔';
+    content: "✔";
     position: absolute;
     right: 0;
     top: 50%;
@@ -2802,7 +3146,7 @@ function syncSpecsAndAddProduct() {
   max-height: 200px;
   overflow-y: auto;
 }
-/* From Uiverse.io by SelfMadeSystem */ 
+/* From Uiverse.io by SelfMadeSystem */
 .remember-me__label {
   display: flex;
   align-items: center;
@@ -2840,15 +3184,15 @@ function syncSpecsAndAddProduct() {
   padding: 0.75rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: var(--bg-light);
   }
-  
+
   &:first-child {
     border-radius: 0.5rem 0.5rem 0 0;
   }
-  
+
   &:last-child {
     border-radius: 0 0 0.5rem 0.5rem;
   }
@@ -2863,17 +3207,17 @@ function syncSpecsAndAddProduct() {
   background: var(--bg);
   color: var(--text);
   transition: all 0.2s ease;
-  
+
   &:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
   }
-  
+
   &:hover {
     border-color: var(--primary);
   }
-  
+
   &::placeholder {
     color: var(--text-light);
   }
@@ -2884,7 +3228,7 @@ function syncSpecsAndAddProduct() {
   text-align: center;
   vertical-align: middle;
   cursor: grab;
-  
+
   &:active {
     cursor: grabbing;
   }
@@ -2895,7 +3239,7 @@ function syncSpecsAndAddProduct() {
   color: var(--text-light);
   user-select: none;
   transition: color 0.2s ease;
-  
+
   &:hover {
     color: var(--primary);
   }
@@ -2904,30 +3248,31 @@ function syncSpecsAndAddProduct() {
 .specs-table {
   border-collapse: collapse;
   width: 100%;
-  
-  th, td {
+
+  th,
+  td {
     padding: 0.75rem;
     border: 1px solid var(--border);
     vertical-align: middle;
   }
-  
+
   th {
     background: var(--bg-light);
     font-weight: 600;
     color: var(--text);
   }
-  
+
   tbody tr {
     transition: background-color 0.2s ease;
-    
+
     &:hover {
       background-color: var(--bg-light);
     }
   }
-  
+
   .new-spec-row {
     background: var(--bg-light);
-    
+
     td {
       border-top: 2px solid var(--primary);
     }
@@ -3123,4 +3468,4 @@ function syncSpecsAndAddProduct() {
     }
   }
 }
-</style> 
+</style>

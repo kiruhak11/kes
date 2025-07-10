@@ -1471,6 +1471,42 @@ useHead({
     },
   ],
 });
+
+// Определяем типы для emit событий
+interface Emits {
+  "update:password": [value: string];
+  login: [];
+  logout: [];
+  "add-product": [product: Product];
+  "reset-form": [];
+  toggle: [id: number];
+  "update-with-specs": [product: Product];
+  "cancel-edit": [id: number];
+  "add-spec": [id: number, idx: number];
+  "remove-spec": [idx: number];
+  "add-new-spec": [];
+  "remove-new-spec": [id: number];
+  "delete-product": [id: number];
+  "handle-image-upload": [event: Event, product: Product | Partial<Product>];
+  "handle-connection-scheme-upload": [
+    event: Event,
+    product: Product | Partial<Product>
+  ];
+  "toggle-new-prod-fuel-dropdown": [];
+  "add-category": [category: Category];
+  "edit-category": [category: Category];
+  "save-category": [id: string];
+  "delete-category": [id: string];
+  "delete-empty-categories": [];
+  "close-edit-category-modal": [];
+  "update:new-category": [value: Category];
+  "update:editing-category": [value: Category];
+  "update:show-add-category-modal": [value: boolean];
+  "update:show-edit-category-modal": [value: boolean];
+}
+
+// Определяем emit с типами
+const emit = defineEmits<Emits>();
 </script>
 
 <style lang="scss" scoped>

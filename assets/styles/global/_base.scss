@@ -27,14 +27,14 @@ a {
   display: inline-block;
   border-radius: 1.5rem;
   background-color: var(--accent);
-  color: var(--bg);
+  color: var(--text);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   &:hover {
-    background-color: var(--primary);
+    background-color: var(--accent);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   }
@@ -69,17 +69,25 @@ a {
   @include container(1290px);
 }
 @media (max-width: 992px) {
-  h1 { font-size: 2.5rem; }
-  .cta-buttons { flex-direction: column; gap: .5rem; }
+  h1 {
+    font-size: 2.5rem;
+  }
+  .cta-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
   .container {
     @include container(1900px);
   }
 }
 @media (max-width: 576px) {
-  .advantages-section, .offers-section {
+  .advantages-section,
+  .offers-section {
     grid-template-columns: 1fr;
   }
-  .cta-buttons .btn { width: 100%; }
+  .cta-buttons .btn {
+    width: 100%;
+  }
   .container {
     @include container(1900px);
   }
@@ -90,28 +98,41 @@ body {
 }
 
 // === Металлический эффект для всех кнопок ===
-button, .btn, [class*="btn"] {
+button,
+.btn,
+[class*="btn"] {
   position: relative;
   overflow: hidden;
   z-index: 1;
 }
-button:hover, .btn:hover, [class*="btn"]:hover {
+button:hover,
+.btn:hover,
+[class*="btn"]:hover {
   box-shadow: 0 4px 24px rgba(180, 180, 200, 0.25), 0 1.5px 0 0 #fff inset;
 }
-button::after, .btn::after, [class*="btn"]::after {
-  content: '';
+button::after,
+.btn::after,
+[class*="btn"]::after {
+  content: "";
   position: absolute;
   left: -75%;
   top: 0;
   width: 50%;
   height: 100%;
-  background: linear-gradient(120deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.15) 100%);
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
   transform: skewX(-25deg);
-  transition: left 0.5s cubic-bezier(.4,0,.2,1);
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: 2;
 }
-button:hover::after, .btn:hover::after, [class*="btn"]:hover::after {
+button:hover::after,
+.btn:hover::after,
+[class*="btn"]:hover::after {
   left: 120%;
 }
 
@@ -119,14 +140,14 @@ button:hover::after, .btn:hover::after, [class*="btn"]:hover::after {
 .scroll-reveal {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, transform;
 }
 .scroll-reveal-animate {
   opacity: 1 !important;
   transform: none !important;
 }
-
 
 .scroll-reveal--fade-in {
   transform: none;
@@ -142,13 +163,16 @@ button:hover::after, .btn:hover::after, [class*="btn"]:hover::after {
 }
 
 // Nuxt page transition: page-fade
-.page-fade-enter-active, .page-fade-leave-active {
+.page-fade-enter-active,
+.page-fade-leave-active {
   transition: opacity 0.3s;
 }
-.page-fade-enter-from, .page-fade-leave-to {
+.page-fade-enter-from,
+.page-fade-leave-to {
   opacity: 0;
 }
-.page-fade-enter-to, .page-fade-leave-from {
+.page-fade-enter-to,
+.page-fade-leave-from {
   opacity: 1;
 }
 

@@ -322,9 +322,9 @@
           </div>
         </div>
 
-        <div class="products-grid">
+        <div class="products-grid" ref="productListRef">
           <div
-            v-for="(product, index) in paginatedProducts"
+            v-for="(product, index) in visibleProducts"
             :key="product.id"
             class="product-card"
             v-scroll-reveal="
@@ -379,8 +379,8 @@
                 <div class="product-card__bottom">
                   <div class="product-card__price-block">
                     <span class="product-price"
-                      >{{ product.price?.toLocaleString() }}
-                      <span class="currency">р.</span></span
+                      >{{ formatPrice(product.price) }}
+                      <span class="currency">₽</span></span
                     >
                     <span class="product-price-note">Цена с НДС</span>
                   </div>
@@ -493,12 +493,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  nextTick,
+  onBeforeUnmount,
+} from "vue";
 import { useCartStore } from "~/stores/cart";
 import { useRoute, useRouter } from "vue-router";
 import CommercialOfferModal from "~/components/CommercialOfferModal.vue";
 import type { Characteristic } from "~/types/product";
 import { useNuxtApp } from "nuxt/app";
+import { useImageOptimization } from "~/composables/useImageOptimization";
 
 const { $vScrollReveal } = useNuxtApp();
 
@@ -809,10 +817,26 @@ const priceRange = ref({
   max: undefined as number | undefined,
 });
 
-// 3. Модифицируем filteredProducts для поддержки диапазонных фильтров
+// Оптимизируем фильтрацию
 const filteredProducts = computed(() => {
+  // Проверяем наличие активных фильтров
+  const hasActiveFilters =
+    (priceRange.value.min !== undefined && priceRange.value.min !== null) ||
+    (priceRange.value.max !== undefined && priceRange.value.max !== null) ||
+    Object.values(dynamicFilters.value).some(
+      (val) => val !== "" && val !== undefined
+    ) ||
+    Object.values(dynamicRangeFilters.value).some(
+      (range) => range.min !== undefined || range.max !== undefined
+    );
+
+  if (!hasActiveFilters) {
+    return productsInCategory.value;
+  }
+
+  // Применяем фильтры только если они активны
   return productsInCategory.value.filter((product) => {
-    // Price range filter
+    // Фильтр по цене
     if (
       priceRange.value.min !== undefined &&
       product.price &&
@@ -828,65 +852,137 @@ const filteredProducts = computed(() => {
       return false;
     }
 
-    // Dynamic filters
-    for (const key of uniqueSpecs.value) {
-      if (rangeFilters.value[key]) {
-        // Диапазонный фильтр
-        const { min, max } = dynamicRangeFilters.value[key] || {};
-        if (min === undefined && max === undefined) continue;
-        const specItem = product.specs?.find((spec) => spec.key === key);
-        if (!specItem) continue;
-        // Парсим диапазон из значения характеристики
-        const match =
-          typeof specItem.value === "string" &&
-          specItem.value.match(/(\d+(?:[.,]\d+)?)[^\d]+(\d+(?:[.,]\d+)?)/);
-        if (!match) continue;
-        const valMin = parseFloat(match[1].replace(",", "."));
-        const valMax = parseFloat(match[2].replace(",", "."));
-
-        // Проверяем, что товар начинается с указанного минимума и заканчивается указанным максимумом
-        if (min !== undefined && valMin > min) return false; // Минимум товара больше минимума фильтра
-        if (max !== undefined && valMax < max) return false; // Максимум товара меньше максимума фильтра
-      } else {
-        // Обычный фильтр
-        const filterValue = dynamicFilters.value[key];
+    // Динамические фильтры
+    for (const [key, value] of Object.entries(dynamicFilters.value)) {
+      if (value && value !== "") {
+        const productValue = product.specs?.find(
+          (spec) => spec.key === key
+        )?.value;
         if (
-          filterValue === undefined ||
-          filterValue === "" ||
-          (Array.isArray(filterValue) && filterValue.length === 0)
-        )
-          continue;
-        const specItem = product.specs?.find((spec) => spec.key === key);
-        const productValue = specItem?.value;
-        if (Array.isArray(filterValue)) {
-          if (
-            !Array.isArray(productValue) ||
-            !filterValue.some((v) => productValue.includes(v))
-          ) {
-            return false;
-          }
-        } else {
-          if (Array.isArray(productValue)) {
-            if (!productValue.includes(filterValue)) {
-              return false;
-            }
-          } else {
-            if (productValue != filterValue) {
-              return false;
-            }
-          }
+          !productValue ||
+          !productValue.toLowerCase().includes(value.toLowerCase())
+        ) {
+          return false;
         }
       }
     }
+
+    // Фильтры диапазонов
+    for (const [key, range] of Object.entries(dynamicRangeFilters.value)) {
+      if (range.min !== undefined || range.max !== undefined) {
+        const productValue = product.specs?.find(
+          (spec) => spec.key === key
+        )?.value;
+        if (!productValue) return false;
+
+        const numericValue = parseFloat(productValue);
+        if (isNaN(numericValue)) return false;
+
+        if (range.min !== undefined && numericValue < range.min) return false;
+        if (range.max !== undefined && numericValue > range.max) return false;
+      }
+    }
+
     return true;
   });
 });
 
-// Добавляем состояние для пагинации
+// Оптимизируем отображение продуктов с помощью виртуального скроллинга
+const productListRef = ref<HTMLElement | null>(null);
+const productHeight = 300; // Примерная высота карточки продукта
+const buffer = 5; // Количество элементов для предзагрузки
+
+const visibleProducts = computed(() => {
+  if (!productListRef.value) return filteredProducts.value;
+
+  const container = productListRef.value;
+  const scrollTop = container.scrollTop;
+  const containerHeight = container.clientHeight;
+
+  const startIndex = Math.max(
+    0,
+    Math.floor(scrollTop / productHeight) - buffer
+  );
+  const endIndex = Math.min(
+    filteredProducts.value.length,
+    Math.ceil((scrollTop + containerHeight) / productHeight) + buffer
+  );
+
+  return filteredProducts.value.slice(startIndex, endIndex);
+});
+
+// Оптимизируем загрузку изображений
+const { optimizeImageSize } = useImageOptimization();
+
+const optimizeProductImage = (image: string) => {
+  return optimizeImageSize(image, 300, 300);
+};
+
+// Кешируем результаты фильтрации
+const filterCache = new Map<string, Product[]>();
+
+const getCachedFilterResult = (
+  filterKey: string,
+  filterValue: any
+): Product[] | null => {
+  const cacheKey = `${filterKey}-${JSON.stringify(filterValue)}`;
+  if (filterCache.has(cacheKey)) {
+    return filterCache.get(cacheKey) || null;
+  }
+  return null;
+};
+
+const setCachedFilterResult = (
+  filterKey: string,
+  filterValue: any,
+  result: Product[]
+) => {
+  const cacheKey = `${filterKey}-${JSON.stringify(filterValue)}`;
+  filterCache.set(cacheKey, result);
+};
+
+// Очищаем кеш при размонтировании компонента
+onBeforeUnmount(() => {
+  filterCache.clear();
+});
+
+// Оптимизируем обработку фильтров
+const updateFilter = (key: string, value: any) => {
+  const cachedResult = getCachedFilterResult(key, value);
+  if (cachedResult) {
+    // Используем кешированный результат
+    return cachedResult;
+  }
+
+  // Вычисляем новый результат и применяем фильтры
+  const result = filteredProducts.value.filter((product) => {
+    if (key === "price") {
+      const productPrice = product.price || 0;
+      if (value.min && productPrice < value.min) return false;
+      if (value.max && productPrice > value.max) return false;
+      return true;
+    }
+
+    // Для остальных фильтров
+    const productValue = product[key as keyof Product];
+    if (typeof value === "object" && value !== null) {
+      const numericValue = Number(productValue) || 0;
+      if (value.min && numericValue < value.min) return false;
+      if (value.max && numericValue > value.max) return false;
+      return true;
+    }
+
+    return productValue === value;
+  });
+
+  setCachedFilterResult(key, value, result);
+  return result;
+};
+
+// Оптимизируем пагинацию
 const paginatedProducts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredProducts.value.slice(start, end);
+  return filteredProducts.value.slice(start, start + itemsPerPage);
 });
 
 const totalPages = computed(() =>
@@ -1119,6 +1215,15 @@ const visiblePages = computed(() => {
   }
   return pages.filter((p) => p >= 1 && p <= totalPages.value);
 });
+
+const formatPrice = (price: number | null | undefined) => {
+  if (!price) return "0";
+  return new Intl.NumberFormat("ru-RU", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 </script>
 
 <style scoped>
@@ -1733,6 +1838,7 @@ const visiblePages = computed(() => {
   font-weight: 700;
   color: #e31e24;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .currency {
