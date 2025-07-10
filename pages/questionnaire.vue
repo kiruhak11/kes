@@ -3,31 +3,42 @@
     <div class="container">
       <h1 class="page-title" v-scroll-reveal="'fade-in-up'">Опросные листы</h1>
       <p class="page-description" v-scroll-reveal="'fade-in-up'">
-        Для подготовки технико-коммерческого предложения, пожалуйста, скачайте и заполните соответствующий опросный лист. 
-        Заполненный документ вы можете отправить нам на почту.
+        Для подготовки технико-коммерческого предложения, пожалуйста, скачайте и
+        заполните соответствующий опросный лист. Заполненный документ вы можете
+        отправить нам на почту.
       </p>
-      
-      <div v-if="questionnaires.length === 0" class="no-files" v-scroll-reveal="'fade-in-up'">
+
+      <div
+        v-if="questionnaires.length === 0"
+        class="no-files"
+        v-scroll-reveal="'fade-in-up'"
+      >
         Нет доступных для скачивания опросных листов.
       </div>
-      
+
       <div v-else class="questionnaire-list">
-        <a 
-          v-for="(file, index) in questionnaires" 
-          :key="file.name" 
-          :href="file.path" 
-          download 
+        <a
+          v-for="(file, index) in questionnaires"
+          :key="file.name"
+          :href="file.path"
+          download
           class="questionnaire-item"
           v-scroll-reveal="index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'"
         >
           <div class="file-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM12 18L8 14H11V11H13V14H16L12 18Z"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM12 18L8 14H11V11H13V14H16L12 18Z"
+              />
             </svg>
           </div>
           <span class="file-name">{{ file.name }}</span>
           <div class="download-icon">
-             <UiDownload />
+            <UiDownload />
           </div>
         </a>
       </div>
@@ -35,9 +46,12 @@
 
     <div class="commercial-offer-banner" v-scroll-reveal="'fade-in-up'">
       <div class="container">
-        <h2 class="banner-title" v-scroll-reveal="'fade-in-up'">Готовы сделать заказ?</h2>
+        <h2 class="banner-title" v-scroll-reveal="'fade-in-up'">
+          Готовы сделать заказ?
+        </h2>
         <p class="banner-description" v-scroll-reveal="'slide-in-left'">
-          Отправьте нам заполненный опросный лист или свяжитесь для получения коммерческого предложения.
+          Отправьте нам заполненный опросный лист или свяжитесь для получения
+          коммерческого предложения.
         </p>
         <NuxtLink to="/contact" class="btn-offer" v-scroll-reveal="'zoom-in'">
           Заказать коммерческое предложение
@@ -48,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 
 interface Questionnaire {
   name: string;
@@ -56,12 +70,64 @@ interface Questionnaire {
 }
 
 const questionnaires = ref<Questionnaire[]>([
-  { name: 'Опросный лист на водоподготовку', path: '/opr/vodopodgotovka.docx' },
-  { name: 'Опросный лист на котельную', path: '/opr/kotelnaya.docx' },
-  { name: 'Опросный лист на Котлы', path: '/opr/kotly.docx' },
-  { name: 'Опросный лист на ТДМ', path: '/opr/tdm.docx' },
-  { name: 'Опросный лист на теплообменники', path: '/opr/teploobmenniki.docx' },
+  { name: "Опросный лист на водоподготовку", path: "/opr/vodopodgotovka.docx" },
+  { name: "Опросный лист на котельную", path: "/opr/kotelnaya.docx" },
+  { name: "Опросный лист на Котлы", path: "/opr/kotly.docx" },
+  { name: "Опросный лист на ТДМ", path: "/opr/tdm.docx" },
+  { name: "Опросный лист на теплообменники", path: "/opr/teploobmenniki.docx" },
 ]);
+
+// SEO Meta Tags
+useHead({
+  title: "Опросные листы — КотлоЭнергоСнаб",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Скачать опросные листы для заказа котельного оборудования. Водоподготовка, котельные, котлы, ТДМ, теплообменники. КотлоЭнергоСнаб Барнаул.",
+    },
+    {
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, опросные листы, котельное оборудование, водоподготовка, котлы, ТДМ, теплообменники, Барнаул",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Опросные листы — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Скачать опросные листы для заказа котельного оборудования. Водоподготовка, котельные, котлы, ТДМ, теплообменники. КотлоЭнергоСнаб Барнаул.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/questionnaire" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Опросные листы — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Скачать опросные листы для заказа котельного оборудования. Водоподготовка, котельные, котлы, ТДМ, теплообменники. КотлоЭнергоСнаб Барнаул.",
+    },
+    { name: "robots", content: "index, follow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/questionnaire" },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
+});
 </script>
 
 <style scoped>
@@ -128,7 +194,8 @@ const questionnaires = ref<Questionnaire[]>([
   color: var(--primary);
 }
 
-.file-icon svg, .download-icon svg {
+.file-icon svg,
+.download-icon svg {
   width: 28px;
   height: 28px;
 }

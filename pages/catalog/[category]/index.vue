@@ -510,6 +510,113 @@ import { useImageOptimization } from "~/composables/useImageOptimization";
 
 const { $vScrollReveal } = useNuxtApp();
 
+// SEO Meta Tags
+useHead({
+  title: computed(
+    () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+  ),
+  meta: [
+    {
+      name: "description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    {
+      name: "keywords",
+      content: computed(
+        () =>
+          `КотлоЭнергоСнаб, ${
+            categoryInfo.value?.title || "категория"
+          }, котельное оборудование, котлы, Барнаул, производство`
+      ),
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    {
+      property: "og:title",
+      content: computed(
+        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      property: "og:description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    { property: "og:type", content: "website" },
+    {
+      property: "og:url",
+      content: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:title",
+      content: computed(
+        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      name: "twitter:description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    { name: "robots", content: "index, follow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    {
+      rel: "canonical",
+      href: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: computed(() =>
+        JSON.stringify({
+          "@context": "http://schema.org",
+          "@type": "Organization",
+          name: "КотлоЭнергоСнаб",
+          url: "https://kes-sib.ru/",
+          logo: "https://kes-sib.ru/favicon.ico",
+        })
+      ),
+    },
+  ],
+});
+
 const showCommercialOfferModal = ref(false);
 const selectedProduct = ref<Product | null>(null);
 

@@ -1,16 +1,24 @@
 <template>
   <div class="error-page">
     <div class="error-content">
-      <NuxtImg :src="'/images/logo.png'" :placeholder="true" sizes="400px xxs:900px md:1200px" format="webp" alt="Котельный завод КЭС" class="error-logo" />
+      <NuxtImg
+        :src="'/images/logo.png'"
+        :placeholder="true"
+        sizes="400px xxs:900px md:1200px"
+        format="webp"
+        alt="Котельный завод КЭС"
+        class="error-logo"
+      />
       <h1 v-if="error.statusCode === 404">404</h1>
       <h1 v-else>Ошибка</h1>
       <h2 v-if="error.statusCode === 404">Страница не найдена</h2>
       <h2 v-else>Что-то пошло не так</h2>
       <p v-if="error.statusCode === 404">
-        Похоже, вы попали не туда.<br>Но не переживайте — вы всегда можете вернуться на главную!
+        Похоже, вы попали не туда.<br />Но не переживайте — вы всегда можете
+        вернуться на главную!
       </p>
       <p v-else>
-        {{ error.message || 'Произошла непредвиденная ошибка.' }}
+        {{ error.message || "Произошла непредвиденная ошибка." }}
       </p>
       <NuxtLink to="/" class="btn-home">На главную</NuxtLink>
     </div>
@@ -22,9 +30,94 @@
 const props = defineProps({
   error: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
+
+// SEO Meta Tags
+useHead({
+  title: computed(() => {
+    if (props.error.statusCode === 404) {
+      return "404 - Страница не найдена — КотлоЭнергоСнаб";
+    }
+    return "Ошибка — КотлоЭнергоСнаб";
+  }),
+  meta: [
+    {
+      name: "description",
+      content: computed(() => {
+        if (props.error.statusCode === 404) {
+          return "Страница не найдена. Вернитесь на главную страницу сайта КотлоЭнергоСнаб - производителя котельного оборудования в Барнауле.";
+        }
+        return "Произошла ошибка на сайте КотлоЭнергоСнаб. Вернитесь на главную страницу.";
+      }),
+    },
+    {
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, ошибка, страница не найдена, Барнаул, котельное оборудование",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    {
+      property: "og:title",
+      content: computed(() => {
+        if (props.error.statusCode === 404) {
+          return "404 - Страница не найдена — КотлоЭнергоСнаб";
+        }
+        return "Ошибка — КотлоЭнергоСнаб";
+      }),
+    },
+    {
+      property: "og:description",
+      content: computed(() => {
+        if (props.error.statusCode === 404) {
+          return "Страница не найдена. Вернитесь на главную страницу сайта КотлоЭнергоСнаб - производителя котельного оборудования в Барнауле.";
+        }
+        return "Произошла ошибка на сайте КотлоЭнергоСнаб. Вернитесь на главную страницу.";
+      }),
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/error" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:title",
+      content: computed(() => {
+        if (props.error.statusCode === 404) {
+          return "404 - Страница не найдена — КотлоЭнергоСнаб";
+        }
+        return "Ошибка — КотлоЭнергоСнаб";
+      }),
+    },
+    {
+      name: "twitter:description",
+      content: computed(() => {
+        if (props.error.statusCode === 404) {
+          return "Страница не найдена. Вернитесь на главную страницу сайта КотлоЭнергоСнаб - производителя котельного оборудования в Барнауле.";
+        }
+        return "Произошла ошибка на сайте КотлоЭнергоСнаб. Вернитесь на главную страницу.";
+      }),
+    },
+    { name: "robots", content: "noindex, nofollow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/" },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
+});
 </script>
 
 <style scoped>
@@ -39,9 +132,9 @@ const props = defineProps({
 }
 .error-content {
   z-index: 2;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 2rem;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
   padding: 3rem 2.5rem 2.5rem 2.5rem;
   text-align: center;
   max-width: 420px;
@@ -52,7 +145,7 @@ const props = defineProps({
 .error-logo {
   width: 320px;
   margin-bottom: 1.5rem;
-  filter: drop-shadow(0 2px 8px rgba(227,30,36,0.10));
+  filter: drop-shadow(0 2px 8px rgba(227, 30, 36, 0.1));
 }
 h1 {
   font-size: 5rem;
@@ -81,19 +174,19 @@ p {
   padding: 0.9rem 2.2rem;
   border-radius: 2rem;
   text-decoration: none;
-  box-shadow: 0 4px 16px rgba(227,30,36,0.10);
+  box-shadow: 0 4px 16px rgba(227, 30, 36, 0.1);
   transition: background 0.2s, box-shadow 0.2s;
 }
 .btn-home:hover {
   background: linear-gradient(90deg, #ffb74d 0%, #e31e24 100%);
-  box-shadow: 0 8px 32px rgba(227,30,36,0.18);
+  box-shadow: 0 8px 32px rgba(227, 30, 36, 0.18);
 }
 .error-bg {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: url('/images/hero4.png') center/cover no-repeat;
+  background: url("/images/hero4.png") center/cover no-repeat;
   opacity: 0.08;
   filter: blur(2px);
 }
@@ -109,4 +202,4 @@ p {
     font-size: 1.2rem;
   }
 }
-</style> 
+</style>

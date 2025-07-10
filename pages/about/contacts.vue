@@ -12,10 +12,9 @@
             <div class="contact-text">
               <p>Тел/факс:</p>
               <a :href="`tel:${contacts.phone[0]}`">{{ contacts.phone[0] }}</a>
-              
             </div>
           </div>
-          
+
           <div class="contact-item">
             <i class="fas fa-envelope"></i>
             <div class="contact-text">
@@ -50,40 +49,54 @@
             <h3>Банковские реквизиты</h3>
             <div class="bank-details">
               <p><strong>Алтайское отделение № 8644 ПАО Сбербанк</strong></p>
-              <p>г.Барнаул (656038, г Барнаул, проспект Комсомольский, д 106 а)</p>
+              <p>
+                г.Барнаул (656038, г Барнаул, проспект Комсомольский, д 106 а)
+              </p>
               <p>Р/С 40702810502000002131</p>
               <p>К/С 30101810200000000604</p>
               <p>БИК 040173604</p>
             </div>
-
           </div>
         </div>
       </div>
 
       <!-- Карта -->
       <div class="contact-card map-container" v-scroll-reveal="'fade-in-up'">
-        <h2 class="map-title"><span class="map-icon"><iconsPoint /></span> Как нас найти</h2>
-        
-        
+        <h2 class="map-title">
+          <span class="map-icon"><iconsPoint /></span> Как нас найти
+        </h2>
+
         <client-only>
           <div class="map animated-map">
             <!-- Карта через iframe -->
             <div class="map-iframe">
-              <iframe 
-                src="https://yandex.ru/map-widget/v1/?ll=83.762384%2C53.388259&z=15&l=map&pt=83.762384%2C53.388259%2Cpm2rdm&text=ООО%20«КотлоЭнергоСнаб»" 
-                width="100%" 
-                height="500" 
+              <iframe
+                src="https://yandex.ru/map-widget/v1/?ll=83.762384%2C53.388259&z=15&l=map&pt=83.762384%2C53.388259%2Cpm2rdm&text=ООО%20«КотлоЭнергоСнаб»"
+                width="100%"
+                height="500"
                 frameborder="0"
                 title="Карта ООО «КотлоЭнергоСнаб»"
               ></iframe>
             </div>
-            
+
             <!-- Карточка с информацией о компании -->
             <div class="company-info-card">
               <div class="company-header">
                 <div class="company-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H5M5 21L3 21M9 7H15M9 11H15M9 15H15M9 19H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H5M5 21L3 21M9 7H15M9 11H15M9 15H15M9 19H15"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </div>
                 <div class="company-title">
@@ -91,43 +104,126 @@
                   <span class="status-badge open">Открыто</span>
                 </div>
               </div>
-              
+
               <div class="company-details">
                 <div class="detail-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.657 16.657L13.414 20.9C13.039 21.275 12.525 21.485 12 21.485C11.475 21.485 10.961 21.275 10.586 20.9L6.343 16.657C5.22422 15.5381 4.46234 14.1127 4.15369 12.5608C3.84504 11.009 4.00349 9.40047 4.60901 7.93853C5.21452 6.4766 6.2399 5.22433 7.55548 4.34668C8.87107 3.46903 10.4178 3.00024 12 3.00024C13.5822 3.00024 15.1289 3.46903 16.4445 4.34668C17.7601 5.22433 18.7855 6.4766 19.391 7.93853C19.9965 9.40047 20.155 11.009 19.8463 12.5608C19.5377 14.1127 18.7758 15.5381 17.657 16.657Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M15 11C15 12.6569 13.6569 14 12 14C10.3431 14 9 12.6569 9 11C9 9.34315 10.3431 8 12 8C13.6569 8 15 9.34315 15 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M17.657 16.657L13.414 20.9C13.039 21.275 12.525 21.485 12 21.485C11.475 21.485 10.961 21.275 10.586 20.9L6.343 16.657C5.22422 15.5381 4.46234 14.1127 4.15369 12.5608C3.84504 11.009 4.00349 9.40047 4.60901 7.93853C5.21452 6.4766 6.2399 5.22433 7.55548 4.34668C8.87107 3.46903 10.4178 3.00024 12 3.00024C13.5822 3.00024 15.1289 3.46903 16.4445 4.34668C17.7601 5.22433 18.7855 6.4766 19.391 7.93853C19.9965 9.40047 20.155 11.009 19.8463 12.5608C19.5377 14.1127 18.7758 15.5381 17.657 16.657Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M15 11C15 12.6569 13.6569 14 12 14C10.3431 14 9 12.6569 9 11C9 9.34315 10.3431 8 12 8C13.6569 8 15 9.34315 15 11Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                   <span>Бриллиантовая, 2е ст1, 1 этаж</span>
                 </div>
-                
+
                 <div class="detail-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2L2 7L12 12L22 7L12 2Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M2 17L12 22L22 17"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M2 12L12 17L22 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                   <span>Восточный м-н, Октябрьский район, Барнаул, 656037</span>
                 </div>
-                
+
                 <div class="detail-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                   <span>Сегодня c 08:00 до 17:00</span>
                 </div>
               </div>
-              
+
               <div class="company-actions">
                 <a href="tel:+73852500000" class="action-btn call-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                   Позвонить
                 </a>
-                <a href="https://yandex.ru/maps/-/CCUQ4XgKhB" target="_blank" rel="noopener" class="action-btn route-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <a
+                  href="https://yandex.ru/maps/-/CCUQ4XgKhB"
+                  target="_blank"
+                  rel="noopener"
+                  class="action-btn route-btn"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                   Маршрут
                 </a>
@@ -141,11 +237,73 @@
 </template>
 
 <script setup>
-import { contacts } from '~/data/contacts';
+import { contacts } from "~/data/contacts";
+
+// SEO Meta Tags
+useHead({
+  title: "Контакты компании — КотлоЭнергоСнаб",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес, телефон, email, реквизиты. Котельный завод в Барнауле.",
+    },
+    {
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, контакты, адрес, телефон, реквизиты, Барнаул, котельный завод",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Контакты компании — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес, телефон, email, реквизиты. Котельный завод в Барнауле.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/about/contacts" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Контакты компании — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес, телефон, email, реквизиты. Котельный завод в Барнауле.",
+    },
+    { name: "robots", content: "index, follow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/about/contacts" },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "Бриллиантовая, 2е ст1, 1 этаж",
+          addressLocality: "Барнаул",
+          postalCode: "656037",
+          addressRegion: "Алтайский край",
+          addressCountry: "RU",
+        },
+        telephone: "+73852500000",
+        email: "info@kes-sib.ru",
+      }),
+    },
+  ],
+});
 
 definePageMeta({
-  layout: 'default'
-})
+  layout: "default",
+});
 </script>
 
 <style scoped>
@@ -426,17 +584,17 @@ definePageMeta({
 }
 
 .animated-map {
-  animation: fadeInMap 1.2s cubic-bezier(0.4,0,0.2,1);
+  animation: fadeInMap 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes fadeInMap {
-  from { 
-    opacity: 0; 
-    transform: translateY(30px); 
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -449,14 +607,14 @@ definePageMeta({
   font-weight: 600;
   font-size: 1.1em;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0,123,255,0.12);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.12);
   transition: background 0.2s, box-shadow 0.2s;
   margin-top: 0.5em;
 }
 
 .map-btn:hover {
   background: #0056b3;
-  box-shadow: 0 4px 16px rgba(0,86,179,0.18);
+  box-shadow: 0 4px 16px rgba(0, 86, 179, 0.18);
 }
 
 @media (max-width: 768px) {
@@ -471,7 +629,7 @@ definePageMeta({
   .page-title {
     font-size: 2rem;
   }
-  
+
   .company-info-card {
     position: relative;
     top: auto;
@@ -480,11 +638,11 @@ definePageMeta({
     margin-bottom: 16px;
     animation: none;
   }
-  
+
   .company-actions {
     flex-direction: column;
   }
-  
+
   .action-btn {
     width: 100%;
   }
@@ -494,21 +652,21 @@ definePageMeta({
   .map {
     height: 400px;
   }
-  
+
   .map-title {
     font-size: 1.1rem;
   }
-  
+
   .company-info-card {
     padding: 16px;
   }
-  
+
   .company-title h3 {
     font-size: 14px;
   }
-  
+
   .detail-item {
     font-size: 12px;
   }
 }
-</style> 
+</style>

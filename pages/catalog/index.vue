@@ -65,6 +65,58 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue";
 
+// SEO Meta Tags
+useHead({
+  title: "Каталог продукции — КотлоЭнергоСнаб",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Каталог котельного оборудования КотлоЭнергоСнаб. Котлы, котельные, теплообменники, водоподготовка. Производство и монтаж в Барнауле.",
+    },
+    {
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, каталог, котельное оборудование, котлы, котельные, теплообменники, водоподготовка, Барнаул",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Каталог продукции — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Каталог котельного оборудования КотлоЭнергоСнаб. Котлы, котельные, теплообменники, водоподготовка. Производство и монтаж в Барнауле.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/catalog" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Каталог продукции — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Каталог котельного оборудования КотлоЭнергоСнаб. Котлы, котельные, теплообменники, водоподготовка. Производство и монтаж в Барнауле.",
+    },
+    { name: "robots", content: "index, follow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/catalog" },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
+});
+
 interface Category {
   id: string;
   title: string;
