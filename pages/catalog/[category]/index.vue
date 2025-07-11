@@ -451,6 +451,7 @@
       </button>
       <span v-for="page in visiblePages" :key="page">
         <button
+          v-if="page > 0"
           class="pagination-btn"
           :class="{ active: page === currentPage }"
           @click="goToPage(page)"
@@ -458,6 +459,7 @@
         >
           {{ page }}
         </button>
+        <span v-else class="pagination-ellipsis">...</span>
       </span>
       <button
         class="pagination-btn pagination-btn--arrow"
@@ -639,6 +641,9 @@ const config = useRuntimeConfig();
 const currentPage = ref(1);
 const itemsPerPage = 15; // Было 21, теперь 15
 
+// Импортируем usePagination
+const { usePagination } = await import("~/composables/usePagination");
+
 // Products state
 const allProducts = ref<Product[]>([]);
 
@@ -652,6 +657,37 @@ const dynamicFilters = ref<Record<string, any>>({});
 const dynamicRangeFilters = ref<
   Record<string, { min: number | undefined; max: number | undefined }>
 >({});
+
+// Используем usePagination для сохранения параметров в URL
+usePagination([
+  {
+    name: "page",
+    variable: currentPage,
+    defaultValue: 1,
+  },
+  {
+    name: "priceMin",
+    variable: priceRange,
+    path: ["min"],
+    defaultValue: undefined,
+  },
+  {
+    name: "priceMax",
+    variable: priceRange,
+    path: ["max"],
+    defaultValue: undefined,
+  },
+  {
+    name: "filters",
+    variable: dynamicFilters,
+    defaultValue: {},
+  },
+  {
+    name: "rangeFilters",
+    variable: dynamicRangeFilters,
+    defaultValue: {},
+  },
+]);
 
 // Fetch products (загружаем все товары сразу)
 const fetchProducts = async () => {
@@ -689,14 +725,8 @@ watch(
   { immediate: true, deep: true }
 );
 
-// Сбрасываем на первую страницу при изменении фильтров
-watch(
-  [priceRange, dynamicFilters, dynamicRangeFilters],
-  () => {
-    currentPage.value = 1;
-  },
-  { deep: true }
-);
+// Фильтры теперь сохраняются в URL через usePagination
+// Страница будет сбрасываться автоматически при изменении фильтров
 
 const categorySlug = ref(route.params.category as string);
 
@@ -797,6 +827,67 @@ const paginatedProducts = computed<Product[]>(() => {
   const startIndex = (currentPage.value - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   return filteredProducts.value.slice(startIndex, endIndex);
+});
+
+// Вычисляем общее количество страниц
+const totalPages = computed(() => {
+  return Math.ceil(filteredProducts.value.length / itemsPerPage);
+});
+
+const goToNextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const goToPrevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+// Вычисляем видимые страницы для пагинации
+const visiblePages = computed(() => {
+  const pages: number[] = [];
+  const total = totalPages.value;
+  const current = currentPage.value;
+
+  if (total <= 7) {
+    // Если страниц мало, показываем все
+    for (let i = 1; i <= total; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Показываем первую, последнюю и 5 страниц вокруг текущей
+    pages.push(1);
+
+    let start = Math.max(2, current - 2);
+    let end = Math.min(total - 1, current + 2);
+
+    if (current <= 4) {
+      end = Math.min(total - 1, 6);
+    } else if (current >= total - 3) {
+      start = Math.max(2, total - 5);
+    }
+
+    if (start > 2) {
+      pages.push(-1); // Эллипсис
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (end < total - 1) {
+      pages.push(-2); // Эллипсис
+    }
+
+    if (total > 1) {
+      pages.push(total);
+    }
+  }
+
+  return pages;
 });
 
 // Обновляем totalProducts на основе отфильтрованных товаров
@@ -903,11 +994,6 @@ const rangeFilters = computed(() => {
   }
   return result;
 });
-
-// Количество страниц (используем totalProducts с сервера)
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(totalProducts.value / itemsPerPage))
-);
 
 // Переключение страниц
 const goToPage = (page: number) => {
@@ -1108,21 +1194,6 @@ const activeFiltersCount = computed(() => {
 });
 
 // Красивый вывод номеров страниц (максимум 5 одновременно)
-const visiblePages = computed(() => {
-  const pages = [];
-  if (totalPages.value <= 5) {
-    for (let i = 1; i <= totalPages.value; i++) pages.push(i);
-  } else if (currentPage.value <= 3) {
-    pages.push(1, 2, 3, 4, 5);
-  } else if (currentPage.value >= totalPages.value - 2) {
-    for (let i = totalPages.value - 4; i <= totalPages.value; i++)
-      pages.push(i);
-  } else {
-    for (let i = currentPage.value - 2; i <= currentPage.value + 2; i++)
-      pages.push(i);
-  }
-  return pages.filter((p) => p >= 1 && p <= totalPages.value);
-});
 
 const formatPrice = (price: number | null | undefined) => {
   if (!price) return "0";
@@ -2163,6 +2234,16 @@ useHead({
   background: #f5f5f5;
   color: #ccc;
   border-color: #eee;
+}
+
+.pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: #666;
+  font-weight: 600;
 }
 
 .category-slider {
