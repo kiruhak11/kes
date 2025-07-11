@@ -2,29 +2,35 @@
   <header class="header">
     <div v-if="!$device.isMobile" class="header__top">
       <div class="container">
-        <div  class="header__top-content">
+        <div class="header__top-content">
           <div class="header__contacts">
-            <a href="mailto:{{ contacts.email }}" class="header__email">{{ contacts.email }}</a>
-            <a href="tel:{{ contacts.phone[0] }}" class="header__phone">{{ contacts.phone[0] }}</a>
-            <NuxtLink to="/contact" class="header__callback">Заказать звонок</NuxtLink>
+            <a href="mailto:{{ contacts.email }}" class="header__email">{{
+              contacts.email
+            }}</a>
+            <a href="tel:{{ contacts.phone[0] }}" class="header__phone">{{
+              contacts.phone[0]
+            }}</a>
+            <NuxtLink to="/contact" class="header__callback"
+              >Заказать звонок</NuxtLink
+            >
           </div>
           <div class="form-group">
             <div class="search-container">
               <div class="search-input-wrapper">
-                <input 
-                  type="text" 
-                  v-model="searchQuery" 
+                <input
+                  type="text"
+                  v-model="searchQuery"
                   placeholder="Поиск котлов..."
                   class="search-input"
                   @focus="handleSearchInput"
                   @input="handleSearchInput"
-                >
-                <span class="search-icon"><IconsSearch/></span>
+                />
+                <span class="search-icon"><IconsSearch /></span>
               </div>
               <div class="search-results" v-if="showSearchResults">
                 <div v-if="filteredProducts.length" class="search-results-list">
-                  <div 
-                    v-for="product in filteredProducts" 
+                  <div
+                    v-for="product in filteredProducts"
                     :key="product.id"
                     class="search-result-item"
                     @click="selectProduct(product)"
@@ -42,16 +48,36 @@
                       <div class="product-details">
                         <div class="product-main">
                           <span class="product-name">{{ product.name }}</span>
-                          <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                          <span class="product-price"
+                            >{{ product.price.toLocaleString() }} ₽</span
+                          >
                         </div>
                         <div class="product-specs" v-if="product.specs">
-                          <span v-if="product.specs.power && product.specs.power !== 'отсутствует'" class="product-spec">
+                          <span
+                            v-if="
+                              product.specs.power &&
+                              product.specs.power !== 'отсутствует'
+                            "
+                            class="product-spec"
+                          >
                             <span class="spec-icon">⚡</span>
                             {{ product.specs.power }}
                           </span>
-                          <span v-if="product.specs.fuel && (!Array.isArray(product.specs.fuel) || product.specs.fuel.length > 0) && product.specs.fuel !== 'отсутствует'" class="product-spec">
+                          <span
+                            v-if="
+                              product.specs.fuel &&
+                              (!Array.isArray(product.specs.fuel) ||
+                                product.specs.fuel.length > 0) &&
+                              product.specs.fuel !== 'отсутствует'
+                            "
+                            class="product-spec"
+                          >
                             <span class="spec-icon">🔥</span>
-                            {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
+                            {{
+                              Array.isArray(product.specs.fuel)
+                                ? product.specs.fuel.join(", ")
+                                : product.specs.fuel
+                            }}
                           </span>
                         </div>
                       </div>
@@ -59,19 +85,27 @@
                   </div>
                 </div>
                 <div v-else class="no-results">
-                  {{ searchQuery ? 'Ничего не найдено' : 'Введите название товара' }}
+                  {{
+                    searchQuery
+                      ? "Ничего не найдено"
+                      : "Введите название товара"
+                  }}
                 </div>
               </div>
             </div>
           </div>
           <div class="header__user-actions">
-            <NuxtLink to="/catalog" class="header__nav-link catalog-link">Каталог продукции</NuxtLink>
-            <NuxtLink to="/about/contacts" class="header__nav-link">Контакты</NuxtLink>
+            <NuxtLink to="/catalog" class="header__nav-link catalog-link"
+              >Каталог продукции</NuxtLink
+            >
+            <NuxtLink to="/about/contacts" class="header__nav-link"
+              >Контакты</NuxtLink
+            >
             <div class="cart-container">
               <NuxtLink to="/cart" class="cart-link">
                 <span class="cart-text">Корзина</span>
                 <div class="cart-icon-wrapper">
-                  <span class="cart-icon"><IconsCart/></span>
+                  <span class="cart-icon"><IconsCart /></span>
                   <client-only>
                     <span class="cart-count">{{ cartCount }}</span>
                   </client-only>
@@ -86,8 +120,7 @@
       <div class="container">
         <div class="header__main-content">
           <div class="header__logo">
-            <NuxtLink to="/" 
-            class="untouchable">
+            <NuxtLink to="/" class="untouchable">
               <NuxtImg
                 :placeholder="true"
                 sizes="400px xxs:900px md:1200px"
@@ -101,67 +134,103 @@
             <button class="mobile-search-btn" @click="showMobileSearch = true">
               <IconsSearch />
             </button>
-            <button 
-              class="burger-btn" 
+            <button
+              class="burger-btn"
               :class="{ 'is-active': showMobileMenu }"
               @click="showMobileMenu = !showMobileMenu"
             >
-            <label class="burger" for="burger">
-              <input type="checkbox" id="burger" @click="showMobileMenu = !showMobileMenu">
-              <span></span>
-              <span></span>
-              <span></span>
-            </label>
+              <label class="burger" for="burger">
+                <input
+                  type="checkbox"
+                  id="burger"
+                  @click="showMobileMenu = !showMobileMenu"
+                />
+                <span></span>
+                <span></span>
+                <span></span>
+              </label>
             </button>
             <transition name="slide-fade">
               <nav v-if="showMobileMenu" class="mobile-nav">
                 <div class="mobile-nav-header">
                   <h3>Меню</h3>
-                  <button class="close-btn" @click="showMobileMenu = false">×</button>
+                  <button class="close-btn" @click="showMobileMenu = false">
+                    ×
+                  </button>
                 </div>
                 <ul class="mobile-menu">
                   <li>
-                    <NuxtLink to="/catalog" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/catalog"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsCatalog /></span>
                       <span>Каталог продукции</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/about/contacts" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/about/contacts"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsContacts /></span>
                       <span>Контакты</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/about" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/about"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsCompany /></span>
                       <span>О компании</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/certificates" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/certificates"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsCertificates /></span>
                       <span>Сертификаты</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/vacancies" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/vacancies"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsVacancies /></span>
                       <span>Вакансии</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/questionnaire" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/questionnaire"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsQuestionnaire /></span>
                       <span>Опросные листы</span>
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink to="/cart" @click="showMobileMenu = false" class="mobile-menu-item">
+                    <NuxtLink
+                      to="/cart"
+                      @click="showMobileMenu = false"
+                      class="mobile-menu-item"
+                    >
                       <span class="menu-icon"><IconsCart /></span>
                       <span>Корзина</span>
                       <client-only>
-                        <span class="cart-badge" v-if="cartStore.totalItems">{{ cartStore.totalItems }}</span>
+                        <span class="cart-badge" v-if="cartStore.totalItems">{{
+                          cartStore.totalItems
+                        }}</span>
                       </client-only>
                     </NuxtLink>
                   </li>
@@ -169,29 +238,38 @@
               </nav>
             </transition>
             <transition name="fade">
-              <div v-if="showMobileMenu" class="mobile-menu-overlay" @click="showMobileMenu = false"></div>
+              <div
+                v-if="showMobileMenu"
+                class="mobile-menu-overlay"
+                @click="showMobileMenu = false"
+              ></div>
             </transition>
             <transition name="fade">
               <div v-if="showMobileSearch" class="mobile-search-modal">
                 <div class="mobile-search-header">
-                  <button class="close-btn" @click="showMobileSearch = false">×</button>
+                  <button class="close-btn" @click="showMobileSearch = false">
+                    ×
+                  </button>
                   <div class="mobile-search-bar">
-                    <input 
-                      type="text" 
-                      v-model="searchQuery" 
+                    <input
+                      type="text"
+                      v-model="searchQuery"
                       placeholder="Поиск котлов..."
                       class="search-input"
                       @focus="handleSearchInput"
                       @input="handleSearchInput"
                       autofocus
-                    >
-                    <span class="search-icon"><IconsSearch/></span>
+                    />
+                    <span class="search-icon"><IconsSearch /></span>
                   </div>
                 </div>
                 <div class="search-results-mobile" v-if="showSearchResults">
-                  <div v-if="filteredProducts.length" class="search-results-list">
-                    <div 
-                      v-for="product in filteredProducts" 
+                  <div
+                    v-if="filteredProducts.length"
+                    class="search-results-list"
+                  >
+                    <div
+                      v-for="product in filteredProducts"
                       :key="product.id"
                       class="search-result-item"
                       @click="selectProduct(product)"
@@ -209,16 +287,36 @@
                         <div class="product-details">
                           <div class="product-main">
                             <span class="product-name">{{ product.name }}</span>
-                            <span class="product-price">{{ product.price.toLocaleString() }} ₽</span>
+                            <span class="product-price"
+                              >{{ product.price.toLocaleString() }} ₽</span
+                            >
                           </div>
                           <div class="product-specs" v-if="product.specs">
-                            <span v-if="product.specs.power && product.specs.power !== 'отсутствует'" class="product-spec">
+                            <span
+                              v-if="
+                                product.specs.power &&
+                                product.specs.power !== 'отсутствует'
+                              "
+                              class="product-spec"
+                            >
                               <span class="spec-icon">⚡</span>
                               {{ product.specs.power }}
                             </span>
-                            <span v-if="product.specs.fuel && (!Array.isArray(product.specs.fuel) || product.specs.fuel.length > 0) && product.specs.fuel !== 'отсутствует'" class="product-spec">
+                            <span
+                              v-if="
+                                product.specs.fuel &&
+                                (!Array.isArray(product.specs.fuel) ||
+                                  product.specs.fuel.length > 0) &&
+                                product.specs.fuel !== 'отсутствует'
+                              "
+                              class="product-spec"
+                            >
                               <span class="spec-icon">🔥</span>
-                              {{ Array.isArray(product.specs.fuel) ? product.specs.fuel.join(', ') : product.specs.fuel }}
+                              {{
+                                Array.isArray(product.specs.fuel)
+                                  ? product.specs.fuel.join(", ")
+                                  : product.specs.fuel
+                              }}
                             </span>
                           </div>
                         </div>
@@ -226,7 +324,11 @@
                     </div>
                   </div>
                   <div v-else class="no-results">
-                    {{ searchQuery ? 'Ничего не найдено' : 'Введите название товара' }}
+                    {{
+                      searchQuery
+                        ? "Ничего не найдено"
+                        : "Введите название товара"
+                    }}
                   </div>
                 </div>
               </div>
@@ -234,11 +336,11 @@
           </div>
           <nav class="header__nav" v-else>
             <ul class="header__menu">
-            <a href="/questionnaire" class="header__link">Опросные листы</a>
-            <a href="/certificates" class="header__link">Сертификаты</a>
-            <a href="/about" class="header__link">О компании</a>
-            <a href="/vacancies" class="header__link">Вакансии</a>
-              </ul>
+              <a href="/questionnaire" class="header__link">Опросные листы</a>
+              <a href="/certificates" class="header__link">Сертификаты</a>
+              <a href="/about" class="header__link">О компании</a>
+              <a href="/vacancies" class="header__link">Вакансии</a>
+            </ul>
           </nav>
         </div>
       </div>
@@ -247,59 +349,121 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useCartStore } from '~/stores/cart'
-import { contacts } from '~/data/contacts'
-import type { Ref } from 'vue'
-import IconsCatalog from '@/components/icons/catalog.vue';
-import IconsContacts from '@/components/icons/contacts.vue';
-import IconsCompany from '@/components/icons/company.vue';
-import IconsGallery from '@/components/icons/gallery.vue';
-import IconsCertificates from '@/components/icons/certificates.vue';
-import IconsVacancies from '@/components/icons/vacancies.vue';
-import IconsQuestionnaire from '@/components/icons/questionnaire.vue';
-import IconsCart from '@/components/icons/cart.vue';
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { useCartStore } from "~/stores/cart";
+import { contacts } from "~/data/contacts";
+import type { Ref } from "vue";
+import IconsCatalog from "@/components/icons/catalog.vue";
+import IconsContacts from "@/components/icons/contacts.vue";
+import IconsCompany from "@/components/icons/company.vue";
+import IconsGallery from "@/components/icons/gallery.vue";
+import IconsCertificates from "@/components/icons/certificates.vue";
+import IconsVacancies from "@/components/icons/vacancies.vue";
+import IconsQuestionnaire from "@/components/icons/questionnaire.vue";
+import IconsCart from "@/components/icons/cart.vue";
 
 const transliterate = (text: string): string => {
   const mapping: { [key: string]: string } = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
-    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
-    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh',
-    'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z',
-    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
-    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh',
-    'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "yo",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "kh",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    А: "A",
+    Б: "B",
+    В: "V",
+    Г: "G",
+    Д: "D",
+    Е: "E",
+    Ё: "Yo",
+    Ж: "Zh",
+    З: "Z",
+    И: "I",
+    Й: "Y",
+    К: "K",
+    Л: "L",
+    М: "M",
+    Н: "N",
+    О: "O",
+    П: "P",
+    Р: "R",
+    С: "S",
+    Т: "T",
+    У: "U",
+    Ф: "F",
+    Х: "Kh",
+    Ц: "Ts",
+    Ч: "Ch",
+    Ш: "Sh",
+    Щ: "Sch",
+    Ъ: "",
+    Ы: "Y",
+    Ь: "",
+    Э: "E",
+    Ю: "Yu",
+    Я: "Ya",
   };
-  return text.split('').map(char => mapping[char] || char).join('');
+  return text
+    .split("")
+    .map((char) => mapping[char] || char)
+    .join("");
 };
 
 const generateProductSlug = (product: { name?: string | null }): string => {
-  if (!product || !product.name) return ''
+  if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-}
+    .replace(/[.,]/g, "-") // Сначала точки и запятые на дефис
+    .replace(/[^a-z0-9 -]/g, "") // Потом убрать всё лишнее
+    .replace(/[\s-]+/g, "-") // Группы пробелов и дефисов в один дефис
+    .replace(/^-+|-+$/g, ""); // Убрать дефисы по краям
+};
 
 interface Product {
-  id: number
-  name: string
-  description: string
-  extendedDescription?: string
-  price: number
-  image: string
-  category: string
-  category_name?: string
-  category_id?: string
-  category_slug?: string
-  slug: string
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription?: string;
+  price: number;
+  image: string;
+  category: string;
+  category_name?: string;
+  category_id?: string;
+  category_slug?: string;
+  slug: string;
   specs?: {
-    power?: string
-    fuel?: string | string[]
-    [key: string]: any
-  }
+    power?: string;
+    fuel?: string | string[];
+    [key: string]: any;
+  };
 }
 
 interface Boiler {
@@ -313,154 +477,168 @@ interface Boiler {
 }
 
 interface ApiProduct {
-  id: number
-  name: string
-  description: string
-  extendedDescription: string | null
-  price: number
-  image: string
-  category: string
-  category_name?: string
-  category_id?: string
-  category_slug?: string
-  slug: string
+  id: number;
+  name: string;
+  description: string;
+  extendedDescription: string | null;
+  price: number;
+  image: string;
+  category: string;
+  category_name?: string;
+  category_id?: string;
+  category_slug?: string;
+  slug: string;
   specs?: {
-    power?: string
-    fuel?: string | string[]
-    [key: string]: any
-  }
+    power?: string;
+    fuel?: string | string[];
+    [key: string]: any;
+  };
 }
 
-const { $device } = useNuxtApp()
-const showMobileMenu = ref(false)
-const cartStore = useCartStore()
-const searchQuery = ref('')
-const showSearchResults = ref(false)
-const cartCount: Ref<number> = ref(0)
-const isHydrated: Ref<boolean> = ref(false)
-const showMobileSearch = ref(false)
+const { $device } = useNuxtApp();
+const showMobileMenu = ref(false);
+const cartStore = useCartStore();
+const searchQuery = ref("");
+const showSearchResults = ref(false);
+const cartCount: Ref<number> = ref(0);
+const isHydrated: Ref<boolean> = ref(false);
+const showMobileSearch = ref(false);
 
-const route = useRoute()
-const router = useRouter()
-const config = useRuntimeConfig()
+const route = useRoute();
+const router = useRouter();
+const config = useRuntimeConfig();
 
 // Получаем список товаров из API
-const { data: fetchedProducts, error: fetchError } = await useFetch<{ products: ApiProduct[] }>('/api/products', {
+const { data: fetchedProducts, error: fetchError } = await useFetch<{
+  products: ApiProduct[];
+}>("/api/products", {
   transform: (response) => {
     if (!response || !response.products) {
-      console.error('Invalid response format:', response)
-      return { products: [] }
+      console.error("Invalid response format:", response);
+      return { products: [] };
     }
-    return response
-  }
-})
+    return response;
+  },
+});
 
 // Инициализируем список товаров
-const products = ref<Product[]>([])
+const products = ref<Product[]>([]);
 
 // Обрабатываем ошибки загрузки
 if (fetchError.value) {
-  console.error('Error fetching products:', fetchError.value)
-  products.value = []
+  console.error("Error fetching products:", fetchError.value);
+  products.value = [];
 } else if (fetchedProducts.value) {
-  products.value = fetchedProducts.value.products.map(product => {
-    const specs = product.specs || {}
+  products.value = fetchedProducts.value.products.map((product) => {
+    const specs = product.specs || {};
     return {
       ...product,
-      name: product.name || '',
-      description: product.description || '',
+      name: product.name || "",
+      description: product.description || "",
       price: product.price || 0,
-      image: product.image || '',
-      category: product.category || '',
-      slug: product.slug || '',
+      image: product.image || "",
+      category: product.category || "",
+      slug: product.slug || "",
       specs: {
         ...specs,
-        power: specs.power && specs.power !== 'отсутствует' ? specs.power : undefined,
-        fuel: specs.fuel && specs.fuel !== 'отсутствует' 
-          ? (Array.isArray(specs.fuel) 
-              ? specs.fuel.filter(f => f !== 'отсутствует')
-              : specs.fuel.split(', ').map(f => f.trim()).filter(f => f !== 'отсутствует'))
-          : undefined
-      }
-    } as Product
-  })
+        power:
+          specs.power && specs.power !== "отсутствует"
+            ? specs.power
+            : undefined,
+        fuel:
+          specs.fuel && specs.fuel !== "отсутствует"
+            ? Array.isArray(specs.fuel)
+              ? specs.fuel.filter((f) => f !== "отсутствует")
+              : specs.fuel
+                  .split(", ")
+                  .map((f) => f.trim())
+                  .filter((f) => f !== "отсутствует")
+            : undefined,
+      },
+    } as Product;
+  });
 } else {
-  products.value = []
+  products.value = [];
 }
 
 // Получаем список котлов
-const boilers = ref<Boiler[]>([])
+const boilers = ref<Boiler[]>([]);
 
 // Получаем подсказки на основе ввода
 const suggestions = computed(() => {
-  if (!searchQuery.value) return []
-  const query = searchQuery.value.toLowerCase()
-  const uniqueSuggestions = new Set<string>()
-  
-  products.value.forEach(product => {
+  if (!searchQuery.value) return [];
+  const query = searchQuery.value.toLowerCase();
+  const uniqueSuggestions = new Set<string>();
+
+  products.value.forEach((product) => {
     if (product.name.toLowerCase().includes(query)) {
-      uniqueSuggestions.add(product.name)
+      uniqueSuggestions.add(product.name);
     }
     if (product.description?.toLowerCase().includes(query)) {
-      uniqueSuggestions.add(product.description)
+      uniqueSuggestions.add(product.description);
     }
-  })
-  
-  return Array.from(uniqueSuggestions).slice(0, 5)
-})
+  });
+
+  return Array.from(uniqueSuggestions).slice(0, 5);
+});
 
 // Фильтруем товары по поисковому запросу
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) return []
-  const query = searchQuery.value.toLowerCase()
-  return products.value.filter(product => {
-    const nameMatch = product.name.toLowerCase().includes(query)
-    const descriptionMatch = product.description?.toLowerCase().includes(query) || false
-    const powerMatch = product.specs?.power?.toLowerCase().includes(query) || false
-    
-    let fuelMatch = false
+  if (!searchQuery.value) return [];
+  const query = searchQuery.value.toLowerCase();
+  return products.value.filter((product) => {
+    const nameMatch = product.name.toLowerCase().includes(query);
+    const descriptionMatch =
+      product.description?.toLowerCase().includes(query) || false;
+    const powerMatch =
+      product.specs?.power?.toLowerCase().includes(query) || false;
+
+    let fuelMatch = false;
     if (product.specs?.fuel) {
       if (Array.isArray(product.specs.fuel)) {
-        fuelMatch = product.specs.fuel.some(fuel => fuel.toLowerCase().includes(query))
+        fuelMatch = product.specs.fuel.some((fuel) =>
+          fuel.toLowerCase().includes(query)
+        );
       } else {
-        fuelMatch = product.specs.fuel.toLowerCase().includes(query)
+        fuelMatch = product.specs.fuel.toLowerCase().includes(query);
       }
     }
-    
-    return nameMatch || descriptionMatch || powerMatch || fuelMatch
-  })
-})
+
+    return nameMatch || descriptionMatch || powerMatch || fuelMatch;
+  });
+});
 
 // Загружаем котлы из каталога
 const loadBoilers = async () => {
   try {
-    const { data } = await useFetch<Boiler[]>('/api/catalog/boilers')
+    const { data } = await useFetch<Boiler[]>("/api/catalog/boilers");
     if (data.value && Array.isArray(data.value)) {
-      boilers.value = data.value.map(boiler => ({
+      boilers.value = data.value.map((boiler) => ({
         ...boiler,
-        category: boiler.fuel?.toLowerCase().includes('газ') 
-          ? 'gazovye-kotly' 
-          : 'tverdotoplivnye-kotly'
-      }))
+        category: boiler.fuel?.toLowerCase().includes("газ")
+          ? "gazovye-kotly"
+          : "tverdotoplivnye-kotly",
+      }));
     }
   } catch (error) {
-    console.error('Ошибка при загрузке котлов:', error)
+    console.error("Ошибка при загрузке котлов:", error);
   }
-}
+};
 
 // Фильтруем котлы по поисковому запросу
 const filteredBoilers = computed(() => {
   if (!searchQuery.value) {
-    return boilers.value // Показываем все котлы, если поисковый запрос пустой
+    return boilers.value; // Показываем все котлы, если поисковый запрос пустой
   }
-  const query = searchQuery.value.toLowerCase()
-  const filtered = boilers.value.filter(boiler => 
-    boiler.name.toLowerCase().includes(query) ||
-    boiler.power?.toLowerCase().includes(query) ||
-    boiler.fuel?.toLowerCase().includes(query)
-  )
-  return filtered
-})
+  const query = searchQuery.value.toLowerCase();
+  const filtered = boilers.value.filter(
+    (boiler) =>
+      boiler.name.toLowerCase().includes(query) ||
+      boiler.power?.toLowerCase().includes(query) ||
+      boiler.fuel?.toLowerCase().includes(query)
+  );
+  return filtered;
+});
 
 // Обработчик выбора товара
 const selectProduct = async (product: Product) => {
@@ -469,111 +647,113 @@ const selectProduct = async (product: Product) => {
   // Если slug категории отсутствует, получаем его
   if (!categorySlug) {
     try {
-      const { data: categoryData }: any = await useFetch(`/api/categories/by-product/${product.id}`);
+      const { data: categoryData }: any = await useFetch(
+        `/api/categories/by-product/${product.id}`
+      );
       if (categoryData.value && categoryData.value.category) {
         categorySlug = categoryData.value.category.slug;
       } else {
-        console.error('Category not found for product:', product.id);
+        console.error("Category not found for product:", product.id);
         return; // Не переходим, если категория не найдена
       }
     } catch (error) {
-      console.error('Error fetching category slug:', error);
+      console.error("Error fetching category slug:", error);
       return; // Не переходим при ошибке
     }
   }
 
-  const productSlug = generateProductSlug(product)
-  router.push(`/catalog/${categorySlug}/${productSlug}`)
-  showSearchResults.value = false
-  showMobileSearch.value = false
-  searchQuery.value = ''
-}
+  const productSlug = generateProductSlug(product);
+  router.push(`/catalog/${categorySlug}/${productSlug}`);
+  showSearchResults.value = false;
+  showMobileSearch.value = false;
+  searchQuery.value = "";
+};
 
 // Обработчик выбора подсказки
 const selectSuggestion = (suggestion: string) => {
-  searchQuery.value = suggestion
-  showSearchResults.value = true
-}
+  searchQuery.value = suggestion;
+  showSearchResults.value = true;
+};
 
 // Обработчик выбора котла
 const selectBoiler = (boiler: Boiler) => {
-  searchQuery.value = boiler.name
-  showSearchResults.value = false
-  
+  searchQuery.value = boiler.name;
+  showSearchResults.value = false;
+
   // Определяем категорию на основе типа топлива
-  const category = boiler.fuel?.toLowerCase().includes('газ') 
-    ? 'gazovye-kotly' 
-    : 'tverdotoplivnye-kotly'
-    
-  navigateTo(`/catalog/${category}/${boiler.slug}`)
-}
+  const category = boiler.fuel?.toLowerCase().includes("газ")
+    ? "gazovye-kotly"
+    : "tverdotoplivnye-kotly";
+
+  navigateTo(`/catalog/${category}/${boiler.slug}`);
+};
 
 // Обработчик ввода в поле поиска
 const handleSearchInput = () => {
-  showSearchResults.value = true
-}
+  showSearchResults.value = true;
+};
 
 // Закрываем результаты поиска при клике вне
 function closeSearchOnOutsideClick(e: MouseEvent) {
-  const target = e.target as HTMLElement
-  if (!target.closest('.search-container')) {
-    showSearchResults.value = false
+  const target = e.target as HTMLElement;
+  if (!target.closest(".search-container")) {
+    showSearchResults.value = false;
   }
 }
 
 onMounted(() => {
-  document.addEventListener('click', closeSearchOnOutsideClick)
-  loadBoilers() // Загружаем котлы при монтировании компонента
-  isHydrated.value = true
-  cartCount.value = cartStore.totalItems
-})
+  document.addEventListener("click", closeSearchOnOutsideClick);
+  loadBoilers(); // Загружаем котлы при монтировании компонента
+  isHydrated.value = true;
+  cartCount.value = cartStore.totalItems;
+});
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', closeSearchOnOutsideClick)
-})
+  document.removeEventListener("click", closeSearchOnOutsideClick);
+});
 </script>
 
 <style lang="scss" scoped>
 .form-group {
-    display: flex;
-    flex-direction: column;
-    
-    label {
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
 
-      @media (min-width: 768px) {
-        font-size: 1rem;
-      }
-    }
+  label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
 
-    input,
-    textarea {
-      padding: 0.75rem;
-      border: 1px solid var(--secondary);
-      border-radius: 0.5rem;
-      background: var(--bg);
-      color: var(--text);
-      transition: border-color 0.2s;
-      font-size: 0.95rem;
-      width: 100%;
-
-      @media (min-width: 768px) {
-        font-size: 1rem;
-      }
-
-      &:focus {
-        border-color: var(--accent);
-        outline: none;
-      }
-    }
-
-    textarea {
-      min-height: 120px;
-      resize: vertical;
+    @media (min-width: 768px) {
+      font-size: 1rem;
     }
   }
+
+  input,
+  textarea {
+    padding: 0.75rem;
+    border: 1px solid var(--secondary);
+    border-radius: 0.5rem;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+    font-size: 0.95rem;
+    width: 100%;
+
+    @media (min-width: 768px) {
+      font-size: 1rem;
+    }
+
+    &:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+}
 .region-select {
   position: relative;
 }
@@ -658,7 +838,6 @@ onBeforeUnmount(() => {
   gap: 24px;
 }
 
-
 .header__nav-link {
   color: #333;
   text-decoration: none;
@@ -682,7 +861,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   border-radius: 12px;
   border: 1.5px solid #e31e24;
-  box-shadow: 0 2px 16px rgba(227,30,36,0.07);
+  box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
@@ -799,7 +978,6 @@ onBeforeUnmount(() => {
   list-style: none;
   margin: 0;
   padding: 0;
-
 }
 
 .header__menu a {
@@ -878,9 +1056,9 @@ onBeforeUnmount(() => {
   left: 6px;
   right: 6px;
   height: 2.5px;
-  background-color: rgba(51,51,51,0.85);
+  background-color: rgba(51, 51, 51, 0.85);
   border-radius: 6px;
-  box-shadow: 0 1.5px 6px rgba(227,30,36,0.08);
+  box-shadow: 0 1.5px 6px rgba(227, 30, 36, 0.08);
   transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
 }
@@ -896,11 +1074,11 @@ onBeforeUnmount(() => {
 }
 
 .burger-btn.is-active {
-  box-shadow: 0 2px 16px rgba(227,30,36,0.13);
+  box-shadow: 0 2px 16px rgba(227, 30, 36, 0.13);
 }
 .burger-btn.is-active .burger-line {
   background-color: #e31e24;
-  box-shadow: 0 2px 8px rgba(227,30,36,0.18);
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.18);
 }
 .burger-btn.is-active .burger-line:nth-child(1) {
   transform: translateY(12px) scaleX(0.95) rotate(45deg);
@@ -921,7 +1099,7 @@ onBeforeUnmount(() => {
   max-width: 400px;
   height: 100vh;
   background: #fff;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   z-index: 1200;
   display: flex;
   flex-direction: column;
@@ -1032,7 +1210,7 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1100;
   backdrop-filter: blur(2px);
 }
@@ -1215,7 +1393,6 @@ onBeforeUnmount(() => {
     width: 0px;
     visibility: hidden;
   }
-
 }
 
 .search-input-wrapper {
@@ -1440,7 +1617,8 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.mobile-search-btn, .burger-btn {
+.mobile-search-btn,
+.burger-btn {
   width: 44px;
   height: 44px;
   padding: 0;
@@ -1526,7 +1704,7 @@ onBeforeUnmount(() => {
 .search-result-item {
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(227,30,36,0.07);
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
   padding: 16px 14px;
   display: flex;
   align-items: center;
@@ -1538,7 +1716,7 @@ onBeforeUnmount(() => {
 
 .search-result-item:hover {
   background: #f9f9f9;
-  box-shadow: 0 4px 16px rgba(227,30,36,0.13);
+  box-shadow: 0 4px 16px rgba(227, 30, 36, 0.13);
   border-color: #e31e24;
 }
 
@@ -1636,7 +1814,7 @@ onBeforeUnmount(() => {
   opacity: 1;
   left: 0;
   transform: rotate(0deg);
-  transition: .25s ease-in-out;
+  transition: 0.25s ease-in-out;
 }
 
 .burger span:nth-of-type(1) {
@@ -1655,6 +1833,4 @@ onBeforeUnmount(() => {
   transform-origin: left center;
   transform: translateY(-100%);
 }
-
-
 </style>

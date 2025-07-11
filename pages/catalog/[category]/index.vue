@@ -318,13 +318,13 @@
       <div class="products-section">
         <div class="products-header">
           <div class="products-count" v-if="filteredProducts.length > 0">
-            Найдено товаров: <strong>{{ filteredProducts.length }}</strong>
+            Найдено товаров: <strong>{{ totalProducts }}</strong>
           </div>
         </div>
 
-        <div class="products-grid" ref="productListRef">
+        <div class="products-grid">
           <div
-            v-for="(product, index) in visibleProducts"
+            v-for="(product, index) in paginatedProducts"
             :key="product.id"
             class="product-card"
             v-scroll-reveal="
@@ -598,10 +598,14 @@ const transliterate = (text: string): string => {
     Ю: "Yu",
     Я: "Ya",
   };
-  return text
+  const result = text
     .split("")
     .map((char) => mapping[char] || char)
     .join("");
+
+  console.log("transliterate debug:", { input: text, output: result });
+
+  return result;
 };
 
 interface Product {
@@ -633,37 +637,66 @@ const config = useRuntimeConfig();
 
 // Pagination state
 const currentPage = ref(1);
-const itemsPerPage = 21;
+const itemsPerPage = 15; // Было 21, теперь 15
 
 // Products state
 const allProducts = ref<Product[]>([]);
 
-// Fetch products
-const { data: fetchedAllProducts, error: fetchError } = await useFetch(
-  `/api/products`,
-  {
+// Фильтры
+const priceRange = ref({
+  min: undefined as number | undefined,
+  max: undefined as number | undefined,
+});
+
+const dynamicFilters = ref<Record<string, any>>({});
+const dynamicRangeFilters = ref<
+  Record<string, { min: number | undefined; max: number | undefined }>
+>({});
+
+// Fetch products (загружаем все товары сразу)
+const fetchProducts = async () => {
+  const { data: fetched, error } = await useFetch("/api/products", {
     query: {
       categorySlug: route.params.category,
     },
     transform: (response) => {
       if (!response || !response.products) {
         console.error("Invalid response format:", response);
-        return [];
+        return {
+          products: [],
+          pagination: { total: 0, page: 1, limit: 15, totalPages: 0 },
+        };
       }
-      return response.products;
+      return response;
     },
+  });
+  if (error.value) {
+    console.error("Error fetching products:", error.value);
+    allProducts.value = [];
+  } else if (fetched.value) {
+    allProducts.value = fetched.value.products as unknown as Product[];
+  } else {
+    allProducts.value = [];
   }
+};
+
+// Загружаем товары только при инициализации и при смене категории
+watch(
+  [() => route.params.category],
+  () => {
+    fetchProducts();
+  },
+  { immediate: true, deep: true }
 );
 
-// Handle fetch errors
-if (fetchError.value) {
-  console.error("Error fetching products:", fetchError.value);
-  allProducts.value = [];
-} else if (fetchedAllProducts.value) {
-  allProducts.value = fetchedAllProducts.value as unknown as Product[];
-} else {
-  allProducts.value = [];
-}
+// Сбрасываем на первую страницу при изменении фильтров
+watch(
+  [priceRange, dynamicFilters, dynamicRangeFilters],
+  () => {
+    currentPage.value = 1;
+  },
+  { deep: true }
+);
 
 const categorySlug = ref(route.params.category as string);
 
@@ -703,6 +736,71 @@ function prevSlide() {
 function nextSlide() {
   sliderIndex.value = (sliderIndex.value + 1) % sliderImages.value.length;
 }
+
+// Отфильтрованные товары с пагинацией
+const filteredProducts = computed<Product[]>(() => {
+  let products = allProducts.value;
+
+  // Фильтр по цене
+  if (
+    priceRange.value.min !== undefined ||
+    priceRange.value.max !== undefined
+  ) {
+    products = products.filter((product) => {
+      const price = product.price;
+      if (!price) return false;
+
+      if (priceRange.value.min !== undefined && price < priceRange.value.min) {
+        return false;
+      }
+      if (priceRange.value.max !== undefined && price > priceRange.value.max) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  // Фильтры по характеристикам
+  Object.entries(dynamicFilters.value).forEach(([key, value]) => {
+    if (value && value !== "") {
+      products = products.filter((product) => {
+        if (!product.specs || !Array.isArray(product.specs)) return false;
+        const spec = product.specs.find((s) => s.key === key);
+        return spec && spec.value === value;
+      });
+    }
+  });
+
+  // Диапазонные фильтры
+  Object.entries(dynamicRangeFilters.value).forEach(([key, range]) => {
+    if (range.min !== undefined || range.max !== undefined) {
+      products = products.filter((product) => {
+        if (!product.specs || !Array.isArray(product.specs)) return false;
+        const spec = product.specs.find((s) => s.key === key);
+        if (!spec || !spec.value) return false;
+
+        const value = parseFloat(spec.value);
+        if (isNaN(value)) return false;
+
+        if (range.min !== undefined && value < range.min) return false;
+        if (range.max !== undefined && value > range.max) return false;
+        return true;
+      });
+    }
+  });
+
+  return products;
+});
+
+// Товары для текущей страницы
+const paginatedProducts = computed<Product[]>(() => {
+  const startIndex = (currentPage.value - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  return filteredProducts.value.slice(startIndex, endIndex);
+});
+
+// Обновляем totalProducts на основе отфильтрованных товаров
+const totalProducts = computed(() => filteredProducts.value.length);
 
 const productsInCategory = computed<Product[]>(() => {
   return allProducts.value.filter((product) => {
@@ -806,192 +904,12 @@ const rangeFilters = computed(() => {
   return result;
 });
 
-// 2. Состояние для диапазонных фильтров
-const dynamicRangeFilters = ref<
-  Record<string, { min: number | undefined; max: number | undefined }>
->({});
-
-// 3. Состояние фильтров по характеристикам
-const dynamicFilters = ref<Record<string, any>>({});
-
-const priceRange = ref({
-  min: undefined as number | undefined,
-  max: undefined as number | undefined,
-});
-
-// Оптимизируем фильтрацию
-const filteredProducts = computed(() => {
-  // Проверяем наличие активных фильтров
-  const hasActiveFilters =
-    (priceRange.value.min !== undefined && priceRange.value.min !== null) ||
-    (priceRange.value.max !== undefined && priceRange.value.max !== null) ||
-    Object.values(dynamicFilters.value).some(
-      (val) => val !== "" && val !== undefined
-    ) ||
-    Object.values(dynamicRangeFilters.value).some(
-      (range) => range.min !== undefined || range.max !== undefined
-    );
-
-  if (!hasActiveFilters) {
-    return productsInCategory.value;
-  }
-
-  // Применяем фильтры только если они активны
-  return productsInCategory.value.filter((product) => {
-    // Фильтр по цене
-    if (
-      priceRange.value.min !== undefined &&
-      product.price &&
-      product.price < priceRange.value.min
-    ) {
-      return false;
-    }
-    if (
-      priceRange.value.max !== undefined &&
-      product.price &&
-      product.price > priceRange.value.max
-    ) {
-      return false;
-    }
-
-    // Динамические фильтры
-    for (const [key, value] of Object.entries(dynamicFilters.value)) {
-      if (value && value !== "") {
-        const productValue = product.specs?.find(
-          (spec) => spec.key === key
-        )?.value;
-        if (
-          !productValue ||
-          !productValue.toLowerCase().includes(value.toLowerCase())
-        ) {
-          return false;
-        }
-      }
-    }
-
-    // Фильтры диапазонов
-    for (const [key, range] of Object.entries(dynamicRangeFilters.value)) {
-      if (range.min !== undefined || range.max !== undefined) {
-        const productValue = product.specs?.find(
-          (spec) => spec.key === key
-        )?.value;
-        if (!productValue) return false;
-
-        const numericValue = parseFloat(productValue);
-        if (isNaN(numericValue)) return false;
-
-        if (range.min !== undefined && numericValue < range.min) return false;
-        if (range.max !== undefined && numericValue > range.max) return false;
-      }
-    }
-
-    return true;
-  });
-});
-
-// Оптимизируем отображение продуктов с помощью виртуального скроллинга
-const productListRef = ref<HTMLElement | null>(null);
-const productHeight = 300; // Примерная высота карточки продукта
-const buffer = 5; // Количество элементов для предзагрузки
-
-const visibleProducts = computed(() => {
-  if (!productListRef.value) return filteredProducts.value;
-
-  const container = productListRef.value;
-  const scrollTop = container.scrollTop;
-  const containerHeight = container.clientHeight;
-
-  const startIndex = Math.max(
-    0,
-    Math.floor(scrollTop / productHeight) - buffer
-  );
-  const endIndex = Math.min(
-    filteredProducts.value.length,
-    Math.ceil((scrollTop + containerHeight) / productHeight) + buffer
-  );
-
-  return filteredProducts.value.slice(startIndex, endIndex);
-});
-
-// Оптимизируем загрузку изображений
-const { optimizeImageSize } = useImageOptimization();
-
-const optimizeProductImage = (image: string) => {
-  return optimizeImageSize(image, 300, 300);
-};
-
-// Кешируем результаты фильтрации
-const filterCache = new Map<string, Product[]>();
-
-const getCachedFilterResult = (
-  filterKey: string,
-  filterValue: any
-): Product[] | null => {
-  const cacheKey = `${filterKey}-${JSON.stringify(filterValue)}`;
-  if (filterCache.has(cacheKey)) {
-    return filterCache.get(cacheKey) || null;
-  }
-  return null;
-};
-
-const setCachedFilterResult = (
-  filterKey: string,
-  filterValue: any,
-  result: Product[]
-) => {
-  const cacheKey = `${filterKey}-${JSON.stringify(filterValue)}`;
-  filterCache.set(cacheKey, result);
-};
-
-// Очищаем кеш при размонтировании компонента
-onBeforeUnmount(() => {
-  filterCache.clear();
-});
-
-// Оптимизируем обработку фильтров
-const updateFilter = (key: string, value: any) => {
-  const cachedResult = getCachedFilterResult(key, value);
-  if (cachedResult) {
-    // Используем кешированный результат
-    return cachedResult;
-  }
-
-  // Вычисляем новый результат и применяем фильтры
-  const result = filteredProducts.value.filter((product) => {
-    if (key === "price") {
-      const productPrice = product.price || 0;
-      if (value.min && productPrice < value.min) return false;
-      if (value.max && productPrice > value.max) return false;
-      return true;
-    }
-
-    // Для остальных фильтров
-    const productValue = product[key as keyof Product];
-    if (typeof value === "object" && value !== null) {
-      const numericValue = Number(productValue) || 0;
-      if (value.min && numericValue < value.min) return false;
-      if (value.max && numericValue > value.max) return false;
-      return true;
-    }
-
-    return productValue === value;
-  });
-
-  setCachedFilterResult(key, value, result);
-  return result;
-};
-
-// Оптимизируем пагинацию
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return filteredProducts.value.slice(start, start + itemsPerPage);
-});
-
+// Количество страниц (используем totalProducts с сервера)
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredProducts.value.length / itemsPerPage))
+  Math.max(1, Math.ceil(totalProducts.value / itemsPerPage))
 );
 
-// Добавляем методы для пагинации
+// Переключение страниц
 const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
@@ -1078,9 +996,10 @@ const generateProductSlug = (product: Product) => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/[.,]/g, "-") // Сначала точки и запятые на дефис
+    .replace(/[^a-z0-9 -]/g, "") // Потом убрать всё лишнее
+    .replace(/[\s-]+/g, "-") // Группы пробелов и дефисов в один дефис
+    .replace(/^-+|-+$/g, ""); // Убрать дефисы по краям
 };
 
 const generateCategorySlug = (category: string) => {
@@ -1187,19 +1106,6 @@ const activeFiltersCount = computed(() => {
   });
   return count;
 });
-
-// Следим за изменениями в paginatedProducts, чтобы обновить scroll-reveal
-watch(
-  paginatedProducts,
-  async () => {
-    await nextTick();
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("scroll"));
-      window.dispatchEvent(new Event("resize"));
-    }
-  },
-  { immediate: true, deep: true }
-);
 
 // Красивый вывод номеров страниц (максимум 5 одновременно)
 const visiblePages = computed(() => {

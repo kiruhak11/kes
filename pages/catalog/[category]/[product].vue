@@ -792,46 +792,63 @@ const categoryInfo = ref<
 const fetchError = ref<Error | null>(null);
 const categoryError = ref<Error | null>(null);
 
+const product = ref<ProductType | null>(null);
+
 // Загружаем данные сразу при создании компонента
-const { data: initialProducts } = await useFetch<{
+const { data: initialProducts, error: productsError } = await useFetch<{
   products: APIProduct[];
 }>("/api/products", {
-  key: `products-${categorySlug.value}`,
+  key: `products-${categorySlug.value}-${productSlug.value}`,
   query: {
     categorySlug: categorySlug.value,
+    productSlug: productSlug.value,
   },
 });
 
-const { data: initialCategory } = await useFetch<{
+const { data: initialCategory, error: initialCategoryError } = await useFetch<{
   category: { name: string; description: string };
 }>(`/api/categories/${categorySlug.value}`, {
   key: `category-${categorySlug.value}`,
 });
 
 // Инициализируем начальные данные
-if (initialProducts.value) {
-  products.value = initialProducts.value.products.map(
-    (product: APIProduct) => ({
-      id: product.id,
-      name: product.name || "",
-      description: product.description || "",
-      extendedDescription: product.extendedDescription || "",
-      price: product.price || 0,
-      image: product.image || "",
-      category: initialCategory.value?.category?.name || "",
-      category_slug: categorySlug.value,
-      slug: product.slug || "",
-      additional_images: product.additional_images || [],
-      specs: Array.isArray(product.specs) ? product.specs : [],
-      delivery_set: product.delivery_set || "",
-      connection_scheme: product.connection_scheme || "",
-      additional_requirements: product.additional_requirements || "",
-      required_products: product.required_products || [],
-    })
-  );
+if (productsError.value) {
+  console.error("Error fetching products:", productsError.value);
+  fetchError.value = new Error(productsError.value.message);
+  product.value = null;
+} else if (initialProducts.value && initialProducts.value.products.length > 0) {
+  product.value = {
+    id: initialProducts.value.products[0].id,
+    name: initialProducts.value.products[0].name || "",
+    description: initialProducts.value.products[0].description || "",
+    extendedDescription:
+      initialProducts.value.products[0].extendedDescription || "",
+    price: initialProducts.value.products[0].price || 0,
+    image: initialProducts.value.products[0].image || "",
+    category: initialCategory.value?.category?.name || "",
+    category_slug: categorySlug.value,
+    slug: initialProducts.value.products[0].slug || "",
+    additional_images:
+      initialProducts.value.products[0].additional_images || [],
+    specs: Array.isArray(initialProducts.value.products[0].specs)
+      ? initialProducts.value.products[0].specs
+      : [],
+    delivery_set: initialProducts.value.products[0].delivery_set || "",
+    connection_scheme:
+      initialProducts.value.products[0].connection_scheme || "",
+    additional_requirements:
+      initialProducts.value.products[0].additional_requirements || "",
+    required_products:
+      initialProducts.value.products[0].required_products || [],
+  };
+} else {
+  product.value = null;
 }
 
-if (initialCategory.value?.category) {
+if (initialCategoryError.value) {
+  console.error("Error fetching category:", initialCategoryError.value);
+  categoryError.value = new Error(initialCategoryError.value.message);
+} else if (initialCategory.value?.category) {
   categoryInfo.value = {
     title: initialCategory.value.category.name || "",
     description: initialCategory.value.category.description || "",
@@ -851,38 +868,45 @@ const fetchProducts = async () => {
     }>("/api/products", {
       query: {
         categorySlug: categorySlug.value,
+        productSlug: productSlug.value,
       },
-      key: `products-${categorySlug.value}`,
+      key: `products-${categorySlug.value}-${productSlug.value}`,
     });
 
     if (error.value) {
       console.error("Error fetching products:", error.value);
       fetchError.value = new Error(error.value.message);
-      products.value = [];
-    } else if (response.value) {
-      products.value = response.value.products.map((product: APIProduct) => ({
-        id: product.id,
-        name: product.name || "",
-        description: product.description || "",
-        extendedDescription: product.extendedDescription || "",
-        price: product.price || 0,
-        image: product.image || "",
+      product.value = null;
+    } else if (response.value && response.value.products.length > 0) {
+      product.value = {
+        id: response.value.products[0].id,
+        name: response.value.products[0].name || "",
+        description: response.value.products[0].description || "",
+        extendedDescription:
+          response.value.products[0].extendedDescription || "",
+        price: response.value.products[0].price || 0,
+        image: response.value.products[0].image || "",
         category: categoryInfo.value?.title || "",
         category_slug: categorySlug.value,
-        slug: product.slug || "",
-        additional_images: product.additional_images || [],
-        specs: Array.isArray(product.specs) ? product.specs : [],
-        delivery_set: product.delivery_set || "",
-        connection_scheme: product.connection_scheme || "",
-        additional_requirements: product.additional_requirements || "",
-        required_products: product.required_products || [],
-      }));
+        slug: response.value.products[0].slug || "",
+        additional_images: response.value.products[0].additional_images || [],
+        specs: Array.isArray(response.value.products[0].specs)
+          ? response.value.products[0].specs
+          : [],
+        delivery_set: response.value.products[0].delivery_set || "",
+        connection_scheme: response.value.products[0].connection_scheme || "",
+        additional_requirements:
+          response.value.products[0].additional_requirements || "",
+        required_products: response.value.products[0].required_products || [],
+      };
+    } else {
+      product.value = null;
     }
   } catch (err) {
     console.error("Failed to fetch products:", err);
     fetchError.value =
       err instanceof Error ? err : new Error("Failed to fetch products");
-    products.value = [];
+    product.value = null;
   } finally {
     isLoadingProducts.value = false;
   }
@@ -917,9 +941,9 @@ const fetchCategory = async () => {
   }
 };
 
-// Загружаем данные при изменении маршрута
+// Загружаем данные при изменении маршрута только если данные не загружены
 watchEffect(async () => {
-  if (categorySlug.value && productSlug.value) {
+  if (categorySlug.value && productSlug.value && !product.value) {
     await Promise.all([fetchProducts(), fetchCategory()]);
   }
 });
@@ -954,9 +978,6 @@ const openOfferModal = () => {
     }
   );
 };
-
-// Заменяем currentProduct на ref, чтобы избежать мигания при навигации
-const product = ref<ProductType | null>(null);
 
 // Вычисляемое свойство для поиска товара по slug
 const searchedProduct = computed(() => {

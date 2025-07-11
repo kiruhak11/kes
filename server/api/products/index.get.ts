@@ -82,35 +82,80 @@ export default defineEventHandler(async (event) => {
     const productSlug = query.productSlug as string | undefined;
     const exclude = query.exclude as string | undefined;
     const page = parseInt(query.page as string) || 1;
-    const limit = parseInt(query.limit as string) || 99999;
+    const limit = parseInt(query.limit as string) || 15; // Дефолт 15
     const offset = (page - 1) * limit;
+
+    // Фильтры
+    const priceMin = query.priceMin
+      ? parseFloat(query.priceMin as string)
+      : undefined;
+    const priceMax = query.priceMax
+      ? parseFloat(query.priceMax as string)
+      : undefined;
+    const filters = query.filters ? JSON.parse(query.filters as string) : {};
 
     const where: any = {};
     if (categorySlug && categorySlug !== "all") {
       where.categories = { slug: categorySlug };
     }
-    if (productSlug && productSlug !== "undefined") {
-      const productId = parseInt(productSlug);
-      if (!isNaN(productId)) {
-        where.id = productId;
+    // Исключение будет обрабатываться после получения товаров
+    // так как slug генерируется динамически из name
+
+    // Фильтр по цене
+    if (priceMin !== undefined || priceMax !== undefined) {
+      where.price = {};
+      if (priceMin !== undefined) {
+        where.price.gte = priceMin;
+      }
+      if (priceMax !== undefined) {
+        where.price.lte = priceMax;
       }
     }
-    if (exclude) {
-      where.NOT = {
-        slug: exclude,
-      };
+
+    // Фильтры по характеристикам
+    if (Object.keys(filters).length > 0) {
+      where.AND = [];
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== "") {
+          where.AND.push({
+            specs: {
+              path: `$.${key}`,
+              equals: value,
+            },
+          });
+        }
+      });
     }
 
-    const [products, total] = await Promise.all([
-      prisma.products.findMany({
+    let products;
+    let total;
+
+    if (productSlug && productSlug !== "undefined") {
+      // Ищем конкретный товар по slug
+      products = await prisma.products.findMany({
         where,
         include: { categories: true },
         orderBy: { id: "asc" },
-        skip: offset,
-        take: limit,
-      }),
-      prisma.products.count({ where }),
-    ]);
+      });
+
+      // Фильтруем по slug
+      products = products.filter((product) => {
+        if (!product.name) return false;
+        const productSlugGenerated = generateSlug(product.name);
+        return productSlugGenerated === productSlug;
+      });
+
+      total = products.length;
+    } else {
+      // Загружаем все товары из категории
+      products = await prisma.products.findMany({
+        where,
+        include: { categories: true },
+        orderBy: { id: "asc" },
+      });
+
+      total = products.length;
+    }
 
     if (!products || products.length === 0) {
       return {
@@ -139,12 +184,6 @@ export default defineEventHandler(async (event) => {
           ? characteristics
           : [];
 
-        // Отладочная информация
-        console.log(
-          "Raw product additional_images:",
-          product.additional_images
-        );
-
         return {
           ...product,
           category_name: category?.name || "",
@@ -159,9 +198,9 @@ export default defineEventHandler(async (event) => {
       products: transformedProducts,
       pagination: {
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: productSlug ? 1 : page,
+        limit: productSlug ? total : limit,
+        totalPages: productSlug ? 1 : Math.ceil(total / limit),
       },
     };
   } catch (e: any) {
