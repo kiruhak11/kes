@@ -59,16 +59,13 @@
               v-scroll-reveal="'zoom-in'"
             >
               <NuxtLink :to="`/catalog/${category.slug}`">
-                <NuxtImg
+                <img
                   :src="
                     Array.isArray(category.images) && category.images[0]
                       ? category.images[0]
                       : '/images/placeholders/placeholder.png'
                   "
                   :alt="`${category.title} - котельное оборудование`"
-                  :placeholder="[67, 58, 45, 10]"
-                  sizes="400px xxs:900px md:1200px"
-                  format="webp"
                 />
                 <h3>{{ category.title }}</h3>
                 <p v-if="!$device.isMobile">{{ category.description }}</p>

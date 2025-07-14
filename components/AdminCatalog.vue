@@ -166,10 +166,7 @@
                 style="margin-top: 0.5rem"
               >
                 <div class="gallery-item">
-                  <NuxtImg
-                    :placeholder="[67, 58, 45, 10]"
-                    sizes="400px xxs:900px md:1200px"
-                    format="webp"
+                  <img
                     :src="getImageUrl(newProdLocal.image)"
                     class="img-preview"
                     alt="Основное изображение"
@@ -238,10 +235,7 @@
                 v-if="newProdLocal.connection_scheme"
                 class="image-preview-container"
               >
-                <NuxtImg
-                  :placeholder="[67, 58, 45, 10]"
-                  sizes="400px xxs:900px md:1200px"
-                  format="webp"
+                <img
                   :src="getImageUrl(newProdLocal.connection_scheme)"
                   class="img-preview"
                   alt="Схема подключения"
@@ -674,10 +668,7 @@
                       v-if="p.image && p.image !== 'custom'"
                       class="image-preview-container"
                     >
-                      <NuxtImg
-                        :placeholder="[67, 58, 45, 10]"
-                        sizes="400px xxs:900px md:1200px"
-                        format="webp"
+                      <img
                         :src="getImageUrl(p.image)"
                         class="img-preview"
                         alt="Основное изображение"
@@ -704,13 +695,7 @@
                         :key="gidx"
                         class="gallery-item"
                       >
-                        <NuxtImg
-                          :placeholder="[67, 58, 45, 10]"
-                          sizes="400px xxs:900px md:1200px"
-                          format="webp"
-                          :src="getImageUrl(gimg)"
-                          class="img-preview"
-                        />
+                        <img :src="getImageUrl(gimg)" class="img-preview" />
                         <button
                           class="btn btn-danger btn-sm gallery-remove-btn"
                           @click.prevent="removeEditGalleryImage(p, gidx)"
@@ -749,10 +734,7 @@
                       v-if="p.connection_scheme"
                       class="image-preview-container"
                     >
-                      <NuxtImg
-                        :placeholder="[67, 58, 45, 10]"
-                        sizes="400px xxs:900px md:1200px"
-                        format="webp"
+                      <img
                         :src="getImageUrl(p.connection_scheme)"
                         class="img-preview"
                         alt="Схема подключения"

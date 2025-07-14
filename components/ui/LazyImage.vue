@@ -1,9 +1,6 @@
 <template>
   <div class="lazy-image" :class="{ 'lazy-image--loaded': isLoaded }">
-    <NuxtImg
-      :placeholder="[67, 58, 45, 10]"
-      sizes="400px xxs:900px md:1200px"
-      format="webp"
+    <img
       v-if="isVisible"
       ref="imageRef"
       :src="src"

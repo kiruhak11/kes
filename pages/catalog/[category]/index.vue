@@ -346,10 +346,7 @@
               "
             >
               <div class="product-card__img-wrap">
-                <NuxtImg
-                  :placeholder="[67, 58, 45, 10]"
-                  sizes="400px xxs:900px md:1200px"
-                  format="webp"
+                <img
                   :src="product.image ?? undefined"
                   :alt="product.name ?? undefined"
                   class="product-image"

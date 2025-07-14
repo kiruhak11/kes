@@ -24,14 +24,7 @@
               index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'
             "
           >
-            <NuxtImg
-              :placeholder="[67, 58, 45, 10]"
-              sizes="400px xxs:900px md:1200px"
-              format="webp"
-              :src="item.image"
-              :alt="item.name"
-              class="cart-item-image"
-            />
+            <img :src="item.image" :alt="item.name" class="cart-item-image" />
             <div class="cart-item-details">
               <h3>{{ item.name }}</h3>
               <p class="cart-item-price">
