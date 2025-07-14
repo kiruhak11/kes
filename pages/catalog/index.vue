@@ -21,9 +21,12 @@
         >
           <div class="catalog-item__image-container">
             <transition-group name="fade">
-              <img
+              <NuxtImg
                 v-for="(image, index) in category.images"
                 :key="image"
+                :placeholder="[67, 58, 45, 10]"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
                 :src="image"
                 :alt="category.title"
                 v-show="index === category.currentImageIndex"

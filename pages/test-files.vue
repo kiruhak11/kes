@@ -54,7 +54,7 @@
         >
           <h4>Тест отображения изображения:</h4>
           <NuxtImg
-            :placeholder="true"
+            :placeholder="[67, 58, 45, 10]"
             sizes="400px xxs:900px md:1200px"
             format="webp"
             :src="uploadResult.path"
@@ -91,7 +91,7 @@
           <h4>{{ file.name }}</h4>
           <p>Путь: {{ file.path }}</p>
           <NuxtImg
-            :placeholder="true"
+            :placeholder="[67, 58, 45, 10]"
             sizes="400px xxs:900px md:1200px"
             format="webp"
             :src="file.path"

@@ -74,7 +74,7 @@ if (fetchError.value) {
         <div class="footer__logo">
           <NuxtImg
             :src="'/images/logo-white.png'"
-            :placeholder="true"
+            :placeholder="[67, 58, 45, 10]"
             sizes="400px xxs:900px md:1200px"
             format="webp"
             alt="ООО «КотлоЭнергоСнаб»"
@@ -101,7 +101,7 @@ if (fetchError.value) {
           <div class="footer__logo">
             <NuxtImg
               :src="'/images/logo-white.png'"
-              :placeholder="true"
+              :placeholder="[67, 58, 45, 10]"
               sizes="400px xxs:900px md:1200px"
               format="webp"
               alt="ООО «КотлоЭнергоСнаб»"

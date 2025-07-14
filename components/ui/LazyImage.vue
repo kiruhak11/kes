@@ -1,6 +1,9 @@
 <template>
   <div class="lazy-image" :class="{ 'lazy-image--loaded': isLoaded }">
-    <img
+    <NuxtImg
+      :placeholder="[67, 58, 45, 10]"
+      sizes="400px xxs:900px md:1200px"
+      format="webp"
       v-if="isVisible"
       ref="imageRef"
       :src="src"
@@ -17,54 +20,54 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useLazyLoad } from '~/composables/useLazyLoad'
+import { computed } from "vue";
+import { useLazyLoad } from "~/composables/useLazyLoad";
 
 interface Props {
-  src: string
-  alt: string
-  width?: number
-  height?: number
-  imageClass?: string
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  imageClass?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   width: 0,
   height: 0,
-  imageClass: '',
-})
+  imageClass: "",
+});
 
-const { isVisible, elementRef } = useLazyLoad()
-const imageRef = ref<HTMLImageElement | null>(null)
-const isLoaded = ref(false)
-const isError = ref(false)
+const { isVisible, elementRef } = useLazyLoad();
+const imageRef = ref<HTMLImageElement | null>(null);
+const isLoaded = ref(false);
+const isError = ref(false);
 
 const placeholderStyle = computed(() => ({
-  width: props.width ? `${props.width}px` : '100%',
-  height: props.height ? `${props.height}px` : 'auto',
-}))
+  width: props.width ? `${props.width}px` : "100%",
+  height: props.height ? `${props.height}px` : "auto",
+}));
 
 const handleLoad = () => {
-  isLoaded.value = true
-}
+  isLoaded.value = true;
+};
 
 const handleError = () => {
-  isError.value = true
-}
+  isError.value = true;
+};
 </script>
 
 <style lang="scss" scoped>
 .lazy-image {
   position: relative;
   overflow: hidden;
-  
+
   &__placeholder {
     background: var(--bg-light);
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  
+
   &__skeleton {
     width: 100%;
     height: 100%;
@@ -72,17 +75,17 @@ const handleError = () => {
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
   }
-  
+
   img {
     width: 100%;
     height: auto;
     transition: opacity 0.3s ease;
-    
+
     &:not(.lazy-image--loaded) {
       opacity: 0;
     }
   }
-  
+
   &--loaded {
     img {
       opacity: 1;
@@ -98,4 +101,4 @@ const handleError = () => {
     background-position: -200% 0;
   }
 }
-</style> 
+</style>

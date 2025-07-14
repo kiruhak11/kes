@@ -67,6 +67,7 @@ export default defineNuxtConfig({
 
   // Оптимизация изображений
   image: {
+    domains: ["kes-sib.ru"],
     screens: {
       default: 320,
       xxs: 480,

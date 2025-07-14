@@ -38,7 +38,7 @@
                     <div class="product-info">
                       <div class="product-image">
                         <NuxtImg
-                          :placeholder="true"
+                          :placeholder="[67, 58, 45, 10]"
                           sizes="400px xxs:900px md:1200px"
                           format="webp"
                           :src="product.image"
@@ -122,7 +122,7 @@
           <div class="header__logo">
             <NuxtLink to="/" class="untouchable">
               <NuxtImg
-                :placeholder="true"
+                :placeholder="[67, 58, 45, 10]"
                 sizes="400px xxs:900px md:1200px"
                 format="webp"
                 :src="'/images/logo.png'"
@@ -277,7 +277,7 @@
                       <div class="product-info">
                         <div class="product-image">
                           <NuxtImg
-                            :placeholder="true"
+                            :placeholder="[67, 58, 45, 10]"
                             sizes="400px xxs:900px md:1200px"
                             format="webp"
                             :src="product.image"

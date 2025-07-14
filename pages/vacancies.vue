@@ -12,7 +12,7 @@
           style="cursor: pointer"
         >
           <NuxtImg
-            :placeholder="true"
+            :placeholder="[67, 58, 45, 10]"
             sizes="400px xxs:900px md:1200px"
             format="webp"
             :src="vacancy.img"
@@ -50,7 +50,7 @@
         <div class="vacancy-modal">
           <button class="modal-close" @click="closeVacancyModal">×</button>
           <NuxtImg
-            :placeholder="true"
+            :placeholder="[67, 58, 45, 10]"
             sizes="400px xxs:900px md:1200px"
             format="webp"
             :src="selectedVacancy.img"

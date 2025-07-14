@@ -63,7 +63,10 @@
               >
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <img
+              <NuxtImg
+                :placeholder="[67, 58, 45, 10]"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
                 :src="
                   imageList[currentImageIndex] ||
                   '/images/placeholders/placeholder.png'
@@ -92,7 +95,10 @@
                   ]"
                   @click="currentImageIndex = idx"
                 >
-                  <img
+                  <NuxtImg
+                    :placeholder="[67, 58, 45, 10]"
+                    sizes="400px xxs:900px md:1200px"
+                    format="webp"
                     :src="img"
                     :alt="`${product.name} - изображение ${idx + 1}`"
                   />
@@ -262,7 +268,10 @@
               v-if="product.connection_scheme"
               class="scheme-image-container"
             >
-              <img
+              <NuxtImg
+                :placeholder="[67, 58, 45, 10]"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
                 :src="product.connection_scheme"
                 alt="Схема подключения"
                 class="scheme-image"
@@ -308,7 +317,10 @@
                 >
                   <div class="required-product-card__image-wrapper">
                     <div class="required-product-card__image">
-                      <img
+                      <NuxtImg
+                        :placeholder="[67, 58, 45, 10]"
+                        sizes="400px xxs:900px md:1200px"
+                        format="webp"
                         :src="getProductById(prodId)?.image"
                         :alt="getProductById(prodId)?.name"
                       />
@@ -354,7 +366,13 @@
                     class="cert-gallery-card"
                   >
                     <div class="cert-gallery-img-wrap">
-                      <img :src="certificate.image" :alt="certificate.title" />
+                      <NuxtImg
+                        :placeholder="[67, 58, 45, 10]"
+                        sizes="400px xxs:900px md:1200px"
+                        format="webp"
+                        :src="certificate.image"
+                        :alt="certificate.title"
+                      />
                     </div>
                     <div class="cert-gallery-title">
                       {{ certificate.title }}
@@ -473,7 +491,10 @@
                         class="cert-gallery-card"
                       >
                         <div class="cert-gallery-img-wrap">
-                          <img
+                          <NuxtImg
+                            :placeholder="[67, 58, 45, 10]"
+                            sizes="400px xxs:900px md:1200px"
+                            format="webp"
                             :src="certificate.image"
                             :alt="certificate.title"
                           />
@@ -589,7 +610,10 @@
                 )
               "
             >
-              <img
+              <NuxtImg
+                :placeholder="[67, 58, 45, 10]"
+                sizes="400px xxs:900px md:1200px"
+                format="webp"
                 :src="relatedProduct.image"
                 :alt="relatedProduct.name ? String(relatedProduct.name) : ''"
               />
