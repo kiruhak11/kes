@@ -52,7 +52,7 @@
                 transform: filtersCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
               }"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M6 9l6 6 6-6"
                   stroke="currentColor"
