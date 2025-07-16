@@ -15,7 +15,7 @@
           categoryInfo?.title || "Категория"
         }}</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
-        <span>{{ product?.name || "Товар" }}</span>
+        <span>{{ productBreadcrumbName }}</span>
       </nav>
 
       <!-- Индикатор загрузки -->
@@ -306,30 +306,47 @@
                   class="required-product-card"
                   @click="navigateToProduct(getProductById(prodId))"
                 >
-                  <div class="required-product-card__image-wrapper">
-                    <div class="required-product-card__image">
-                      <img
-                        :src="getProductById(prodId)?.image"
-                        :alt="getProductById(prodId)?.name"
-                      />
-                    </div>
+                  <div class="required-product-card__image">
+                    <img
+                      :src="
+                        getProductById(prodId)?.image ||
+                        '/images/placeholder.jpg'
+                      "
+                      :alt="getProductById(prodId)?.name || 'Товар'"
+                      loading="lazy"
+                    />
                   </div>
                   <div class="required-product-card__content">
-                    <div class="required-product-card__header">
-                      <h3 class="required-product-card__title">
-                        {{ getProductById(prodId)?.name }}
-                      </h3>
-                      <div class="required-product-card__price">
-                        {{ getProductById(prodId)?.price?.toLocaleString() }} ₽
-                      </div>
-                    </div>
+                    <h3 class="required-product-card__title">
+                      {{ getProductById(prodId)?.name || "Товар не найден" }}
+                    </h3>
                     <p class="required-product-card__description">
-                      {{ getProductById(prodId)?.description }}
+                      {{
+                        getProductById(prodId)?.description ||
+                        "Описание отсутствует"
+                      }}
                     </p>
                     <div class="required-product-card__footer">
-                      <button class="required-product-card__button">
-                        Подробнее →
-                      </button>
+                      <div class="required-product-card__price">
+                        <span class="price-value">
+                          {{
+                            getProductById(prodId)?.price?.toLocaleString() ||
+                            "0"
+                          }}
+                          ₽
+                        </span>
+                      </div>
+                      <div class="required-product-card__arrow">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M9 18L15 12L9 6"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -780,22 +797,12 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Состояния загрузки
-const isLoadingProducts = ref(true);
-const isLoadingCategory = ref(true);
-
-// Инициализируем состояния
-const products = ref<ProductType[]>([]);
-const categoryInfo = ref<
-  { title: string; description: string; slug: string } | undefined
->(undefined);
-const fetchError = ref<Error | null>(null);
-const categoryError = ref<Error | null>(null);
-
-const product = ref<ProductType | null>(null);
-
-// Загружаем данные сразу при создании компонента
-const { data: initialProducts, error: productsError } = await useFetch<{
+// Загружаем данные сразу при создании компонента с правильной обработкой SSR
+const {
+  data: productData,
+  error: productsError,
+  pending: productsPending,
+} = await useFetch<{
   products: APIProduct[];
 }>("/api/products", {
   key: `products-${categorySlug.value}-${productSlug.value}`,
@@ -803,61 +810,130 @@ const { data: initialProducts, error: productsError } = await useFetch<{
     categorySlug: categorySlug.value,
     productSlug: productSlug.value,
   },
+  server: true,
+  default: () => ({ products: [] }),
 });
 
-const { data: initialCategory, error: initialCategoryError } = await useFetch<{
+const {
+  data: categoryData,
+  error: initialCategoryError,
+  pending: categoryPending,
+} = await useFetch<{
   category: { name: string; description: string };
 }>(`/api/categories/${categorySlug.value}`, {
   key: `category-${categorySlug.value}`,
+  server: true,
+  default: () => ({ category: { name: "", description: "" } }),
 });
 
-// Инициализируем начальные данные
-if (productsError.value) {
-  console.error("Error fetching products:", productsError.value);
-  fetchError.value = new Error(productsError.value.message);
-  product.value = null;
-} else if (initialProducts.value && initialProducts.value.products.length > 0) {
-  product.value = {
-    id: initialProducts.value.products[0].id,
-    name: initialProducts.value.products[0].name || "",
-    description: initialProducts.value.products[0].description || "",
-    extendedDescription:
-      initialProducts.value.products[0].extendedDescription || "",
-    price: initialProducts.value.products[0].price || 0,
-    image: initialProducts.value.products[0].image || "",
-    category: initialCategory.value?.category?.name || "",
-    category_slug: categorySlug.value,
-    slug: initialProducts.value.products[0].slug || "",
-    additional_images:
-      initialProducts.value.products[0].additional_images || [],
-    specs: Array.isArray(initialProducts.value.products[0].specs)
-      ? initialProducts.value.products[0].specs
-      : [],
-    delivery_set: initialProducts.value.products[0].delivery_set || "",
-    connection_scheme:
-      initialProducts.value.products[0].connection_scheme || "",
-    additional_requirements:
-      initialProducts.value.products[0].additional_requirements || "",
-    required_products:
-      initialProducts.value.products[0].required_products || [],
-  };
-} else {
-  product.value = null;
-}
+// Состояния загрузки
+const isLoadingProducts = computed(() => productsPending.value);
+const isLoadingCategory = computed(() => categoryPending.value);
 
-if (initialCategoryError.value) {
-  console.error("Error fetching category:", initialCategoryError.value);
-  categoryError.value = new Error(initialCategoryError.value.message);
-} else if (initialCategory.value?.category) {
-  categoryInfo.value = {
-    title: initialCategory.value.category.name || "",
-    description: initialCategory.value.category.description || "",
+// Инициализируем состояния
+const products = ref<ProductType[]>([]);
+const fetchError = ref<Error | null>(null);
+const categoryError = ref<Error | null>(null);
+
+// Загружаем все товары для разделов "Дополнительно потребуется" и "Похожие товары"
+const { data: allProductsData } = await useFetch<{
+  products: APIProduct[];
+}>("/api/products", {
+  key: `all-products-${categorySlug.value}`,
+  server: true,
+  default: () => ({ products: [] }),
+});
+
+// Преобразуем все товары в нужный формат
+watchEffect(() => {
+  if (allProductsData.value?.products) {
+    products.value = allProductsData.value.products.map(
+      (product: APIProduct) => ({
+        id: product.id,
+        name: product.name || "",
+        description: product.description || "",
+        extendedDescription: product.extendedDescription || "",
+        price: product.price || 0,
+        image: product.image || "",
+        category: "", // Будет заполнено позже из categoryData
+        category_slug: categorySlug.value, // Используем текущую категорию
+        slug: product.slug || `product-${product.id}`,
+        additional_images: product.additional_images || [],
+        specs: Array.isArray(product.specs) ? product.specs : [],
+        delivery_set: product.delivery_set || "",
+        connection_scheme: product.connection_scheme || "",
+        additional_requirements: product.additional_requirements || "",
+        required_products: product.required_products || [],
+      })
+    );
+  }
+});
+
+// Реактивная информация о категории
+const categoryInfo = computed(() => {
+  if (initialCategoryError.value) {
+    categoryError.value = new Error(initialCategoryError.value.message);
+    return undefined;
+  }
+
+  if (!categoryData.value?.category) {
+    return undefined;
+  }
+
+  return {
+    title: categoryData.value.category.name || "",
+    description: categoryData.value.category.description || "",
     slug: categorySlug.value,
   };
-}
+});
 
-isLoadingProducts.value = false;
-isLoadingCategory.value = false;
+// Реактивный продукт на основе загруженных данных
+const product = computed<ProductType | null>(() => {
+  if (productsError.value) {
+    fetchError.value = new Error(productsError.value.message);
+    return null;
+  }
+
+  if (!productData.value?.products?.length) {
+    return null;
+  }
+
+  const productItem = productData.value.products[0];
+
+  return {
+    id: productItem.id,
+    name: productItem.name || "",
+    description: productItem.description || "",
+    extendedDescription: productItem.extendedDescription || "",
+    price: productItem.price || 0,
+    image: productItem.image || "",
+    category: categoryData.value?.category?.name || "",
+    category_slug: categorySlug.value,
+    slug: productItem.slug || "",
+    additional_images: productItem.additional_images || [],
+    specs: Array.isArray(productItem.specs) ? productItem.specs : [],
+    delivery_set: productItem.delivery_set || "",
+    connection_scheme: productItem.connection_scheme || "",
+    additional_requirements: productItem.additional_requirements || "",
+    required_products: productItem.required_products || [],
+  };
+});
+
+// Computed property for product name to prevent hydration mismatch
+const productName = computed(() => {
+  if (isLoadingProducts.value || isLoadingCategory.value) {
+    return "Загрузка...";
+  }
+  return product.value?.name || "Товар";
+});
+
+// Computed property for breadcrumb name to prevent hydration mismatch
+const productBreadcrumbName = computed(() => {
+  if (isLoadingProducts.value || isLoadingCategory.value) {
+    return "Загрузка...";
+  }
+  return product.value?.name || "Товар";
+});
 
 // Функция для загрузки продуктов (используется для обновления)
 const fetchProducts = async () => {
@@ -1110,23 +1186,40 @@ const displaySpecs = computed(() => {
 
 // Похожие товары
 const relatedProducts = computed(() => {
-  if (!product.value || !products.value) return [];
-  // Фильтруем товары, исключая текущий
-  const filteredProducts = products.value.filter(
-    (p) => p.id !== product.value?.id
+  if (!product.value || !products.value || products.value.length === 0)
+    return [];
+
+  // Сначала пытаемся найти товары из той же категории
+  let filteredProducts = products.value.filter(
+    (p) =>
+      p.id !== product.value?.id &&
+      p.category_slug === product.value?.category_slug
   );
-  // Сортируем по id (или по алфавиту, если нужно)
-  const sorted = [...filteredProducts].sort((a, b) => a.id - b.id);
-  return sorted.slice(0, 3);
+
+  // Если товаров из той же категории мало, добавляем товары из других категорий
+  if (filteredProducts.length < 4) {
+    const otherProducts = products.value.filter(
+      (p) =>
+        p.id !== product.value?.id &&
+        p.category_slug !== product.value?.category_slug
+    );
+    filteredProducts = [...filteredProducts, ...otherProducts];
+  }
+
+  // Перемешиваем и берем первые 4 товара
+  const shuffled = filteredProducts.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
 });
 
 const generateProductSlug = (product: ProductType): string => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/[^a-z0-9\. -]/g, "") // Разрешаем точки
     .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/\.+/g, "-") // Заменяем точки на дефис
+    .replace(/-+/g, "-")
+    .replace(/(\d+)\.(\d+)/g, "$1-$2"); // Заменяем точку между числами на дефис
 };
 
 const productTabs = [
@@ -2228,6 +2321,210 @@ if (process.client) {
     padding: 16px 6px 8px 6px;
   }
 }
+
+/* Стили для карточек дополнительных товаров */
+.required-products-grid {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.required-product-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.required-product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(227, 30, 36, 0.15);
+  border-color: #e31e24;
+}
+
+.required-product-card__image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.required-product-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 16px;
+  transition: transform 0.3s ease;
+}
+
+.required-product-card:hover .required-product-card__image img {
+  transform: scale(1.05);
+}
+
+.required-product-card__overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  background: rgba(227, 30, 36, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  transform: scale(0.8);
+}
+
+.required-product-card:hover .required-product-card__overlay {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.required-product-card__icon {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.required-product-card__content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.required-product-card__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.required-product-card__description {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.required-product-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.required-product-card__price {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.price-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e31e24;
+}
+
+.required-product-card__button {
+  background: linear-gradient(135deg, #e31e24, #ff4d4d);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
+}
+
+.required-product-card__button:hover {
+  background: linear-gradient(135deg, #ff4d4d, #e31e24);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(227, 30, 36, 0.3);
+}
+
+.required-product-card__button svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.required-product-card:hover .required-product-card__button svg {
+  transform: translateX(4px);
+}
+
+/* Адаптивность для карточек дополнительных товаров */
+@media (max-width: 768px) {
+  .required-products-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .required-product-card__image {
+    height: 160px;
+  }
+
+  .required-product-card__content {
+    padding: 16px;
+  }
+
+  .required-product-card__title {
+    font-size: 1rem;
+  }
+
+  .required-product-card__description {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .required-products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .required-product-card__image {
+    height: 140px;
+  }
+
+  .required-product-card__footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .required-product-card__button {
+    width: 100%;
+    justify-content: center;
+  }
+}
 .btn-red {
   background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
   color: #fff;
@@ -3034,6 +3331,116 @@ if (process.client) {
     color: var(--text-primary);
   }
 }
+</style>
 
-// ... existing code ...
+<style lang="scss" scoped>
+.required-product-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: visible;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  padding-left: 200px;
+  margin-left: 40px;
+  margin-right: 40px;
+  margin-top: 60px;
+
+  &__image {
+    position: absolute;
+    left: 0px;
+    top: -60px;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      z-index: 2;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  &__description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+    flex: 1;
+    white-space: pre-wrap; // Сохраняем переносы строк
+    word-wrap: break-word; // Разрешаем перенос длинных слов
+    line-height: 1.5; // Добавляем высоту строки для лучшей читаемости
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__price {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+    transition: opacity 0.3s ease;
+  }
+
+  &__arrow {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
+
+    svg {
+      width: 24px;
+      height: 24px;
+      color: #e31e24;
+    }
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 24px 24px rgba(0, 0, 0, 0.13);
+
+    .required-product-card__arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .required-product-card__image img {
+      transform: scale(1.05);
+    }
+  }
+}
+
+.additional-description {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+}
 </style>
