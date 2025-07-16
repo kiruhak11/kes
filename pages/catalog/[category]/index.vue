@@ -107,67 +107,33 @@
 
             <div class="filters-grid">
               <!-- Фильтр по цене -->
-              <div
-                class="filter-card price-filter"
-                :class="{ active: priceRange.min || priceRange.max }"
-              >
-                <div class="filter-card__header">
-                  <div class="filter-card__title-group">
-                    <svg
-                      class="filter-icon"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <path
-                        d="M8 6h6a3 3 0 1 1 0 6H8m0 0v6m0-6v-6m0 6h7"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <span class="filter-card__title">Цена</span>
-                  </div>
-                  <span class="filter-card__arrow open">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M6 9l6 6 6-6"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </span>
+              <div class="filter-group">
+                <div class="filter-group__header">
+                  <h4 class="filter-group__title">Цена</h4>
                 </div>
-                <div class="filter-card__body">
-                  <div class="filter-content">
-                    <div class="price-range">
-                      <div class="price-inputs">
-                        <div class="price-input-group">
-                          <label>От</label>
-                          <div class="input-wrapper">
-                            <input
-                              type="number"
-                              v-model="priceRange.min"
-                              placeholder="0"
-                            />
-                            <span class="currency-symbol">₽</span>
-                          </div>
+                <div class="filter-group__content">
+                  <div class="price-range">
+                    <div class="price-inputs">
+                      <div class="price-input-group">
+                        <label>От</label>
+                        <div class="input-wrapper">
+                          <input
+                            type="number"
+                            v-model="priceRange.min"
+                            placeholder="0"
+                          />
+                          <span class="currency-symbol">₽</span>
                         </div>
-                        <div class="price-separator"></div>
-                        <div class="price-input-group">
-                          <label>До</label>
-                          <div class="input-wrapper">
-                            <input
-                              type="number"
-                              v-model="priceRange.max"
-                              placeholder="∞"
-                            />
-                            <span class="currency-symbol">₽</span>
-                          </div>
+                      </div>
+                      <div class="price-separator"></div>
+                      <div class="price-input-group">
+                        <label>До</label>
+                        <div class="input-wrapper">
+                          <input
+                            type="number"
+                            v-model="priceRange.max"
+                            placeholder="∞"
+                          />
                         </div>
                       </div>
                     </div>
@@ -179,134 +145,54 @@
               <div
                 v-for="spec in filteredSpecs"
                 :key="spec"
-                class="filter-card"
-                :class="{
-                  active:
-                    dynamicFilters[spec] ||
-                    (rangeFilters[spec] &&
-                      (dynamicRangeFilters[spec]?.min !== undefined ||
-                        dynamicRangeFilters[spec]?.max !== undefined)),
-                }"
+                class="filter-group"
               >
-                <div class="filter-card__header">
-                  <div class="filter-card__title-group">
-                    <svg
-                      class="filter-icon"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <path
-                        d="M3 3h18v18H3zM8 12h8M12 8v8"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <span class="filter-card__title">{{
-                      spec.slice(0, 24) + (spec.length > 24 ? "..." : "")
-                    }}</span>
-                  </div>
-                  <span class="filter-card__arrow open">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M6 9l6 6 6-6"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </span>
+                <div class="filter-group__header">
+                  <h4 class="filter-group__title">{{ spec }}</h4>
                 </div>
-                <div class="filter-card__body">
-                  <div class="filter-content">
-                    <template v-if="rangeFilters[spec]">
-                      <div class="price-range">
-                        <div class="price-inputs">
-                          <div class="price-input-group">
-                            <label>От</label>
-                            <div class="input-wrapper">
-                              <input
-                                type="number"
-                                :value="getRangeFilterValue(spec, 'min')"
-                                @input="updateRangeFilter(spec, 'min', $event)"
-                                placeholder="0"
-                              />
-                            </div>
+                <div class="filter-group__content">
+                  <template v-if="rangeFilters[spec]">
+                    <div class="price-range">
+                      <div class="price-inputs">
+                        <div class="price-input-group">
+                          <label>От</label>
+                          <div class="input-wrapper">
+                            <input
+                              type="number"
+                              :value="getRangeFilterValue(spec, 'min')"
+                              @input="updateRangeFilter(spec, 'min', $event)"
+                              placeholder="0"
+                            />
                           </div>
-                          <div class="price-separator"></div>
-                          <div class="price-input-group">
-                            <label>До</label>
-                            <div class="input-wrapper">
-                              <input
-                                type="number"
-                                :value="getRangeFilterValue(spec, 'max')"
-                                @input="updateRangeFilter(spec, 'max', $event)"
-                                placeholder="∞"
-                              />
-                            </div>
+                        </div>
+                        <div class="price-separator"></div>
+                        <div class="price-input-group">
+                          <label>До</label>
+                          <div class="input-wrapper">
+                            <input
+                              type="number"
+                              :value="getRangeFilterValue(spec, 'max')"
+                              @input="updateRangeFilter(spec, 'max', $event)"
+                              placeholder="∞"
+                            />
                           </div>
                         </div>
                       </div>
-                    </template>
-                    <template
-                      v-else-if="
-                        specOptions[spec] && specOptions[spec].length > 0
-                      "
-                    >
-                      <div
-                        v-if="specOptions[spec].length <= 8"
-                        class="select-wrapper"
+                    </div>
+                  </template>
+                  <template v-else-if="specOptions[spec] && specOptions[spec].length > 0">
+                    <div class="filter-options">
+                      <button
+                        v-for="option in specOptions[spec]"
+                        :key="option"
+                        class="filter-option"
+                        :class="{ active: dynamicFilters[spec] === option }"
+                        @click="toggleFilterOption(spec, option)"
                       >
-                        <select
-                          v-model="dynamicFilters[spec]"
-                          class="filter-select"
-                        >
-                          <option value="">
-                            Выберите {{ spec.toLowerCase() }}
-                          </option>
-                          <option
-                            v-for="option in specOptions[spec]"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-                      <div v-else class="search-wrapper">
-                        <input
-                          type="text"
-                          v-model="dynamicFilters[spec]"
-                          :placeholder="`Введите ${spec.toLowerCase()}`"
-                          class="filter-search"
-                        />
-                      </div>
-                    </template>
-                  </div>
-                  <button
-                    v-if="
-                      dynamicFilters[spec] ||
-                      (rangeFilters[spec] &&
-                        (dynamicRangeFilters[spec]?.min !== undefined ||
-                          dynamicRangeFilters[spec]?.max !== undefined))
-                    "
-                    class="clear-filter-btn"
-                    @click="clearFilter(spec)"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M18 6L6 18M6 6L18 18"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    Сбросить
-                  </button>
+                        {{ option }}
+                      </button>
+                    </div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -641,13 +527,10 @@ const config = useRuntimeConfig();
 const currentPage = ref(1);
 const itemsPerPage = 15; // Было 21, теперь 15
 
-// Импортируем usePagination
-const { usePagination } = await import("~/composables/usePagination");
-
 // Products state
 const allProducts = ref<Product[]>([]);
 
-// Фильтры
+// Фильтры - простая инициализация без сохранения в URL
 const priceRange = ref({
   min: undefined as number | undefined,
   max: undefined as number | undefined,
@@ -657,37 +540,6 @@ const dynamicFilters = ref<Record<string, any>>({});
 const dynamicRangeFilters = ref<
   Record<string, { min: number | undefined; max: number | undefined }>
 >({});
-
-// Используем usePagination для сохранения параметров в URL
-usePagination([
-  {
-    name: "page",
-    variable: currentPage,
-    defaultValue: 1,
-  },
-  {
-    name: "priceMin",
-    variable: priceRange,
-    path: ["min"],
-    defaultValue: undefined,
-  },
-  {
-    name: "priceMax",
-    variable: priceRange,
-    path: ["max"],
-    defaultValue: undefined,
-  },
-  {
-    name: "filters",
-    variable: dynamicFilters,
-    defaultValue: {},
-  },
-  {
-    name: "rangeFilters",
-    variable: dynamicRangeFilters,
-    defaultValue: {},
-  },
-]);
 
 // Fetch products (загружаем все товары сразу)
 const fetchProducts = async () => {
@@ -905,13 +757,6 @@ const productsInCategory = computed<Product[]>(() => {
   });
 });
 
-const filters = ref({
-  minPower: undefined as number | undefined,
-  maxPower: undefined as number | undefined,
-  powerUnit: "",
-  fuel: [] as string[],
-});
-
 const powerUnits = computed(() => {
   const units = new Set<string>();
   productsInCategory.value.forEach((product) => {
@@ -953,7 +798,7 @@ const uniqueSpecs = computed<string[]>(() => {
       product.specs.forEach((spec) => {
         if (spec.key && spec.show_in_filters) specsSet.add(spec.key);
       });
-    }
+    };
   });
   return Array.from(specsSet);
 });
@@ -1078,6 +923,16 @@ function updateRangeFilter(spec: string, field: "min" | "max", event: Event) {
   dynamicRangeFilters.value[spec][field] = value;
 }
 
+function toggleFilterOption(spec: string, option: string) {
+  if (dynamicFilters.value[spec] === option) {
+    // Если уже выбран, снимаем выбор
+    dynamicFilters.value[spec] = "";
+  } else {
+    // Выбираем новый вариант
+    dynamicFilters.value[spec] = option;
+  }
+}
+
 const generateProductSlug = (product: Product) => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
@@ -1135,18 +990,341 @@ if (fetchedCategory.value && fetchedCategory.value.category) {
   console.error("Failed to fetch category info:", categoryError.value);
 }
 
-// Инициализируем все фильтры пустыми значениями
+// Инициализируем все фильтры пустыми значениями и сбрасываем при загрузке страницы
 onMounted(() => {
+  // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
+  resetAllFilters();
+  
   // Программно триггерим scroll событие
   window.dispatchEvent(new Event("scroll"));
+  
+  // Инициализируем фильтры
   uniqueSpecs.value.forEach((spec) => {
     dynamicFilters.value[spec] = "";
-    openFilters.value[spec] = true; // Все дропдауны всегда открыты
     // Инициализируем диапазонные фильтры
     if (rangeFilters.value[spec]) {
       dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
     }
   });
+  
+  // Очищаем URL от параметров фильтров
+  const url = new URL(window.location.href);
+  url.searchParams.delete('priceMin');
+  url.searchParams.delete('priceMax');
+  url.searchParams.delete('filters');
+  url.searchParams.delete('rangeFilters');
+  url.searchParams.delete('page');
+  
+  // Обновляем URL без перезагрузки страницы
+  window.history.replaceState({}, '', url.toString());
+});
+
+// Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
+watch(
+  rangeFilters,
+  (newRangeFilters) => {
+    Object.keys(newRangeFilters).forEach((spec) => {
+      if (newRangeFilters[spec] && !dynamicRangeFilters.value[spec]) {
+        dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
+      }
+    });
+  },
+  { immediate: true }
+);
+
+
+// 4. filteredSpecs - только характеристики с show_in_filters
+const filteredSpecs = computed(() =>
+  uniqueSpecs.value.filter(
+    (spec) =>
+      Array.isArray(specOptions.value[spec]) &&
+      specOptions.value[spec].length > 1
+  )
+);
+
+
+// SEO Meta Tags
+useHead({
+  title: computed(
+    () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+  ),
+  meta: [
+    {
+      name: "description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    {
+      name: "keywords",
+      content: computed(
+        () =>
+          `КотлоЭнергоСнаб, ${
+            categoryInfo.value?.title || "категория"
+          }, котельное оборудование, котлы, Барнаул, производство`
+      ),
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    {
+      property: "og:title",
+      content: computed(
+        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      property: "og:description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    { property: "og:type", content: "website" },
+    {
+      property: "og:url",
+      content: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:title",
+      content: computed(
+        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      name: "twitter:description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    { name: "robots", content: "index, follow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    {
+      rel: "canonical",
+      href: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: computed(() =>
+        JSON.stringify({
+          "@context": "http://schema.org",
+          "@type": "Organization",
+          name: "КотлоЭнергоСнаб",
+          url: "https://kes-sib.ru/",
+          logo: "https://kes-sib.ru/favicon.ico",
+        })
+      ),
+    },
+  ],
+});
+
+// Инициализируем все фильтры пустыми значениями и сбрасываем при загрузке страницы
+onMounted(() => {
+  // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
+  resetAllFilters();
+  
+  // Программно триггерим scroll событие
+  window.dispatchEvent(new Event("scroll"));
+  
+  // Инициализируем фильтры
+  uniqueSpecs.value.forEach((spec) => {
+    dynamicFilters.value[spec] = "";
+    // Инициализируем диапазонные фильтры
+    if (rangeFilters.value[spec]) {
+      dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
+    }
+  });
+  
+  // Очищаем URL от параметров фильтров
+  const url = new URL(window.location.href);
+  url.searchParams.delete('priceMin');
+  url.searchParams.delete('priceMax');
+  url.searchParams.delete('filters');
+  url.searchParams.delete('rangeFilters');
+  url.searchParams.delete('page');
+  
+  // Обновляем URL без перезагрузки страницы
+  window.history.replaceState({}, '', url.toString());
+});
+
+// Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
+watch(
+  rangeFilters,
+  (newRangeFilters) => {
+    Object.keys(newRangeFilters).forEach((spec) => {
+      if (newRangeFilters[spec] && !dynamicRangeFilters.value[spec]) {
+        dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
+      }
+    });
+  },
+  { immediate: true }
+);
+
+
+// SEO Meta Tags
+useHead({
+  title: computed(
+    () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+  ),
+  meta: [
+    {
+      name: "description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    {
+      name: "keywords",
+      content: computed(
+        () =>
+          `КотлоЭнергоСнаб, ${
+            categoryInfo.value?.title || "категория"
+          }, котельное оборудование, котлы, Барнаул, производство`
+      ),
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    {
+      property: "og:title",
+      content: computed(
+        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      property: "og:description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    { property: "og:type", content: "website" },
+    {
+      property: "og:url",
+      content: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:title",
+      content: computed(
+        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      name: "twitter:description",
+      content: computed(
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования КотлоЭнергоСнаб. ${
+            categoryInfo.value?.description ||
+            "Производство и монтаж котельного оборудования в Барнауле."
+          }`
+      ),
+    },
+    { name: "robots", content: "index, follow" },
+  ],
+  link: [
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    {
+      rel: "canonical",
+      href: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: computed(() =>
+        JSON.stringify({
+          "@context": "http://schema.org",
+          "@type": "Organization",
+          name: "КотлоЭнергоСнаб",
+          url: "https://kes-sib.ru/",
+          logo: "https://kes-sib.ru/favicon.ico",
+        })
+      ),
+    },
+  ],
+});
+onMounted(() => {
+  // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
+  resetAllFilters();
+  
+  // Программно триггерим scroll событие
+  window.dispatchEvent(new Event("scroll"));
+  
+  // Инициализируем фильтры
+  uniqueSpecs.value.forEach((spec) => {
+    dynamicFilters.value[spec] = "";
+    // Инициализируем диапазонные фильтры
+    if (rangeFilters.value[spec]) {
+      dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
+    }
+  });
+  
+  // Очищаем URL от параметров фильтров
+  const url = new URL(window.location.href);
+  url.searchParams.delete('priceMin');
+  url.searchParams.delete('priceMax');
+  url.searchParams.delete('filters');
+  url.searchParams.delete('rangeFilters');
+  url.searchParams.delete('page');
+  
+  // Обновляем URL без перезагрузки страницы
+  window.history.replaceState({}, '', url.toString());
 });
 
 // Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
@@ -1167,14 +1345,6 @@ const toggleFiltersCollapsed = () => {
   filtersCollapsed.value = !filtersCollapsed.value;
 };
 
-// 4. filteredSpecs - только характеристики с show_in_filters
-const filteredSpecs = computed(() =>
-  uniqueSpecs.value.filter(
-    (spec) =>
-      Array.isArray(specOptions.value[spec]) &&
-      specOptions.value[spec].length > 1
-  )
-);
 
 // Подсчет активных фильтров
 const activeFiltersCount = computed(() => {
@@ -1476,88 +1646,74 @@ useHead({
 }
 
 .filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   padding: 24px 32px 32px;
 }
 
-.filter-card {
+.filter-group {
   background: #fff;
-  border: 1px solid #f0f0f0;
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 2, 0.6, 1);
-  position: relative;
+}
+
+.filter-group__header {
+  padding: 16px 0 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-group__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e31e24;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group__content {
+  padding: 16px 0;
+}
+
+.filter-options {
   display: flex;
-  flex-direction: column;
-  height: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.filter-card:hover {
-  border-color: #e31e24;
-  box-shadow: 0 6px 24px rgba(227, 30, 36, 0.15);
-  transform: translateY(-2px);
-}
-
-.filter-card.active {
-  border-color: #e31e24;
-  background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
-}
-
-.filter-card__header {
-  display: flex;
+.filter-option {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.filter-card__title-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.filter-option:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+  transform: translateY(-1px);
 }
 
-.filter-icon {
-  color: #e31e24;
-  opacity: 0.7;
+.filter-option.active {
+  background: #e31e24;
+  border-color: #e31e24;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.25);
 }
 
-.filter-card__title {
-  font-weight: 600;
-  color: #1a1a1a;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-}
-
-.filter-card__arrow {
-  display: flex;
-  align-items: center;
-  transition: transform 0.3s cubic-bezier(0.4, 2, 0.6, 1);
-  color: #666;
-}
-
-.filter-card__arrow.open {
-  transform: rotate(180deg);
-  color: #e31e24;
-}
-
-.filter-card__body {
-  padding: 20px;
-  background: #fff;
-  border-top: 1px solid #f5f5f5;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.filter-content {
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
+.filter-option.active:hover {
+  background: #c41e24;
+  border-color: #c41e24;
 }
 
 /* Стили для фильтра цены */
@@ -1633,93 +1789,7 @@ useHead({
   margin: 0 8px;
 }
 
-/* Стили для селектов и поиска */
-.select-wrapper,
-.search-wrapper {
-  position: relative;
-  width: 100%;
-}
 
-.filter-select {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #fff;
-  color: #1a1a1a;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
-  font-weight: 500;
-}
-
-.filter-select:focus {
-  border-color: #e31e24;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
-}
-
-.filter-select option {
-  padding: 8px;
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-.filter-search {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #fff;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-.filter-search:focus {
-  border-color: #e31e24;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
-}
-
-.filter-search::placeholder {
-  color: #999;
-  font-weight: 400;
-}
-
-.clear-filter-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: auto;
-  padding: 10px 16px;
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  color: #666;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.clear-filter-btn:hover {
-  background: #e31e24;
-  color: #fff;
-  border-color: #e31e24;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(227, 30, 36, 0.25);
-}
 
 /* Секция товаров */
 .products-section {
@@ -2008,19 +2078,11 @@ useHead({
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .filters-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
 }
 
 @media (max-width: 992px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .filters-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 
   .filters-header {
@@ -2084,17 +2146,29 @@ useHead({
   }
 
   .filters-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
     padding: 16px 20px 24px;
   }
 
-  .filter-card__header {
-    padding: 14px 16px;
+  .filter-group__header {
+    padding: 12px 0 6px 0;
   }
 
-  .filter-card__body {
-    padding: 16px;
+  .filter-group__title {
+    font-size: 1rem;
+  }
+
+  .filter-group__content {
+    padding: 12px 0;
+  }
+
+  .filter-options {
+    gap: 6px;
+  }
+
+  .filter-option {
+    padding: 6px 12px;
+    font-size: 0.85rem;
   }
 
   .price-range {
@@ -2110,16 +2184,9 @@ useHead({
     display: none;
   }
 
-  .input-wrapper input,
-  .filter-select,
-  .filter-search {
+  .input-wrapper input {
     padding: 10px 12px;
     font-size: 0.9rem;
-  }
-
-  .clear-filter-btn {
-    padding: 8px 12px;
-    font-size: 0.8rem;
   }
 
   .products-grid {
