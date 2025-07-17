@@ -1131,12 +1131,14 @@ const generateProductSlug = (product: ProductType): string => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
+    .replace(/[\/\\]/g, "-") // Заменяем слэши и обратные слэши на дефис
     .replace(/[^a-z0-9\., -]/g, "") // Разрешаем точки и запятые
     .replace(/\s+/g, "-")
     .replace(/\.+/g, "-") // Заменяем точки на дефис
     .replace(/,+/g, "-") // Заменяем запятые на дефис
-    .replace(/-+/g, "-")
-    .replace(/(\d+)\.(\d+)/g, "$1-$2"); // Заменяем точку между числами на дефис
+    .replace(/-+/g, "-") // Убираем множественные дефисы
+    .replace(/(\d+)\.(\d+)/g, "$1-$2") // Заменяем точку между числами на дефис
+    .replace(/^-+|-+$/g, ""); // Убираем дефисы в начале и конце строки
 };
 
 const productTabs = [
