@@ -754,6 +754,9 @@ interface APIProduct {
   price: number | null;
   extendedDescription: string | null;
   category_id: string | null;
+  category?: string | null;
+  category_name?: string | null;
+  category_slug?: string | null;
   additional_images: string[] | null;
   specs: Characteristic[] | ProductSpecs;
   delivery_set: string | null;
@@ -855,8 +858,8 @@ watchEffect(() => {
         extendedDescription: product.extendedDescription || "",
         price: product.price || 0,
         image: product.image || "",
-        category: "", // Будет заполнено позже из categoryData
-        category_slug: categorySlug.value, // Используем текущую категорию
+        category: product.category_name || product.category || "", // Используем category_name из API
+        category_slug: product.category_slug || categorySlug.value, // Используем category_slug из API или текущую категорию
         slug: product.slug || `product-${product.id}`,
         additional_images: product.additional_images || [],
         specs: Array.isArray(product.specs) ? product.specs : [],
@@ -1215,9 +1218,10 @@ const generateProductSlug = (product: ProductType): string => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
-    .replace(/[^a-z0-9\. -]/g, "") // Разрешаем точки
+    .replace(/[^a-z0-9\., -]/g, "") // Разрешаем точки и запятые
     .replace(/\s+/g, "-")
     .replace(/\.+/g, "-") // Заменяем точки на дефис
+    .replace(/,+/g, "-") // Заменяем запятые на дефис
     .replace(/-+/g, "-")
     .replace(/(\d+)\.(\d+)/g, "$1-$2"); // Заменяем точку между числами на дефис
 };
@@ -1497,9 +1501,12 @@ const getProductById = (id: number): ProductType | undefined => {
 // Add helper function for navigation
 const navigateToProduct = (product: ProductType | undefined) => {
   if (!product) return;
-  router.push(
-    `/catalog/${product.category_slug}/${generateProductSlug(product)}`
-  );
+
+  // Проверяем, есть ли у товара category_slug, если нет - используем текущую категорию
+  const targetCategorySlug = product.category_slug || categorySlug.value;
+
+  router.push(`/catalog/${targetCategorySlug}/${generateProductSlug(product)}`);
+  console.log("Navigating to product:", product);
 };
 
 watchEffect(() => {
@@ -1512,7 +1519,8 @@ watchEffect(() => {
 const retryLoading = async () => {
   fetchError.value = null;
   categoryError.value = null;
-  await Promise.all([fetchProducts(), fetchCategory()]);
+  // Перезагружаем страницу для получения свежих данных
+  await navigateTo(`/catalog/${categorySlug.value}/${productSlug.value}`);
 };
 
 // Загружаем рекомендованные товары
