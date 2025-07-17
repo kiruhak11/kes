@@ -2048,7 +2048,7 @@ useHead(() => {
 }
 .product-card img {
   position: absolute;
-  top: -25px;
+  top: -65px;
   left: 50%;
   transform: translateX(-50%);
   width: 140px;
@@ -3383,5 +3383,83 @@ useHead(() => {
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: inherit;
+}
+
+/* Стили для форматированного описания */
+:deep(.extended-description-content) {
+  line-height: 1.6;
+
+  ul,
+  ol {
+    list-style-position: outside;
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+    color: var(--text);
+    white-space: normal;
+  }
+
+  /* Вложенные списки */
+  ul ul,
+  ol ul {
+    list-style-type: circle;
+    margin: 0.5rem 0;
+  }
+
+  ul ol,
+  ol ol {
+    list-style-type: lower-alpha;
+    margin: 0.5rem 0;
+  }
+
+  /* Параграфы */
+  p {
+    margin: 1rem 0;
+    white-space: normal;
+  }
+
+  /* Заголовки */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 1.5rem 0 1rem;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+  h2 {
+    font-size: 1.75rem;
+  }
+  h3 {
+    font-size: 1.5rem;
+  }
+  h4 {
+    font-size: 1.25rem;
+  }
+  h5 {
+    font-size: 1.1rem;
+  }
+  h6 {
+    font-size: 1rem;
+  }
 }
 </style>
