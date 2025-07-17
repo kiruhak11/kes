@@ -938,6 +938,7 @@ const generateProductSlug = (product: Product) => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
+    .replace(/[\/\\]/g, "-") // Заменяем слэши и обратные слэши на дефис
     .replace(/[.,]/g, "-") // Сначала точки и запятые на дефис
     .replace(/[^a-z0-9 -]/g, "") // Потом убрать всё лишнее
     .replace(/[\s-]+/g, "-") // Группы пробелов и дефисов в один дефис
@@ -977,6 +978,7 @@ function addToCart(product: Product, e: Event) {
 }
 
 // Получаем инфу о категории
+// @ts-ignore
 const { data: fetchedCategory, error: categoryError } = await useFetch<{
   category: { name: string; description: string };
 }>(`/api/categories/${categorySlug.value}`);
