@@ -1884,7 +1884,7 @@ useHead(() => {
   align-items: flex-start;
   background: #f7f7f7;
   border-radius: 12px;
-  padding: 12px 24px;
+  padding: 12px 12px;
   flex: 1 1 50%;
   min-width: 0;
   box-shadow: 0 2px 12px rgba(227, 30, 36, 0.04);
