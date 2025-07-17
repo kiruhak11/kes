@@ -1542,11 +1542,6 @@ const toggle = (id: number) => {
   // Инициализируем галерею при начале редактирования
   const product = props.products.find((p) => p.id === id);
   if (product) {
-    console.log("Product found for edit:", product);
-    console.log("Product additional_images:", product.additional_images);
-    console.log("Type of additional_images:", typeof product.additional_images);
-    console.log("Is array:", Array.isArray(product.additional_images));
-
     initializeEditGallery(id, product.additional_images || []);
   }
   emit("toggle", id);
@@ -1590,8 +1585,6 @@ const toggleNewProdFuelDropdown = () => emit("toggleNewProdFuelDropdown");
 const removeEditGalleryImage = (product: Product, idx: number) => {
   // Инициализируем галерею, если её нет
   if (!editGalleryLocal.value[product.id]) {
-    console.log("Initializing gallery for removal, product:", product.id);
-    console.log("Product additional_images:", product.additional_images);
     initializeEditGallery(product.id, product.additional_images || []);
   }
 
@@ -1600,11 +1593,6 @@ const removeEditGalleryImage = (product: Product, idx: number) => {
 
   // Обновляем additional_images в продукте
   product.additional_images = [...editGalleryLocal.value[product.id]];
-
-  console.log(
-    "After removal, product additional_images:",
-    product.additional_images
-  );
 };
 
 const handleEditGalleryUpload = async (event: Event, product: Product) => {
@@ -1615,26 +1603,17 @@ const handleEditGalleryUpload = async (event: Event, product: Product) => {
 
   // Инициализируем галерею, если её нет
   if (!editGalleryLocal.value[product.id]) {
-    console.log("Initializing gallery for product:", product.id);
-    console.log("Product additional_images:", product.additional_images);
     initializeEditGallery(product.id, product.additional_images || []);
   }
 
   try {
-    console.log("Uploading files for edit:", files.length);
     const filePaths = await uploadFiles(files);
-    console.log("Uploaded file paths for edit:", filePaths);
 
     // Добавляем новые изображения в локальную галерею
     addEditGalleryImages(product.id, filePaths);
 
     // Обновляем additional_images в продукте
     product.additional_images = [...editGalleryLocal.value[product.id]];
-
-    console.log(
-      "Updated product additional_images:",
-      product.additional_images
-    );
   } catch (error) {
     console.error("Error uploading gallery images for edit:", error);
   }

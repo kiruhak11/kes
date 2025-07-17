@@ -52,7 +52,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     // Предзагрузка критических изображений
     const preloadCriticalImages = () => {
-      const criticalImages = ["/images/logo.png", "/images/hero-bg.jpg"];
+      const criticalImages = ["/images/logo.png"];
 
       criticalImages.forEach((src) => {
         const link = document.createElement("link");

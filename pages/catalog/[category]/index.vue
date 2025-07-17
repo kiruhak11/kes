@@ -180,7 +180,11 @@
                       </div>
                     </div>
                   </template>
-                  <template v-else-if="specOptions[spec] && specOptions[spec].length > 0">
+                  <template
+                    v-else-if="
+                      specOptions[spec] && specOptions[spec].length > 0
+                    "
+                  >
                     <div class="filter-options">
                       <button
                         v-for="option in specOptions[spec]"
@@ -490,9 +494,6 @@ const transliterate = (text: string): string => {
     .split("")
     .map((char) => mapping[char] || char)
     .join("");
-
-  console.log("transliterate debug:", { input: text, output: result });
-
   return result;
 };
 
@@ -798,7 +799,7 @@ const uniqueSpecs = computed<string[]>(() => {
       product.specs.forEach((spec) => {
         if (spec.key && spec.show_in_filters) specsSet.add(spec.key);
       });
-    };
+    }
   });
   return Array.from(specsSet);
 });
@@ -994,10 +995,10 @@ if (fetchedCategory.value && fetchedCategory.value.category) {
 onMounted(() => {
   // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
   resetAllFilters();
-  
+
   // Программно триггерим scroll событие
   window.dispatchEvent(new Event("scroll"));
-  
+
   // Инициализируем фильтры
   uniqueSpecs.value.forEach((spec) => {
     dynamicFilters.value[spec] = "";
@@ -1006,17 +1007,17 @@ onMounted(() => {
       dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
     }
   });
-  
+
   // Очищаем URL от параметров фильтров
   const url = new URL(window.location.href);
-  url.searchParams.delete('priceMin');
-  url.searchParams.delete('priceMax');
-  url.searchParams.delete('filters');
-  url.searchParams.delete('rangeFilters');
-  url.searchParams.delete('page');
-  
+  url.searchParams.delete("priceMin");
+  url.searchParams.delete("priceMax");
+  url.searchParams.delete("filters");
+  url.searchParams.delete("rangeFilters");
+  url.searchParams.delete("page");
+
   // Обновляем URL без перезагрузки страницы
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, "", url.toString());
 });
 
 // Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
@@ -1032,7 +1033,6 @@ watch(
   { immediate: true }
 );
 
-
 // 4. filteredSpecs - только характеристики с show_in_filters
 const filteredSpecs = computed(() =>
   uniqueSpecs.value.filter(
@@ -1041,7 +1041,6 @@ const filteredSpecs = computed(() =>
       specOptions.value[spec].length > 1
   )
 );
-
 
 // SEO Meta Tags
 useHead({
@@ -1154,10 +1153,10 @@ useHead({
 onMounted(() => {
   // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
   resetAllFilters();
-  
+
   // Программно триггерим scroll событие
   window.dispatchEvent(new Event("scroll"));
-  
+
   // Инициализируем фильтры
   uniqueSpecs.value.forEach((spec) => {
     dynamicFilters.value[spec] = "";
@@ -1166,17 +1165,17 @@ onMounted(() => {
       dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
     }
   });
-  
+
   // Очищаем URL от параметров фильтров
   const url = new URL(window.location.href);
-  url.searchParams.delete('priceMin');
-  url.searchParams.delete('priceMax');
-  url.searchParams.delete('filters');
-  url.searchParams.delete('rangeFilters');
-  url.searchParams.delete('page');
-  
+  url.searchParams.delete("priceMin");
+  url.searchParams.delete("priceMax");
+  url.searchParams.delete("filters");
+  url.searchParams.delete("rangeFilters");
+  url.searchParams.delete("page");
+
   // Обновляем URL без перезагрузки страницы
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, "", url.toString());
 });
 
 // Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
@@ -1191,7 +1190,6 @@ watch(
   },
   { immediate: true }
 );
-
 
 // SEO Meta Tags
 useHead({
@@ -1302,10 +1300,10 @@ useHead({
 onMounted(() => {
   // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
   resetAllFilters();
-  
+
   // Программно триггерим scroll событие
   window.dispatchEvent(new Event("scroll"));
-  
+
   // Инициализируем фильтры
   uniqueSpecs.value.forEach((spec) => {
     dynamicFilters.value[spec] = "";
@@ -1314,17 +1312,17 @@ onMounted(() => {
       dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
     }
   });
-  
+
   // Очищаем URL от параметров фильтров
   const url = new URL(window.location.href);
-  url.searchParams.delete('priceMin');
-  url.searchParams.delete('priceMax');
-  url.searchParams.delete('filters');
-  url.searchParams.delete('rangeFilters');
-  url.searchParams.delete('page');
-  
+  url.searchParams.delete("priceMin");
+  url.searchParams.delete("priceMax");
+  url.searchParams.delete("filters");
+  url.searchParams.delete("rangeFilters");
+  url.searchParams.delete("page");
+
   // Обновляем URL без перезагрузки страницы
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, "", url.toString());
 });
 
 // Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
@@ -1344,7 +1342,6 @@ const filtersCollapsed = ref(true);
 const toggleFiltersCollapsed = () => {
   filtersCollapsed.value = !filtersCollapsed.value;
 };
-
 
 // Подсчет активных фильтров
 const activeFiltersCount = computed(() => {
@@ -1788,8 +1785,6 @@ useHead({
   background: linear-gradient(180deg, transparent, #e0e0e0, transparent);
   margin: 0 8px;
 }
-
-
 
 /* Секция товаров */
 .products-section {

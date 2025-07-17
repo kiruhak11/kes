@@ -708,12 +708,6 @@ async function updateWithSpecs(p: Product) {
       required_products: p.required_products || [],
     };
 
-    // Отладочная информация
-    console.log(
-      "Updating product with additional_images:",
-      updateData.additional_images
-    );
-
     // Получаем обновленный продукт с сервера
     const updatedProduct = await $fetch<ProductApiResponse>(
       `/api/products/${p.id}`,
@@ -965,13 +959,10 @@ async function handleEditGalleryUpload(event: Event, p: Product) {
   }
 
   try {
-    console.log("Uploading files:", files.length);
     const filePaths = await uploadFiles(files);
-    console.log("Uploaded file paths:", filePaths);
 
     // Добавляем новые пути к существующим
     p.additional_images = [...p.additional_images, ...filePaths];
-    console.log("Updated additional_images:", p.additional_images);
   } catch (error) {
     console.error("Error uploading gallery images:", error);
   }
