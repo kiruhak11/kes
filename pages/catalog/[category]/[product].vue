@@ -801,6 +801,10 @@ interface Certificate {
   image: string;
 }
 
+interface APIResponse {
+  product: APIProduct | null;
+}
+
 const route = useRoute();
 const router = useRouter();
 const categorySlug = computed(() => route.params.category as string);
@@ -812,21 +816,34 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Загружаем данные с помощью useFetch в правильном контексте
+// Сначала получаем ID продукта по слагу
+const { data: productIdData } = useFetch<{ id: number }>(
+  "/api/products/by-slug",
+  {
+    query: {
+      category: route.params.category,
+      slug: route.params.product,
+    },
+  }
+);
+
+// URL для запроса продукта
+const productUrl = computed(() =>
+  productIdData.value?.id
+    ? `/api/products/${productIdData.value.id}`
+    : "/api/products/0"
+);
+
+// Затем загружаем полные данные продукта
 const {
   data: productData,
   error: productsError,
   pending: productsPending,
-} = useFetch<{
-  products: APIProduct[];
-}>("/api/products", {
-  key: `products-${categorySlug.value}-${productSlug.value}`,
-  query: {
-    categorySlug: categorySlug.value,
-    productSlug: productSlug.value,
-  },
+  execute: refreshProduct,
+} = useFetch<APIResponse>(productUrl, {
+  key: computed(() => `product-${productIdData.value?.id || 0}`),
   server: true,
-  default: () => ({ products: [] }),
+  default: () => null,
 });
 
 const {
@@ -844,8 +861,13 @@ const {
 // Загружаем все товары для разделов "Дополнительно потребуется" и "Похожие товары"
 const { data: allProductsData } = useFetch<{
   products: APIProduct[];
-}>("/api/products", {
+}>("/api/products/list", {
   key: `all-products-${categorySlug.value}`,
+  query: {
+    categorySlug: categorySlug.value,
+    exclude: route.params.id,
+    limit: 4,
+  },
   server: true,
   default: () => ({ products: [] }),
 });
@@ -913,29 +935,28 @@ watchEffect(() => {
     return;
   }
 
-  if (!productData.value?.products?.length) {
+  const apiProduct = productData.value?.product;
+  if (!apiProduct) {
     product.value = null;
     return;
   }
 
-  const productItem = productData.value.products[0];
-
   product.value = {
-    id: productItem.id,
-    name: productItem.name || "",
-    description: productItem.description || "",
-    extendedDescription: productItem.extendedDescription || "",
-    price: productItem.price || 0,
-    image: productItem.image || "",
+    id: apiProduct.id,
+    name: apiProduct.name || "",
+    description: apiProduct.description || "",
+    extendedDescription: apiProduct.extendedDescription || "",
+    price: apiProduct.price || 0,
+    image: apiProduct.image || "",
     category: categoryData.value?.category?.name || "",
     category_slug: categorySlug.value,
-    slug: productItem.slug || "",
-    additional_images: productItem.additional_images || [],
-    specs: Array.isArray(productItem.specs) ? productItem.specs : [],
-    delivery_set: productItem.delivery_set || "",
-    connection_scheme: productItem.connection_scheme || "",
-    additional_requirements: productItem.additional_requirements || "",
-    required_products: productItem.required_products || [],
+    slug: apiProduct.slug || "",
+    additional_images: apiProduct.additional_images || [],
+    specs: Array.isArray(apiProduct.specs) ? apiProduct.specs : [],
+    delivery_set: apiProduct.delivery_set || "",
+    connection_scheme: apiProduct.connection_scheme || "",
+    additional_requirements: apiProduct.additional_requirements || "",
+    required_products: apiProduct.required_products || [],
   };
 });
 
@@ -1922,7 +1943,11 @@ useHead(() => {
   box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
+  transition:
+    box-shadow 0.25s,
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2036,7 +2061,9 @@ useHead(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: visible;
-  transition: transform 0.25s, box-shadow 0.25s;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
   position: relative;
   min-height: 240px;
   display: flex;
@@ -2463,7 +2490,9 @@ useHead(() => {
   font-weight: 600;
   cursor: pointer;
   padding: 14px 32px;
-  transition: background 0.3s, transform 0.2s;
+  transition:
+    background 0.3s,
+    transform 0.2s;
 }
 .btn-red:hover {
   background: #ff6b6b;
@@ -2610,7 +2639,9 @@ useHead(() => {
   padding: 10px 22px 10px 22px;
   border-radius: 8px 8px 0 0;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   position: relative;
 }
 .tab-btn.active {
@@ -2687,7 +2718,11 @@ useHead(() => {
   box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   overflow: hidden;
   position: relative;
-  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
+  transition:
+    box-shadow 0.25s,
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
 }
 .cart-minus,
 .cart-plus {
@@ -2702,7 +2737,9 @@ useHead(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s;
   border-radius: 0;
 }
 .cart-minus:hover,
@@ -2747,7 +2784,9 @@ useHead(() => {
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .factory-tab-btn.active {
   background: #f7f7fa;
@@ -2808,7 +2847,10 @@ useHead(() => {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
   font-size: 1.2rem;
-  transition: background 0.2s, border 0.2s, opacity 0.2s;
+  transition:
+    background 0.2s,
+    border 0.2s,
+    opacity 0.2s;
   opacity: 0.92;
   pointer-events: auto;
   margin: 0;
@@ -2873,13 +2915,17 @@ useHead(() => {
   justify-content: flex-start;
   padding: 32px 12px 16px 12px;
   position: relative;
-  transition: box-shadow 0.25s, transform 0.25s, opacity 0.25s;
+  transition:
+    box-shadow 0.25s,
+    transform 0.25s,
+    opacity 0.25s;
   opacity: 0.98;
   border: 1.5px solid #f3eaea;
   z-index: 10;
 }
 .cert-gallery-card:hover {
-  box-shadow: 0 16px 48px 0 rgba(227, 30, 36, 0.18),
+  box-shadow:
+    0 16px 48px 0 rgba(227, 30, 36, 0.18),
     0 2px 12px 0 rgba(0, 0, 0, 0.1);
   transform: translateY(-10px) scale(1.04);
   opacity: 1;
@@ -2953,7 +2999,11 @@ useHead(() => {
   background: #fff;
   border: 2px solid #e31e24;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
-  transition: background 0.35s, transform 0.35s, border 0.35s, width 0.35s,
+  transition:
+    background 0.35s,
+    transform 0.35s,
+    border 0.35s,
+    width 0.35s,
     box-shadow 0.35s;
   cursor: pointer;
   opacity: 0.7;
@@ -2970,7 +3020,9 @@ useHead(() => {
   width: 36px;
   background: linear-gradient(90deg, #e31e24 60%, #ff6b6b 100%);
   border-color: #ff6b6b;
-  box-shadow: 0 0 16px #e31e24, 0 2px 8px rgba(227, 30, 36, 0.13);
+  box-shadow:
+    0 0 16px #e31e24,
+    0 2px 8px rgba(227, 30, 36, 0.13);
   opacity: 1;
   transform: scale(1.18);
 }
@@ -3284,7 +3336,9 @@ useHead(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: visible;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
   position: relative;
   padding-left: 200px;
   margin-left: 40px;

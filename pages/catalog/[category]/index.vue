@@ -221,8 +221,8 @@
               index % 3 === 0
                 ? 'slide-in-left'
                 : index % 3 === 1
-                ? 'fade-in-up'
-                : 'slide-in-right'
+                  ? 'fade-in-up'
+                  : 'slide-in-right'
             "
           >
             <div
@@ -524,9 +524,9 @@ const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
 
-// Pagination state
+// Состояния для пагинации
 const currentPage = ref(1);
-const itemsPerPage = 15; // Было 21, теперь 15
+const itemsPerPage = 15;
 
 // Products state
 const allProducts = ref<Product[]>([]);
@@ -542,38 +542,50 @@ const dynamicRangeFilters = ref<
   Record<string, { min: number | undefined; max: number | undefined }>
 >({});
 
-// Fetch products (загружаем все товары сразу)
+// Fetch products
 const fetchProducts = async () => {
-  const { data: fetched, error } = await useFetch("/api/products", {
+  // Подготавливаем фильтры, исключая пустые значения
+  const nonEmptyFilters = Object.entries(dynamicFilters.value)
+    .filter(([_, value]) => value && value !== "")
+    .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+  const { data: fetched, error } = await useFetch<{
+    products: Product[];
+    total: number;
+  }>("/api/products/list", {
     query: {
       categorySlug: route.params.category,
-    },
-    transform: (response) => {
-      if (!response || !response.products) {
-        console.error("Invalid response format:", response);
-        return {
-          products: [],
-          pagination: { total: 0, page: 1, limit: 15, totalPages: 0 },
-        };
-      }
-      return response;
+      filters:
+        Object.keys(nonEmptyFilters).length > 0
+          ? JSON.stringify(nonEmptyFilters)
+          : undefined,
+      priceMin: priceRange.value.min,
+      priceMax: priceRange.value.max,
     },
   });
+
   if (error.value) {
     console.error("Error fetching products:", error.value);
     allProducts.value = [];
   } else if (fetched.value) {
-    allProducts.value = fetched.value.products as unknown as Product[];
+    allProducts.value = fetched.value.products;
   } else {
     allProducts.value = [];
   }
 };
 
-// Загружаем товары только при инициализации и при смене категории
+// Загружаем товары при инициализации, смене категории или фильтров
 watch(
-  [() => route.params.category],
+  [
+    () => route.params.category,
+    () => dynamicFilters.value,
+    () => priceRange.value.min,
+    () => priceRange.value.max,
+  ],
   () => {
     fetchProducts();
+    // Сбрасываем страницу при изменении фильтров или категории
+    currentPage.value = 1;
   },
   { immediate: true, deep: true }
 );
@@ -620,7 +632,7 @@ function nextSlide() {
   sliderIndex.value = (sliderIndex.value + 1) % sliderImages.value.length;
 }
 
-// Отфильтрованные товары с пагинацией
+// Отфильтрованные товары
 const filteredProducts = computed<Product[]>(() => {
   let products = allProducts.value;
 
@@ -675,16 +687,16 @@ const filteredProducts = computed<Product[]>(() => {
   return products;
 });
 
+// Общее количество страниц
+const totalPages = computed(() => {
+  return Math.ceil(filteredProducts.value.length / itemsPerPage);
+});
+
 // Товары для текущей страницы
 const paginatedProducts = computed<Product[]>(() => {
   const startIndex = (currentPage.value - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   return filteredProducts.value.slice(startIndex, endIndex);
-});
-
-// Вычисляем общее количество страниц
-const totalPages = computed(() => {
-  return Math.ceil(filteredProducts.value.length / itemsPerPage);
 });
 
 const goToNextPage = () => {
@@ -1815,7 +1827,9 @@ useHead({
 /* Анимация выезда фильтров */
 .filters-slide-enter-active,
 .filters-slide-leave-active {
-  transition: max-height 0.45s cubic-bezier(0.4, 2, 0.6, 1), opacity 0.35s,
+  transition:
+    max-height 0.45s cubic-bezier(0.4, 2, 0.6, 1),
+    opacity 0.35s,
     padding 0.3s;
 }
 .filters-slide-enter-from,
@@ -1869,7 +1883,9 @@ useHead({
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: visible;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1879,7 +1895,9 @@ useHead({
 
 .product-card__clickable {
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
   flex: 1;
   padding: 24px 24px 0;
 }
@@ -2016,7 +2034,9 @@ useHead({
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .buy-btn:hover {
@@ -2266,7 +2286,10 @@ useHead({
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
   display: flex;
   align-items: center;
