@@ -15,7 +15,15 @@
           categoryInfo?.title || "Категория"
         }}</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
-        <span>{{ productBreadcrumbName }}</span>
+        <span
+          v-if="!isLoadingProducts && !isLoadingCategory && product && isClient"
+          v-cloak
+          >{{ product.name }}</span
+        >
+        <span v-else-if="isLoadingProducts || isLoadingCategory"
+          >Загрузка...</span
+        >
+        <span v-else v-cloak>Товар</span>
       </nav>
 
       <!-- Индикатор загрузки -->
@@ -42,10 +50,11 @@
       </div>
 
       <div
-        v-else-if="product"
+        v-if="product && !isLoadingProducts && !isLoadingCategory && isClient"
         class="product-detail-card"
         :class="{ 'no-reveal': isMobile }"
         v-scroll-reveal="!isMobile && 'fade-in-up'"
+        v-cloak
       >
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
@@ -106,7 +115,10 @@
             :class="{ 'no-reveal': isMobile }"
             v-scroll-reveal="!isMobile && 'slide-in-right'"
           >
-            <h1 class="product-title">{{ product.name }}</h1>
+            <h1 class="product-title" v-cloak v-if="isClient">
+              {{ productName }}
+            </h1>
+            <h1 class="product-title" v-else>Загрузка...</h1>
             <div class="product-main-row">
               <div class="product-main-description">
                 <div
@@ -800,12 +812,12 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Загружаем данные сразу при создании компонента с правильной обработкой SSR
+// Загружаем данные с помощью useFetch в правильном контексте
 const {
   data: productData,
   error: productsError,
   pending: productsPending,
-} = await useFetch<{
+} = useFetch<{
   products: APIProduct[];
 }>("/api/products", {
   key: `products-${categorySlug.value}-${productSlug.value}`,
@@ -821,7 +833,7 @@ const {
   data: categoryData,
   error: initialCategoryError,
   pending: categoryPending,
-} = await useFetch<{
+} = useFetch<{
   category: { name: string; description: string };
 }>(`/api/categories/${categorySlug.value}`, {
   key: `category-${categorySlug.value}`,
@@ -829,23 +841,23 @@ const {
   default: () => ({ category: { name: "", description: "" } }),
 });
 
-// Состояния загрузки
-const isLoadingProducts = computed(() => productsPending.value);
-const isLoadingCategory = computed(() => categoryPending.value);
-
-// Инициализируем состояния
-const products = ref<ProductType[]>([]);
-const fetchError = ref<Error | null>(null);
-const categoryError = ref<Error | null>(null);
-
 // Загружаем все товары для разделов "Дополнительно потребуется" и "Похожие товары"
-const { data: allProductsData } = await useFetch<{
+const { data: allProductsData } = useFetch<{
   products: APIProduct[];
 }>("/api/products", {
   key: `all-products-${categorySlug.value}`,
   server: true,
   default: () => ({ products: [] }),
 });
+
+// Состояния загрузки
+const isLoadingProducts = computed(() => productsPending?.value);
+const isLoadingCategory = computed(() => categoryPending?.value);
+
+// Инициализируем состояния
+const products = ref<ProductType[]>([]);
+const fetchError = ref<Error | null>(null);
+const categoryError = ref<Error | null>(null);
 
 // Преобразуем все товары в нужный формат
 watchEffect(() => {
@@ -891,19 +903,24 @@ const categoryInfo = computed(() => {
 });
 
 // Реактивный продукт на основе загруженных данных
-const product = computed<ProductType | null>(() => {
+const product = ref<ProductType | null>(null);
+
+// Обновляем продукт при изменении данных
+watchEffect(() => {
   if (productsError.value) {
     fetchError.value = new Error(productsError.value.message);
-    return null;
+    product.value = null;
+    return;
   }
 
   if (!productData.value?.products?.length) {
-    return null;
+    product.value = null;
+    return;
   }
 
   const productItem = productData.value.products[0];
 
-  return {
+  product.value = {
     id: productItem.id,
     name: productItem.name || "",
     description: productItem.description || "",
@@ -930,107 +947,15 @@ const productName = computed(() => {
   return product.value?.name || "Товар";
 });
 
-// Computed property for breadcrumb name to prevent hydration mismatch
-const productBreadcrumbName = computed(() => {
-  if (isLoadingProducts.value || isLoadingCategory.value) {
-    return "Загрузка...";
-  }
-  return product.value?.name || "Товар";
-});
-
-// Функция для загрузки продуктов (используется для обновления)
-const fetchProducts = async () => {
-  isLoadingProducts.value = true;
-  try {
-    const { data: response, error } = await useFetch<{
-      products: APIProduct[];
-    }>("/api/products", {
-      query: {
-        categorySlug: categorySlug.value,
-        productSlug: productSlug.value,
-      },
-      key: `products-${categorySlug.value}-${productSlug.value}`,
-    });
-
-    if (error.value) {
-      console.error("Error fetching products:", error.value);
-      fetchError.value = new Error(error.value.message);
-      product.value = null;
-    } else if (response.value && response.value.products.length > 0) {
-      product.value = {
-        id: response.value.products[0].id,
-        name: response.value.products[0].name || "",
-        description: response.value.products[0].description || "",
-        extendedDescription:
-          response.value.products[0].extendedDescription || "",
-        price: response.value.products[0].price || 0,
-        image: response.value.products[0].image || "",
-        category: categoryInfo.value?.title || "",
-        category_slug: categorySlug.value,
-        slug: response.value.products[0].slug || "",
-        additional_images: response.value.products[0].additional_images || [],
-        specs: Array.isArray(response.value.products[0].specs)
-          ? response.value.products[0].specs
-          : [],
-        delivery_set: response.value.products[0].delivery_set || "",
-        connection_scheme: response.value.products[0].connection_scheme || "",
-        additional_requirements:
-          response.value.products[0].additional_requirements || "",
-        required_products: response.value.products[0].required_products || [],
-      };
-    } else {
-      product.value = null;
-    }
-  } catch (err) {
-    console.error("Failed to fetch products:", err);
-    fetchError.value =
-      err instanceof Error ? err : new Error("Failed to fetch products");
-    product.value = null;
-  } finally {
-    isLoadingProducts.value = false;
-  }
-};
-
-// Функция для загрузки категории
-const fetchCategory = async () => {
-  isLoadingCategory.value = true;
-  try {
-    const { data: response, error } = await useFetch<{
-      category: { name: string; description: string };
-    }>(`/api/categories/${categorySlug.value}`, {
-      key: `category-${categorySlug.value}`, // Добавляем уникальный ключ
-    });
-
-    if (error.value) {
-      console.error("Failed to fetch category:", error.value);
-      categoryError.value = new Error(error.value.message);
-    } else if (response.value?.category) {
-      categoryInfo.value = {
-        title: response.value.category.name || "",
-        description: response.value.category.description || "",
-        slug: categorySlug.value,
-      };
-    }
-  } catch (err) {
-    console.error("Failed to fetch category:", err);
-    categoryError.value =
-      err instanceof Error ? err : new Error("Failed to fetch category");
-  } finally {
-    isLoadingCategory.value = false;
-  }
-};
-
-// Загружаем данные при изменении маршрута только если данные не загружены
-watchEffect(async () => {
-  if (categorySlug.value && productSlug.value && !product.value) {
-    await Promise.all([fetchProducts(), fetchCategory()]);
-  }
-});
+// Данные загружаются автоматически через useFetch
 
 // Определяем, является ли устройство мобильным
 const isMobile = ref(false);
+const isClient = ref(false);
 
 onMounted(() => {
+  isClient.value = true;
+
   // Проверяем ширину экрана при монтировании
   isMobile.value = window.innerWidth <= 768;
 
@@ -1077,20 +1002,7 @@ const searchedProduct = computed(() => {
   );
 });
 
-// Обновляем `product` только когда это необходимо
-watch(
-  searchedProduct,
-  (newProduct) => {
-    if (newProduct) {
-      product.value = newProduct;
-    } else if (productSlug.value) {
-      // Если есть slug, но товар не найден
-      product.value = null;
-    }
-    // Если slug пуст (навигация), ничего не делаем, `product` сохраняет значение
-  },
-  { immediate: true }
-);
+// Product теперь обновляется через watchEffect выше
 
 // Handle product not found
 watch(product, (newProduct, oldProduct) => {
@@ -1099,7 +1011,8 @@ watch(product, (newProduct, oldProduct) => {
     !isLoadingProducts.value &&
     !newProduct &&
     products.value.length > 0 &&
-    isProductRouteActive.value
+    isProductRouteActive.value &&
+    isClient.value
   ) {
     router.push(`/catalog/${categorySlug.value}`);
   }
@@ -1509,11 +1422,7 @@ const navigateToProduct = (product: ProductType | undefined) => {
   console.log("Navigating to product:", product);
 };
 
-watchEffect(() => {
-  if (!isLoadingProducts.value || fetchError.value) {
-    isLoadingProducts.value = false;
-  }
-});
+// Состояния загрузки управляются автоматически через useFetch
 
 // Функция для повторной загрузки данных
 const retryLoading = async () => {
@@ -1523,21 +1432,31 @@ const retryLoading = async () => {
   await navigateTo(`/catalog/${categorySlug.value}/${productSlug.value}`);
 };
 
-// Загружаем рекомендованные товары
-const { data: recommendedProducts } = await useFetch<{
-  products: APIProduct[];
-}>("/api/products", {
-  key: `recommended-${categorySlug.value}`,
-  query: {
-    categorySlug: categorySlug.value,
-    exclude: productSlug.value,
-    limit: 4,
-  },
-});
+// Глобальная переменная для рекомендованных товаров
+let recommendedProducts: any = null;
+
+// Функция для загрузки рекомендованных товаров
+async function loadRecommendedProducts() {
+  const response = await useFetch<{
+    products: APIProduct[];
+  }>("/api/products", {
+    key: `recommended-${categorySlug.value}`,
+    query: {
+      categorySlug: categorySlug.value,
+      exclude: productSlug.value,
+      limit: 4,
+    },
+  });
+
+  recommendedProducts = response.data;
+}
+
+// Загружаем рекомендованные товары при инициализации
+loadRecommendedProducts();
 
 // Преобразуем рекомендованные товары
 const similarProducts = computed(() => {
-  if (!recommendedProducts.value?.products) return [];
+  if (!recommendedProducts?.value?.products) return [];
   return recommendedProducts.value.products.map((product: APIProduct) => ({
     id: product.id,
     name: product.name || "",
@@ -1549,7 +1468,7 @@ const similarProducts = computed(() => {
 });
 
 // SEO Meta Tags
-if (process.client) {
+useHead(() => {
   const productName = product.value?.name || "Товар";
   const productDesc = product.value?.description || "";
   const categoryName = categoryInfo.value?.title || "";
@@ -1558,7 +1477,7 @@ if (process.client) {
   const productImage = product.value?.image || "/images/hero1.jpg";
   const productPrice = product.value?.price || 0;
 
-  useHead({
+  return {
     title: `${productName} — КотлоЭнергоСнаб`,
     meta: [
       {
@@ -1644,8 +1563,8 @@ if (process.client) {
         }),
       },
     ],
-  });
-}
+  };
+});
 
 // ... existing code ...
 </script>
@@ -3338,6 +3257,20 @@ if (process.client) {
     text-align: center;
     color: var(--text-primary);
   }
+}
+
+/* Стили для v-cloak - скрывают элементы до полной гидратации */
+[v-cloak] {
+  display: none !important;
+}
+
+/* Дополнительная защита от мигания контента */
+.product-detail-card[v-cloak] {
+  visibility: hidden !important;
+}
+
+.product-title[v-cloak] {
+  visibility: hidden !important;
 }
 </style>
 

@@ -33,10 +33,10 @@
       :authorized="authorized"
       :password="password"
       :login-error="loginError"
-      @update:password="(val) => (password = val)"
+      @update:password="(...args: any[]) => (password = args[0])"
       @login="login"
       @logout="logout"
-      :products="products"
+      :products="normalizedProducts"
       :categories="categories"
       :specs-list="specsList"
       :new-prod="newProd"
@@ -56,47 +56,47 @@
       :modal-store="modalStore"
       :filtered-specs="filteredSpecs"
       :set-show-in-filters-for-all="setShowInFiltersForAll"
-      @add-product="addProduct"
-      @reset-form="resetForm"
-      @toggle="toggle"
-      @update-with-specs="updateWithSpecs"
-      @cancel-edit="cancelEdit"
-      @add-spec="addSpec"
-      @remove-spec="removeSpec"
-      @add-new-spec="addNewSpec"
-      @remove-new-spec="removeNewSpec"
-      @delete-product="deleteProduct"
-      @handle-image-upload="handleImageUpload"
-      @handle-connection-scheme-upload="handleConnectionSchemeUpload"
-      @toggle-new-prod-fuel-dropdown="toggleNewProdFuelDropdown"
+      @add-product="(...args: any[]) => addProduct()"
+      @reset-form="(...args: any[]) => resetForm()"
+      @toggle="(...args: any[]) => toggle(args[0])"
+      @update-with-specs="(...args: any[]) => updateWithSpecs(args[0])"
+      @cancel-edit="(...args: any[]) => cancelEdit()"
+      @add-spec="(...args: any[]) => addSpec(args[0])"
+      @remove-spec="(...args: any[]) => removeSpec(args[0], args[1])"
+      @add-new-spec="(...args: any[]) => addNewSpec()"
+      @remove-new-spec="(...args: any[]) => removeNewSpec(args[0])"
+      @delete-product="(...args: any[]) => deleteProduct(args[0])"
+      @handle-image-upload="(...args: any[]) => handleImageUpload(args[0], args[1])"
+      @handle-connection-scheme-upload="(...args: any[]) => handleConnectionSchemeUpload(args[0], args[1])"
+      @toggle-new-prod-fuel-dropdown="(...args: any[]) => toggleNewProdFuelDropdown()"
     />
 
     <AdminFilters
       v-if="adminTab === 'filters'"
-      :products="products"
+      :products="normalizedProducts"
       :specs-list="specsList"
       :categories="categories"
     />
     <AdminCategories
       v-if="adminTab === 'categories' && authorized"
       :categories="categories"
-      :products="products"
+      :products="normalizedProducts"
       :new-category="newCategory"
       :editing-category="editingCategory"
       :show-add-category-modal="showAddCategoryModal"
       :show-edit-category-modal="showEditCategoryModal"
       :modal-store="modalStore"
       :is-deleting="isDeletingEmptyCategories"
-      @add-category="addCategory"
-      @edit-category="editCategory"
-      @save-category="saveCategory"
-      @delete-category="deleteCategory"
-      @delete-empty-categories="deleteEmptyCategories"
-      @close-edit-category-modal="closeEditCategoryModal"
-      @update:new-category="(val) => (newCategory = val)"
-      @update:editing-category="(val) => (editingCategory = val)"
-      @update:show-add-category-modal="(val) => (showAddCategoryModal = val)"
-      @update:show-edit-category-modal="(val) => (showEditCategoryModal = val)"
+      @add-category="(...args: any[]) => addCategory()"
+      @edit-category="(...args: any[]) => editCategory(args[0])"
+      @save-category="(...args: any[]) => saveCategory()"
+      @delete-category="(...args: any[]) => deleteCategory(args[0])"
+      @delete-empty-categories="(...args: any[]) => deleteEmptyCategories()"
+      @close-edit-category-modal="(...args: any[]) => closeEditCategoryModal()"
+      @update:new-category="(...args: any[]) => (newCategory = args[0])"
+      @update:editing-category="(...args: any[]) => (editingCategory = args[0])"
+      @update:show-add-category-modal="(...args: any[]) => (showAddCategoryModal = args[0])"
+      @update:show-edit-category-modal="(...args: any[]) => (showEditCategoryModal = args[0])"
       :get-category-product-count="getCategoryProductCount"
     />
     <AdminStats
@@ -107,11 +107,11 @@
       :visits="visits"
       :requests="requests"
       :selected-request="selectedRequest"
-      @fetch-stats="fetchStats"
-      @show-request-details="showRequestDetails"
-      @close-request-details="closeRequestDetails"
-      @delete-request="deleteRequest"
-      @delete-all-requests="deleteAllRequests"
+      @fetch-stats="(...args: any[]) => fetchStats()"
+      @show-request-details="(...args: any[]) => showRequestDetails(args[0])"
+      @close-request-details="(...args: any[]) => closeRequestDetails()"
+      @delete-request="(...args: any[]) => deleteRequest(args[0])"
+      @delete-all-requests="(...args: any[]) => deleteAllRequests()"
     />
     <UiLog v-if="!authorized && adminTab !== 'catalog'" class="log" />
   </section>
@@ -122,7 +122,7 @@ import AdminCatalog from "~/components/AdminCatalog.vue";
 import AdminCategories from "~/components/AdminCategories.vue";
 import AdminStats from "~/components/AdminStats.vue";
 import AdminFilters from "~/components/AdminFilters.vue";
-import { ref, onMounted, watch, h } from "vue";
+import { ref, onMounted, watch, h, computed } from "vue";
 import { useStats } from "~/composables/useStats";
 import { useModalStore } from "~/stores/modal";
 import { useFileStorage } from "~/composables/useFileStorage";
@@ -262,6 +262,26 @@ const password = ref("");
 const loginError = ref<string | null>(null);
 const authorized = ref(false);
 const products = ref<Product[]>([]);
+
+// Функция для генерации slug
+function generateSlug(text: string): string {
+  return transliterate(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+// Computed свойство для нормализации продуктов с правильными типами
+const normalizedProducts = computed(() => {
+  return products.value.map((p) => ({
+    ...p,
+    category: p.category || "",
+    category_name: p.category_name || p.category || "",
+    category_slug: p.category_slug || "",
+    slug: p.slug || generateSlug(p.name || ""),
+  }));
+});
 const categories = ref<AdminCategory[]>([]);
 const specsList = ref<Record<number, Spec[]>>({});
 const newProd = ref<NewProduct>({
@@ -326,89 +346,109 @@ const presetImages = [
 // add after newProdSelectedFuels definitions
 const newProdGallery = ref<string[]>([]);
 
-// First load categories
-const { data: fetchedCategories, error: categoriesFetchError } =
-  await useFetch<CategoryApiResponse>("/api/categories");
+// Глобальная переменная для refreshProducts
+let refreshProducts: (() => Promise<void>) | null = null;
 
-if (fetchedCategories.value?.categories) {
-  categories.value = fetchedCategories.value.categories.map((cat) => ({
-    id: String(cat.id),
-    name: cat.name,
-    description: cat.description ?? "",
-    slug: cat.slug,
-  }));
-} else {
-  console.error("No categories data received");
-  categories.value = [];
-}
+// Функция для загрузки данных
+async function loadData() {
+  // First load categories
+  const { data: fetchedCategories, error: categoriesFetchError } =
+    await useFetch<CategoryApiResponse>("/api/categories");
 
-if (categoriesFetchError.value) {
-  console.error(
-    "Error fetching categories for admin:",
-    categoriesFetchError.value
-  );
-  categories.value = [];
-}
+  if (fetchedCategories.value?.categories) {
+    categories.value = fetchedCategories.value.categories.map((cat) => ({
+      id: String(cat.id),
+      name: cat.name,
+      description: cat.description ?? "",
+      slug: cat.slug,
+    }));
+  } else {
+    console.error("No categories data received");
+    categories.value = [];
+  }
 
-// Then load products
-const {
-  data: fetchedProducts,
-  error: productsFetchError,
-  refresh: refreshProducts,
-} = await useFetch<any>("/api/products", {
-  query: {
-    categorySlug: "all",
-  },
-  transform: (response) => {
-    if (!response || !response.products || !Array.isArray(response.products)) {
-      console.error("Invalid response format:", response);
-      return [];
-    }
-    return response.products;
-  },
-});
-
-if (fetchedProducts.value) {
-  products.value = fetchedProducts.value.map((product: Product) => {
-    // Find the category name from the category ID or slug
-    const category = categories.value.find(
-      (c) =>
-        c.id === String(product.category_id) || c.slug === product.category_slug
+  if (categoriesFetchError.value) {
+    console.error(
+      "Error fetching categories for admin:",
+      categoriesFetchError.value
     );
+    categories.value = [];
+  }
 
-    // Конвертируем старый формат specs в новый формат characteristics
-    const characteristics = convertSpecsToCharacteristics(
-      product.specs as Record<string, any>
-    );
-
-    return {
-      ...product,
-      category: category?.name || product.category || "",
-      category_name: category?.name || product.category || "",
-      slug: generateSlug(product.name || ""),
-      specs: characteristics,
-      additional_requirements: product.additional_requirements || "",
-      required_products: product.required_products || [],
-      description: product.description ?? "",
-      extendedDescription: product.extendedDescription ?? "",
-      price:
-        typeof product.price === "number"
-          ? product.price
-          : Number(product.price) || 0,
-      image: product.image ?? "",
-      category_id: product.category_id,
-      category_slug: product.category_slug,
-    };
+  // Then load products
+  const {
+    data: fetchedProducts,
+    error: productsFetchError,
+    refresh: refreshProductsFn,
+  } = await useFetch<any>("/api/products", {
+    query: {
+      categorySlug: "all",
+    },
+    transform: (response) => {
+      if (
+        !response ||
+        !response.products ||
+        !Array.isArray(response.products)
+      ) {
+        console.error("Invalid response format:", response);
+        return [];
+      }
+      return response.products;
+    },
   });
-} else {
-  console.error("No products data received");
-  products.value = [];
+
+  if (fetchedProducts.value) {
+    products.value = fetchedProducts.value.map((product: Product) => {
+      // Find the category name from the category ID or slug
+      const category = categories.value.find(
+        (c) =>
+          c.id === String(product.category_id) ||
+          c.slug === product.category_slug
+      );
+
+      // Конвертируем старый формат specs в новый формат characteristics
+      const characteristics = convertSpecsToCharacteristics(
+        product.specs as Record<string, any>
+      );
+
+      return {
+        ...product,
+        category: category?.name || product.category || "",
+        category_name: category?.name || product.category || "",
+        slug: generateSlug(product.name || ""),
+        specs: characteristics,
+        additional_requirements: product.additional_requirements || "",
+        required_products: product.required_products || [],
+        description: product.description ?? "",
+        extendedDescription: product.extendedDescription ?? "",
+        price:
+          typeof product.price === "number"
+            ? product.price
+            : Number(product.price) || 0,
+        image: product.image ?? "",
+        category_id: product.category_id,
+        category_slug: product.category_slug,
+      };
+    });
+  } else {
+    console.error("No products data received");
+    products.value = [];
+  }
+
+  if (productsFetchError.value) {
+    console.error(
+      "Error fetching products for admin:",
+      productsFetchError.value
+    );
+    products.value = [];
+  }
+
+  // Присваиваем refreshProducts глобальной переменной
+  refreshProducts = refreshProductsFn;
 }
 
-if (productsFetchError.value) {
-  console.error("Error fetching products for admin:", productsFetchError.value);
-  products.value = [];
-}
+// Загружаем данные при инициализации
+loadData();
 
 // Update specsList after products are loaded
 watch(
@@ -455,14 +495,7 @@ function validateNewCategory() {
   }
 }
 
-// Добавляем функцию generateSlug в начало скрипта после импортов
-function generateSlug(text: string): string {
-  return transliterate(text)
-    .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
+// Функция generateSlug уже определена выше
 const modalStore = useModalStore();
 // Обновляем функцию addProduct
 async function addProduct() {
@@ -606,7 +639,9 @@ async function addProduct() {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Обновляем список продуктов
-    await refreshProducts();
+    if (refreshProducts) {
+      await refreshProducts();
+    }
 
     // Принудительно обновляем specsList для всех продуктов
     if (products.value) {

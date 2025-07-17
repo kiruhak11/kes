@@ -133,7 +133,6 @@ useHead({
 <style scoped>
 .questionnaire-page {
   padding: 40px 0 0;
-  background-color: #f9f9f9;
 }
 
 .container {
