@@ -61,6 +61,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    // Находим категорию
+    const category = await prisma.categories.findFirst({
+      where: { slug: categorySlug },
+    });
+
+    if (!category) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Category not found",
+      });
+    }
+
     // Находим все товары в категории
     const products = await prisma.products.findMany({
       where: {
@@ -68,9 +80,13 @@ export default defineEventHandler(async (event) => {
           slug: categorySlug,
         },
       },
-      select: {
-        id: true,
-        name: true,
+      include: {
+        categories: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
       },
     });
 
@@ -88,7 +104,16 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    return { id: product.id };
+    // Формируем полный ответ
+    const fullProduct = {
+      ...product,
+      category_name: product.categories?.name || "",
+      category_slug: product.categories?.slug || "",
+      slug: generateSlug(product.name || ""),
+      categories: undefined, // Убираем исходное поле categories
+    };
+
+    return { product: fullProduct };
   } catch (e: any) {
     console.error("GET /api/products/by-slug error:", e);
     throw createError({

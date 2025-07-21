@@ -19,7 +19,7 @@
       </nav>
 
       <div
-        v-if="isLoadingProducts || isLoadingCategory"
+        v-if="productsPending || isLoadingProducts || isLoadingCategory"
         class="loading-container"
       >
         <UiLoader />
@@ -37,6 +37,21 @@
         <button class="retry-button" @click="retryLoading">
           Попробовать снова
         </button>
+      </div>
+
+      <div
+        v-else-if="
+          !product &&
+          !productsPending &&
+          !isLoadingProducts &&
+          !isLoadingCategory
+        "
+        class="error-container"
+      >
+        <p class="error-message">Товар не найден</p>
+        <NuxtLink :to="'/catalog/' + categorySlug" class="retry-button">
+          Вернуться в категорию
+        </NuxtLink>
       </div>
 
       <div
@@ -101,10 +116,9 @@
             :class="{ 'no-reveal': isMobile }"
             v-scroll-reveal="!isMobile && 'slide-in-right'"
           >
-            <h1 class="product-title" v-cloak v-if="isClient">
+            <h1 class="product-title">
               {{ productName }}
             </h1>
-            <h1 class="product-title" v-else>Загрузка...</h1>
             <div class="product-main-row">
               <div class="product-main-description">
                 <div
@@ -245,7 +259,7 @@
           >
             <h2 class="section-title">Комплект поставки</h2>
             <div
-              v-if="product.delivery_set"
+              v-if="product?.delivery_set"
               class="delivery-set-content"
               v-html="product.delivery_set.replace(/\\n/g, '<br>')"
             ></div>
@@ -804,43 +818,47 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Сначала получаем ID продукта по слагу
-const { data: productIdData } = useFetch<{ id: number }>(
-  "/api/products/by-slug",
-  {
-    query: computed(() => ({
-      category: route.params.category || "",
-      slug: route.params.product || "",
-    })),
-    server: true,
-    key: computed(
-      () => `product-id-${route.params.category}-${route.params.product}`
-    ),
-  }
-);
-
-// URL для запроса продукта
-const productUrl = computed(() =>
-  productIdData.value?.id
-    ? `/api/products/${productIdData.value.id}`
-    : undefined
-);
-
-// Затем загружаем полные данные продукта
+// Загружаем данные продукта напрямую
 const {
   data: productData,
   error: productsError,
   pending: productsPending,
   execute: refreshProduct,
-} = useFetch<APIResponse>(() => productUrl.value || "", {
-  key: computed(
-    () => `product-${productIdData.value?.id || route.params.product}`
-  ),
-  server: true,
-  default: () => ({ product: null }),
-  immediate: true,
-  watch: [productUrl],
-});
+} = useFetch<APIResponse>(
+  () =>
+    `/api/products/by-slug?category=${route.params.category || ""}&slug=${route.params.product || ""}`,
+  {
+    key: computed(
+      () => `product-${route.params.category}-${route.params.product}`
+    ),
+    server: true,
+    default: () => ({ product: null }),
+    transform: (response) => {
+      console.log("API Response:", {
+        raw: response,
+        type: typeof response,
+        hasProduct:
+          response && typeof response === "object" && "product" in response,
+        isArray: Array.isArray(response),
+        keys:
+          response && typeof response === "object" ? Object.keys(response) : [],
+      });
+
+      if (!response || typeof response !== "object") {
+        console.log("Invalid response format");
+        return { product: null };
+      }
+
+      if ("product" in response && response.product) {
+        console.log("Valid product data found:", response.product);
+        return response;
+      }
+
+      console.log("No valid product data found");
+      return { product: null };
+    },
+  }
+);
 
 const {
   data: categoryData,
@@ -870,12 +888,8 @@ const { data: allProductsData } = useFetch<{
 });
 
 // Состояния загрузки
-const isLoadingProducts = computed(
-  () => productsPending?.value || !productData.value
-);
-const isLoadingCategory = computed(
-  () => categoryPending?.value || !categoryData.value
-);
+const isLoadingProducts = computed(() => productsPending.value);
+const isLoadingCategory = computed(() => categoryPending.value);
 
 // Инициализируем состояния
 const products = ref<ProductType[]>([]);
@@ -907,11 +921,9 @@ watchEffect(() => {
   }
 });
 
-// Запускаем загрузку при изменении URL
-watch(productUrl, (newUrl) => {
-  if (newUrl) {
-    refreshProduct();
-  }
+// Запускаем загрузку при изменении параметров маршрута
+watch([() => route.params.category, () => route.params.product], () => {
+  refreshProduct();
 });
 
 // Реактивная информация о категории
@@ -937,37 +949,65 @@ const product = ref<ProductType | null>(null);
 
 // Обновляем продукт при изменении данных
 watchEffect(() => {
+  console.log("Watch Effect State:", {
+    pending: productsPending.value,
+    error: productsError.value,
+    data: productData.value,
+    route: route.params,
+  });
+
+  // Если данные загружаются, сохраняем текущее состояние
+  if (productsPending.value) {
+    console.log("Loading in progress...");
+    return;
+  }
+
+  // Проверяем ошибки
   if (productsError.value) {
+    console.log("Error occurred:", productsError.value);
     fetchError.value = new Error(productsError.value.message);
-    product.value = null;
     return;
   }
 
   const apiProduct = productData.value?.product;
-  if (!apiProduct) {
-    if (!productsPending.value && !isLoadingProducts.value) {
+
+  // Обновляем состояние продукта
+  if (apiProduct && typeof apiProduct === "object" && "id" in apiProduct) {
+    console.log("Setting product data:", apiProduct);
+    try {
+      product.value = {
+        id: apiProduct.id,
+        name: apiProduct.name || "",
+        description: apiProduct.description || "",
+        extendedDescription: apiProduct.extendedDescription || "",
+        price: apiProduct.price || 0,
+        image: apiProduct.image || "",
+        category: categoryData.value?.category?.name || "",
+        category_slug: categorySlug.value,
+        slug: apiProduct.slug || "",
+        additional_images: Array.isArray(apiProduct.additional_images)
+          ? apiProduct.additional_images
+          : [],
+        specs: Array.isArray(apiProduct.specs) ? apiProduct.specs : [],
+        delivery_set: apiProduct.delivery_set || "",
+        connection_scheme: apiProduct.connection_scheme || "",
+        additional_requirements: apiProduct.additional_requirements || "",
+        required_products: Array.isArray(apiProduct.required_products)
+          ? apiProduct.required_products
+          : [],
+      };
+      console.log("Product data set successfully:", product.value);
+    } catch (error) {
+      console.error("Error setting product data:", error);
       product.value = null;
     }
-    return;
+  } else {
+    console.log("Product data is invalid:", {
+      apiProduct,
+      type: typeof apiProduct,
+    });
+    product.value = null;
   }
-
-  product.value = {
-    id: apiProduct.id,
-    name: apiProduct.name || "",
-    description: apiProduct.description || "",
-    extendedDescription: apiProduct.extendedDescription || "",
-    price: apiProduct.price || 0,
-    image: apiProduct.image || "",
-    category: categoryData.value?.category?.name || "",
-    category_slug: categorySlug.value,
-    slug: apiProduct.slug || "",
-    additional_images: apiProduct.additional_images || [],
-    specs: Array.isArray(apiProduct.specs) ? apiProduct.specs : [],
-    delivery_set: apiProduct.delivery_set || "",
-    connection_scheme: apiProduct.connection_scheme || "",
-    additional_requirements: apiProduct.additional_requirements || "",
-    required_products: apiProduct.required_products || [],
-  };
 });
 
 // Computed property for product name to prevent hydration mismatch
@@ -975,7 +1015,10 @@ const productName = computed(() => {
   if (isLoadingProducts.value || isLoadingCategory.value) {
     return "Загрузка...";
   }
-  return product.value?.name || "Товар" || "";
+  if (!product.value && !isLoadingProducts.value) {
+    return "Товар не найден";
+  }
+  return product.value?.name || "";
 });
 
 // Данные загружаются автоматически через useFetch
@@ -1494,8 +1537,7 @@ const navigateToProduct = (product: ProductType | undefined) => {
 const retryLoading = async () => {
   fetchError.value = null;
   categoryError.value = null;
-  // Перезагружаем страницу для получения свежих данных
-  await navigateTo(`/catalog/${categorySlug.value}/${productSlug.value}`);
+  refreshProduct();
 };
 
 // Глобальная переменная для рекомендованных товаров
