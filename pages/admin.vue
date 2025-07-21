@@ -750,15 +750,15 @@ function toggle(id: number) {
 // Обновляем функцию updateWithSpecs
 async function updateWithSpecs(p: Product) {
   try {
+    // Сохраняем флаг keepOpen
+    const keepOpen = (p as any).keepOpen;
+
     // Находим категорию
     const category = categories.value.find((c) => c.name === p.category);
     if (!category) {
       console.error("Category not found:", p.category);
       return;
     }
-
-    // Получаем обновленные характеристики из specsList
-    const updatedSpecs = specsList.value[p.id] || [];
 
     // Подготовка данных для обновления
     const updateData = {
@@ -768,8 +768,8 @@ async function updateWithSpecs(p: Product) {
       price: Number(p.price),
       image: p.image,
       category_id: category.id,
-      specs: updatedSpecs, // Используем обновленные характеристики
-      additional_images: p.additional_images || [], // Добавляем галерею изображений
+      specs: p.specs,
+      additional_images: p.additional_images || [],
       delivery_set: p.delivery_set || null,
       connection_scheme: p.connection_scheme || null,
       additional_requirements: p.additional_requirements || null,
@@ -785,78 +785,19 @@ async function updateWithSpecs(p: Product) {
       }
     );
 
-    // Обновляем specsList для этого продукта
-    if (updatedProduct?.product) {
-      const rawSpecs = updatedProduct.product.specs;
-      specsList.value[p.id] = convertSpecsToCharacteristics(
-        rawSpecs && typeof rawSpecs === "object" && !Array.isArray(rawSpecs)
-          ? rawSpecs
-          : {}
-      );
-    }
-    // Обновляем сам продукт в products
+    // Обновляем продукт в списке
     const productIndex = products.value.findIndex((prod) => prod.id === p.id);
     if (productIndex !== -1 && updatedProduct?.product) {
-      const rawSpecs = updatedProduct.product.specs;
-      const categoryValue =
-        updatedProduct.product.category_name ??
-        categories.value.find(
-          (c) => c.id === updatedProduct.product.category_id
-        )?.name ??
-        "";
-      const slugValue =
-        categories.value.find(
-          (c) => c.id === updatedProduct.product.category_id
-        )?.slug ?? "";
-
-      // Обрабатываем additional_images
-      let additionalImages: string[] = [];
-      if (updatedProduct.product.additional_images) {
-        if (Array.isArray(updatedProduct.product.additional_images)) {
-          additionalImages = updatedProduct.product.additional_images.filter(
-            (img: any) => typeof img === "string" && img !== null
-          );
-        } else if (
-          typeof updatedProduct.product.additional_images === "string"
-        ) {
-          additionalImages = [updatedProduct.product.additional_images];
-        }
-      }
-
       products.value[productIndex] = {
         ...products.value[productIndex],
-        id: updatedProduct.product.id,
-        name: updatedProduct.product.name ?? "",
-        description: updatedProduct.product.description ?? "",
-        extendedDescription: updatedProduct.product.extendedDescription ?? "",
-        price:
-          typeof updatedProduct.product.price === "number"
-            ? updatedProduct.product.price
-            : Number(updatedProduct.product.price) || 0,
-        image: updatedProduct.product.image ?? "",
-        category: categoryValue || "",
-        category_name: updatedProduct.product.category_name ?? "",
-        category_id: updatedProduct.product.category_id ?? "",
-        category_slug: updatedProduct.product.category_slug ?? "",
-        slug: slugValue,
-        specs: Array.isArray(rawSpecs)
-          ? convertSpecsToCharacteristics(rawSpecs)
-          : [],
-        additional_images: additionalImages,
-        delivery_set: updatedProduct.product.delivery_set ?? "",
-        connection_scheme: updatedProduct.product.connection_scheme ?? "",
-        additional_requirements:
-          updatedProduct.product.additional_requirements ?? "",
-        required_products: Array.isArray(
-          updatedProduct.product.required_products
-        )
-          ? updatedProduct.product.required_products
-              .map((id: any) => (typeof id === "number" ? id : Number(id)))
-              .filter((id: any) => typeof id === "number" && !isNaN(id))
-          : [],
+        ...updatedProduct.product,
       };
     }
-    activeId.value = null;
+
+    // Закрываем форму редактирования только если не указан флаг keepOpen
+    if (!keepOpen) {
+      activeId.value = null;
+    }
   } catch (error) {
     console.error("Error updating product:", error);
   }
@@ -1241,7 +1182,16 @@ const closeRequestDetails = () => {
 
 // Add this computed property in the script section
 const filteredSpecs = computed(() => (id: number) => {
-  return specsList.value[id] || [];
+  const specs = specsList.value[id] ? [...specsList.value[id]] : [];
+  // Сортируем характеристики по порядку добавления (по id)
+  return specs.sort((a, b) => {
+    // Если есть id, сортируем по ним
+    if (typeof a.id === "number" && typeof b.id === "number") {
+      return a.id - b.id;
+    }
+    // Если нет id, сохраняем текущий порядок
+    return 0;
+  });
 });
 
 const showCategoryDescriptionModal = ref(false);
@@ -1488,10 +1438,22 @@ async function deleteRequest(id: number) {
 }
 
 function updateSpecsList(productId: number, specs: Spec[]) {
-  if (!specsList.value[productId]) {
-    specsList.value[productId] = [];
-  }
-  specsList.value[productId] = specs;
+  // Создаем новый объект для specsList
+  const newSpecsList = { ...specsList.value };
+
+  // Обновляем спецификации для конкретного продукта
+  newSpecsList[productId] = specs.map((spec, index) => ({
+    ...spec,
+    id: spec.id,
+    key: spec.key,
+    value: spec.value,
+    show_in_filters: spec.show_in_filters || false,
+    showKeySuggestions: false,
+    showValueSuggestions: false,
+  }));
+
+  // Обновляем состояние
+  specsList.value = newSpecsList;
 }
 
 // --- Массовое обновление show_in_filters по ключу ---
@@ -1601,21 +1563,43 @@ const isBackupInProgress = ref(false);
 
 // Функция для скачивания бэкапа
 async function downloadBackup() {
+  if (!process.client) return; // Проверяем, что мы на клиенте
+
   try {
     isBackupInProgress.value = true;
 
+    // Делаем прямой запрос через fetch
+    const response = await fetch("/api/admin/backup-db");
+
+    if (!response.ok) {
+      throw new Error("Ошибка при создании бэкапа");
+    }
+
+    // Получаем blob из ответа
+    const blob = await response.blob();
+
+    // Создаем URL для blob
+    const url = window.URL.createObjectURL(blob);
+
     // Создаем ссылку для скачивания
     const link = document.createElement("a");
-    link.href = "/api/admin/backup-db";
+    link.href = url;
 
-    // Генерируем имя файла с текущей датой
-    const date = new Date().toISOString().split("T")[0];
-    link.download = `backup-${date}.sql`;
+    // Получаем имя файла из заголовков или генерируем новое
+    const contentDisposition = response.headers.get("content-disposition");
+    const fileName = contentDisposition
+      ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+      : `backup-${new Date().toISOString().split("T")[0]}.sql`;
+
+    link.download = fileName;
 
     // Добавляем ссылку в документ, кликаем по ней и удаляем
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Освобождаем URL
+    window.URL.revokeObjectURL(url);
 
     modalStore.showSuccess("Бэкап базы данных успешно создан");
   } catch (error) {

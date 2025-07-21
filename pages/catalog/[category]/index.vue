@@ -251,12 +251,15 @@
                 </div>
                 <div class="product-card__specs">
                   <div
-                    v-for="spec in (product.specs || []).slice(0, 4)"
+                    v-for="spec in getSortedSpecs(product)"
                     :key="spec.id"
                     class="spec-item"
                   >
                     <span class="spec-label">{{
-                      typeof spec === "object" ? spec.key : "Invalid spec"
+                      typeof spec === "object"
+                        ? spec.key.slice(0, 30) +
+                          (spec.key.length > 30 ? "..." : "")
+                        : "Invalid spec"
                     }}</span>
                     <span class="spec-dots"></span>
                     <span class="spec-value">{{
@@ -1491,6 +1494,14 @@ useHead({
     },
   ],
 });
+
+// Функция для сортировки характеристик
+const getSortedSpecs = (product: Product) => {
+  if (!product.specs || !Array.isArray(product.specs)) return [];
+  return [...product.specs]
+    .sort((a, b) => (a.id || 0) - (b.id || 0))
+    .slice(0, 4);
+};
 </script>
 
 <style scoped>
@@ -1976,10 +1987,9 @@ useHead({
 }
 
 .spec-dots {
-  flex: 1;
-  border-bottom: 1px dotted #bbb;
-  margin: 0 8px;
-  height: 1px;
+  flex-grow: 1;
+  border-bottom: 2px dotted #e0e0e0;
+  position: relative;
 }
 
 .spec-value {

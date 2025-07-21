@@ -15,18 +15,9 @@
           categoryInfo?.title || "Категория"
         }}</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
-        <span
-          v-if="!isLoadingProducts && !isLoadingCategory && product && isClient"
-          v-cloak
-          >{{ product.name }}</span
-        >
-        <span v-else-if="isLoadingProducts || isLoadingCategory"
-          >Загрузка...</span
-        >
-        <span v-else v-cloak>Товар</span>
+        <span>{{ productName }}</span>
       </nav>
 
-      <!-- Индикатор загрузки -->
       <div
         v-if="isLoadingProducts || isLoadingCategory"
         class="loading-container"
@@ -35,7 +26,6 @@
         <p>Загрузка товара...</p>
       </div>
 
-      <!-- Сообщение об ошибке -->
       <div v-else-if="fetchError || categoryError" class="error-container">
         <p class="error-message">
           {{
@@ -50,11 +40,10 @@
       </div>
 
       <div
-        v-if="product && !isLoadingProducts && !isLoadingCategory && isClient"
+        v-else-if="product"
         class="product-detail-card"
         :class="{ 'no-reveal': isMobile }"
         v-scroll-reveal="!isMobile && 'fade-in-up'"
-        v-cloak
       >
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
@@ -129,7 +118,10 @@
                   :key="spec.id"
                   class="spec-item"
                 >
-                  <span class="spec-label">{{ capitalize(spec.key) }}</span>
+                  <span class="spec-label">{{
+                    capitalize(spec.key).slice(0, 48) +
+                    (spec.key.length > 48 ? "..." : "")
+                  }}</span>
                   <span class="spec-dots"></span>
                   <span class="spec-value">{{ spec.value }}</span>
                 </div>
@@ -317,7 +309,9 @@
                 >
                   <div class="required-product-card__image">
                     <img
-                      :src="normalizeImagePath(getProductById(prodId)?.image)"
+                      :src="
+                        normalizeImagePath(getProductById(prodId)?.image || '')
+                      "
                       :alt="getProductById(prodId)?.name || 'Товар'"
                       loading="lazy"
                     />
@@ -639,7 +633,6 @@
           </div>
         </div>
       </div>
-      <!-- v-else ничего не рендерим, чтобы не было мигания "Товар не найден" -->
     </div>
   </div>
 </template>
@@ -672,7 +665,8 @@ interface ProductType {
   required_products?: number[];
 }
 
-const transliterate = (text: string): string => {
+const transliterate = (text: string | undefined): string => {
+  if (!text) return "";
   const mapping: { [key: string]: string } = {
     а: "a",
     б: "b",
@@ -801,8 +795,8 @@ interface APIResponse {
 
 const route = useRoute();
 const router = useRouter();
-const categorySlug = computed(() => route.params.category as string);
-const productSlug = computed(() => route.params.product as string);
+const categorySlug = computed(() => (route.params.category as string) || "");
+const productSlug = computed(() => (route.params.product as string) || "");
 
 // Добавляем проверку, активен ли маршрут продукта
 const isProductRouteActive = computed(() => {
@@ -814,10 +808,14 @@ const isProductRouteActive = computed(() => {
 const { data: productIdData } = useFetch<{ id: number }>(
   "/api/products/by-slug",
   {
-    query: {
-      category: route.params.category,
-      slug: route.params.product,
-    },
+    query: computed(() => ({
+      category: route.params.category || "",
+      slug: route.params.product || "",
+    })),
+    server: true,
+    key: computed(
+      () => `product-id-${route.params.category}-${route.params.product}`
+    ),
   }
 );
 
@@ -835,11 +833,13 @@ const {
   pending: productsPending,
   execute: refreshProduct,
 } = useFetch<APIResponse>(() => productUrl.value || "", {
-  key: computed(() => `product-${productIdData.value?.id || "pending"}`),
+  key: computed(
+    () => `product-${productIdData.value?.id || route.params.product}`
+  ),
   server: true,
   default: () => ({ product: null }),
+  immediate: true,
   watch: [productUrl],
-  lazy: true,
 });
 
 const {
@@ -848,9 +848,10 @@ const {
   pending: categoryPending,
 } = useFetch<{
   category: { name: string; description: string };
-}>(`/api/categories/${categorySlug.value}`, {
-  key: `category-${categorySlug.value}`,
+}>(() => `/api/categories/${categorySlug.value || ""}`, {
+  key: computed(() => `category-${categorySlug.value || ""}`),
   server: true,
+  immediate: true,
   default: () => ({ category: { name: "", description: "" } }),
 });
 
@@ -858,19 +859,23 @@ const {
 const { data: allProductsData } = useFetch<{
   products: APIProduct[];
 }>("/api/products/list", {
-  key: `all-products-${categorySlug.value}`,
-  query: {
-    categorySlug: categorySlug.value,
+  key: computed(() => `all-products-${categorySlug.value || ""}`),
+  query: computed(() => ({
+    categorySlug: categorySlug.value || "",
     exclude: route.params.id,
     limit: 4,
-  },
+  })),
   server: true,
   default: () => ({ products: [] }),
 });
 
 // Состояния загрузки
-const isLoadingProducts = computed(() => productsPending?.value);
-const isLoadingCategory = computed(() => categoryPending?.value);
+const isLoadingProducts = computed(
+  () => productsPending?.value || !productData.value
+);
+const isLoadingCategory = computed(
+  () => categoryPending?.value || !categoryData.value
+);
 
 // Инициализируем состояния
 const products = ref<ProductType[]>([]);
@@ -940,7 +945,9 @@ watchEffect(() => {
 
   const apiProduct = productData.value?.product;
   if (!apiProduct) {
-    product.value = null;
+    if (!productsPending.value && !isLoadingProducts.value) {
+      product.value = null;
+    }
     return;
   }
 
@@ -968,7 +975,7 @@ const productName = computed(() => {
   if (isLoadingProducts.value || isLoadingCategory.value) {
     return "Загрузка...";
   }
-  return product.value?.name || "Товар";
+  return product.value?.name || "Товар" || "";
 });
 
 // Данные загружаются автоматически через useFetch
@@ -1104,22 +1111,29 @@ const displaySpecs = computed(() => {
     return [];
   }
 
-  // Фильтруем характеристики
-  const filtered = product.value.specs.filter((spec) => {
-    // Проверяем, что spec это объект с нужными полями
-    if (!spec || typeof spec !== "object") {
-      console.error("Invalid spec object:", spec);
-      return false;
-    }
+  // Фильтруем и сортируем характеристики
+  const filtered = product.value.specs
+    .filter((spec) => {
+      // Проверяем, что spec это объект с нужными полями
+      if (!spec || typeof spec !== "object") {
+        console.error("Invalid spec object:", spec);
+        return false;
+      }
 
-    return (
-      spec.key &&
-      spec.value &&
-      spec.value !== null &&
-      spec.value !== undefined &&
-      spec.value !== ""
-    );
-  });
+      return (
+        spec.key &&
+        spec.value &&
+        spec.value !== null &&
+        spec.value !== undefined &&
+        spec.value !== ""
+      );
+    })
+    .sort((a, b) => {
+      // Сортируем по id, если id нет - ставим в конец
+      const aId = typeof a.id === "number" ? a.id : Number.MAX_SAFE_INTEGER;
+      const bId = typeof b.id === "number" ? b.id : Number.MAX_SAFE_INTEGER;
+      return aId - bId;
+    });
 
   return filtered;
 });
@@ -1153,7 +1167,8 @@ const relatedProducts = computed(() => {
 
 const generateProductSlug = (product: ProductType): string => {
   if (!product || !product.name) return "";
-  return transliterate(product.name)
+  const name = product.name || "";
+  return transliterate(name)
     .toLowerCase()
     .replace(/[\/\\]/g, "-") // Заменяем слэши и обратные слэши на дефис
     .replace(/[^a-z0-9\., -]/g, "") // Разрешаем точки и запятые
@@ -1246,7 +1261,7 @@ function scrollToGalleryCard(idx: number) {
 }
 
 // Добавляем функцию нормализации путей изображений
-function normalizeImagePath(path: string): string {
+function normalizeImagePath(path: string | undefined): string {
   if (!path) return "/images/placeholders/placeholder.png";
 
   // Если путь уже начинается с /api/uploads/, оставляем как есть
@@ -1276,14 +1291,15 @@ const imageList = computed<string[]>(() => {
   if (!product.value) return [];
 
   // Основное изображение
-  const mainImage = normalizeImagePath(product.value.image);
+  const mainImage = normalizeImagePath(product.value.image || "");
 
   // Дополнительные изображения
   let additionalImages: string[] = [];
   if (product.value.additional_images) {
     if (Array.isArray(product.value.additional_images)) {
-      additionalImages =
-        product.value.additional_images.map(normalizeImagePath);
+      additionalImages = product.value.additional_images.map((img) =>
+        normalizeImagePath(img || "")
+      );
     } else if (typeof product.value.additional_images === "string") {
       additionalImages = [normalizeImagePath(product.value.additional_images)];
     }
@@ -1466,7 +1482,7 @@ const navigateToProduct = (product: ProductType | undefined) => {
   if (!product) return;
 
   // Проверяем, есть ли у товара category_slug, если нет - используем текущую категорию
-  const targetCategorySlug = product.category_slug || categorySlug.value;
+  const targetCategorySlug = product.category_slug || categorySlug.value || "";
 
   router.push(`/catalog/${targetCategorySlug}/${generateProductSlug(product)}`);
   console.log("Navigating to product:", product);
@@ -1615,6 +1631,8 @@ useHead(() => {
     ],
   };
 });
+
+// ... existing code ...
 
 // ... existing code ...
 </script>
@@ -2688,9 +2706,11 @@ useHead(() => {
 .spec-item {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 0.3rem 0;
-  gap: 1rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  padding: 0.1rem 0;
+  gap: 0.5rem;
+  min-height: 1.8em;
 }
 .spec-empty {
   display: flex;
@@ -2712,6 +2732,7 @@ useHead(() => {
   flex-grow: 1;
   border-bottom: 2px dotted #e0e0e0;
   position: relative;
+  top: 1rem;
 }
 .spec-value {
   font-weight: 500;
@@ -2719,6 +2740,10 @@ useHead(() => {
   white-space: normal;
   word-wrap: break-word;
   max-width: 60%;
+  line-height: 1.4;
+  padding-left: 10px;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .product-brief-specs {
   margin-top: 1rem;

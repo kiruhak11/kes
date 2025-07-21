@@ -759,8 +759,9 @@
                     </thead>
                     <tbody>
                       <tr
-                        v-for="(spec, idx) in filteredSpecs(p.id)"
-                        :key="spec.id"
+                        v-for="(spec, idx) in localSpecs[p.id] ||
+                        filteredSpecs(p.id)"
+                        :key="`${p.id}-${spec.id}-${idx}`"
                         :draggable="true"
                         @dragstart="onEditDragStart($event, p.id, idx)"
                         @dragover.prevent
@@ -1939,8 +1940,84 @@ const onEditDragStart = (
   }
 };
 
+// Функция для обработки перетаскивания характеристик
+function handleSpecsDragDrop(
+  productId: number,
+  fromIndex: number,
+  toIndex: number
+) {
+  const currentSpecs = props.filteredSpecs(productId);
+  if (!currentSpecs || currentSpecs.length === 0) return;
+
+  const specs = [...currentSpecs];
+  const [movedSpec] = specs.splice(fromIndex, 1);
+  specs.splice(toIndex, 0, movedSpec);
+
+  // Создаем новый массив с обновленными характеристиками, сохраняя оригинальные ID
+  const updatedSpecs = specs.map((spec) => ({
+    ...spec,
+    showKeySuggestions: false,
+    showValueSuggestions: false,
+  }));
+
+  // Обновляем specsList через emit
+  emit("updateSpecsList", productId, updatedSpecs);
+}
+
+// Метод для обработки перемещения характеристик
+const handleSpecReorder = (
+  productId: number,
+  fromIndex: number,
+  toIndex: number
+) => {
+  // Получаем текущие характеристики
+  const currentSpecs = props.filteredSpecs(productId);
+  if (!currentSpecs || currentSpecs.length === 0) return;
+
+  // Создаем новый массив и перемещаем элемент
+  const newSpecs = [...currentSpecs];
+  const [movedSpec] = newSpecs.splice(fromIndex, 1);
+  newSpecs.splice(toIndex, 0, movedSpec);
+
+  // Обновляем порядок
+  const updatedSpecs = newSpecs.map((spec, index) => ({
+    ...spec,
+    order: index, // Добавляем порядковый номер
+  }));
+
+  // Находим продукт
+  const product = props.products.find((p) => p.id === productId);
+  if (!product) return;
+
+  // Обновляем specsList и продукт
+  nextTick(() => {
+    emit("updateSpecsList", productId, updatedSpecs);
+    emit("updateWithSpecs", {
+      ...product,
+      specs: updatedSpecs,
+    });
+  });
+};
+
+// Локальное состояние для характеристик
+const localSpecs = ref<Record<number, Spec[]>>({});
+
+// Инициализация локальных характеристик при открытии редактирования
+watch(
+  () => props.activeId,
+  (newId) => {
+    if (newId !== null) {
+      const specs = props.filteredSpecs(newId);
+      localSpecs.value[newId] = [...specs];
+    }
+  }
+);
+
+// Обновляем функцию onEditDrop
 const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
   event.preventDefault();
+  event.stopPropagation();
+
   if (
     draggedEditIndex.value === null ||
     draggedEditIndex.value === dropIndex ||
@@ -1948,24 +2025,39 @@ const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
   )
     return;
 
-  // Получаем текущие характеристики из filteredSpecs
-  const currentSpecs = props.filteredSpecs(productId);
-  if (!currentSpecs || currentSpecs.length === 0) return;
+  // Работаем с локальной копией характеристик
+  if (!localSpecs.value[productId]) {
+    localSpecs.value[productId] = [...props.filteredSpecs(productId)];
+  }
 
-  const specs = [...currentSpecs];
-  const draggedSpec = specs[draggedEditIndex.value];
-  specs.splice(draggedEditIndex.value, 1);
-  specs.splice(dropIndex, 0, draggedSpec);
+  const specs = localSpecs.value[productId];
+  const [movedSpec] = specs.splice(draggedEditIndex.value, 1);
+  specs.splice(dropIndex, 0, movedSpec);
 
-  // Обновляем ID для правильного порядка
-  specs.forEach((spec, index) => {
-    spec.id = index + 1;
-  });
+  // Обновляем порядок
+  localSpecs.value[productId] = specs.map((spec, index) => ({
+    ...spec,
+    id: index + 1,
+    key: spec.key,
+    value: spec.value,
+    show_in_filters: spec.show_in_filters || false,
+    showKeySuggestions: false,
+    showValueSuggestions: false,
+  }));
 
-  // Обновляем specsList через emit или напрямую через props
-  // Поскольку specsList передается как prop, нам нужно обновить его в родительском компоненте
-  // Для этого создадим emit событие
-  emit("updateSpecsList", productId, specs);
+  // Обновляем specsList
+  emit("updateSpecsList", productId, localSpecs.value[productId]);
+
+  // Обновляем продукт
+  const product = props.products.find((p) => p.id === productId);
+  if (product) {
+    emit("updateWithSpecs", {
+      ...product,
+      specs: localSpecs.value[productId],
+      keepOpen: true, // Добавляем флаг, чтобы форма не закрывалась
+    });
+  }
+
   draggedEditIndex.value = null;
   draggedEditProductId.value = null;
 };
@@ -2209,6 +2301,15 @@ const removeEditGalleryImageLocal = (productId: number, idx: number) => {
     editGalleryLocal.value[productId].splice(idx, 1);
   }
 };
+
+// Добавляем watch для отслеживания изменений specsList
+watch(
+  () => props.specsList,
+  (newSpecsList) => {
+    console.log("SpecsList updated:", newSpecsList);
+  },
+  { deep: true }
+);
 </script>
 
 <style lang="scss" scoped>
@@ -3278,7 +3379,9 @@ const removeEditGalleryImageLocal = (productId: number, idx: number) => {
   stroke-width: 6;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+  transition:
+    stroke-dasharray 0.5s ease,
+    stroke-dashoffset 0.5s ease;
   stroke-dasharray: 241 9999999;
   stroke-dashoffset: 0;
 }
