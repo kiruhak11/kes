@@ -1544,10 +1544,22 @@ const toggle = (id: number) => {
   const product = props.products.find((p) => p.id === id);
   if (product) {
     initializeEditGallery(id, product.additional_images || []);
+    // Инициализируем характеристики
+    if (product.specs) {
+      localSpecs.value[id] = product.specs.map((spec) => ({
+        ...spec,
+        showKeySuggestions: false,
+        showValueSuggestions: false,
+      }));
+    }
   }
   emit("toggle", id);
 };
 const updateWithSpecs = (product: Product) => {
+  // Получаем актуальные характеристики из localSpecs
+  if (localSpecs.value[product.id]) {
+    product.specs = [...localSpecs.value[product.id]];
+  }
   // Очищаем локальную галерею после сохранения
   delete editGalleryLocal.value[product.id];
   emit("updateWithSpecs", product);
@@ -1555,6 +1567,10 @@ const updateWithSpecs = (product: Product) => {
 const cancelEdit = () => {
   // Очищаем локальную галерею при отмене редактирования
   editGalleryLocal.value = {};
+  // Очищаем локальные характеристики
+  if (props.activeId) {
+    delete localSpecs.value[props.activeId];
+  }
   emit("cancelEdit");
 };
 const addSpec = (id: number) => emit("addSpec", id);
