@@ -27,6 +27,22 @@
         Статистика
       </button>
     </div>
+
+    <!-- Добавляем кнопку бэкапа -->
+    <div v-if="authorized" class="admin-actions">
+      <button
+        class="backup-btn"
+        @click="downloadBackup"
+        :disabled="isBackupInProgress"
+      >
+        {{
+          isBackupInProgress
+            ? "Создание бэкапа..."
+            : "Скачать бэкап базы данных"
+        }}
+      </button>
+    </div>
+
     <AdminCatalog
       v-if="adminTab === 'catalog'"
       :admin-tab="adminTab"
@@ -1579,6 +1595,36 @@ interface Emits {
 
 // Определяем emit с типами
 const emit = defineEmits<Emits>();
+
+// Добавляем состояние для отслеживания процесса бэкапа
+const isBackupInProgress = ref(false);
+
+// Функция для скачивания бэкапа
+async function downloadBackup() {
+  try {
+    isBackupInProgress.value = true;
+
+    // Создаем ссылку для скачивания
+    const link = document.createElement("a");
+    link.href = "/api/admin/backup-db";
+
+    // Генерируем имя файла с текущей датой
+    const date = new Date().toISOString().split("T")[0];
+    link.download = `backup-${date}.sql`;
+
+    // Добавляем ссылку в документ, кликаем по ней и удаляем
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    modalStore.showSuccess("Бэкап базы данных успешно создан");
+  } catch (error) {
+    console.error("Ошибка при создании бэкапа:", error);
+    modalStore.showError("Ошибка при создании бэкапа базы данных");
+  } finally {
+    isBackupInProgress.value = false;
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -2636,6 +2682,45 @@ const emit = defineEmits<Emits>();
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;
+  }
+}
+
+.admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+
+.backup-btn {
+  background: linear-gradient(135deg, #28a745, #34ce57);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+
+  &:hover {
+    background: linear-gradient(135deg, #34ce57, #28a745);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 </style>
