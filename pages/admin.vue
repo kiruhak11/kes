@@ -66,9 +66,15 @@
       @add-new-spec="(...args: any[]) => addNewSpec()"
       @remove-new-spec="(...args: any[]) => removeNewSpec(args[0])"
       @delete-product="(...args: any[]) => deleteProduct(args[0])"
-      @handle-image-upload="(...args: any[]) => handleImageUpload(args[0], args[1])"
-      @handle-connection-scheme-upload="(...args: any[]) => handleConnectionSchemeUpload(args[0], args[1])"
-      @toggle-new-prod-fuel-dropdown="(...args: any[]) => toggleNewProdFuelDropdown()"
+      @handle-image-upload="
+        (...args: any[]) => handleImageUpload(args[0], args[1])
+      "
+      @handle-connection-scheme-upload="
+        (...args: any[]) => handleConnectionSchemeUpload(args[0], args[1])
+      "
+      @toggle-new-prod-fuel-dropdown="
+        (...args: any[]) => toggleNewProdFuelDropdown()
+      "
     />
 
     <AdminFilters
@@ -95,8 +101,12 @@
       @close-edit-category-modal="(...args: any[]) => closeEditCategoryModal()"
       @update:new-category="(...args: any[]) => (newCategory = args[0])"
       @update:editing-category="(...args: any[]) => (editingCategory = args[0])"
-      @update:show-add-category-modal="(...args: any[]) => (showAddCategoryModal = args[0])"
-      @update:show-edit-category-modal="(...args: any[]) => (showEditCategoryModal = args[0])"
+      @update:show-add-category-modal="
+        (...args: any[]) => (showAddCategoryModal = args[0])
+      "
+      @update:show-edit-category-modal="
+        (...args: any[]) => (showEditCategoryModal = args[0])
+      "
       :get-category-product-count="getCategoryProductCount"
     />
     <AdminStats
@@ -341,6 +351,13 @@ const presetImages = [
   "/images/cutouts/tchzm.png",
   "/images/cutouts/tlph.png",
   "/images/cutouts/TSHPM.png",
+  "/images/cutouts/ciklon1.png",
+  "/images/cutouts/cn15.png",
+  "/images/cutouts/skip11.png",
+  "/images/cutouts/tc2-28.png",
+  "/images/cutouts/ts2-30.png",
+  "/images/cutouts/zoloyl1.png",
+  "/images/cutouts/zoloyl2.png",
 ];
 
 // add after newProdSelectedFuels definitions
@@ -1545,7 +1562,7 @@ interface Emits {
   "handle-image-upload": [event: Event, product: Product | Partial<Product>];
   "handle-connection-scheme-upload": [
     event: Event,
-    product: Product | Partial<Product>
+    product: Product | Partial<Product>,
   ];
   "toggle-new-prod-fuel-dropdown": [];
   "add-category": [category: Category];
@@ -2520,7 +2537,9 @@ const emit = defineEmits<Emits>();
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover {
       transform: translateY(-2px);

@@ -73,10 +73,7 @@
                 <i class="fas fa-chevron-left"></i>
               </button>
               <img
-                :src="
-                  imageList[currentImageIndex] ||
-                  '/images/placeholders/placeholder.png'
-                "
+                :src="imageList[currentImageIndex]"
                 :alt="product.name ? String(product.name) : ''"
                 class="main-image"
               />
@@ -275,7 +272,7 @@
               class="scheme-image-container"
             >
               <img
-                :src="product.connection_scheme"
+                :src="normalizeImagePath(product.connection_scheme)"
                 alt="Схема подключения"
                 class="scheme-image"
               />
@@ -320,10 +317,7 @@
                 >
                   <div class="required-product-card__image">
                     <img
-                      :src="
-                        getProductById(prodId)?.image ||
-                        '/images/placeholder.jpg'
-                      "
+                      :src="normalizeImagePath(getProductById(prodId)?.image)"
                       :alt="getProductById(prodId)?.name || 'Товар'"
                       loading="lazy"
                     />
@@ -503,7 +497,7 @@
                       >
                         <div class="cert-gallery-img-wrap">
                           <img
-                            :src="certificate.image"
+                            :src="normalizeImagePath(certificate.image)"
                             :alt="certificate.title"
                           />
                         </div>
@@ -619,7 +613,7 @@
               "
             >
               <img
-                :src="relatedProduct.image"
+                :src="normalizeImagePath(relatedProduct.image)"
                 :alt="relatedProduct.name ? String(relatedProduct.name) : ''"
               />
               <div class="product-card__content">
@@ -831,7 +825,7 @@ const { data: productIdData } = useFetch<{ id: number }>(
 const productUrl = computed(() =>
   productIdData.value?.id
     ? `/api/products/${productIdData.value.id}`
-    : "/api/products/0"
+    : undefined
 );
 
 // Затем загружаем полные данные продукта
@@ -840,10 +834,12 @@ const {
   error: productsError,
   pending: productsPending,
   execute: refreshProduct,
-} = useFetch<APIResponse>(productUrl, {
-  key: computed(() => `product-${productIdData.value?.id || 0}`),
+} = useFetch<APIResponse>(() => productUrl.value || "", {
+  key: computed(() => `product-${productIdData.value?.id || "pending"}`),
   server: true,
-  default: () => null,
+  default: () => ({ product: null }),
+  watch: [productUrl],
+  lazy: true,
 });
 
 const {
@@ -903,6 +899,13 @@ watchEffect(() => {
         required_products: product.required_products || [],
       })
     );
+  }
+});
+
+// Запускаем загрузку при изменении URL
+watch(productUrl, (newUrl) => {
+  if (newUrl) {
+    refreshProduct();
   }
 });
 
@@ -1242,25 +1245,49 @@ function scrollToGalleryCard(idx: number) {
   }
 }
 
+// Добавляем функцию нормализации путей изображений
+function normalizeImagePath(path: string): string {
+  if (!path) return "/images/placeholders/placeholder.png";
+
+  // Если путь уже начинается с /api/uploads/, оставляем как есть
+  if (path.startsWith("/api/uploads/")) {
+    return path;
+  }
+
+  // Если путь начинается с /uploads/, добавляем /api
+  if (path.startsWith("/uploads/")) {
+    return `/api${path}`;
+  }
+
+  // Если путь абсолютный (начинается с /), возвращаем как есть
+  if (path.startsWith("/")) {
+    return path;
+  }
+
+  // В остальных случаях предполагаем, что это относительный путь к uploads
+  if (path.includes("uploads/")) {
+    return `/api/${path}`;
+  }
+
+  return path;
+}
+
 const imageList = computed<string[]>(() => {
   if (!product.value) return [];
 
   // Основное изображение
-  const mainImage = product.value.image;
+  const mainImage = normalizeImagePath(product.value.image);
 
   // Дополнительные изображения
   let additionalImages: string[] = [];
   if (product.value.additional_images) {
     if (Array.isArray(product.value.additional_images)) {
-      additionalImages = product.value.additional_images;
+      additionalImages =
+        product.value.additional_images.map(normalizeImagePath);
     } else if (typeof product.value.additional_images === "string") {
-      additionalImages = [product.value.additional_images];
+      additionalImages = [normalizeImagePath(product.value.additional_images)];
     }
   }
-
-  // Отладочная информация
-  console.log("Product additional_images:", product.value.additional_images);
-  console.log("Processed additionalImages:", additionalImages);
 
   // Объединяем основное изображение и дополнительные
   const result = [mainImage, ...additionalImages].filter(Boolean);
@@ -2689,7 +2716,9 @@ useHead(() => {
 .spec-value {
   font-weight: 500;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 60%;
 }
 .product-brief-specs {
   margin-top: 1rem;
