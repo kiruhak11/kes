@@ -58,7 +58,6 @@
         v-else-if="product"
         class="product-detail-card"
         :class="{ 'no-reveal': isMobile }"
-        v-scroll-reveal="!isMobile && 'fade-in-up'"
       >
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
