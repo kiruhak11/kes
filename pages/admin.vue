@@ -760,6 +760,9 @@ async function updateWithSpecs(p: Product) {
       return;
     }
 
+    // Подготовка характеристик
+    const specs = Array.isArray(p.specs) ? p.specs : [];
+
     // Подготовка данных для обновления
     const updateData = {
       name: p.name,
@@ -768,7 +771,7 @@ async function updateWithSpecs(p: Product) {
       price: Number(p.price),
       image: p.image,
       category_id: category.id,
-      specs: p.specs,
+      specs: specs.filter((spec) => spec.key && spec.value), // Фильтруем пустые характеристики
       additional_images: p.additional_images || [],
       delivery_set: p.delivery_set || null,
       connection_scheme: p.connection_scheme || null,
@@ -785,21 +788,27 @@ async function updateWithSpecs(p: Product) {
       }
     );
 
-    // Обновляем продукт в списке
+    // Обновляем продукт в списке и specsList
     const productIndex = products.value.findIndex((prod) => prod.id === p.id);
     if (productIndex !== -1 && updatedProduct?.product) {
       products.value[productIndex] = {
         ...products.value[productIndex],
         ...updatedProduct.product,
       };
+
+      // Обновляем specsList
+      specsList.value[p.id] = updatedProduct.product.specs || [];
     }
 
     // Закрываем форму редактирования только если не указан флаг keepOpen
     if (!keepOpen) {
       activeId.value = null;
     }
+
+    modalStore.showSuccess("Товар успешно обновлен");
   } catch (error) {
     console.error("Error updating product:", error);
+    modalStore.showError("Ошибка при обновлении товара");
   }
 }
 
@@ -823,8 +832,26 @@ function addSpec(id: number) {
   });
 }
 
-function removeSpec(id: number, idx: number) {
-  specsList.value[id].splice(idx, 1);
+// Функция удаления характеристики
+async function removeSpec(productId: number, idx: number) {
+  // Находим продукт
+  const product = products.value.find((p) => p.id === productId);
+  if (!product) return;
+
+  // Удаляем характеристику из локального состояния
+  specsList.value[productId].splice(idx, 1);
+
+  // Создаем копию продукта с обновленными характеристиками
+  const updatedProduct = {
+    ...product,
+    specs: specsList.value[productId],
+  };
+
+  // Обновляем продукт на сервере
+  await updateWithSpecs({
+    ...updatedProduct,
+    keepOpen: true, // Оставляем форму редактирования открытой
+  });
 }
 
 function addNewSpec() {
@@ -1437,23 +1464,25 @@ async function deleteRequest(id: number) {
   }
 }
 
+// Обновляем функцию updateSpecsList
 function updateSpecsList(productId: number, specs: Spec[]) {
-  // Создаем новый объект для specsList
-  const newSpecsList = { ...specsList.value };
+  // Обновляем specsList
+  specsList.value = {
+    ...specsList.value,
+    [productId]: specs.map((spec, index) => ({
+      ...spec,
+      id: index + 1, // Пересчитываем ID для сохранения последовательности
+    })),
+  };
 
-  // Обновляем спецификации для конкретного продукта
-  newSpecsList[productId] = specs.map((spec, index) => ({
-    ...spec,
-    id: spec.id,
-    key: spec.key,
-    value: spec.value,
-    show_in_filters: spec.show_in_filters || false,
-    showKeySuggestions: false,
-    showValueSuggestions: false,
-  }));
-
-  // Обновляем состояние
-  specsList.value = newSpecsList;
+  // Обновляем продукт в основном списке
+  const productIndex = products.value.findIndex((p) => p.id === productId);
+  if (productIndex !== -1) {
+    products.value[productIndex] = {
+      ...products.value[productIndex],
+      specs: specsList.value[productId],
+    };
+  }
 }
 
 // --- Массовое обновление show_in_filters по ключу ---

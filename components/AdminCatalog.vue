@@ -834,7 +834,11 @@
                         </td>
 
                         <td>
-                          <button @click.prevent="removeSpec(p.id, idx)">
+                          <button
+                            class="delete-spec-btn"
+                            @click.prevent="removeSpec(p.id, idx)"
+                            title="Удалить характеристику"
+                          >
                             <UiDeleteSmall />
                           </button>
                         </td>
@@ -955,6 +959,59 @@
       </div>
     </div>
   </div>
+
+  <!-- Модальное окно подтверждения удаления характеристики -->
+  <div
+    v-if="showDeleteSpecModal"
+    class="modal-overlay"
+    @click="cancelDeleteSpec"
+  >
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h3>Подтверждение удаления</h3>
+        <button class="close-button" @click="cancelDeleteSpec">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить эту характеристику?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" @click="cancelDeleteSpec">
+          Отмена
+        </button>
+        <button class="btn btn-danger" @click="confirmDeleteSpec">
+          Удалить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно подтверждения удаления товара -->
+  <div
+    v-if="showDeleteProductModal"
+    class="modal-overlay"
+    @click="cancelDeleteProduct"
+  >
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h3>Подтверждение удаления товара</h3>
+        <button class="close-button" @click="cancelDeleteProduct">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить этот товар?</p>
+        <p class="warning-text">Это действие нельзя отменить!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" @click="cancelDeleteProduct">
+          Отмена
+        </button>
+        <button class="btn btn-danger" @click="confirmDeleteProduct">
+          Удалить
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -1048,7 +1105,7 @@ const emit = defineEmits<{
   (e: "removeSpec", ...args: any[]): void;
   (e: "addNewSpec"): void;
   (e: "removeNewSpec", ...args: any[]): void;
-  (e: "deleteProduct", ...args: any[]): void;
+  (e: "delete-product", ...args: any[]): void;
   (e: "handleImageUpload", ...args: any[]): void;
   (e: "toggleNewProdFuelDropdown"): void;
   (e: "handleGalleryUpload", ...args: any[]): void;
@@ -1066,6 +1123,12 @@ const emit = defineEmits<{
   (e: "update:newSpecs", ...args: any[]): void;
   (e: "updateSpecsList", ...args: any[]): void;
   (e: "update:newProdGallery", ...args: any[]): void;
+  (e: "updateWithSpecs", product: Product): void;
+  (e: "removeSpec", productId: number, specIndex: number): void;
+  (e: "addSpec", id: number): void;
+  (e: "removeNewSpec", idx: number): void;
+  (e: "delete-product", id: number): void;
+  (e: "updateSpecsList", productId: number, specs: Spec[]): void;
 }>();
 
 // Локальная переменная для пароля
@@ -1574,7 +1637,10 @@ const cancelEdit = () => {
   emit("cancelEdit");
 };
 const addSpec = (id: number) => emit("addSpec", id);
-const removeSpec = (id: number, idx: number) => emit("removeSpec", id, idx);
+const removeSpec = (productId: number, specIndex: number) => {
+  pendingDeleteSpecData.value = { productId, specIndex };
+  showDeleteSpecModal.value = true;
+};
 const addNewSpec = () => {
   if (newSpecLocal.value.key && newSpecLocal.value.value) {
     const newId =
@@ -1595,7 +1661,10 @@ const addNewSpec = () => {
   }
 };
 const removeNewSpec = (idx: number) => emit("removeNewSpec", idx);
-const deleteProduct = (id: number) => emit("deleteProduct", id);
+const deleteProduct = (id: number) => {
+  pendingDeleteProductId.value = id;
+  showDeleteProductModal.value = true;
+};
 const handleImageUpload = (event: Event, product: Product | Partial<Product>) =>
   emit("handleImageUpload", event, product);
 const toggleNewProdFuelDropdown = () => emit("toggleNewProdFuelDropdown");
@@ -2018,6 +2087,15 @@ const handleSpecReorder = (
 // Локальное состояние для характеристик
 const localSpecs = ref<Record<number, Spec[]>>({});
 
+// Следим за изменениями specsList
+watch(
+  () => props.specsList,
+  (newSpecsList) => {
+    localSpecs.value = JSON.parse(JSON.stringify(newSpecsList));
+  },
+  { deep: true, immediate: true }
+);
+
 // Инициализация локальных характеристик при открытии редактирования
 watch(
   () => props.activeId,
@@ -2326,6 +2404,61 @@ watch(
   },
   { deep: true }
 );
+
+// Состояние для модальных окон
+const showDeleteSpecModal = ref(false);
+const showDeleteProductModal = ref(false);
+const pendingDeleteSpecData = ref<{
+  productId: number;
+  specIndex: number;
+} | null>(null);
+const pendingDeleteProductId = ref<number | null>(null);
+
+// Функции для модального окна удаления характеристики
+const cancelDeleteSpec = () => {
+  showDeleteSpecModal.value = false;
+  pendingDeleteSpecData.value = null;
+};
+
+const confirmDeleteSpec = () => {
+  if (!pendingDeleteSpecData.value) return;
+
+  const { productId, specIndex } = pendingDeleteSpecData.value;
+
+  // Удаляем из локального состояния
+  if (localSpecs.value[productId]) {
+    localSpecs.value[productId].splice(specIndex, 1);
+  }
+
+  // Обновляем родительское состояние
+  emit("updateSpecsList", productId, localSpecs.value[productId] || []);
+
+  // Обновляем продукт на сервере
+  const product = props.products.find((p) => p.id === productId);
+  if (product) {
+    emit("updateWithSpecs", {
+      ...product,
+      specs: localSpecs.value[productId] || [],
+      keepOpen: true,
+    });
+  }
+
+  // Закрываем модальное окно
+  cancelDeleteSpec();
+};
+
+// Функции для модального окна удаления товара
+const cancelDeleteProduct = () => {
+  showDeleteProductModal.value = false;
+  pendingDeleteProductId.value = null;
+};
+
+const confirmDeleteProduct = () => {
+  if (!pendingDeleteProductId.value) return;
+
+  emit("delete-product", pendingDeleteProductId.value);
+  cancelDeleteProduct();
+};
 </script>
 
 <style lang="scss" scoped>
@@ -3694,5 +3827,115 @@ watch(
       box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.3);
     }
   }
+}
+
+.delete-spec-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-spec-btn:hover {
+  opacity: 0.7;
+}
+
+.delete-spec-btn:active {
+  opacity: 0.5;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #666;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.warning-text {
+  color: #dc3545;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
 }
 </style>

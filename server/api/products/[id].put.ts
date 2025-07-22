@@ -21,10 +21,19 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event);
 
+    // Проверяем и форматируем характеристики
+    const specs = Array.isArray(body.specs) ? body.specs : [];
+
+    // Подготавливаем данные для обновления
+    const updateData = {
+      ...body,
+      specs: specs.filter((spec: Characteristic) => spec.key && spec.value), // Удаляем пустые характеристики
+    };
+
     // Обновляем продукт
     const updated = await prisma.products.update({
       where: { id: Number(productId) },
-      data: body,
+      data: updateData,
       include: {
         categories: true,
       },
