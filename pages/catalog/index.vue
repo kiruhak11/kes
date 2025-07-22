@@ -266,7 +266,7 @@ function goToPage(page: number) {
   overflow: visible;
   transition: all 0.3s ease;
   position: relative;
-  margin-top: 40px;
+  margin-top: 75px;
   text-decoration: none;
   color: inherit;
   display: block;

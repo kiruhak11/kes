@@ -16,9 +16,37 @@
           {{ isDeleting ? "Удаление..." : "Удалить все пустые категории" }}
         </button>
       </div>
-      <div class="categories-grid">
-        <div v-for="cat in categories" :key="cat.id" class="category-card">
+
+      <!-- Индикатор загрузки -->
+      <div v-if="isLoading" class="loading-indicator">
+        <UiLoader />
+        <p>Загрузка категорий...</p>
+      </div>
+
+      <!-- Сетка категорий -->
+      <div v-else-if="categories.length > 0" class="categories-grid">
+        <div
+          v-for="(cat, index) in categories"
+          :key="cat.id"
+          class="category-card"
+        >
           <div class="category-card__header">
+            <div class="category-card__move-buttons">
+              <button
+                @click="moveCategory(index, 'up')"
+                :disabled="index === 0"
+                class="move-btn"
+              >
+                ↑
+              </button>
+              <button
+                @click="moveCategory(index, 'down')"
+                :disabled="index === categories.length - 1"
+                class="move-btn"
+              >
+                ↓
+              </button>
+            </div>
             <h3>{{ cat.name }}</h3>
             <div class="category-card__actions">
               <button @click="editCategory(cat)">
@@ -51,6 +79,14 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Сообщение об отсутствии категорий -->
+      <div v-else class="empty-state">
+        <p>Нет доступных категорий</p>
+        <button class="btn btn-primary" @click="showAddCategoryModal = true">
+          Добавить первую категорию
+        </button>
       </div>
     </div>
 
@@ -183,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import type { PropType } from "vue";
 import { useModalStore } from "../stores/modal";
 
@@ -199,6 +235,66 @@ interface Product {
   category: string;
   category_id?: string;
   category_slug?: string;
+}
+
+const modalStore = useModalStore();
+
+// Состояния
+const categories = ref<AdminCategory[]>([]);
+const productsInCategories = ref<Record<string, Product[]>>({});
+const isLoading = ref(false);
+const isDeleting = ref(false);
+const showAddCategoryModal = ref(false);
+const showEditCategoryModal = ref(false);
+const editingCategory = ref<AdminCategory | null>(null);
+
+// Загрузка категорий
+async function loadCategories() {
+  try {
+    isLoading.value = true;
+    const response = await fetch("/api/categories");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.statusMessage || "Failed to load categories");
+    }
+
+    if (!data.categories || !Array.isArray(data.categories)) {
+      console.error("Invalid response format:", data);
+      throw new Error("Invalid response format from server");
+    }
+
+    categories.value = data.categories.map((cat: any) => ({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description,
+    }));
+
+    // Загружаем продукты для каждой категории
+    for (const category of categories.value) {
+      const productsResponse = await fetch(
+        `/api/products?category_id=${category.id}`
+      );
+      const productsData = await productsResponse.json();
+      productsInCategories.value[category.id] = productsData.products || [];
+    }
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    modalStore.showError("Ошибка при загрузке категорий");
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Загружаем категории при монтировании компонента
+onMounted(() => {
+  loadCategories();
+});
+
+// Функция для получения количества продуктов в категории
+function getCategoryProductCount(categoryId: string): number {
+  return productsInCategories.value[categoryId]?.length || 0;
 }
 
 const props = defineProps({
@@ -242,9 +338,6 @@ const emit = defineEmits<{
 }>();
 
 // Локальные переменные для управления состоянием
-const showAddCategoryModal = ref(props.showAddCategoryModal || false);
-const showEditCategoryModal = ref(props.showEditCategoryModal || false);
-
 const newCategoryLocal = ref(props.newCategory);
 const editingCategoryLocal = ref(props.editingCategory);
 
@@ -327,8 +420,6 @@ const editCategory = (category: AdminCategory) => {
 const saveCategory = () => {
   emit("save-category");
 };
-
-const modalStore = useModalStore();
 
 // Функции для работы с категориями
 const confirmDeleteEmptyCategories = async () => {
@@ -465,6 +556,45 @@ const generateSlug = (name: string): string => {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 };
+
+// Функция для обмена порядка категорий
+async function swapCategoryOrder(index1: number, index2: number) {
+  try {
+    const cat1 = categories.value[index1];
+    const cat2 = categories.value[index2];
+
+    // Отправляем запрос на обмен порядка
+    await fetch("/api/categories/swap-order", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        categoryId1: cat1.id,
+        categoryId2: cat2.id,
+      }),
+    });
+
+    // Обновляем локальный порядок категорий
+    [categories.value[index1], categories.value[index2]] = [
+      categories.value[index2],
+      categories.value[index1],
+    ];
+
+    modalStore.showSuccess("Порядок категорий изменен");
+  } catch (error) {
+    console.error("Error swapping category order:", error);
+    modalStore.showError("Ошибка при изменении порядка категорий");
+    // Перезагружаем данные в случае ошибки
+    await loadCategories();
+  }
+}
+
+// Функция для перемещения категории вверх/вниз
+function moveCategory(index: number, direction: "up" | "down") {
+  const newIndex = direction === "up" ? index - 1 : index + 1;
+  if (newIndex >= 0 && newIndex < categories.value.length) {
+    swapCategoryOrder(index, newIndex);
+  }
+}
 </script>
 
 <style scoped>
@@ -519,7 +649,9 @@ const generateSlug = (name: string): string => {
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .category-card:hover {
   transform: translateY(-2px);
@@ -563,6 +695,31 @@ const generateSlug = (name: string): string => {
   padding-top: 1rem;
   border-top: 1px solid var(--border);
   font-size: 0.9rem;
+}
+
+.category-card__move-buttons {
+  display: flex;
+  gap: 4px;
+  margin-right: 10px;
+}
+
+.move-btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.move-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+.move-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Стили для модальных окон */
@@ -664,5 +821,27 @@ const generateSlug = (name: string): string => {
     gap: 1rem;
     margin-top: 2rem;
   }
+}
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+  color: #6c757d;
 }
 </style>

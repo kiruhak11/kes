@@ -12,7 +12,9 @@ model categories {
   name        String
   description String?
   slug        String   @unique
+  display_order Int    @default(1)
   products    products[] @relation("CategoryProducts")
+
 }
 
 model products {
