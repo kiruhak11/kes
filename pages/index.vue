@@ -45,7 +45,6 @@
         </div>
       </section>
     </client-only>
-
     <!-- Catalog Section -->
     <section class="catalog" v-scroll-reveal="'fade-in-up'">
       <div class="container">

@@ -111,7 +111,7 @@ const vacancies: Vacancy[] = [
     short: "Выполнение сварочных работ под давлением на производстве.",
     duties: ["Сварка под давлением"],
     requirements: ["Знание техники безопасности"],
-    price: 50000,
+    price: 120000,
   },
   {
     title: "Конструктор (создание чертежей)",
@@ -128,7 +128,7 @@ const vacancies: Vacancy[] = [
       "Базовое знание КОМПАС-3D;",
       "Знание основ машиностроения, технологии металлообработки.",
     ],
-    price: 50000,
+    price: 120000,
   },
   {
     title: "Слесарь",
@@ -149,7 +149,7 @@ const vacancies: Vacancy[] = [
       "Навык сварочных работ (прихватки)",
       "Опыт не обязателен. ОБУЧЕНИЕ НА МЕСТЕ.",
     ],
-    price: 50000,
+    price: 120000,
   },
 ];
 
@@ -261,7 +261,9 @@ useHead({
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   padding: 1.5rem 1.2rem 2rem 1.2rem;
   justify-content: flex-start;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
   position: relative;
 }
 .vacancy-card-spacer {
@@ -283,7 +285,9 @@ useHead({
   position: relative;
   z-index: 2;
   border: 1px solid #ececec;
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
 .price span {
   font-size: 1.12em;
