@@ -239,7 +239,13 @@
                 :key="spec.id"
                 class="spec-item"
               >
-                <span class="spec-label">{{ capitalize(spec.key) }}</span>
+                <span class="spec-label">{{
+                  isMobile
+                    ? capitalize(spec.key).slice(0, 24) +
+                      (spec.key.length > 24 ? "..." : "")
+                    : capitalize(spec.key).slice(0, 64) +
+                      (spec.key.length > 64 ? "..." : "")
+                }}</span>
                 <span class="spec-dots"></span>
                 <span class="spec-value">{{ spec.value }}</span>
               </li>
