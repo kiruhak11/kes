@@ -7,6 +7,9 @@
         <button class="btn btn-primary" @click="showAddCategoryModal = true">
           <i class="fas fa-plus"></i> Добавить категорию
         </button>
+        <button class="btn btn-primary" @click="showOrderModal = true">
+          <i class="fas fa-sort-numeric-down"></i> Управление порядком
+        </button>
         <button
           class="btn btn-warning"
           @click="confirmDeleteEmptyCategories"
@@ -74,7 +77,7 @@
             <div class="category-stats">
               <p>
                 <strong>Товаров в категории:</strong>
-                {{ getCategoryProductCount(cat.id) }}
+                {{ cat.productsCount }}
               </p>
             </div>
           </div>
@@ -215,6 +218,61 @@
         </div>
       </div>
     </div>
+
+    <!-- Модальное окно управления порядком -->
+    <div v-if="showOrderModal" class="modal-overlay" @click="closeOrderModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Управление порядком категорий</h3>
+          <button class="close-button" @click="closeOrderModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Отладочная информация -->
+          <div class="debug-info">
+            <p>Всего категорий: {{ categories.length }}</p>
+            <p>Категорий в модальном окне: {{ modalCategories.length }}</p>
+            <p>Категории: {{ categories.map((c) => c.name).join(", ") }}</p>
+            <p>
+              Модальные категории:
+              {{ modalCategories.map((c) => c.name).join(", ") }}
+            </p>
+          </div>
+
+          <!-- Список категорий -->
+          <div class="order-list">
+            <template v-if="categories.length > 0">
+              <div v-for="cat in categories" :key="cat.id" class="order-item">
+                <div class="order-item-content">
+                  <span class="order-item-name">{{ cat.name }}</span>
+                  <div class="order-item-controls">
+                    <span class="current-order"
+                      >Текущий порядок: {{ cat.display_order }}</span
+                    >
+                    <input
+                      type="number"
+                      v-model.number="categoryOrders[cat.id]"
+                      min="1"
+                      class="order-input"
+                      @change="validateOrder(cat.id)"
+                      :placeholder="String(cat.display_order)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </template>
+            <div v-else class="no-categories">
+              <p>Нет доступных категорий</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeOrderModal">
+            Отмена
+          </button>
+          <button class="btn btn-primary" @click="saveOrder">Сохранить</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -228,6 +286,8 @@ interface AdminCategory {
   name: string;
   slug: string;
   description?: string;
+  productsCount: number;
+  display_order?: number;
 }
 
 interface Product {
@@ -241,71 +301,19 @@ const modalStore = useModalStore();
 
 // Состояния
 const categories = ref<AdminCategory[]>([]);
-const productsInCategories = ref<Record<string, Product[]>>({});
 const isLoading = ref(false);
 const isDeleting = ref(false);
 const showAddCategoryModal = ref(false);
 const showEditCategoryModal = ref(false);
 const editingCategory = ref<AdminCategory | null>(null);
 
-// Загрузка категорий
-async function loadCategories() {
-  try {
-    isLoading.value = true;
-    const response = await fetch("/api/categories");
-    const data = await response.json();
+// Состояние для модального окна порядка
+const showOrderModal = ref(false);
+const categoryOrders = ref<Record<string, number>>({});
+const modalCategories = ref<AdminCategory[]>([]);
 
-    if (!response.ok) {
-      throw new Error(data.statusMessage || "Failed to load categories");
-    }
-
-    if (!data.categories || !Array.isArray(data.categories)) {
-      console.error("Invalid response format:", data);
-      throw new Error("Invalid response format from server");
-    }
-
-    categories.value = data.categories.map((cat: any) => ({
-      id: cat.id,
-      name: cat.name,
-      slug: cat.slug,
-      description: cat.description,
-    }));
-
-    // Загружаем продукты для каждой категории
-    for (const category of categories.value) {
-      const productsResponse = await fetch(
-        `/api/products?category_id=${category.id}`
-      );
-      const productsData = await productsResponse.json();
-      productsInCategories.value[category.id] = productsData.products || [];
-    }
-  } catch (error) {
-    console.error("Error loading categories:", error);
-    modalStore.showError("Ошибка при загрузке категорий");
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-// Загружаем категории при монтировании компонента
-onMounted(() => {
-  loadCategories();
-});
-
-// Функция для получения количества продуктов в категории
-function getCategoryProductCount(categoryId: string): number {
-  return productsInCategories.value[categoryId]?.length || 0;
-}
-
+// Props только для тех свойств, которые действительно приходят извне
 const props = defineProps({
-  categories: {
-    type: Array as PropType<AdminCategory[]>,
-    required: true,
-  },
-  products: {
-    type: Array as PropType<Product[]>,
-    required: true,
-  },
   newCategory: {
     type: Object as PropType<Record<string, any>>,
     required: true,
@@ -316,10 +324,6 @@ const props = defineProps({
   },
   showAddCategoryModal: Boolean,
   showEditCategoryModal: Boolean,
-  getCategoryProductCount: {
-    type: Function as PropType<(id: string) => number>,
-    required: true,
-  },
   isDeleting: Boolean,
 });
 
@@ -595,6 +599,122 @@ function moveCategory(index: number, direction: "up" | "down") {
     swapCategoryOrder(index, newIndex);
   }
 }
+
+// Загрузка категорий
+async function loadCategories() {
+  try {
+    isLoading.value = true;
+    const response = await fetch("/api/categories");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.statusMessage || "Failed to load categories");
+    }
+
+    if (!data.categories || !Array.isArray(data.categories)) {
+      console.error("Invalid response format:", data);
+      throw new Error("Invalid response format from server");
+    }
+
+    console.log("Loaded categories:", data.categories);
+
+    categories.value = data.categories.map((cat: any) => ({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description,
+      productsCount: cat.productsCount || 0,
+      display_order: cat.display_order || 0,
+    }));
+
+    console.log("Processed categories:", categories.value);
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    modalStore.showError("Ошибка при загрузке категорий");
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Загружаем категории при монтировании компонента
+onMounted(() => {
+  loadCategories();
+});
+
+// Обновляем функцию открытия модального окна
+async function openOrderModal() {
+  console.log("Opening modal, current categories:", categories.value);
+
+  if (!categories.value || categories.value.length === 0) {
+    console.log("No categories available");
+    modalStore.showError("Нет доступных категорий");
+    return;
+  }
+
+  try {
+    // Сначала очищаем предыдущие значения
+    categoryOrders.value = {};
+
+    // Инициализируем порядковые номера
+    categories.value.forEach((cat) => {
+      categoryOrders.value[cat.id] = cat.display_order || 0;
+    });
+
+    console.log("Category orders initialized:", categoryOrders.value);
+    console.log("Number of categories:", categories.value.length);
+
+    showOrderModal.value = true;
+  } catch (error) {
+    console.error("Error in openOrderModal:", error);
+    modalStore.showError("Ошибка при открытии модального окна");
+  }
+}
+
+// Обновляем функцию закрытия модального окна
+function closeOrderModal() {
+  console.log("Closing modal");
+  showOrderModal.value = false;
+  categoryOrders.value = {};
+}
+
+// Валидация порядка
+function validateOrder(catId: string) {
+  const value = categoryOrders.value[catId];
+  if (value < 1) {
+    categoryOrders.value[catId] = 1;
+  }
+}
+
+// Сохранение порядка
+async function saveOrder() {
+  try {
+    // Отправляем запрос на обновление порядка
+    const updates = Object.entries(categoryOrders.value).map(([id, order]) => ({
+      id,
+      display_order: order,
+    }));
+
+    await fetch("/api/categories/update-order", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ updates }),
+    });
+
+    // Обновляем локальное состояние
+    categories.value = categories.value.map((cat) => ({
+      ...cat,
+      display_order: categoryOrders.value[cat.id] || cat.display_order,
+    }));
+
+    closeOrderModal();
+    modalStore.showSuccess("Порядок категорий обновлен");
+  } catch (error) {
+    console.error("Error updating category order:", error);
+    modalStore.showError("Ошибка при обновлении порядка категорий");
+  }
+}
 </script>
 
 <style scoped>
@@ -843,5 +963,84 @@ function moveCategory(index: number, direction: "up" | "down") {
 .empty-state p {
   margin-bottom: 1rem;
   color: #6c757d;
+}
+
+.order-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+}
+
+.order-item {
+  margin-bottom: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.order-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.debug-info {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.debug-info p {
+  margin: 0.25rem 0;
+}
+
+.no-categories {
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+}
+
+.order-item-name {
+  font-weight: 500;
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.order-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: nowrap;
+}
+
+.current-order {
+  color: #666;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.order-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.order-input:focus {
+  border-color: #e31e24;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.1);
+}
+
+.order-input::placeholder {
+  color: #999;
 }
 </style>

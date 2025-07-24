@@ -1,6 +1,20 @@
 <template>
   <div class="category-page">
-    <div class="container">
+    <div v-if="productsLoading" class="loading-container">
+      <UiLoader />
+      <p>Загрузка товаров...</p>
+    </div>
+
+    <div v-else-if="productsError" class="error-container">
+      <p>
+        {{ productsError.message || "Произошла ошибка при загрузке товаров" }}
+      </p>
+      <button @click="handleRefresh" class="retry-button">
+        Попробовать снова
+      </button>
+    </div>
+
+    <div v-else class="container">
       <nav class="breadcrumbs" v-scroll-reveal="'fade-in'">
         <NuxtLink to="/">Главная</NuxtLink>
         <span class="breadcrumbs-separator">→</span>
@@ -385,6 +399,11 @@
     :product="selectedProduct"
     @close="closeCommercialOfferModal"
   />
+  <!-- В секции template, добавляем индикатор загрузки -->
+  <div v-if="pending" class="loading-container">
+    <UiLoader />
+    <p>Загрузка товаров...</p>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -1502,6 +1521,27 @@ const getSortedSpecs = (product: Product) => {
     .sort((a, b) => (a.id || 0) - (b.id || 0))
     .slice(0, 4);
 };
+
+// В секции script
+const {
+  data: productsData,
+  pending: productsLoading,
+  error: productsError,
+  refresh: refreshProducts,
+} = useFetch<{ products: Product[] }>(
+  () => `/api/products/list?categorySlug=${categorySlug.value}`,
+  {
+    watch: [categorySlug],
+    transform: (response) => {
+      if (!response) return { products: [] };
+      return response;
+    },
+  }
+);
+
+const handleRefresh = () => {
+  refreshProducts();
+};
 </script>
 
 <style scoped>
@@ -2410,5 +2450,63 @@ const getSortedSpecs = (product: Product) => {
 }
 .breadcrumbs a:hover {
   text-decoration: underline;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  margin: 20px auto;
+  max-width: 1200px;
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  margin: 20px auto;
+  max-width: 1200px;
+}
+
+.error-container p {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.retry-button {
+  background: #e31e24;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #c31a1f;
+  transform: translateY(-1px);
 }
 </style>

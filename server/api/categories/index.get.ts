@@ -3,25 +3,37 @@ import prisma from "~/server/utils/prisma";
 
 export default defineEventHandler(async (event) => {
   try {
-    // Получаем категории, сортируя по display_order
+    // Получаем категории с подсчетом продуктов в одном запросе
     const categories = await prisma.categories.findMany({
       orderBy: { display_order: "asc" },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        slug: true,
+        display_order: true,
+        _count: {
+          select: { products: true },
+        },
+        products: {
+          select: {
+            id: true,
+            image: true,
+          },
+        },
+      },
     });
 
-    // Получаем изображения для каждой категории
-    const categoriesWithImages = await Promise.all(
-      categories.map(async (cat) => {
-        const products = await prisma.products.findMany({
-          where: { category_id: cat.id },
-          select: { image: true },
-        });
-
-        return {
-          ...cat,
-          images: products.map((p) => p.image).filter(Boolean),
-        };
-      })
-    );
+    // Трансформируем данные для ответа
+    const categoriesWithImages = categories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description,
+      slug: cat.slug,
+      display_order: cat.display_order,
+      productsCount: cat._count.products,
+      images: cat.products.map((p) => p.image).filter(Boolean),
+    }));
 
     return { categories: categoriesWithImages };
   } catch (e: any) {

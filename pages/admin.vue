@@ -1465,11 +1465,31 @@ async function deleteRequest(id: number) {
 }
 
 // Обновляем функцию updateSpecsList
-function updateSpecsList(productId: number, specs: Spec[]) {
-  // Обновляем specsList
+function updateSpecsList(
+  productId: number | Record<number, any[]>,
+  specs?: any[]
+) {
+  // Если первый аргумент - объект, значит это массовое обновление
+  if (typeof productId === "object") {
+    specsList.value = productId;
+
+    // Обновляем specs в products
+    Object.entries(productId).forEach(([id, specs]) => {
+      const productIndex = products.value.findIndex((p) => p.id === Number(id));
+      if (productIndex !== -1) {
+        products.value[productIndex] = {
+          ...products.value[productIndex],
+          specs: specs,
+        };
+      }
+    });
+    return;
+  }
+
+  // Обычное обновление одного продукта
   specsList.value = {
     ...specsList.value,
-    [productId]: specs.map((spec, index) => ({
+    [productId]: specs?.map((spec, index) => ({
       ...spec,
       id: index + 1, // Пересчитываем ID для сохранения последовательности
     })),
