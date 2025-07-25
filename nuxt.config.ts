@@ -3,77 +3,21 @@ import { defineNuxtConfig } from "nuxt/config";
 export default defineNuxtConfig({
   typescript: { strict: true },
 
-  // Стабильные функции для производительности
+  // Минимальные экспериментальные функции
   experimental: {
     payloadExtraction: false,
-    renderJsonPayloads: true,
   },
 
-  // Оптимизация рендеринга - критично для скорости!
+  // Стандартный SSR без агрессивного кэширования
   ssr: true,
-  routeRules: {
-    // Главная страница - предрендер для мгновенной загрузки
-    '/': { prerender: true, headers: { 'cache-control': 's-maxage=31536000' } },
-    // Каталог - ISR с кэшированием
-    '/catalog': { isr: 60, headers: { 'cache-control': 's-maxage=3600' } },
-    '/catalog/**': { isr: 300, headers: { 'cache-control': 's-maxage=7200' } },
-    // API - кэширование
-    '/api/**': { cors: true, headers: { 'cache-control': 's-maxage=300' } },
-    // Статические страницы
-    '/about': { prerender: true },
-    '/contact': { prerender: true },
-  },
 
-  // Оптимизация рендеринга
+  // Простая конфигурация Nitro
   nitro: {
     compressPublicAssets: true,
-    minify: true,
-    prerender: {
-      routes: [],
-      crawlLinks: false,
-      ignore: ["/api/**"],
-    },
-    storage: {
-      redis: {
-        driver: "memory",
-      },
-    },
-    // Правильные MIME типы для статических файлов
-    routeRules: {
-      '/_nuxt/**': {
-        headers: {
-          'Content-Type': 'application/javascript; charset=utf-8',
-        },
-      },
-      '/_nuxt/**/*.css': {
-        headers: {
-          'Content-Type': 'text/css; charset=utf-8',
-        },
-      },
-      '/_nuxt/**/*.js': {
-        headers: {
-          'Content-Type': 'application/javascript; charset=utf-8',
-        },
-      },
-    },
   },
 
-  // Оптимизация Vite - стабильная конфигурация
+  // Стандартная конфигурация Vite
   vite: {
-    build: {
-      target: "esnext",
-      minify: "esbuild",
-      cssMinify: true,
-      sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ["vue", "vue-router"],
-            charts: ["chart.js"],
-          },
-        },
-      },
-    },
     css: {
       preprocessorOptions: {
         scss: {
@@ -87,72 +31,18 @@ export default defineNuxtConfig({
         },
       },
     },
-    optimizeDeps: {
-      include: ["vue", "vue-router", "chart.js", "@vueuse/core"],
-      exclude: ["@nuxt/devtools"],
-    },
-    ssr: {
-      noExternal: ["@nuxt/image", "@vueuse/core"],
-    },
-    define: {
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
-    },
   },
 
-  // Оптимизация изображений - максимальная производительность
+  // Простая конфигурация изображений
   image: {
     domains: ["kes-sib.ru"],
-    screens: {
-      xs: 320,
-      sm: 640,
-      md: 768,
-      lg: 1024,
-      xl: 1280,
-      xxl: 1536,
-    },
-    format: ["avif", "webp", "jpg"],
-    quality: 85,
-    densities: [1, 2],
+    format: ["webp"],
+    quality: 80,
     provider: "ipx",
-    presets: {
-      avatar: {
-        modifiers: {
-          format: "webp",
-          width: 50,
-          height: 50,
-          quality: 90,
-        },
-      },
-      thumbnail: {
-        modifiers: {
-          format: "webp",
-          width: 300,
-          height: 200,
-          quality: 80,
-        },
-      },
-      hero: {
-        modifiers: {
-          format: "webp",
-          width: 1200,
-          height: 600,
-          quality: 85,
-        },
-      },
-    },
-    // Ленивая загрузка по умолчанию
-    loading: "lazy",
-    // Предзагрузка критических изображений
-    preload: {
-      sizes: "100vw",
-    },
   },
 
-  // Оптимизация CSS
-  css: [
-    "@/assets/styles/global/index.scss",
-    "@/assets/styles/animations.scss"
-  ],
+  // Основные стили
+  css: ["@/assets/styles/global/index.scss"],
 
   // Runtime конфигурация
   runtimeConfig: {
@@ -196,17 +86,9 @@ export default defineNuxtConfig({
     mount: process.env.FILE_STORAGE_MOUNT || "./public/uploads",
   },
 
-  // Оптимизация загрузки - критические ресурсы
+  // Простая конфигурация приложения
   app: {
     head: {
-      htmlAttrs: {
-        lang: 'ru',
-      },
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'format-detection', content: 'telephone=no' },
-      ],
       link: [
         {
           rel: "preconnect",
@@ -217,55 +99,10 @@ export default defineNuxtConfig({
           href: "https://fonts.gstatic.com",
           crossorigin: "",
         },
-        {
-          rel: "dns-prefetch",
-          href: "https://fonts.googleapis.com",
-        },
-        {
-          rel: "dns-prefetch",
-          href: "https://fonts.gstatic.com",
-        },
       ],
     },
-    // Простые переходы страниц
-    pageTransition: false,
-    layoutTransition: false,
   },
 
-  // Оптимизация сборки
-  build: {
-    transpile: ['chart.js'],
-  },
-
-  // Оптимизация devtools
-  devtools: { enabled: process.env.NODE_ENV === 'development' },
-
-  // Дополнительные оптимизации производительности
-  features: {
-    // Оставляем стандартное поведение
-    inlineStyles: undefined,
-    noScripts: false,
-  },
-
-  // Оптимизация сборки
-  optimization: {
-    keyedComposables: [
-      {
-        name: 'useState',
-        argumentLength: 2,
-      },
-    ],
-  },
-
-  // Хуки для дополнительных оптимизаций
-  hooks: {
-    'build:before': () => {
-      console.log('🚀 Запуск оптимизированной сборки...');
-    },
-    'nitro:build:before': (nitro) => {
-      // Дополнительные оптимизации Nitro
-      nitro.options.minify = true;
-      nitro.options.sourceMap = false;
-    },
-  },
+  // Стандартные настройки
+  devtools: { enabled: true },
 });
