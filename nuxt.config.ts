@@ -46,9 +46,27 @@ export default defineNuxtConfig({
         driver: "memory",
       },
     },
+    // Правильные MIME типы для статических файлов
+    routeRules: {
+      '/_nuxt/**': {
+        headers: {
+          'Content-Type': 'application/javascript; charset=utf-8',
+        },
+      },
+      '/_nuxt/**/*.css': {
+        headers: {
+          'Content-Type': 'text/css; charset=utf-8',
+        },
+      },
+      '/_nuxt/**/*.js': {
+        headers: {
+          'Content-Type': 'application/javascript; charset=utf-8',
+        },
+      },
+    },
   },
 
-  // Оптимизация Vite - максимальная производительность
+  // Оптимизация Vite - стабильная конфигурация
   vite: {
     build: {
       target: "esnext",
@@ -57,20 +75,10 @@ export default defineNuxtConfig({
       sourcemap: false,
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Умное разделение чанков для оптимальной загрузки
-            if (id.includes('node_modules')) {
-              if (id.includes('vue')) return 'vue-vendor';
-              if (id.includes('chart.js')) return 'charts';
-              if (id.includes('@nuxt')) return 'nuxt-vendor';
-              return 'vendor';
-            }
-            if (id.includes('pages/')) return 'pages';
-            if (id.includes('components/')) return 'components';
+          manualChunks: {
+            vendor: ["vue", "vue-router"],
+            charts: ["chart.js"],
           },
-          chunkFileNames: 'assets/[name]-[hash].js',
-          entryFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash].[ext]',
         },
       },
     },

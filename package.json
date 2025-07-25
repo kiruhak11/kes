@@ -11,7 +11,8 @@
     "postinstall": "nuxt prepare",
     "check-performance": "node scripts/check-performance.js",
     "build:optimized": "npm run check-performance && npm run build",
-    "deploy:check": "npm run build:optimized && npm run preview"
+    "deploy:check": "npm run build:optimized && npm run preview",
+    "fix-production": "bash scripts/fix-production.sh"
   },
   "dependencies": {
     "@nuxt/image": "^1.10.0",
