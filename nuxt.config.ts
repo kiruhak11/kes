@@ -53,7 +53,7 @@ export default defineNuxtConfig({
     build: {
       target: "esnext",
       minify: "esbuild",
-      cssMinify: "esbuild",
+      cssMinify: true,
       sourcemap: false,
       rollupOptions: {
         output: {
@@ -242,8 +242,8 @@ export default defineNuxtConfig({
 
   // Дополнительные оптимизации производительности
   features: {
-    // Отключаем неиспользуемые функции для ускорения
-    inlineStyles: false, // Используем наш критический CSS
+    // Оставляем стандартное поведение
+    inlineStyles: undefined,
     noScripts: false,
   },
 

@@ -845,13 +845,13 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Оптимизированная загрузка данных продукта
+// Загружаем данные продукта
 const {
   data: productData,
   error: productsError,
   pending: productsPending,
   execute: refreshProduct,
-} = useLazyFetch<APIResponse>(
+} = useFetch<APIResponse>(
   () =>
     `/api/products/by-slug?category=${route.params.category || ""}&slug=${route.params.product || ""}`,
   {
@@ -860,9 +860,6 @@ const {
     ),
     server: true,
     default: () => ({ product: null }),
-    getCachedData(key) {
-      return nuxtApp.ssrContext?.cache?.[key] ?? nuxtApp.payload.data[key];
-    },
     transform: (response) => {
       if (!response || typeof response !== "object") {
         return { product: null };
@@ -881,19 +878,16 @@ const {
   data: categoryData,
   error: initialCategoryError,
   pending: categoryPending,
-} = useLazyFetch<{
+} = useFetch<{
   category: { name: string; description: string };
 }>(() => `/api/categories/${categorySlug.value || ""}`, {
   key: computed(() => `category-${categorySlug.value || ""}`),
   server: true,
   default: () => ({ category: { name: "", description: "" } }),
-  getCachedData(key) {
-    return nuxtApp.ssrContext?.cache?.[key] ?? nuxtApp.payload.data[key];
-  },
 });
 
-// Ленивая загрузка похожих товаров - не блокирует основной контент
-const { data: allProductsData } = useLazyFetch<{
+// Загружаем все товары для разделов "Дополнительно потребуется" и "Похожие товары"
+const { data: allProductsData } = useFetch<{
   products: APIProduct[];
 }>("/api/products/list", {
   key: computed(() => `all-products-${categorySlug.value || ""}`),
@@ -902,7 +896,7 @@ const { data: allProductsData } = useLazyFetch<{
     exclude: route.params.id,
     limit: 4,
   })),
-  server: false, // Загружаем только на клиенте для ускорения SSR
+  server: true,
   default: () => ({ products: [] }),
 });
 
