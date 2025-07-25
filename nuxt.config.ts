@@ -41,8 +41,11 @@ export default defineNuxtConfig({
     provider: "ipx",
   },
 
-  // Основные стили
-  css: ["@/assets/styles/global/index.scss"],
+  // Основные стили с плавными переходами
+  css: [
+    "@/assets/styles/global/index.scss",
+    "@/assets/styles/smooth-transitions.scss"
+  ],
 
   // Runtime конфигурация
   runtimeConfig: {
@@ -86,7 +89,7 @@ export default defineNuxtConfig({
     mount: process.env.FILE_STORAGE_MOUNT || "./public/uploads",
   },
 
-  // Простая конфигурация приложения
+  // Конфигурация приложения с переходами
   app: {
     head: {
       link: [
@@ -101,6 +104,9 @@ export default defineNuxtConfig({
         },
       ],
     },
+    // Красивые переходы страниц
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' },
   },
 
   // Стандартные настройки

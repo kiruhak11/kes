@@ -1,0 +1,342 @@
+/* 🎨 Плавные переходы и анимации */
+
+/* Индикатор загрузки страницы */
+.page-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(227, 30, 36, 0.1);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  &.loading {
+    opacity: 1;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e31e24, #ff4757);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(227, 30, 36, 0.5);
+  }
+
+  &.loading .progress-fill {
+    animation: progressAnimation 2s ease-in-out infinite;
+  }
+}
+
+@keyframes progressAnimation {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* Переходы страниц */
+.page-transitioning {
+  .main-content {
+    opacity: 0.7;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+}
+
+/* Плавная загрузка изображений */
+img {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.image-loading {
+    opacity: 0;
+    filter: blur(5px);
+    transform: scale(1.05);
+  }
+
+  &.image-loaded {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+
+  &.image-error {
+    opacity: 0.5;
+    filter: grayscale(100%);
+  }
+}
+
+/* Плавное появление контента */
+.fade-in-content {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Скелетоны для загрузки */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s infinite;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+@keyframes skeletonLoading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  
+  .skeleton-image {
+    width: 100%;
+    height: 200px;
+    background: #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  .skeleton-content {
+    .skeleton-title {
+      height: 24px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .skeleton-text {
+      height: 16px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      
+      &.short {
+        width: 60%;
+      }
+    }
+  }
+}
+
+.skeleton-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Hover эффекты для карточек */
+.product-card,
+.category-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    
+    img {
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* Плавные кнопки */
+.btn,
+button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+  }
+  
+  &:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Плавная прокрутка */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Анимация появления элементов при скролле */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Специальные эффекты для галереи */
+.product-gallery {
+  .main-image {
+    transition: all 0.4s ease;
+    
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+  
+  .thumbnail-btn {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(227, 30, 36, 0.3);
+    }
+    
+    &.active {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.5);
+    }
+  }
+}
+
+/* Загрузка контента */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #e31e24;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  .loading-text {
+    color: #666;
+    font-size: 0.9rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Мобильная оптимизация */
+@media (max-width: 768px) {
+  .skeleton-card {
+    padding: 0.5rem;
+    
+    .skeleton-image {
+      height: 150px;
+    }
+  }
+  
+  .product-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .page-progress-bar {
+    height: 2px;
+  }
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  }
+  
+  .skeleton-image,
+  .skeleton-title,
+  .skeleton-text {
+    background: #3a3a3a;
+  }
+  
+  .loading-text {
+    color: #ccc;
+  }
+}
+/*
+ 🎭 Переходы между страницами */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.layout-enter-active,
+.layout-leave-active {
+  transition: all 0.3s ease;
+}
+
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+}
+
+/* Специальные переходы для каталога */
+.catalog-enter-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.catalog-enter-from {
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
+}
+
+/* Переходы для модальных окон */
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}

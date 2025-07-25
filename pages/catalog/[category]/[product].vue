@@ -22,8 +22,8 @@
         v-if="productsPending || isLoadingProducts || isLoadingCategory"
         class="loading-container"
       >
-        <UiLoader />
-        <p>Загрузка товара...</p>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">{{ loadingMessage }}</div>
       </div>
 
       <div v-else-if="fetchError || categoryError" class="error-container">
@@ -56,7 +56,7 @@
 
       <div
         v-else-if="product"
-        class="product-detail-card"
+        class="product-detail-card fade-in-content animate-on-scroll"
         :class="{ 'no-reveal': isMobile }"
       >
         <!-- Верхний блок: галерея + инфо -->
@@ -827,6 +827,23 @@ const route = useRoute();
 const router = useRouter();
 const categorySlug = computed(() => (route.params.category as string) || "");
 const productSlug = computed(() => (route.params.product as string) || "");
+
+// Позитивные сообщения
+const { getPositiveMessage } = usePositiveUX();
+const loadingMessage = ref('✨ Загружаем товар...');
+
+// Обновляем сообщение каждые 2 секунды
+onMounted(() => {
+  const updateMessage = () => {
+    loadingMessage.value = getPositiveMessage('loading');
+  };
+  
+  const messageInterval = setInterval(updateMessage, 2000);
+  
+  onUnmounted(() => {
+    clearInterval(messageInterval);
+  });
+});
 
 // Добавляем проверку, активен ли маршрут продукта
 const isProductRouteActive = computed(() => {
