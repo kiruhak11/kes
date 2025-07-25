@@ -75,10 +75,17 @@
               >
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <img
+              <NuxtImg
                 :src="imageList[currentImageIndex]"
                 :alt="product.name ? String(product.name) : ''"
                 class="main-image"
+                format="webp"
+                quality="85"
+                :width="600"
+                :height="400"
+                loading="eager"
+                fetchpriority="high"
+                sizes="(max-width: 768px) 100vw, 600px"
               />
               <button
                 v-if="imageList.length > 1"
@@ -101,9 +108,15 @@
                   ]"
                   @click="currentImageIndex = idx"
                 >
-                  <img
+                  <NuxtImg
                     :src="img"
                     :alt="`${product.name} - изображение ${idx + 1}`"
+                    format="webp"
+                    quality="75"
+                    :width="80"
+                    :height="60"
+                    :loading="idx < 3 ? 'eager' : 'lazy'"
+                    sizes="80px"
                   />
                 </button>
               </div>
@@ -282,10 +295,14 @@
               v-if="product.connection_scheme"
               class="scheme-image-container"
             >
-              <img
+              <NuxtImg
                 :src="normalizeImagePath(product.connection_scheme)"
                 alt="Схема подключения"
                 class="scheme-image"
+                format="webp"
+                quality="90"
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>
             <div v-else class="no-data-message">
@@ -327,12 +344,17 @@
                   @click="navigateToProduct(getProductById(prodId))"
                 >
                   <div class="required-product-card__image">
-                    <img
+                    <NuxtImg
                       :src="
                         normalizeImagePath(getProductById(prodId)?.image || '')
                       "
                       :alt="getProductById(prodId)?.name || 'Товар'"
+                      format="webp"
+                      quality="80"
+                      :width="200"
+                      :height="150"
                       loading="lazy"
+                      sizes="200px"
                     />
                   </div>
                   <div class="required-product-card__content">
@@ -823,13 +845,13 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Загружаем данные продукта напрямую
+// Оптимизированная загрузка данных продукта
 const {
   data: productData,
   error: productsError,
   pending: productsPending,
   execute: refreshProduct,
-} = useFetch<APIResponse>(
+} = useLazyFetch<APIResponse>(
   () =>
     `/api/products/by-slug?category=${route.params.category || ""}&slug=${route.params.product || ""}`,
   {
@@ -838,28 +860,18 @@ const {
     ),
     server: true,
     default: () => ({ product: null }),
+    getCachedData(key) {
+      return nuxtApp.ssrContext?.cache?.[key] ?? nuxtApp.payload.data[key];
+    },
     transform: (response) => {
-      console.log("API Response:", {
-        raw: response,
-        type: typeof response,
-        hasProduct:
-          response && typeof response === "object" && "product" in response,
-        isArray: Array.isArray(response),
-        keys:
-          response && typeof response === "object" ? Object.keys(response) : [],
-      });
-
       if (!response || typeof response !== "object") {
-        console.log("Invalid response format");
         return { product: null };
       }
 
       if ("product" in response && response.product) {
-        console.log("Valid product data found:", response.product);
         return response;
       }
 
-      console.log("No valid product data found");
       return { product: null };
     },
   }
@@ -869,17 +881,19 @@ const {
   data: categoryData,
   error: initialCategoryError,
   pending: categoryPending,
-} = useFetch<{
+} = useLazyFetch<{
   category: { name: string; description: string };
 }>(() => `/api/categories/${categorySlug.value || ""}`, {
   key: computed(() => `category-${categorySlug.value || ""}`),
   server: true,
-  immediate: true,
   default: () => ({ category: { name: "", description: "" } }),
+  getCachedData(key) {
+    return nuxtApp.ssrContext?.cache?.[key] ?? nuxtApp.payload.data[key];
+  },
 });
 
-// Загружаем все товары для разделов "Дополнительно потребуется" и "Похожие товары"
-const { data: allProductsData } = useFetch<{
+// Ленивая загрузка похожих товаров - не блокирует основной контент
+const { data: allProductsData } = useLazyFetch<{
   products: APIProduct[];
 }>("/api/products/list", {
   key: computed(() => `all-products-${categorySlug.value || ""}`),
@@ -888,7 +902,7 @@ const { data: allProductsData } = useFetch<{
     exclude: route.params.id,
     limit: 4,
   })),
-  server: true,
+  server: false, // Загружаем только на клиенте для ускорения SSR
   default: () => ({ products: [] }),
 });
 
@@ -1678,10 +1692,6 @@ useHead(() => {
     ],
   };
 });
-
-// ... existing code ...
-
-// ... existing code ...
 </script>
 
 <style scoped lang="scss">

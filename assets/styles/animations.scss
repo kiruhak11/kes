@@ -1,0 +1,158 @@
+// Оптимизированные анимации для максимальной производительности
+
+// Базовые состояния
+.animate-out {
+  opacity: 0;
+  transform: translateY(20px);
+  will-change: transform, opacity;
+}
+
+.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+// Типы анимаций с GPU ускорением
+.animate-fade-in {
+  &.animate-out {
+    opacity: 0;
+  }
+  &.animate-in {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-left {
+  &.animate-out {
+    opacity: 0;
+    transform: translate3d(-30px, 0, 0);
+  }
+  &.animate-in {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-slide-in-right {
+  &.animate-out {
+    opacity: 0;
+    transform: translate3d(30px, 0, 0);
+  }
+  &.animate-in {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-slide-in-up {
+  &.animate-out {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  &.animate-in {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-zoom-in {
+  &.animate-out {
+    opacity: 0;
+    transform: scale3d(0.95, 0.95, 1);
+  }
+  &.animate-in {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+// Переходы страниц
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translate3d(10px, 0, 0);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translate3d(-10px, 0, 0);
+}
+
+// Переходы лейаутов
+.layout-enter-active,
+.layout-leave-active {
+  transition: all 0.15s ease-out;
+}
+
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+}
+
+// Оптимизация для слабых устройств
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Hover эффекты с GPU ускорением
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: scale3d(1.02, 1.02, 1);
+  }
+}
+
+// Оптимизация для touch устройств
+@media (hover: none) and (pointer: coarse) {
+  .hover-lift:hover,
+  .hover-scale:hover {
+    transform: none;
+  }
+}
+
+// Критические анимации с высоким приоритетом
+.critical-fade {
+  animation: criticalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes criticalFadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// Оптимизация для батареи
+@media (prefers-reduced-motion: reduce), 
+       (max-width: 768px) and (orientation: portrait) {
+  .animate-out,
+  .animate-in {
+    transition: none !important;
+    animation: none !important;
+  }
+}

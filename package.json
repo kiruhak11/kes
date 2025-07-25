@@ -8,7 +8,10 @@
     "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "check-performance": "node scripts/check-performance.js",
+    "build:optimized": "npm run check-performance && npm run build",
+    "deploy:check": "npm run build:optimized && npm run preview"
   },
   "dependencies": {
     "@nuxt/image": "^1.10.0",

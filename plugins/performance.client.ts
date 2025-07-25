@@ -1,39 +1,95 @@
 export default defineNuxtPlugin(() => {
   if (process.client) {
-    // Мониторинг Core Web Vitals
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.entryType === 'largest-contentful-paint') {
-          console.log('LCP:', entry.startTime)
-        } else if (entry.entryType === 'first-input') {
-          const firstInput = entry as PerformanceEventTiming
-          console.log('FID:', firstInput.processingStart - firstInput.startTime)
-        } else if (entry.entryType === 'layout-shift') {
-          const layoutShift = entry as any
-          console.log('CLS:', layoutShift.value)
-        }
+    // Оптимизация скроллинга
+    let ticking = false;
+    const optimizeScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          // Здесь можно добавить логику для оптимизации скроллинга
+          ticking = false;
+        });
+        ticking = true;
       }
-    })
+    };
 
-    observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] })
+    // Дебаунс для resize событий
+    let resizeTimeout: NodeJS.Timeout;
+    const optimizeResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // Логика для оптимизации resize
+        window.dispatchEvent(new Event('optimizedResize'));
+      }, 150);
+    };
 
-    // Мониторинг времени загрузки страницы
-    window.addEventListener('load', () => {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-      if (navigation) {
-        console.log('Page Load Time:', navigation.loadEventEnd - navigation.loadEventStart)
-        console.log('DOM Content Loaded:', navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart)
+    // Оптимизация изображений с Intersection Observer
+    const imageObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            if (img.dataset.src) {
+              img.src = img.dataset.src;
+              img.removeAttribute('data-src');
+              imageObserver.unobserve(img);
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '50px 0px',
+        threshold: 0.01,
       }
-    })
+    );
 
-    // Мониторинг использования памяти
-    if ('memory' in performance) {
+    // Наблюдение за изображениями с data-src
+    const observeImages = () => {
+      document.querySelectorAll('img[data-src]').forEach((img) => {
+        imageObserver.observe(img);
+      });
+    };
+
+    // Оптимизация анимаций
+    const optimizeAnimations = () => {
+      // Отключаем анимации при слабом устройстве
+      if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+        document.documentElement.style.setProperty('--animation-duration', '0s');
+      }
+
+      // Отключаем анимации при низком заряде батареи
+      if ('getBattery' in navigator) {
+        (navigator as any).getBattery().then((battery: any) => {
+          if (battery.level < 0.2) {
+            document.documentElement.style.setProperty('--animation-duration', '0s');
+          }
+        });
+      }
+    };
+
+    // Оптимизация памяти
+    const optimizeMemory = () => {
+      // Очистка неиспользуемых ресурсов каждые 5 минут
       setInterval(() => {
-        const memory = (performance as any).memory
-        if (memory.usedJSHeapSize > 50 * 1024 * 1024) { // 50MB
-          console.warn('High memory usage:', memory.usedJSHeapSize / 1024 / 1024, 'MB')
+        if ('gc' in window && typeof (window as any).gc === 'function') {
+          (window as any).gc();
         }
-      }, 30000) // Проверка каждые 30 секунд
-    }
+      }, 300000);
+    };
+
+    // Инициализация оптимизаций
+    nextTick(() => {
+      window.addEventListener('scroll', optimizeScroll, { passive: true });
+      window.addEventListener('resize', optimizeResize, { passive: true });
+      observeImages();
+      optimizeAnimations();
+      optimizeMemory();
+    });
+
+    // Очистка при размонтировании
+    onBeforeUnmount(() => {
+      window.removeEventListener('scroll', optimizeScroll);
+      window.removeEventListener('resize', optimizeResize);
+      imageObserver.disconnect();
+    });
   }
-}) 
+});
