@@ -3,18 +3,10 @@ import { defineNuxtConfig } from "nuxt/config";
 export default defineNuxtConfig({
   typescript: { strict: true },
 
-  // Экспериментальные функции для производительности
+  // Стабильные функции для производительности
   experimental: {
     payloadExtraction: false,
     renderJsonPayloads: true,
-    componentIslands: true,
-    treeshakeClientOnly: true,
-    asyncContext: true,
-    crossOriginPrefetch: true,
-    inlineRouteRules: true,
-    viewTransition: true,
-    headNext: true,
-    typedPages: true,
   },
 
   // Оптимизация рендеринга - критично для скорости!
@@ -235,9 +227,9 @@ export default defineNuxtConfig({
         },
       ],
     },
-    // Оптимизация загрузки страниц
-    pageTransition: { name: 'page', mode: 'out-in' },
-    layoutTransition: { name: 'layout', mode: 'out-in' },
+    // Простые переходы страниц
+    pageTransition: false,
+    layoutTransition: false,
   },
 
   // Оптимизация сборки

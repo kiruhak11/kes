@@ -75,17 +75,11 @@
               >
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <NuxtImg
+              <img
                 :src="imageList[currentImageIndex]"
                 :alt="product.name ? String(product.name) : ''"
                 class="main-image"
-                format="webp"
-                quality="85"
-                :width="600"
-                :height="400"
                 loading="eager"
-                fetchpriority="high"
-                sizes="(max-width: 768px) 100vw, 600px"
               />
               <button
                 v-if="imageList.length > 1"
@@ -108,15 +102,10 @@
                   ]"
                   @click="currentImageIndex = idx"
                 >
-                  <NuxtImg
+                  <img
                     :src="img"
                     :alt="`${product.name} - изображение ${idx + 1}`"
-                    format="webp"
-                    quality="75"
-                    :width="80"
-                    :height="60"
                     :loading="idx < 3 ? 'eager' : 'lazy'"
-                    sizes="80px"
                   />
                 </button>
               </div>
@@ -903,6 +892,13 @@ const { data: allProductsData } = useFetch<{
 // Состояния загрузки
 const isLoadingProducts = computed(() => productsPending.value);
 const isLoadingCategory = computed(() => categoryPending.value);
+
+// Перезагружаем данные при изменении маршрута
+watch(() => route.params, async (newParams, oldParams) => {
+  if (newParams.category !== oldParams?.category || newParams.product !== oldParams?.product) {
+    await refreshProduct();
+  }
+}, { immediate: false });
 
 // Инициализируем состояния
 const products = ref<ProductType[]>([]);

@@ -236,21 +236,11 @@ export const useCriticalCSS = () => {
     }
   };
 
-  // Автоматическая инициализация при создании композабла
-  if (process.client) {
-    injectCriticalCSS();
-    optimizeForMobile();
-    
-    // Загружаем некритичные стили после загрузки страницы
-    nextTick(() => {
-      // Используем requestIdleCallback для загрузки некритичных стилей
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          measureCSSPerformance();
-        });
-      }
-    });
-  }
+  // Отключаем автоматическую инициализацию - она конфликтует с основными стилями
+  // if (process.client) {
+  //   injectCriticalCSS();
+  //   optimizeForMobile();
+  // }
 
   return {
     criticalStyles: readonly(criticalStyles),
