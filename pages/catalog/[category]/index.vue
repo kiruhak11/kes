@@ -399,11 +399,7 @@
     :product="selectedProduct"
     @close="closeCommercialOfferModal"
   />
-  <!-- В секции template, добавляем индикатор загрузки -->
-  <div v-if="pending" class="loading-container">
-    <UiLoader />
-    <p>Загрузка товаров...</p>
-  </div>
+
 </template>
 
 <script setup lang="ts">
@@ -552,6 +548,7 @@ const itemsPerPage = 15;
 
 // Products state
 const allProducts = ref<Product[]>([]);
+const pending = ref(false);
 
 // Фильтры - простая инициализация без сохранения в URL
 const priceRange = ref({
@@ -566,33 +563,39 @@ const dynamicRangeFilters = ref<
 
 // Fetch products
 const fetchProducts = async () => {
-  // Подготавливаем фильтры, исключая пустые значения
-  const nonEmptyFilters = Object.entries(dynamicFilters.value)
-    .filter(([_, value]) => value && value !== "")
-    .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+  pending.value = true;
+  
+  try {
+    // Подготавливаем фильтры, исключая пустые значения
+    const nonEmptyFilters = Object.entries(dynamicFilters.value)
+      .filter(([_, value]) => value && value !== "")
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
-  const { data: fetched, error } = await useFetch<{
-    products: Product[];
-    total: number;
-  }>("/api/products/list", {
-    query: {
-      categorySlug: route.params.category,
-      filters:
-        Object.keys(nonEmptyFilters).length > 0
-          ? JSON.stringify(nonEmptyFilters)
-          : undefined,
-      priceMin: priceRange.value.min,
-      priceMax: priceRange.value.max,
-    },
-  });
+    const { data: fetched, error } = await useFetch<{
+      products: Product[];
+      total: number;
+    }>("/api/products/list", {
+      query: {
+        categorySlug: route.params.category,
+        filters:
+          Object.keys(nonEmptyFilters).length > 0
+            ? JSON.stringify(nonEmptyFilters)
+            : undefined,
+        priceMin: priceRange.value.min,
+        priceMax: priceRange.value.max,
+      },
+    });
 
-  if (error.value) {
-    console.error("Error fetching products:", error.value);
-    allProducts.value = [];
-  } else if (fetched.value) {
-    allProducts.value = fetched.value.products;
-  } else {
-    allProducts.value = [];
+    if (error.value) {
+      console.error("Error fetching products:", error.value);
+      allProducts.value = [];
+    } else if (fetched.value) {
+      allProducts.value = fetched.value.products;
+    } else {
+      allProducts.value = [];
+    }
+  } finally {
+    pending.value = false;
   }
 };
 

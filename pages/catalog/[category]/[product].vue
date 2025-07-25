@@ -18,6 +18,16 @@
         <span>{{ productName }}</span>
       </nav>
 
+      <!-- Отладочная информация -->
+      <div style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; z-index: 9999; font-size: 12px;">
+        <div>Product: {{ product ? 'YES' : 'NO' }}</div>
+        <div>Pending: {{ productsPending }}</div>
+        <div>Loading: {{ isLoadingProducts }}</div>
+        <div>Category Loading: {{ isLoadingCategory }}</div>
+        <div>Error: {{ fetchError ? 'YES' : 'NO' }}</div>
+        <div>Category Error: {{ categoryError ? 'YES' : 'NO' }}</div>
+      </div>
+
       <div
         v-if="productsPending || isLoadingProducts || isLoadingCategory"
         class="loading-container"
@@ -44,7 +54,9 @@
           !product &&
           !productsPending &&
           !isLoadingProducts &&
-          !isLoadingCategory
+          !isLoadingCategory &&
+          !fetchError &&
+          !categoryError
         "
         class="error-container"
       >
@@ -58,6 +70,8 @@
         v-else-if="product"
         class="product-detail-card fade-in-content animate-on-scroll"
         :class="{ 'no-reveal': isMobile }"
+        :key="`product-${product.id}-${route.params.category}-${route.params.product}`"
+        style="opacity: 1 !important; visibility: visible !important;"
       >
         <!-- Верхний блок: галерея + инфо -->
         <div class="product-top-row">
@@ -668,7 +682,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect, onUnmounted, onMounted } from "vue";
+import { ref, computed, watch, watchEffect, onUnmounted, onMounted, nextTick } from "vue";
 import { useCartStore } from "~/stores/cart";
 import { contacts } from "~/data/contacts";
 import { useModalStore } from "~/stores/modal";
@@ -832,13 +846,35 @@ const productSlug = computed(() => (route.params.product as string) || "");
 const { getPositiveMessage } = usePositiveUX();
 const loadingMessage = ref('✨ Загружаем товар...');
 
-// Обновляем сообщение каждые 2 секунды
+// Обновляем сообщение каждые 2 секунды + принудительная загрузка
 onMounted(() => {
   const updateMessage = () => {
     loadingMessage.value = getPositiveMessage('loading');
   };
   
   const messageInterval = setInterval(updateMessage, 2000);
+  
+  // ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА при монтировании компонента
+  // Даем время для гидратации перед принудительной загрузкой
+  setTimeout(async () => {
+    if (route.params.category && route.params.product) {
+      console.log('🚀 Принудительная загрузка товара при монтировании');
+      
+      // НЕ сбрасываем продукт при монтировании, если данные уже есть
+      if (!productData.value?.product) {
+        product.value = null;
+        await refreshProduct();
+      }
+      
+      // Если данные все еще не загрузились, пробуем еще раз через секунду
+      setTimeout(async () => {
+        if (!productData.value?.product && route.params.category && route.params.product) {
+          console.log('🔄 Повторная попытка загрузки товара');
+          await refreshProduct();
+        }
+      }, 1000);
+    }
+  }, 100); // Небольшая задержка для гидратации
   
   onUnmounted(() => {
     clearInterval(messageInterval);
@@ -851,30 +887,33 @@ const isProductRouteActive = computed(() => {
   return !!(route.params.category && route.params.product);
 });
 
-// Загружаем данные продукта
+// Загружаем данные продукта с улучшенной логикой
 const {
   data: productData,
   error: productsError,
   pending: productsPending,
   execute: refreshProduct,
-} = useFetch<APIResponse>(
+} = useLazyFetch<APIResponse>(
   () =>
     `/api/products/by-slug?category=${route.params.category || ""}&slug=${route.params.product || ""}`,
   {
     key: computed(
       () => `product-${route.params.category}-${route.params.product}`
     ),
-    server: true,
+    server: false, // Отключаем SSR для более надежной работы
     default: () => ({ product: null }),
     transform: (response) => {
+      console.log('🔄 Получены данные продукта:', response);
       if (!response || typeof response !== "object") {
         return { product: null };
       }
 
       if ("product" in response && response.product) {
+        console.log('✅ Продукт найден:', response.product.name);
         return response;
       }
 
+      console.log('❌ Продукт не найден в ответе');
       return { product: null };
     },
   }
@@ -889,6 +928,7 @@ const {
 }>(() => `/api/categories/${categorySlug.value || ""}`, {
   key: computed(() => `category-${categorySlug.value || ""}`),
   server: true,
+  watch: [() => route.params.category], // АВТОМАТИЧЕСКАЯ ПЕРЕЗАГРУЗКА КАТЕГОРИИ!
   default: () => ({ category: { name: "", description: "" } }),
 });
 
@@ -910,12 +950,25 @@ const { data: allProductsData } = useFetch<{
 const isLoadingProducts = computed(() => productsPending.value);
 const isLoadingCategory = computed(() => categoryPending.value);
 
-// Перезагружаем данные при изменении маршрута
+// ПРИНУДИТЕЛЬНАЯ перезагрузка данных при изменении маршрута
 watch(() => route.params, async (newParams, oldParams) => {
-  if (newParams.category !== oldParams?.category || newParams.product !== oldParams?.product) {
+  // Только если параметры действительно изменились (не при первой загрузке)
+  if (oldParams && (newParams.category !== oldParams.category || newParams.product !== oldParams.product)) {
+    console.log('🔄 Смена маршрута, перезагружаем товар:', newParams.category, newParams.product);
+    // Сбрасываем текущий продукт
+    product.value = null;
     await refreshProduct();
   }
 }, { immediate: false });
+
+// ДОПОЛНИТЕЛЬНЫЙ watch для гарантированной загрузки
+watch(() => [route.params.category, route.params.product], async ([category, productParam]) => {
+  // Загружаем только если есть параметры и нет данных, и мы на клиенте
+  if (category && productParam && !productData.value?.product && isClient.value) {
+    console.log('🚀 Дополнительная загрузка товара:', category, productParam);
+    await refreshProduct();
+  }
+}, { immediate: false }); // НЕ immediate, чтобы избежать двойной загрузки
 
 // Инициализируем состояния
 const products = ref<ProductType[]>([]);
@@ -947,10 +1000,16 @@ watchEffect(() => {
   }
 });
 
-// Запускаем загрузку при изменении параметров маршрута
-watch([() => route.params.category, () => route.params.product], () => {
-  refreshProduct();
-});
+// Запускаем загрузку при изменении параметров маршрута - ПРИНУДИТЕЛЬНО!
+watch([() => route.params.category, () => route.params.product], 
+  async ([newCategory, newProduct], [oldCategory, oldProduct]) => {
+    if (newCategory !== oldCategory || newProduct !== oldProduct) {
+      console.log('🔄 Смена товара:', oldCategory + '/' + oldProduct, '→', newCategory + '/' + newProduct);
+      await refreshProduct();
+    }
+  }, 
+  { immediate: false }
+);
 
 // Реактивная информация о категории
 const categoryInfo = computed(() => {
@@ -970,71 +1029,66 @@ const categoryInfo = computed(() => {
   };
 });
 
-// Реактивный продукт на основе загруженных данных
-const product = ref<ProductType | null>(null);
+// Определяем, является ли устройство мобильным и клиентом
+const isMobile = ref(false);
+const isClient = ref(false);
 
-// Обновляем продукт при изменении данных
-watchEffect(() => {
-  console.log("Watch Effect State:", {
-    pending: productsPending.value,
-    error: productsError.value,
-    data: productData.value,
-    route: route.params,
-  });
+// Реактивное состояние продукта
+const product = ref<Product | null>(null);
 
-  // Если данные загружаются, сохраняем текущее состояние
-  if (productsPending.value) {
-    console.log("Loading in progress...");
-    return;
-  }
-
-  // Проверяем ошибки
-  if (productsError.value) {
-    console.log("Error occurred:", productsError.value);
-    fetchError.value = new Error(productsError.value.message);
-    return;
-  }
-
-  const apiProduct = productData.value?.product;
-
-  // Обновляем состояние продукта
-  if (apiProduct && typeof apiProduct === "object" && "id" in apiProduct) {
-    console.log("Setting product data:", apiProduct);
-    try {
-      product.value = {
-        id: apiProduct.id,
-        name: apiProduct.name || "",
-        description: apiProduct.description || "",
-        extendedDescription: apiProduct.extendedDescription || "",
-        price: apiProduct.price || 0,
-        image: apiProduct.image || "",
-        category: categoryData.value?.category?.name || "",
-        category_slug: categorySlug.value,
-        slug: apiProduct.slug || "",
-        additional_images: Array.isArray(apiProduct.additional_images)
-          ? apiProduct.additional_images
-          : [],
-        specs: Array.isArray(apiProduct.specs) ? apiProduct.specs : [],
-        delivery_set: apiProduct.delivery_set || "",
-        connection_scheme: apiProduct.connection_scheme || "",
-        additional_requirements: apiProduct.additional_requirements || "",
-        required_products: Array.isArray(apiProduct.required_products)
-          ? apiProduct.required_products
-          : [],
-      };
-      console.log("Product data set successfully:", product.value);
-    } catch (error) {
-      console.error("Error setting product data:", error);
-      product.value = null;
-    }
-  } else {
-    console.log("Product data is invalid:", {
-      apiProduct,
-      type: typeof apiProduct,
+// Отслеживаем изменения данных продукта и обновляем реактивное состояние
+watch(
+  () => productData.value?.product,
+  async (apiProduct, oldApiProduct) => {
+    console.log("🔄 Product data changed:", {
+      hasData: !!apiProduct,
+      productName: apiProduct?.name,
+      pending: productsPending.value,
+      isClient: isClient.value
     });
-    product.value = null;
-  }
-});
+
+    // Если нет данных продукта, сбрасываем состояние
+    if (!apiProduct || typeof apiProduct !== "object" || !("id" in apiProduct)) {
+      console.log("❌ Нет данных продукта");
+      // Сбрасываем только если мы на клиенте и это не первая загрузка
+      if (isClient.value && oldApiProduct !== undefined) {
+        product.value = null;
+      }
+      return;
+    }
+
+    console.log("✅ Устанавливаем продукт:", apiProduct.name);
+    
+    const newProduct = {
+      id: apiProduct.id,
+      name: apiProduct.name || "",
+      description: apiProduct.description || "",
+      extendedDescription: apiProduct.extendedDescription || "",
+      price: apiProduct.price || 0,
+      image: apiProduct.image || "",
+      category: apiProduct.category_name || apiProduct.category || "",
+      category_slug: categorySlug.value,
+      slug: apiProduct.slug || "",
+      additional_images: Array.isArray(apiProduct.additional_images)
+        ? apiProduct.additional_images
+        : [],
+      specs: Array.isArray(apiProduct.specs) ? apiProduct.specs : [],
+      delivery_set: apiProduct.delivery_set || "",
+      connection_scheme: apiProduct.connection_scheme || "",
+      additional_requirements: apiProduct.additional_requirements || "",
+      required_products: Array.isArray(apiProduct.required_products)
+        ? apiProduct.required_products
+        : [],
+    };
+
+    // Используем nextTick для гарантированного обновления DOM
+    await nextTick();
+    product.value = newProduct;
+    
+    console.log("✅ Продукт установлен в DOM:", product.value.name);
+  },
+  { immediate: true }
+);
 
 // Computed property for product name to prevent hydration mismatch
 const productName = computed(() => {
@@ -1049,9 +1103,7 @@ const productName = computed(() => {
 
 // Данные загружаются автоматически через useFetch
 
-// Определяем, является ли устройство мобильным
-const isMobile = ref(false);
-const isClient = ref(false);
+// Переменные уже объявлены выше
 
 onMounted(() => {
   isClient.value = true;
@@ -1063,7 +1115,58 @@ onMounted(() => {
   window.addEventListener("resize", () => {
     isMobile.value = window.innerWidth <= 768;
   });
+
+  // ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА при монтировании компонента
+  // Даем время для гидратации перед принудительной загрузкой
+  setTimeout(async () => {
+    if (route.params.category && route.params.product) {
+      console.log('🚀 Принудительная загрузка товара при монтировании');
+      
+      // НЕ сбрасываем продукт при монтировании, если данные уже есть
+      if (!productData.value?.product) {
+        product.value = null;
+        await refreshProduct();
+      }
+      
+      // Если данные все еще не загрузились, пробуем еще раз через секунду
+      setTimeout(async () => {
+        if (!productData.value?.product && route.params.category && route.params.product) {
+          console.log('🔄 Повторная попытка загрузки товара');
+          await refreshProduct();
+        }
+      }, 1000);
+    }
+  }, 100); // Небольшая задержка для гидратации
 });
+
+// Handle product not found - ПОСЛЕ инициализации isClient
+watch(
+  [product, () => productsPending.value, () => productsError.value],
+  ([newProduct, pending, error]) => {
+    // Перенаправляем ТОЛЬКО если:
+    // 1. Загрузка завершена (не pending)
+    // 2. Нет ошибки загрузки
+    // 3. Продукт не найден
+    // 4. Мы на клиенте
+    // 5. Маршрут активен
+    // 6. Прошло достаточно времени для загрузки (защита от преждевременного редиректа)
+    if (
+      !pending &&
+      !error &&
+      !newProduct &&
+      isClient.value &&
+      isProductRouteActive.value
+    ) {
+      // Добавляем задержку для защиты от преждевременного редиректа
+      setTimeout(() => {
+        if (!product.value && !productsPending.value) {
+          console.log('❌ Продукт не найден, редиректим в каталог');
+          router.push(`/catalog/${categorySlug.value}`);
+        }
+      }, 2000); // Ждем 2 секунды перед редиректом
+    }
+  }
+);
 
 onUnmounted(() => {
   // Удаляем слушатель при размонтировании
@@ -1104,19 +1207,7 @@ const searchedProduct = computed(() => {
 
 // Product теперь обновляется через watchEffect выше
 
-// Handle product not found
-watch(product, (newProduct, oldProduct) => {
-  // Перенаправляем, только если мы на странице товара и товар не найден
-  if (
-    !isLoadingProducts.value &&
-    !newProduct &&
-    products.value.length > 0 &&
-    isProductRouteActive.value &&
-    isClient.value
-  ) {
-    router.push(`/catalog/${categorySlug.value}`);
-  }
-});
+// Handle product not found будет объявлен позже, после isClient
 
 const capitalize = (s: string) => {
   if (typeof s !== "string") return "";
@@ -1129,9 +1220,10 @@ const modalStore = useModalStore();
 const currentImageIndex = ref(0);
 
 // Сброс индекса при изменении продукта
-watch(product, () => {
+watch(product, (newProduct) => {
   currentImageIndex.value = 0;
-});
+  console.log("🔄 Продукт изменился, сбрасываем индекс изображения:", newProduct?.name);
+}, { immediate: true });
 
 // Навигация по галерее
 const nextImage = () => {
@@ -1559,11 +1651,22 @@ const navigateToProduct = (product: ProductType | undefined) => {
 
 // Состояния загрузки управляются автоматически через useFetch
 
-// Функция для повторной загрузки данных
+// УЛУЧШЕННАЯ функция для повторной загрузки данных
 const retryLoading = async () => {
+  console.log('🔄 Повторная загрузка данных...');
   fetchError.value = null;
   categoryError.value = null;
-  refreshProduct();
+  
+  // Принудительно перезагружаем данные
+  await refreshProduct();
+  
+  // Если данные все еще не загрузились, пробуем еще раз
+  setTimeout(async () => {
+    if (!productData.value?.product && route.params.category && route.params.product) {
+      console.log('🚀 Дополнительная попытка загрузки...');
+      await refreshProduct();
+    }
+  }, 500);
 };
 
 // Глобальная переменная для рекомендованных товаров
