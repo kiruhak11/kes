@@ -374,6 +374,13 @@ const presetImages = [
   "/images/cutouts/ts2-30.png",
   "/images/cutouts/zoloyl1.png",
   "/images/cutouts/zoloyl2.png",
+  "/images/cutouts/emma_diz.png",
+  "/images/cutouts/emma.png",
+  "/images/cutouts/g_sib_strong.png",
+  "/images/cutouts/gorelka_baltur_diz.jpg.png",
+  "/images/cutouts/gorelka_eco_gaz.png",
+  "/images/cutouts/gorelka_maslo.png",
+  "/images/cutouts/gorelka_rgmg.png",
 ];
 
 // add after newProdSelectedFuels definitions
@@ -1589,7 +1596,7 @@ interface Emits {
   "handle-image-upload": [event: Event, product: Product | Partial<Product>];
   "handle-connection-scheme-upload": [
     event: Event,
-    product: Product | Partial<Product>,
+    product: Product | Partial<Product>
   ];
   "toggle-new-prod-fuel-dropdown": [];
   "add-category": [category: Category];
@@ -2616,9 +2623,7 @@ async function downloadBackup() {
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
       transform: translateY(-2px);
