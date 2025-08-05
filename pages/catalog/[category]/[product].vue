@@ -1,29 +1,19 @@
 <template>
-  <div class="product-detail-page" :class="{ hydrated: isHydrated }">
+  <div class="product-detail-page" v-cloak>
     <div class="container">
-      <!-- Убираем v-scroll-reveal для мобильных -->
-      <nav
-        class="breadcrumbs"
-        :class="{ 'no-reveal': isMobile }"
-        v-scroll-reveal="!isMobile && 'fade-in'"
-      >
-        <NuxtLink to="/">Главная</NuxtLink>
-        <span class="breadcrumbs-separator">→</span>
-        <NuxtLink to="/catalog">Каталог</NuxtLink>
-        <span class="breadcrumbs-separator">→</span>
-        <NuxtLink :to="`/catalog/${categorySlug}`">{{
-          categoryInfo?.title || "Категория"
-        }}</NuxtLink>
-        <span class="breadcrumbs-separator">→</span>
-        <span>{{ productName }}</span>
-      </nav>
+      <!-- Хлебные крошки -->
+      <ProductBreadcrumbs
+        :category-slug="categorySlug"
+        :category-info="categoryInfo"
+        :product-name="productName"
+        :is-mobile="isMobile"
+      />
 
+      <!-- Состояния загрузки и ошибок -->
       <div
         v-if="
-          !isHydrated ||
-          productsPending ||
-          isLoadingProducts ||
-          isLoadingCategory
+          !product &&
+          (productsPending || isLoadingProducts || isLoadingCategory)
         "
         class="loading-container"
       >
@@ -44,635 +34,110 @@
         </button>
       </div>
 
+      <!-- Основной контент -->
+      <div v-if="product" class="product-detail-card">
+        <!-- Верхний блок: галерея + инфо -->
+        <div class="product-top-row">
+          <!-- Галерея изображений -->
+          <ProductGallery
+            :image-list="imageList"
+            :product-name="productName"
+            :is-mobile="true"
+          />
+
+          <!-- Информация о продукте -->
+          <ProductInfo
+            :product-name="productName"
+            :description="product.description"
+            :display-specs="displaySpecs"
+            :is-mobile="true"
+          />
+        </div>
+
+        <!-- Действия с продуктом -->
+        <ProductActions :product="product" :category-slug="categorySlug" />
+
+        <hr class="section-divider" />
+
+        <!-- Вкладки -->
+        <ProductTabs
+          :active-tab="activeTab"
+          @update:active-tab="activeTab = $event"
+        />
+
+        <!-- Контент вкладок -->
+        <div class="tab-content">
+          <!-- Описание товара -->
+          <ProductDescription
+            :active-tab="activeTab"
+            :extended-description="product.extendedDescription"
+          />
+
+          <!-- Технические характеристики -->
+          <ProductSpecs
+            :active-tab="activeTab"
+            :display-specs="displaySpecs"
+            :is-mobile="true"
+          />
+
+          <!-- Комплект поставки -->
+          <ProductDelivery
+            :active-tab="activeTab"
+            :delivery-set="product.delivery_set"
+          />
+
+          <!-- Схема подключения -->
+          <ProductScheme
+            :active-tab="activeTab"
+            :connection-scheme="product.connection_scheme"
+          />
+
+          <!-- Дополнительные требования -->
+          <ProductAdditional
+            :active-tab="activeTab"
+            :additional-requirements="product.additional_requirements"
+            :required-products="product.required_products"
+            :products="products"
+            :category-slug="categorySlug"
+          />
+
+          <!-- Сертификаты -->
+          <ProductCertificates
+            :active-tab="activeTab"
+            :certificates="certificates"
+            @open-certificate-modal="openCertificateModal"
+          />
+
+          <!-- Отзывы -->
+          <ProductReviews :active-tab="activeTab" />
+        </div>
+
+        <hr class="section-divider" />
+
+        <!-- Информация о заводе -->
+        <ProductFactory
+          :certificates="certificates"
+          @open-certificate-modal="openCertificateModal"
+        />
+
+        <hr class="section-divider" />
+
+        <!-- Похожие товары -->
+        <RelatedProducts
+          :related-products="relatedProducts"
+          :category-slug="categorySlug"
+        />
+      </div>
+
+      <!-- Товар не найден -->
       <div
-        v-else-if="
-          isHydrated &&
-          !product &&
-          !productsPending &&
-          !isLoadingProducts &&
-          !isLoadingCategory
-        "
+        v-else-if="!productsPending && !isLoadingProducts && !isLoadingCategory"
         class="error-container"
       >
         <p class="error-message">Товар не найден</p>
         <NuxtLink :to="'/catalog/' + categorySlug" class="retry-button">
           Вернуться в категорию
         </NuxtLink>
-      </div>
-
-      <div
-        v-else-if="
-          isHydrated &&
-          product &&
-          !productsPending &&
-          !isLoadingProducts &&
-          !isLoadingCategory
-        "
-        class="product-detail-card"
-        :class="{ 'no-reveal': isMobile }"
-      >
-        <!-- Верхний блок: галерея + инфо -->
-        <div class="product-top-row">
-          <div
-            class="product-gallery"
-            :class="{ 'no-reveal': isMobile }"
-            v-scroll-reveal="!isMobile && 'slide-in-left'"
-          >
-            <!-- Основное изображение -->
-            <div class="main-image-container">
-              <button
-                v-if="imageList.length > 1"
-                class="gallery-nav prev"
-                @click="prevImage"
-              >
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <img
-                :src="imageList[currentImageIndex]"
-                :alt="product.name ? String(product.name) : ''"
-                class="main-image"
-                loading="eager"
-              />
-              <button
-                v-if="imageList.length > 1"
-                class="gallery-nav next"
-                @click="nextImage"
-              >
-                <i class="fas fa-chevron-right"></i>
-              </button>
-            </div>
-
-            <!-- Миниатюры -->
-            <div v-if="imageList.length > 1" class="thumbnails-container">
-              <div class="thumbnails-scroll">
-                <button
-                  v-for="(img, idx) in imageList"
-                  :key="idx"
-                  :class="[
-                    'thumbnail-btn',
-                    { active: idx === currentImageIndex },
-                  ]"
-                  @click="currentImageIndex = idx"
-                >
-                  <img
-                    :src="img"
-                    :alt="`${product.name} - изображение ${idx + 1}`"
-                    :loading="idx < 3 ? 'eager' : 'lazy'"
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="product-info-block"
-            :class="{ 'no-reveal': isMobile }"
-            v-scroll-reveal="!isMobile && 'slide-in-right'"
-          >
-            <h1 class="product-title">
-              {{ productName }}
-            </h1>
-            <div class="product-main-row">
-              <div class="product-main-description">
-                <div
-                  class="product-short-description extended-description-content"
-                  v-html="parseExtendedDescription(product.description)"
-                ></div>
-              </div>
-              <div class="product-main-specs">
-                <div
-                  v-for="spec in displaySpecs.slice(0, 4)"
-                  :key="spec.id"
-                  class="spec-item"
-                >
-                  <span class="spec-label">{{
-                    capitalize(spec.key).slice(0, 48) +
-                    (spec.key.length > 48 ? "..." : "")
-                  }}</span>
-                  <span class="spec-dots"></span>
-                  <span class="spec-value">{{ spec.value }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="product-main-actions">
-              <div class="cart-action-wrap">
-                <div class="product-card__price-block">
-                  <span class="product-price">{{
-                    product.price
-                      .toLocaleString()
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ") == 1
-                      ? "Цена по запросу"
-                      : product.price.toLocaleString() + " ₽"
-                  }}</span>
-                  <span class="product-price-note">Цена с НДС</span>
-                </div>
-                <button
-                  v-if="!cartCount"
-                  class="buy-btn"
-                  @click="addToCart"
-                  v-scroll-reveal="'zoom-in'"
-                >
-                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-                    <path
-                      d="M6 6h15l-1.5 9h-13z"
-                      stroke="#e31e24"
-                      stroke-width="2"
-                    />
-                    <circle cx="9" cy="20" r="1" fill="#e31e24" />
-                    <circle cx="18" cy="20" r="1" fill="#e31e24" />
-                  </svg>
-                  <span>Положить в корзину</span>
-                </button>
-                <div v-else class="cart-counter">
-                  <button class="cart-minus" @click="decrementCart">-</button>
-                  <span class="cart-qty">{{ cartCount }}</span>
-                  <button class="cart-plus" @click="incrementCart">+</button>
-                </div>
-              </div>
-              <div class="product-main-actions-right">
-                <button
-                  class="offer-btn"
-                  @click="openCommercialOfferModal(product)"
-                  v-scroll-reveal="'zoom-in'"
-                >
-                  Заказать коммерческое предложение
-                </button>
-                <a
-                  v-if="$device.isMobile"
-                  :href="`tel:${contacts.phone[0]}`"
-                  class="offer-btn"
-                  >Уточнить наличие</a
-                >
-                <button
-                  v-else
-                  class="offer-btn"
-                  @click="openOfferModal()"
-                  v-scroll-reveal="'zoom-in'"
-                >
-                  Уточнить наличие
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <hr class="section-divider" />
-        <!-- Вкладки -->
-        <div class="product-tabs" v-scroll-reveal="'fade-in-up'">
-          <button
-            v-for="tab in productTabs"
-            :key="tab.key"
-            :class="['tab-btn', { active: activeTab === tab.key }]"
-            @click="activeTab = tab.key"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-        <div class="tab-content" v-scroll-reveal="'fade-in-up'">
-          <div
-            v-if="activeTab === 'description'"
-            class="section-block"
-            v-scroll-reveal="'slide-in-left'"
-          >
-            <h2 class="section-title">Описание товара</h2>
-            <div
-              class="extended-description-content"
-              v-html="parseExtendedDescription(product.extendedDescription)"
-            ></div>
-          </div>
-          <div
-            v-if="activeTab === 'specs'"
-            class="section-block"
-            v-scroll-reveal="'slide-in-right'"
-          >
-            <h2 class="section-title">Технические характеристики</h2>
-            <ul class="specs-list">
-              <li
-                v-if="displaySpecs.length > 0"
-                v-for="spec in displaySpecs"
-                :key="spec.id"
-                class="spec-item"
-              >
-                <span class="spec-label">{{
-                  isMobile
-                    ? capitalize(spec.key).slice(0, 24) +
-                      (spec.key.length > 24 ? "..." : "")
-                    : capitalize(spec.key).slice(0, 64) +
-                      (spec.key.length > 64 ? "..." : "")
-                }}</span>
-                <span class="spec-dots"></span>
-                <span class="spec-value">{{ spec.value }}</span>
-              </li>
-              <li v-else class="spec-empty">
-                <div class="spec-empty-content">
-                  <UiEmpty />
-                  <p>Технические характеристики уточняются.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div
-            v-if="activeTab === 'delivery'"
-            class="section-block"
-            v-scroll-reveal="'slide-in-left'"
-          >
-            <h2 class="section-title">Комплект поставки</h2>
-            <div
-              v-if="product?.delivery_set"
-              class="delivery-set-content"
-              v-html="product.delivery_set.replace(/\\n/g, '<br>')"
-            ></div>
-            <div v-else class="no-data-message">
-              Информация о комплекте поставки уточняется.
-            </div>
-          </div>
-          <div
-            v-if="activeTab === 'scheme'"
-            class="section-block"
-            v-scroll-reveal="'slide-in-right'"
-          >
-            <h2 class="section-title">Схема подключения</h2>
-            <div
-              v-if="product.connection_scheme"
-              class="scheme-image-container"
-            >
-              <NuxtImg
-                :src="normalizeImagePath(product.connection_scheme)"
-                alt="Схема подключения"
-                class="scheme-image"
-                format="webp"
-                quality="90"
-                loading="lazy"
-                sizes="(max-width: 768px) 100vw, 800px"
-              />
-            </div>
-            <div v-else class="no-data-message">
-              Схема подключения уточняется.
-            </div>
-          </div>
-          <!-- Дополнительные требования -->
-          <div
-            v-if="activeTab === 'additional'"
-            class="section-block"
-            v-scroll-reveal="'slide-in-right'"
-          >
-            <h2 class="section-title">Дополнительно потребуется</h2>
-            <div
-              v-if="
-                product.additional_requirements ||
-                (product.required_products &&
-                  product.required_products.length > 0)
-              "
-            >
-              <div
-                v-if="product.additional_requirements"
-                class="additional-description"
-              >
-                {{ product.additional_requirements }}
-              </div>
-
-              <div
-                v-if="
-                  product.required_products &&
-                  product.required_products.length > 0
-                "
-                class="required-products-grid"
-              >
-                <div
-                  v-for="prodId in product.required_products"
-                  :key="prodId"
-                  class="required-product-card"
-                  @click="navigateToProduct(getProductById(prodId))"
-                >
-                  <div class="required-product-card__image">
-                    <NuxtImg
-                      :src="
-                        normalizeImagePath(getProductById(prodId)?.image || '')
-                      "
-                      :alt="getProductById(prodId)?.name || 'Товар'"
-                      format="webp"
-                      quality="80"
-                      :width="200"
-                      :height="150"
-                      loading="lazy"
-                      sizes="200px"
-                    />
-                  </div>
-                  <div class="required-product-card__content">
-                    <h3 class="required-product-card__title">
-                      {{ getProductById(prodId)?.name || "Товар не найден" }}
-                    </h3>
-                    <p class="required-product-card__description">
-                      {{
-                        getProductById(prodId)?.description ||
-                        "Описание отсутствует"
-                      }}
-                    </p>
-                    <div class="required-product-card__footer">
-                      <div class="required-product-card__price">
-                        <span class="price-value">
-                          {{
-                            getProductById(prodId)?.price?.toLocaleString() ||
-                            "0"
-                          }}
-                          ₽
-                        </span>
-                      </div>
-                      <div class="required-product-card__arrow">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <path
-                            d="M9 18L15 12L9 6"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="empty-state">
-              Для данного товара не указаны дополнительные требования
-            </div>
-          </div>
-          <div
-            v-if="activeTab === 'certificates'"
-            class="section-block certificates-block"
-            v-scroll-reveal="'fade-in-up'"
-          >
-            <h2 class="section-title">Сертификаты и гарантии</h2>
-            <div class="cert-gallery-slider-wrap">
-              <div class="cert-gallery-scroll">
-                <div class="cert-gallery-track">
-                  <div
-                    v-for="certificate in certificates"
-                    :key="certificate.id"
-                    class="cert-gallery-card"
-                  >
-                    <div class="cert-gallery-img-wrap">
-                      <img :src="certificate.image" :alt="certificate.title" />
-                    </div>
-                    <div class="cert-gallery-title">
-                      {{ certificate.title }}
-                    </div>
-                    <button
-                      class="cert-gallery-btn"
-                      @click="openCertificateModal(certificate)"
-                    >
-                      Просмотреть
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="cert-gallery-controls">
-              <div
-                class="cert-gallery-arrow cert-gallery-arrow-left"
-                :class="{ disabled: galleryActiveIndex === 0 }"
-                @click="scrollGalleryBy(-1)"
-              >
-                <svg width="32" height="32" viewBox="0 0 24 24">
-                  <path
-                    d="M15 19l-7-7 7-7"
-                    stroke="#e31e24"
-                    stroke-width="2"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </div>
-              <div class="cert-gallery-dots">
-                <span
-                  v-for="(c, idx) in certificates"
-                  :key="idx"
-                  :class="[
-                    'cert-gallery-dot',
-                    { active: idx === galleryActiveIndex },
-                  ]"
-                  @click="scrollToGalleryCard(idx)"
-                ></span>
-              </div>
-              <div
-                class="cert-gallery-arrow cert-gallery-arrow-right"
-                :class="{
-                  disabled: galleryActiveIndex === certificates.length - 1,
-                }"
-                @click="scrollGalleryBy(1)"
-              >
-                <svg width="32" height="32" viewBox="0 0 24 24">
-                  <path
-                    d="M9 5l7 7-7 7"
-                    stroke="#e31e24"
-                    stroke-width="2"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div
-            v-if="activeTab === 'reviews'"
-            class="section-block reviews-block"
-            v-scroll-reveal="'fade-in-up'"
-          >
-            <h2 class="section-title">Отзывы о продукции</h2>
-            <div class="review-card" v-scroll-reveal="'slide-in-left'">
-              <div class="review-author">Иван Петров</div>
-              <div class="review-text">
-                Отличный котел, быстро доставили и помогли с установкой!
-              </div>
-            </div>
-            <div class="review-card" v-scroll-reveal="'slide-in-right'">
-              <div class="review-author">ООО "ТеплоСервис"</div>
-              <div class="review-text">
-                Работаем с этим заводом не первый год, всегда всё на высшем
-                уровне.
-              </div>
-            </div>
-          </div>
-        </div>
-        <hr class="section-divider" />
-        <!-- О заводе -->
-        <div class="about-factory-section" v-scroll-reveal="'fade-in-up'">
-          <div class="factory-menu" v-scroll-reveal="'fade-in-up'">
-            <button
-              v-for="tab in factoryTabs"
-              :key="tab.key"
-              :class="[
-                'factory-tab-btn',
-                { active: activeFactoryTab === tab.key },
-              ]"
-              @click="activeFactoryTab = tab.key"
-            >
-              {{ tab.label }}
-            </button>
-          </div>
-          <div class="factory-content" v-scroll-reveal="'fade-in-up'">
-            <div v-if="activeFactoryTab === 'certificates'">
-              <section class="certificates-gallery-section">
-                <h2 class="certificates-gallery-title">
-                  Сертификаты и гарантии
-                </h2>
-                <p class="certificates-gallery-desc">
-                  Вся продукция сертифицирована и сопровождается гарантией
-                  завода-изготовителя.
-                </p>
-                <div class="cert-gallery-slider-wrap">
-                  <div class="cert-gallery-scroll">
-                    <div class="cert-gallery-track">
-                      <div
-                        v-for="certificate in certificates"
-                        :key="certificate.id"
-                        class="cert-gallery-card"
-                      >
-                        <div class="cert-gallery-img-wrap">
-                          <img
-                            :src="normalizeImagePath(certificate.image)"
-                            :alt="certificate.title"
-                          />
-                        </div>
-                        <div class="cert-gallery-title">
-                          {{ certificate.title }}
-                        </div>
-                        <button
-                          class="cert-gallery-btn"
-                          @click="openCertificateModal(certificate)"
-                        >
-                          Просмотреть
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="cert-gallery-controls">
-                  <div
-                    class="cert-gallery-arrow cert-gallery-arrow-left"
-                    :class="{ disabled: galleryActiveIndex === 0 }"
-                    @click="scrollGalleryBy(-1)"
-                  >
-                    <svg width="32" height="32" viewBox="0 0 24 24">
-                      <path
-                        d="M15 19l-7-7 7-7"
-                        stroke="#e31e24"
-                        stroke-width="2"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div class="cert-gallery-dots">
-                    <span
-                      v-for="(c, idx) in certificates"
-                      :key="idx"
-                      :class="[
-                        'cert-gallery-dot',
-                        { active: idx === galleryActiveIndex },
-                      ]"
-                      @click="scrollToGalleryCard(idx)"
-                    ></span>
-                  </div>
-                  <div
-                    class="cert-gallery-arrow cert-gallery-arrow-right"
-                    :class="{
-                      disabled: galleryActiveIndex === certificates.length - 1,
-                    }"
-                    @click="scrollGalleryBy(1)"
-                  >
-                    <svg width="32" height="32" viewBox="0 0 24 24">
-                      <path
-                        d="M9 5l7 7-7 7"
-                        stroke="#e31e24"
-                        stroke-width="2"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </section>
-            </div>
-            <div v-else-if="activeFactoryTab === 'about'">
-              <div class="factory-about-block">
-                <h3>О заводе</h3>
-                <p>
-                  Наш завод — один из лидеров отрасли, производящий современные
-                  котлы и оборудование для промышленности и ЖКХ. Мы гордимся
-                  своей историей, инновациями и командой профессионалов.
-                </p>
-              </div>
-            </div>
-            <div v-else-if="activeFactoryTab === 'production'">
-              <div class="factory-production-block">
-                <h3>Производство</h3>
-                <p>
-                  Современные производственные линии, строгий контроль качества,
-                  автоматизация и экологичность — всё это позволяет нам
-                  выпускать продукцию мирового уровня.
-                </p>
-              </div>
-            </div>
-            <div v-else-if="activeFactoryTab === 'team'">
-              <div class="factory-team-block">
-                <h3>Наша команда</h3>
-                <p>
-                  В нашем коллективе работают инженеры, технологи, менеджеры и
-                  рабочие с многолетним опытом. Мы ценим каждого сотрудника и
-                  вместе достигаем новых высот!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <hr class="section-divider" />
-        <!-- Похожие товары -->
-        <div class="related-products-section">
-          <h2 class="section-title">Вам также может понравиться</h2>
-          <div class="related-products-grid">
-            <div
-              v-for="relatedProduct in relatedProducts"
-              :key="relatedProduct.id"
-              class="product-card"
-              @click="
-                router.push(
-                  `/catalog/${
-                    relatedProduct.category_slug || categorySlug
-                  }/${generateProductSlug(relatedProduct)}`
-                )
-              "
-            >
-              <img
-                :src="normalizeImagePath(relatedProduct.image)"
-                :alt="relatedProduct.name ? String(relatedProduct.name) : ''"
-              />
-              <div class="product-card__content">
-                <h3>{{ relatedProduct.name }}</h3>
-                <div
-                  class="related-category extended-description-content"
-                  v-html="
-                    parseExtendedDescription(
-                      relatedProduct.description.slice(0, 32) + '...'
-                    )
-                  "
-                ></div>
-                <div class="related-price">
-                  {{
-                    relatedProduct.price
-                      .toLocaleString()
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-                  }}
-                  &#8381;
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -687,7 +152,10 @@ import { useRoute, useRouter } from "vue-router";
 import type { Characteristic } from "~/types/product";
 
 // Отключаем SSR для страницы продукта чтобы избежать проблем с гидратацией
-definePageMeta({ ssr: false });
+definePageMeta({
+  ssr: false,
+  layout: "default",
+});
 
 interface ProductType {
   id: number;
@@ -699,12 +167,18 @@ interface ProductType {
   category: string;
   category_slug: string;
   slug: string;
-  specs?: Characteristic[];
-  additional_images?: string[];
-  delivery_set?: string;
-  connection_scheme?: string;
-  additional_requirements?: string;
-  required_products?: number[];
+  additional_images: string[];
+  specs: any[];
+  delivery_set: string;
+  connection_scheme: string;
+  additional_requirements: string;
+  required_products: any[];
+}
+
+interface CategoryType {
+  title: string;
+  description: string;
+  slug: string;
 }
 
 const transliterate = (text: string | undefined): string => {
@@ -906,13 +380,16 @@ const { data: allProductsData } = useFetch<{
 });
 
 // Состояния загрузки
-const isLoadingProducts = computed(() => productsPending.value);
-const isLoadingCategory = computed(() => categoryPending.value);
+const isLoadingProducts = ref(false);
+const isLoadingCategory = ref(false);
 
 // Инициализируем состояния
 const products = ref<ProductType[]>([]);
 const fetchError = ref<Error | null>(null);
 const categoryError = ref<Error | null>(null);
+
+// Реактивный продукт на основе загруженных данных
+const product = ref<ProductType | null>(null);
 
 // Преобразуем все товары в нужный формат
 watchEffect(() => {
@@ -940,25 +417,7 @@ watchEffect(() => {
 });
 
 // Реактивная информация о категории
-const categoryInfo = computed(() => {
-  if (initialCategoryError.value) {
-    categoryError.value = new Error(initialCategoryError.value.message);
-    return undefined;
-  }
-
-  if (!categoryData.value?.category) {
-    return undefined;
-  }
-
-  return {
-    title: categoryData.value.category.name || "",
-    description: categoryData.value.category.description || "",
-    slug: categorySlug.value,
-  };
-});
-
-// Реактивный продукт на основе загруженных данных
-const product = ref<ProductType | null>(null);
+const categoryInfo = ref<CategoryType | undefined>(undefined);
 
 // Обновляем продукт при изменении данных
 watchEffect(() => {
@@ -968,8 +427,7 @@ watchEffect(() => {
   }
 
   // Проверяем ошибки
-  if (productsError.value) {
-    fetchError.value = new Error(productsError.value.message);
+  if (fetchError.value) {
     return;
   }
 
@@ -985,7 +443,7 @@ watchEffect(() => {
         extendedDescription: apiProduct.extendedDescription || "",
         price: apiProduct.price || 0,
         image: apiProduct.image || "",
-        category: categoryData.value?.category?.name || "",
+        category: categoryInfo.value?.title || "",
         category_slug: categorySlug.value,
         slug: apiProduct.slug || "",
         additional_images: Array.isArray(apiProduct.additional_images)
@@ -1111,50 +569,6 @@ const capitalize = (s: string) => {
 
 const cartStore = useCartStore();
 const modalStore = useModalStore();
-// Текущий индекс изображения
-const currentImageIndex = ref(0);
-
-// Сброс индекса при изменении продукта
-watch(product, () => {
-  currentImageIndex.value = 0;
-});
-
-// Навигация по галерее
-const nextImage = () => {
-  if (currentImageIndex.value < imageList.value.length - 1) {
-    currentImageIndex.value++;
-  } else {
-    currentImageIndex.value = 0;
-  }
-};
-
-const prevImage = () => {
-  if (currentImageIndex.value > 0) {
-    currentImageIndex.value--;
-  } else {
-    currentImageIndex.value = imageList.value.length - 1;
-  }
-};
-
-const addToCart = () => {
-  if (!product.value) return;
-
-  const cartItem = {
-    id: product.value.id,
-    name: product.value.name,
-    price: product.value.price,
-    image: product.value.image,
-    quantity: 1,
-    category: product.value.category || "Без категории",
-    category_slug:
-      product.value.category_slug ||
-      (route.params.category as string) ||
-      "unknown",
-    slug: product.value.slug || generateProductSlug(product.value),
-  };
-
-  cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
-};
 
 // Заменим вычисление displaySpecs, чтобы корректно работать с новым форматом
 const displaySpecs = computed(() => {
@@ -1245,17 +659,6 @@ const productTabs = [
 ];
 const activeTab = ref("description");
 
-const showCommercialOfferModal = ref(false);
-const selectedProduct = ref<any>(null);
-const openCommercialOfferModal = (product: ProductType) => {
-  selectedProduct.value = product;
-  showCommercialOfferModal.value = true;
-};
-const closeCommercialOfferModal = () => {
-  showCommercialOfferModal.value = false;
-  selectedProduct.value = null;
-};
-
 const factoryTabs = [
   { key: "certificates", label: "Сертификаты" },
   { key: "about", label: "О заводе" },
@@ -1291,29 +694,39 @@ const certificates = [
     image: "/certificates/dek_mod.png",
   },
 ];
-const selectedCertificate = ref<Certificate | null>(null);
-const openCertificateModal = (certificate: Certificate) => {
+
+// Состояние модальных окон
+const showCertificateModal = ref(false);
+const showCommercialOfferModal = ref(false);
+const showCallbackModal = ref(false);
+const selectedCertificate = ref<any>(null);
+
+// Функции для работы с модальными окнами
+const openCertificateModal = (certificate: any) => {
   selectedCertificate.value = certificate;
+  showCertificateModal.value = true;
 };
+
 const closeCertificateModal = () => {
+  showCertificateModal.value = false;
   selectedCertificate.value = null;
 };
 
-const galleryActiveIndex = ref(0);
-function scrollToGalleryCard(idx: number) {
-  const scrollContainer = document.querySelector(".cert-gallery-scroll");
-  const track = document.querySelector(".cert-gallery-track");
-  if (scrollContainer && track) {
-    const maxScroll = track.scrollWidth - scrollContainer.clientWidth;
-    const dotsCount = certificates.length;
-    let scrollLeft = 0;
-    if (dotsCount > 1) {
-      scrollLeft = (maxScroll * idx) / (dotsCount - 1);
-    }
-    scrollContainer.scrollTo({ left: scrollLeft, behavior: "smooth" });
-    galleryActiveIndex.value = idx;
-  }
-}
+const openCommercialOfferModal = () => {
+  showCommercialOfferModal.value = true;
+};
+
+const closeCommercialOfferModal = () => {
+  showCommercialOfferModal.value = false;
+};
+
+const openCallbackModal = () => {
+  showCallbackModal.value = true;
+};
+
+const closeCallbackModal = () => {
+  showCallbackModal.value = false;
+};
 
 // Добавляем функцию нормализации путей изображений
 function normalizeImagePath(path: string | undefined): string {
@@ -1366,67 +779,6 @@ const imageList = computed<string[]>(() => {
 
   return result;
 });
-
-const cartItem = computed(() =>
-  cartStore.items.find((item: any) => item.id === product.value?.id)
-);
-const cartCount = computed(() =>
-  cartItem.value ? cartItem.value.quantity : 0
-);
-const incrementCart = () => {
-  if (product.value) {
-    const cartItem = {
-      id: product.value.id,
-      name: product.value.name,
-      price: product.value.price,
-      image: product.value.image,
-      quantity: 1,
-      category: product.value.category || "Без категории",
-      category_slug:
-        product.value.category_slug ||
-        (route.params.category as string) ||
-        "unknown",
-      slug: product.value.slug || generateProductSlug(product.value),
-    };
-    cartStore.addItem(JSON.parse(JSON.stringify(cartItem)));
-  }
-};
-const decrementCart = () => {
-  if (product.value && cartItem.value && cartItem.value.quantity > 0) {
-    if (cartItem.value.quantity === 1) {
-      cartStore.removeItem(product.value.id);
-    } else {
-      cartStore.updateQuantity(product.value.id, cartItem.value.quantity - 1);
-    }
-  }
-};
-
-if (typeof window !== "undefined") {
-  setTimeout(() => {
-    const track = document.querySelector(".cert-gallery-track");
-    if (track) {
-      track.addEventListener("scroll", () => {
-        const cards = Array.from(track.children) as HTMLElement[];
-        let minDiff = Infinity;
-        let activeIdx = 0;
-        cards.forEach((card, idx) => {
-          const diff = Math.abs((track.scrollLeft || 0) - card.offsetLeft);
-          if (diff < minDiff) {
-            minDiff = diff;
-            activeIdx = idx;
-          }
-        });
-        galleryActiveIndex.value = activeIdx;
-      });
-    }
-  }, 500);
-}
-
-function scrollGalleryBy(delta: number) {
-  let newIdx = galleryActiveIndex.value + delta;
-  newIdx = Math.max(0, Math.min(certificates.length - 1, newIdx));
-  scrollToGalleryCard(newIdx);
-}
 
 function escapeHtml(text: string): string {
   const map: { [key: string]: string } = {
@@ -3401,23 +2753,65 @@ useHead(() => {
   display: none !important;
 }
 
-/* Дополнительная защита от мигания контента */
-.product-detail-card[v-cloak] {
-  visibility: hidden !important;
+/* Принудительное отображение контента */
+.product-detail-card {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-.product-title[v-cloak] {
-  visibility: hidden !important;
+.product-top-row {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-/* Предотвращение мигания контента при гидратации */
-.product-detail-page:not(.hydrated) {
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.product-gallery {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-.product-detail-page.hydrated {
-  opacity: 1;
+.product-info-block {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.product-main-actions {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.product-tabs {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.tab-content {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.section-block {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.about-factory-section {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.related-products-section {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 </style>
 
@@ -3475,7 +2869,7 @@ useHead(() => {
     margin-bottom: 15px;
     flex: 1;
     white-space: pre-wrap; // Сохраняем переносы строк
-    word-wrap: break-word; // Разрешаем перенос длинных слов
+    overflow-wrap: break-word; // Разрешаем перенос длинных слов
     line-height: 1.5; // Добавляем высоту строки для лучшей читаемости
   }
 
@@ -3528,7 +2922,7 @@ useHead(() => {
   background: #f8f9fa;
   border-radius: 8px;
   white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   font-family: inherit;
   text-align: left; // Исправляем центрирование
 }

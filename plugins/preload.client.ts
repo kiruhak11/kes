@@ -1,22 +1,20 @@
 export default defineNuxtPlugin(() => {
   // Кэш для предзагруженных ресурсов
   const preloadedResources = new Set<string>();
-  
+
   // Предзагрузка критических ресурсов с приоритетом
   const preloadCriticalResources = () => {
     // Критические шрифты с высоким приоритетом
     const fontLink = document.createElement("link");
     fontLink.rel = "preload";
-    fontLink.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap";
+    fontLink.href =
+      "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap";
     fontLink.as = "style";
     fontLink.crossOrigin = "anonymous";
     document.head.appendChild(fontLink);
 
     // Критические изображения
-    const criticalImages = [
-      "/images/logo.png",
-      "/images/hero-bg.jpg",
-    ];
+    const criticalImages = ["/images/logo.png", "/images/hero1.png"];
 
     criticalImages.forEach((src) => {
       if (!preloadedResources.has(src)) {
@@ -44,19 +42,26 @@ export default defineNuxtPlugin(() => {
 
   // Предзагрузка при наведении (intersection observer для производительности)
   const setupHoverPreload = () => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const link = entry.target as HTMLAnchorElement;
-          if (link.href && !preloadedResources.has(link.href)) {
-            // Предзагружаем при появлении в viewport
-            link.addEventListener('mouseenter', () => {
-              smartPreload(link.href);
-            }, { once: true });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const link = entry.target as HTMLAnchorElement;
+            if (link.href && !preloadedResources.has(link.href)) {
+              // Предзагружаем при появлении в viewport
+              link.addEventListener(
+                "mouseenter",
+                () => {
+                  smartPreload(link.href);
+                },
+                { once: true }
+              );
+            }
           }
-        }
-      });
-    }, { rootMargin: '50px' });
+        });
+      },
+      { rootMargin: "50px" }
+    );
 
     // Наблюдаем за всеми ссылками
     document.querySelectorAll('a[href^="/"]').forEach((link) => {
@@ -67,17 +72,17 @@ export default defineNuxtPlugin(() => {
   // Предзагрузка API данных
   const preloadAPIData = (route: string) => {
     const apiRoutes = {
-      '/catalog': ['/api/categories', '/api/products/featured'],
-      '/': ['/api/categories', '/api/products/popular'],
+      "/catalog": ["/api/categories", "/api/products/featured"],
+      "/": ["/api/categories", "/api/products/popular"],
     };
 
     const apis = apiRoutes[route as keyof typeof apiRoutes];
     if (apis) {
       apis.forEach((api) => {
         if (!preloadedResources.has(api)) {
-          fetch(api, { 
-            method: 'GET',
-            headers: { 'X-Preload': 'true' }
+          fetch(api, {
+            method: "GET",
+            headers: { "X-Preload": "true" },
           }).catch(() => {}); // Тихо игнорируем ошибки предзагрузки
           preloadedResources.add(api);
         }
@@ -88,7 +93,7 @@ export default defineNuxtPlugin(() => {
   if (process.client) {
     // Немедленная предзагрузка критических ресурсов
     preloadCriticalResources();
-    
+
     // Настройка умной предзагрузки после загрузки DOM
     nextTick(() => {
       setupHoverPreload();
@@ -100,20 +105,20 @@ export default defineNuxtPlugin(() => {
       if (to.path !== from.path) {
         // Предзагружаем данные для следующей страницы
         preloadAPIData(to.path);
-        
+
         // Предзагружаем критические ресурсы для каталога
-        if (to.path.startsWith('/catalog')) {
-          smartPreload('/api/categories');
-          smartPreload('/api/products/list');
+        if (to.path.startsWith("/catalog")) {
+          smartPreload("/api/categories");
+          smartPreload("/api/products/list");
         }
       }
     });
 
     // Предзагрузка при idle состоянии
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       requestIdleCallback(() => {
         // Предзагружаем популярные страницы
-        ['/catalog', '/about', '/contacts'].forEach(smartPreload);
+        ["/catalog", "/about", "/about/contacts"].forEach(smartPreload);
       });
     }
   }

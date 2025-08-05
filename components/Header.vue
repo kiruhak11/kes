@@ -463,10 +463,14 @@ const generateProductSlug = (product: { name?: string | null }): string => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
     .toLowerCase()
-    .replace(/[.,]/g, "-") // Сначала точки и запятые на дефис
-    .replace(/[^a-z0-9 -]/g, "") // Потом убрать всё лишнее
-    .replace(/[\s-]+/g, "-") // Группы пробелов и дефисов в один дефис
-    .replace(/^-+|-+$/g, ""); // Убрать дефисы по краям
+    .replace(/[\/\\]/g, "-")
+    .replace(/[^a-z0-9\., -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/\.+/g, "-")
+    .replace(/,+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/(\d+)\.(\d+)/g, "$1-$2")
+    .replace(/^-+|-+$/g, "");
 };
 
 interface Product {
