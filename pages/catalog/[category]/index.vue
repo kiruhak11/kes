@@ -1,6 +1,6 @@
 <template>
   <div class="category-page">
-    <div v-if="productsLoading" class="loading-container">
+    <div v-if="productsLoading || pending" class="loading-container">
       <UiLoader />
       <p>Загрузка товаров...</p>
     </div>
@@ -229,14 +229,14 @@
         <div class="products-grid">
           <div
             v-for="(product, index) in paginatedProducts"
-            :key="product.id"
+            :key="`${product.id}-${product.name}`"
             class="product-card"
             v-scroll-reveal="
               index % 3 === 0
                 ? 'slide-in-left'
                 : index % 3 === 1
-                  ? 'fade-in-up'
-                  : 'slide-in-right'
+                ? 'fade-in-up'
+                : 'slide-in-right'
             "
           >
             <div
@@ -284,12 +284,20 @@
                   </div>
                 </div>
                 <div class="product-card__bottom">
-                  <div class="product-card__price-block">
+                  <div
+                    v-if="product.price.toLocaleString() != 1"
+                    class="product-card__price-block"
+                  >
                     <span class="product-price"
                       >{{ formatPrice(product.price) }}
                       <span class="currency">₽</span></span
                     >
                     <span class="product-price-note">Цена с НДС</span>
+                  </div>
+                  <div v-else class="product-card__price-block">
+                    <span class="product-price-placeholder"
+                      >Цена по запросу</span
+                    >
                   </div>
                   <button
                     class="buy-btn"
@@ -329,8 +337,8 @@
       </div>
     </div>
     <div
-      class="pagination"
       v-if="totalPages > 1"
+      class="pagination"
       v-scroll-reveal="'fade-in-up'"
     >
       <button
@@ -399,7 +407,6 @@
     :product="selectedProduct"
     @close="closeCommercialOfferModal"
   />
-
 </template>
 
 <script setup lang="ts">
@@ -564,7 +571,7 @@ const dynamicRangeFilters = ref<
 // Fetch products
 const fetchProducts = async () => {
   pending.value = true;
-  
+
   try {
     // Подготавливаем фильтры, исключая пустые значения
     const nonEmptyFilters = Object.entries(dynamicFilters.value)
@@ -575,6 +582,13 @@ const fetchProducts = async () => {
       products: Product[];
       total: number;
     }>("/api/products/list", {
+      key: computed(
+        () =>
+          `products-${route.params.category}-${JSON.stringify(
+            nonEmptyFilters
+          )}-${priceRange.value.min}-${priceRange.value.max}`
+      ),
+      server: false,
       query: {
         categorySlug: route.params.category,
         filters:
@@ -607,8 +621,8 @@ watch(
     () => priceRange.value.min,
     () => priceRange.value.max,
   ],
-  () => {
-    fetchProducts();
+  async () => {
+    await fetchProducts();
     // Сбрасываем страницу при изменении фильтров или категории
     currentPage.value = 1;
   },
@@ -1015,20 +1029,25 @@ function addToCart(product: Product, e: Event) {
 }
 
 // Получаем инфу о категории
-// @ts-ignore
-const { data: fetchedCategory, error: categoryError } = await useFetch<{
+const { data: fetchedCategory, error: categoryError } = useFetch<{
   category: { name: string; description: string };
-}>(`/api/categories/${categorySlug.value}`);
+}>(() => `/api/categories/${categorySlug.value}`, {
+  key: computed(() => `category-info-${categorySlug.value}`),
+  watch: [categorySlug],
+});
 
-if (fetchedCategory.value && fetchedCategory.value.category) {
-  categoryInfo.value = {
-    title: fetchedCategory.value.category.name || "",
-    description: fetchedCategory.value.category.description || "",
-    slug: categorySlug.value,
-  };
-} else {
-  console.error("Failed to fetch category info:", categoryError.value);
-}
+// Обновляем categoryInfo при изменении fetchedCategory
+watchEffect(() => {
+  if (fetchedCategory.value && fetchedCategory.value.category) {
+    categoryInfo.value = {
+      title: fetchedCategory.value.category.name || "",
+      description: fetchedCategory.value.category.description || "",
+      slug: categorySlug.value,
+    };
+  } else if (categoryError.value) {
+    console.error("Failed to fetch category info:", categoryError.value);
+  }
+});
 
 // Инициализируем все фильтры пустыми значениями и сбрасываем при загрузке страницы
 onMounted(() => {
@@ -1534,6 +1553,7 @@ const {
 } = useFetch<{ products: Product[] }>(
   () => `/api/products/list?categorySlug=${categorySlug.value}`,
   {
+    key: computed(() => `products-data-${categorySlug.value}`),
     watch: [categorySlug],
     transform: (response) => {
       if (!response) return { products: [] };
@@ -1542,8 +1562,21 @@ const {
   }
 );
 
-const handleRefresh = () => {
-  refreshProducts();
+// Обновляем allProducts при изменении productsData
+watchEffect(() => {
+  if (productsData.value?.products) {
+    allProducts.value = productsData.value.products;
+  }
+});
+
+const handleRefresh = async () => {
+  pending.value = true;
+  try {
+    await refreshProducts();
+    await fetchProducts();
+  } finally {
+    pending.value = false;
+  }
 };
 </script>
 
@@ -1881,9 +1914,7 @@ const handleRefresh = () => {
 /* Анимация выезда фильтров */
 .filters-slide-enter-active,
 .filters-slide-leave-active {
-  transition:
-    max-height 0.45s cubic-bezier(0.4, 2, 0.6, 1),
-    opacity 0.35s,
+  transition: max-height 0.45s cubic-bezier(0.4, 2, 0.6, 1), opacity 0.35s,
     padding 0.3s;
 }
 .filters-slide-enter-from,
@@ -1937,9 +1968,7 @@ const handleRefresh = () => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: visible;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1949,9 +1978,7 @@ const handleRefresh = () => {
 
 .product-card__clickable {
   cursor: pointer;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
   flex: 1;
   padding: 24px 24px 0;
 }
@@ -2064,6 +2091,13 @@ const handleRefresh = () => {
   line-height: 1;
   white-space: nowrap;
 }
+.product-price-placeholder {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e31e24;
+  line-height: 1;
+  white-space: nowrap;
+}
 
 .currency {
   font-size: 1.2rem;
@@ -2087,9 +2121,7 @@ const handleRefresh = () => {
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .buy-btn:hover {
@@ -2339,10 +2371,7 @@ const handleRefresh = () => {
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    box-shadow 0.2s;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
   display: flex;
   align-items: center;

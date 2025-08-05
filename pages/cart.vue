@@ -28,7 +28,15 @@
             <div class="cart-item-details">
               <h3>{{ item.name }}</h3>
               <p class="cart-item-price">
-                {{ item.price * item.quantity }} &#8381;
+                {{
+                  item.price *
+                    item.quantity
+                      .toLocaleString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <=
+                  1000
+                    ? "Цена по запросу"
+                    : item.price * item.quantity + " ₽"
+                }}
               </p>
               <div class="cart-item-quantity">
                 <button
@@ -56,7 +64,13 @@
           <h2 v-scroll-reveal="'fade-in-up'">Оформление заказа</h2>
           <div class="summary-row" v-scroll-reveal="'slide-in-left'">
             <span>Товары ({{ cartStore.totalItems }}):</span>
-            <span>{{ cartStore.totalPrice.toLocaleString() }} &#8381;</span>
+            <span>{{
+              cartStore.totalPrice
+                .toLocaleString()
+                .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <= 1000
+                ? "Цена по запросу"
+                : cartStore.totalPrice.toLocaleString() + " ₽"
+            }}</span>
           </div>
           <form
             @submit.prevent="submitOrder"

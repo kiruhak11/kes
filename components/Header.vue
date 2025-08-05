@@ -49,7 +49,18 @@
                         <div class="product-main">
                           <span class="product-name">{{ product.name }}</span>
                           <span class="product-price"
-                            >{{ product.price.toLocaleString() }} ₽</span
+                            >{{
+                              product.price
+                                .toLocaleString()
+                                .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <= 1000
+                                ? "Цена по запросу"
+                                : product.price.toLocaleString() + " ₽"
+                            }}
+                            <span
+                              v-if="product.price.toLocaleString() != 1"
+                              class="currency"
+                              >₽</span
+                            ></span
                           >
                         </div>
                         <div class="product-specs" v-if="product.specs">
@@ -288,7 +299,18 @@
                           <div class="product-main">
                             <span class="product-name">{{ product.name }}</span>
                             <span class="product-price"
-                              >{{ product.price.toLocaleString() }} ₽</span
+                              >{{
+                                product.price
+                                  .toLocaleString()
+                                  .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <= 1000
+                                  ? "Цена по запросу"
+                                  : product.price.toLocaleString() + " ₽"
+                              }}
+                              <span
+                                v-if="product.price.toLocaleString() != 1"
+                                class="currency"
+                                >₽</span
+                              ></span
                             >
                           </div>
                           <div class="product-specs" v-if="product.specs">

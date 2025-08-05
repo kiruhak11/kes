@@ -158,6 +158,7 @@ const { data: categories } = await useFetch<{ categories: Category[] }>(
       return { categories: [] };
     },
     lazy: true,
+    server: false,
   }
 );
 

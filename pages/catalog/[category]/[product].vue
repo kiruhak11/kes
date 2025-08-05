@@ -1,5 +1,5 @@
 <template>
-  <div class="product-detail-page">
+  <div class="product-detail-page" :class="{ hydrated: isHydrated }">
     <div class="container">
       <!-- Убираем v-scroll-reveal для мобильных -->
       <nav
@@ -19,7 +19,12 @@
       </nav>
 
       <div
-        v-if="productsPending || isLoadingProducts || isLoadingCategory"
+        v-if="
+          !isHydrated ||
+          productsPending ||
+          isLoadingProducts ||
+          isLoadingCategory
+        "
         class="loading-container"
       >
         <UiLoader />
@@ -41,6 +46,7 @@
 
       <div
         v-else-if="
+          isHydrated &&
           !product &&
           !productsPending &&
           !isLoadingProducts &&
@@ -55,7 +61,13 @@
       </div>
 
       <div
-        v-else-if="product"
+        v-else-if="
+          isHydrated &&
+          product &&
+          !productsPending &&
+          !isLoadingProducts &&
+          !isLoadingCategory
+        "
         class="product-detail-card"
         :class="{ 'no-reveal': isMobile }"
       >
@@ -145,14 +157,13 @@
             <div class="product-main-actions">
               <div class="cart-action-wrap">
                 <div class="product-card__price-block">
-                  <span class="product-price"
-                    >{{
-                      product.price
-                        .toLocaleString()
-                        .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-                    }}
-                    <span class="currency">₽</span></span
-                  >
+                  <span class="product-price">{{
+                    product.price
+                      .toLocaleString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ") == 1
+                      ? "Цена по запросу"
+                      : product.price.toLocaleString() + " ₽"
+                  }}</span>
                   <span class="product-price-note">Цена с НДС</span>
                 </div>
                 <button
@@ -675,7 +686,8 @@ import { useModalStore } from "~/stores/modal";
 import { useRoute, useRouter } from "vue-router";
 import type { Characteristic } from "~/types/product";
 
-// SEO Meta Tags будет добавлен после объявления переменных
+// Отключаем SSR для страницы продукта чтобы избежать проблем с гидратацией
+definePageMeta({ ssr: false });
 
 interface ProductType {
   id: number;
@@ -842,12 +854,14 @@ const {
   execute: refreshProduct,
 } = useFetch<APIResponse>(
   () =>
-    `/api/products/by-slug?category=${route.params.category || ""}&slug=${route.params.product || ""}`,
+    `/api/products/by-slug?category=${route.params.category || ""}&slug=${
+      route.params.product || ""
+    }`,
   {
     key: computed(
       () => `product-${route.params.category}-${route.params.product}`
     ),
-    server: true,
+    server: false, // Отключаем SSR для предотвращения проблем с гидратацией
     default: () => ({ product: null }),
     transform: (response) => {
       if (!response || typeof response !== "object") {
@@ -860,6 +874,7 @@ const {
 
       return { product: null };
     },
+    watch: [() => route.params.category, () => route.params.product],
   }
 );
 
@@ -871,8 +886,9 @@ const {
   category: { name: string; description: string };
 }>(() => `/api/categories/${categorySlug.value || ""}`, {
   key: computed(() => `category-${categorySlug.value || ""}`),
-  server: true,
+  server: false, // Отключаем SSR для предотвращения проблем с гидратацией
   default: () => ({ category: { name: "", description: "" } }),
+  watch: [categorySlug],
 });
 
 // Загружаем все товары для разделов "Дополнительно потребуется" и "Похожие товары"
@@ -885,20 +901,13 @@ const { data: allProductsData } = useFetch<{
     exclude: route.params.id,
     limit: 4,
   })),
-  server: true,
+  server: false, // Отключаем SSR для предотвращения проблем с гидратацией
   default: () => ({ products: [] }),
 });
 
 // Состояния загрузки
 const isLoadingProducts = computed(() => productsPending.value);
 const isLoadingCategory = computed(() => categoryPending.value);
-
-// Перезагружаем данные при изменении маршрута
-watch(() => route.params, async (newParams, oldParams) => {
-  if (newParams.category !== oldParams?.category || newParams.product !== oldParams?.product) {
-    await refreshProduct();
-  }
-}, { immediate: false });
 
 // Инициализируем состояния
 const products = ref<ProductType[]>([]);
@@ -930,11 +939,6 @@ watchEffect(() => {
   }
 });
 
-// Запускаем загрузку при изменении параметров маршрута
-watch([() => route.params.category, () => route.params.product], () => {
-  refreshProduct();
-});
-
 // Реактивная информация о категории
 const categoryInfo = computed(() => {
   if (initialCategoryError.value) {
@@ -958,22 +962,13 @@ const product = ref<ProductType | null>(null);
 
 // Обновляем продукт при изменении данных
 watchEffect(() => {
-  console.log("Watch Effect State:", {
-    pending: productsPending.value,
-    error: productsError.value,
-    data: productData.value,
-    route: route.params,
-  });
-
   // Если данные загружаются, сохраняем текущее состояние
   if (productsPending.value) {
-    console.log("Loading in progress...");
     return;
   }
 
   // Проверяем ошибки
   if (productsError.value) {
-    console.log("Error occurred:", productsError.value);
     fetchError.value = new Error(productsError.value.message);
     return;
   }
@@ -982,7 +977,6 @@ watchEffect(() => {
 
   // Обновляем состояние продукта
   if (apiProduct && typeof apiProduct === "object" && "id" in apiProduct) {
-    console.log("Setting product data:", apiProduct);
     try {
       product.value = {
         id: apiProduct.id,
@@ -1005,18 +999,28 @@ watchEffect(() => {
           ? apiProduct.required_products
           : [],
       };
-      console.log("Product data set successfully:", product.value);
     } catch (error) {
       console.error("Error setting product data:", error);
       product.value = null;
     }
   } else {
-    console.log("Product data is invalid:", {
-      apiProduct,
-      type: typeof apiProduct,
-    });
     product.value = null;
   }
+});
+
+// Принудительно обновляем данные при изменении маршрута
+watch(
+  [() => route.params.category, () => route.params.product],
+  () => {
+    refreshProduct();
+  },
+  { immediate: true }
+);
+
+// Дополнительная защита от проблем с гидратацией
+const isHydrated = ref(false);
+onMounted(() => {
+  isHydrated.value = true;
 });
 
 // Computed property for product name to prevent hydration mismatch
@@ -1093,7 +1097,6 @@ watch(product, (newProduct, oldProduct) => {
   if (
     !isLoadingProducts.value &&
     !newProduct &&
-    products.value.length > 0 &&
     isProductRouteActive.value &&
     isClient.value
   ) {
@@ -1697,9 +1700,10 @@ useHead(() => {
 }
 .product-detail-page {
   padding: 40px 0;
-  min-height: 100vh; // Добавляем минимальную высоту
-  position: relative; // Добавляем позиционирование
-  z-index: 1; // Устанавливаем z-index
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  text-align: left; // Исправляем центрирование текста
 }
 .container {
   max-width: 1200px;
@@ -1956,11 +1960,13 @@ useHead(() => {
   font-weight: 700;
   margin-bottom: 0;
   color: #222;
+  text-align: left; // Исправляем центрирование заголовка
 }
 .product-short-description {
   color: #555;
   margin-bottom: 0;
   line-height: 1.5;
+  text-align: left; // Исправляем центрирование описания
 }
 .product-main-row {
   display: flex;
@@ -1974,6 +1980,7 @@ useHead(() => {
   font-size: 1.08rem;
   color: #444;
   line-height: 1.6;
+  text-align: left; // Исправляем центрирование описания
 }
 .product-main-specs {
   flex: 1;
@@ -2035,11 +2042,7 @@ useHead(() => {
   box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   position: relative;
   overflow: hidden;
-  transition:
-    box-shadow 0.25s,
-    border-color 0.2s,
-    background 0.2s,
-    color 0.2s;
+  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2153,9 +2156,7 @@ useHead(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: visible;
-  transition:
-    transform 0.25s,
-    box-shadow 0.25s;
+  transition: transform 0.25s, box-shadow 0.25s;
   position: relative;
   min-height: 240px;
   display: flex;
@@ -2582,9 +2583,7 @@ useHead(() => {
   font-weight: 600;
   cursor: pointer;
   padding: 14px 32px;
-  transition:
-    background 0.3s,
-    transform 0.2s;
+  transition: background 0.3s, transform 0.2s;
 }
 .btn-red:hover {
   background: #ff6b6b;
@@ -2608,6 +2607,7 @@ useHead(() => {
   margin-bottom: 18px;
   color: #ff6b6b;
   font-weight: 700;
+  text-align: left; // Исправляем центрирование заголовков секций
 }
 .specs-list {
   list-style: none;
@@ -2658,7 +2658,7 @@ useHead(() => {
   margin-bottom: 4px;
 }
 .certificates-block {
-  text-align: center;
+  text-align: left; // Исправляем центрирование
 }
 .certificates-row {
   display: flex;
@@ -2731,9 +2731,7 @@ useHead(() => {
   padding: 10px 22px 10px 22px;
   border-radius: 8px 8px 0 0;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  transition: background 0.2s, color 0.2s;
   position: relative;
 }
 .tab-btn.active {
@@ -2819,11 +2817,7 @@ useHead(() => {
   box-shadow: 0 2px 16px rgba(227, 30, 36, 0.07);
   overflow: hidden;
   position: relative;
-  transition:
-    box-shadow 0.25s,
-    border-color 0.2s,
-    background 0.2s,
-    color 0.2s;
+  transition: box-shadow 0.25s, border-color 0.2s, background 0.2s, color 0.2s;
 }
 .cart-minus,
 .cart-plus {
@@ -2838,9 +2832,7 @@ useHead(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition:
-    background 0.18s,
-    color 0.18s;
+  transition: background 0.18s, color 0.18s;
   border-radius: 0;
 }
 .cart-minus:hover,
@@ -2885,9 +2877,7 @@ useHead(() => {
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 .factory-tab-btn.active {
   background: #f7f7fa;
@@ -2906,13 +2896,16 @@ useHead(() => {
   padding-bottom: 0;
   padding-top: 0;
   margin-bottom: 0;
+  text-align: left; // Исправляем центрирование
 }
 .certificates-gallery-title {
   margin-top: 0;
   margin-bottom: 8px;
+  text-align: left; // Исправляем центрирование заголовка
 }
 .certificates-gallery-desc {
   margin-bottom: 16px;
+  text-align: left; // Исправляем центрирование описания
 }
 .cert-gallery-slider-wrap {
   width: 100%;
@@ -2948,10 +2941,7 @@ useHead(() => {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
   font-size: 1.2rem;
-  transition:
-    background 0.2s,
-    border 0.2s,
-    opacity 0.2s;
+  transition: background 0.2s, border 0.2s, opacity 0.2s;
   opacity: 0.92;
   pointer-events: auto;
   margin: 0;
@@ -3002,6 +2992,7 @@ useHead(() => {
   min-width: 100%;
   padding-bottom: 0;
   overflow: visible;
+  flex-wrap: nowrap; // Предотвращаем перенос сертификатов
 }
 .cert-gallery-card {
   background: #fff;
@@ -3016,17 +3007,14 @@ useHead(() => {
   justify-content: flex-start;
   padding: 32px 12px 16px 12px;
   position: relative;
-  transition:
-    box-shadow 0.25s,
-    transform 0.25s,
-    opacity 0.25s;
+  transition: box-shadow 0.25s, transform 0.25s, opacity 0.25s;
   opacity: 0.98;
   border: 1.5px solid #f3eaea;
   z-index: 10;
+  flex-shrink: 0; // Предотвращаем сжатие карточек
 }
 .cert-gallery-card:hover {
-  box-shadow:
-    0 16px 48px 0 rgba(227, 30, 36, 0.18),
+  box-shadow: 0 16px 48px 0 rgba(227, 30, 36, 0.18),
     0 2px 12px 0 rgba(0, 0, 0, 0.1);
   transform: translateY(-10px) scale(1.04);
   opacity: 1;
@@ -3100,11 +3088,7 @@ useHead(() => {
   background: #fff;
   border: 2px solid #e31e24;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
-  transition:
-    background 0.35s,
-    transform 0.35s,
-    border 0.35s,
-    width 0.35s,
+  transition: background 0.35s, transform 0.35s, border 0.35s, width 0.35s,
     box-shadow 0.35s;
   cursor: pointer;
   opacity: 0.7;
@@ -3121,9 +3105,7 @@ useHead(() => {
   width: 36px;
   background: linear-gradient(90deg, #e31e24 60%, #ff6b6b 100%);
   border-color: #ff6b6b;
-  box-shadow:
-    0 0 16px #e31e24,
-    0 2px 8px rgba(227, 30, 36, 0.13);
+  box-shadow: 0 0 16px #e31e24, 0 2px 8px rgba(227, 30, 36, 0.13);
   opacity: 1;
   transform: scale(1.18);
 }
@@ -3427,6 +3409,16 @@ useHead(() => {
 .product-title[v-cloak] {
   visibility: hidden !important;
 }
+
+/* Предотвращение мигания контента при гидратации */
+.product-detail-page:not(.hydrated) {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-detail-page.hydrated {
+  opacity: 1;
+}
 </style>
 
 <style lang="scss" scoped>
@@ -3437,9 +3429,7 @@ useHead(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: visible;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
   position: relative;
   padding-left: 200px;
   margin-left: 40px;
@@ -3540,6 +3530,7 @@ useHead(() => {
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: inherit;
+  text-align: left; // Исправляем центрирование
 }
 
 /* Стили для форматированного описания */
