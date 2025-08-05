@@ -258,11 +258,12 @@ const transliterate = (text: string | undefined): string => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background: #f7f7f7;
   border-radius: 12px;
+
   padding: 12px 12px;
   flex: 1 1 50%;
   min-width: 0;
+  background: #f7f7f7;
   box-shadow: 0 2px 12px rgba(227, 30, 36, 0.04);
   margin: 0;
   justify-content: center;

@@ -67,3 +67,66 @@ const props = defineProps<{
   visiblePages: number[];
 }>();
 </script>
+<style scoped lang="scss">
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 32px 0 0 0;
+}
+
+.pagination-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: #f5f5f5;
+  color: #e31e24;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.pagination-btn.active,
+.pagination-btn:disabled {
+  background: #e31e24;
+  color: #fff;
+  cursor: default;
+  box-shadow: 0 4px 12px rgba(227, 30, 36, 0.15);
+}
+
+.pagination-btn--arrow {
+  font-size: 1.3rem;
+  background: #fff;
+  color: #e31e24;
+  border: 1px solid #e31e24;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+}
+
+.pagination-btn--arrow:disabled {
+  background: #f5f5f5;
+  color: #ccc;
+  border-color: #eee;
+}
+
+.pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: #666;
+  font-weight: 600;
+}
+</style>

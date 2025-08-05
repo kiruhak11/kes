@@ -52,8 +52,16 @@
                 class="product-card__price-block"
               >
                 <span class="product-price"
-                  >{{ formatPrice(product.price) }}
-                  <span class="currency">₽</span></span
+                  >{{
+                    formatPrice(product.price) == 1
+                      ? "Цена по запросу"
+                      : formatPrice(product.price)
+                  }}
+                  <span
+                    v-if="formatPrice(product.price) != '1'"
+                    class="currency"
+                    >₽</span
+                  ></span
                 >
                 <span class="product-price-note">Цена с НДС</span>
               </div>
@@ -114,5 +122,5 @@ function getReveal(index: number) {
 }
 </script>
 <style scoped lang="scss">
-@import "~/assets/styles/global/category-products.scss";
+@use "~/assets/styles/global/category-products.scss";
 </style>

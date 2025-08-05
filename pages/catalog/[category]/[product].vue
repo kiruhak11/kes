@@ -44,18 +44,17 @@
             :product-name="productName"
             :is-mobile="true"
           />
+          <div class="product-info-wrap">
+            <ProductInfo
+              :product-name="productName"
+              :description="product.description"
+              :display-specs="displaySpecs"
+              :is-mobile="true"
+            />
 
-          <!-- Информация о продукте -->
-          <ProductInfo
-            :product-name="productName"
-            :description="product.description"
-            :display-specs="displaySpecs"
-            :is-mobile="true"
-          />
+            <ProductActions :product="product" :category-slug="categorySlug" />
+          </div>
         </div>
-
-        <!-- Действия с продуктом -->
-        <ProductActions :product="product" :category-slug="categorySlug" />
 
         <hr class="section-divider" />
 
@@ -1049,6 +1048,13 @@ useHead(() => {
   @media (max-width: 768px) {
     flex-direction: column;
   }
+}
+.product-info-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 .product-detail-page {
   padding: 40px 0;
