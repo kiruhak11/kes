@@ -1214,6 +1214,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   flex-shrink: 0;
   color: #666;
+  min-width: 24px;
 }
 
 .cart-badge {
