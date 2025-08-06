@@ -1,5 +1,5 @@
 <template>
-  <div class="category-page">
+  <div class="category-page" :key="categorySlug">
     <div v-if="productsLoading || pending" class="loading-container">
       <UiLoader />
       <p>Загрузка товаров...</p>
@@ -15,396 +15,137 @@
     </div>
 
     <div v-else class="container">
-      <nav class="breadcrumbs" v-scroll-reveal="'fade-in'">
-        <NuxtLink to="/">Главная</NuxtLink>
-        <span class="breadcrumbs-separator">→</span>
-        <NuxtLink to="/catalog">Каталог</NuxtLink>
-        <span class="breadcrumbs-separator">→</span>
-        <span>{{ categoryInfo?.title || "Категория" }}</span>
-      </nav>
-      <div class="category-header" v-scroll-reveal="'fade-in-up'">
-        <h1 class="page-title">{{ categoryInfo?.title || "Категория" }}</h1>
-        <p class="category-description">
-          {{ categoryInfo?.description || "" }}
-        </p>
-      </div>
-
-      <!-- Фильтры сверху -->
-      <div class="filters-section" v-scroll-reveal="'fade-in-up'">
-        <div
-          class="filters-header"
-          @click="toggleFiltersCollapsed"
-          style="cursor: pointer; user-select: none"
-        >
-          <div class="filters-header__left">
-            <svg
-              class="filters-icon"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M3 4h18M7 8h10M9 12h6M11 16h2"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
-            <h3 class="filters-header__title">Фильтры</h3>
-            <span class="filters-count" v-if="!filtersCollapsed"
-              >({{ filteredSpecs.length + 1 }})</span
-            >
-          </div>
-          <div class="filters-header__right">
-            <div class="active-filters-badge" v-if="activeFiltersCount > 0">
-              {{ activeFiltersCount }}
+      <CategoryBreadcrumbs :title="categoryInfo?.title || 'Категория'" />
+      <CategoryHeader
+        :title="categoryInfo?.title || 'Категория'"
+        :description="categoryInfo?.description || ''"
+      />
+      <CategoryFilters
+        :filters-collapsed="filtersCollapsed"
+        :filters-count="filteredSpecs.length + 1"
+        :active-filters-count="activeFiltersCount"
+        @toggleFiltersCollapsed="toggleFiltersCollapsed"
+        @resetFilters="resetFilters"
+        @resetAllFilters="resetAllFilters"
+      >
+        <!-- Фильтры по цене и характеристикам (оставляем как slot) -->
+        <div class="filters-grid">
+          <!-- Фильтр по цене -->
+          <div class="filter-group">
+            <div class="filter-group__header">
+              <h4 class="filter-group__title">Цена</h4>
             </div>
-            <span
-              class="filters-header__arrow"
-              :style="{
-                transform: filtersCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
-              }"
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 9l6 6 6-6"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-          </div>
-        </div>
-
-        <transition name="filters-slide">
-          <div v-show="!filtersCollapsed" class="filters-container">
-            <div class="filters-toolbar">
-              <div class="filters-info">
-                <span class="filters-subtitle">Настройте параметры поиска</span>
-              </div>
-              <div class="filters-actions">
-                <button
-                  class="clear-all-btn"
-                  @click.stop="resetFilters"
-                  v-if="activeFiltersCount > 0"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M18 6L6 18M6 6L18 18"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                  Очистить все
-                </button>
-                <button class="reset-all-btn" @click.stop="resetAllFilters">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    />
-                    <path
-                      d="M12 6v6l4 2"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    />
-                  </svg>
-                  Сбросить все
-                </button>
-              </div>
-            </div>
-
-            <div class="filters-grid">
-              <!-- Фильтр по цене -->
-              <div class="filter-group">
-                <div class="filter-group__header">
-                  <h4 class="filter-group__title">Цена</h4>
-                </div>
-                <div class="filter-group__content">
-                  <div class="price-range">
-                    <div class="price-inputs">
-                      <div class="price-input-group">
-                        <label>От</label>
-                        <div class="input-wrapper">
-                          <input
-                            type="number"
-                            v-model="priceRange.min"
-                            placeholder="0"
-                          />
-                          <span class="currency-symbol">₽</span>
-                        </div>
-                      </div>
-                      <div class="price-separator"></div>
-                      <div class="price-input-group">
-                        <label>До</label>
-                        <div class="input-wrapper">
-                          <input
-                            type="number"
-                            v-model="priceRange.max"
-                            placeholder="∞"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Динамические фильтры -->
-              <div
-                v-for="spec in filteredSpecs"
-                :key="spec"
-                class="filter-group"
-              >
-                <div class="filter-group__header">
-                  <h4 class="filter-group__title">{{ spec }}</h4>
-                </div>
-                <div class="filter-group__content">
-                  <template v-if="rangeFilters[spec]">
-                    <div class="price-range">
-                      <div class="price-inputs">
-                        <div class="price-input-group">
-                          <label>От</label>
-                          <div class="input-wrapper">
-                            <input
-                              type="number"
-                              :value="getRangeFilterValue(spec, 'min')"
-                              @input="updateRangeFilter(spec, 'min', $event)"
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
-                        <div class="price-separator"></div>
-                        <div class="price-input-group">
-                          <label>До</label>
-                          <div class="input-wrapper">
-                            <input
-                              type="number"
-                              :value="getRangeFilterValue(spec, 'max')"
-                              @input="updateRangeFilter(spec, 'max', $event)"
-                              placeholder="∞"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                  <template
-                    v-else-if="
-                      specOptions[spec] && specOptions[spec].length > 0
-                    "
-                  >
-                    <div class="filter-options">
-                      <button
-                        v-for="option in specOptions[spec]"
-                        :key="option"
-                        class="filter-option"
-                        :class="{ active: dynamicFilters[spec] === option }"
-                        @click="toggleFilterOption(spec, option)"
-                      >
-                        {{ option }}
-                      </button>
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-        </transition>
-      </div>
-
-      <!-- Товары -->
-      <div class="products-section">
-        <div class="products-header">
-          <div class="products-count" v-if="filteredProducts.length > 0">
-            Найдено товаров: <strong>{{ totalProducts }}</strong>
-          </div>
-        </div>
-
-        <div class="products-grid">
-          <div
-            v-for="(product, index) in paginatedProducts"
-            :key="`${product.id}-${product.name}`"
-            class="product-card"
-            v-scroll-reveal="
-              index % 3 === 0
-                ? 'slide-in-left'
-                : index % 3 === 1
-                ? 'fade-in-up'
-                : 'slide-in-right'
-            "
-          >
-            <div
-              class="product-card__clickable"
-              @click="
-                router.push(
-                  `/catalog/${categorySlug}/${generateProductSlug(product)}`
-                )
-              "
-            >
-              <div class="product-card__img-wrap">
-                <img
-                  :src="product.image ?? undefined"
-                  :alt="product.name ?? undefined"
-                  class="product-image"
-                />
-              </div>
-              <div class="product-card__content">
-                <div class="product-card__title-row">
-                  <h3 class="product-title">{{ product.name }}</h3>
-                  <span class="product-title-icon"
-                    ><!-- иконка, если нужна --></span
-                  >
-                </div>
-                <div class="product-card__specs">
-                  <div
-                    v-for="spec in getSortedSpecs(product)"
-                    :key="spec.id"
-                    class="spec-item"
-                  >
-                    <span class="spec-label">{{
-                      typeof spec === "object"
-                        ? spec.key.slice(0, 30) +
-                          (spec.key.length > 30 ? "..." : "")
-                        : "Invalid spec"
-                    }}</span>
-                    <span class="spec-dots"></span>
-                    <span class="spec-value">{{
-                      typeof spec === "object"
-                        ? spec.value
-                        : JSON.stringify(spec)
-                    }}</span>
-                  </div>
-                </div>
-                <div class="product-card__bottom">
-                  <div
-                    v-if="product.price && product.price != 1"
-                    class="product-card__price-block"
-                  >
-                    <span class="product-price"
-                      >{{ formatPrice(product.price) }}
-                      <span class="currency">₽</span></span
-                    >
-                    <span class="product-price-note">Цена с НДС</span>
-                  </div>
-                  <div v-else class="product-card__price-block">
-                    <span class="product-price-placeholder"
-                      >Цена по запросу</span
-                    >
-                  </div>
-                  <button
-                    class="buy-btn"
-                    @click.stop="addToCart(product, $event)"
-                    v-scroll-reveal="'zoom-in'"
-                  >
-                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-                      <path
-                        d="M6 6h15l-1.5 9h-13z"
-                        stroke="#e31e24"
-                        stroke-width="2"
+            <div class="filter-group__content">
+              <div class="price-range">
+                <div class="price-inputs">
+                  <div class="price-input-group">
+                    <label>От</label>
+                    <div class="input-wrapper">
+                      <input
+                        type="number"
+                        v-model="priceRange.min"
+                        placeholder="0"
                       />
-                      <circle cx="9" cy="20" r="1" fill="#e31e24" />
-                      <circle cx="18" cy="20" r="1" fill="#e31e24" />
-                    </svg>
-                    <span>Купить</span>
+                      <span class="currency-symbol">₽</span>
+                    </div>
+                  </div>
+                  <div class="price-separator"></div>
+                  <div class="price-input-group">
+                    <label>До</label>
+                    <div class="input-wrapper">
+                      <input
+                        type="number"
+                        v-model="priceRange.max"
+                        placeholder="∞"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Динамические фильтры -->
+          <div v-for="spec in filteredSpecs" :key="spec" class="filter-group">
+            <div class="filter-group__header">
+              <h4 class="filter-group__title">{{ spec }}</h4>
+            </div>
+            <div class="filter-group__content">
+              <template v-if="rangeFilters[spec]">
+                <div class="price-range">
+                  <div class="price-inputs">
+                    <div class="price-input-group">
+                      <label>От</label>
+                      <div class="input-wrapper">
+                        <input
+                          type="number"
+                          :value="getRangeFilterValue(spec, 'min')"
+                          @input="updateRangeFilter(spec, 'min', $event)"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                    <div class="price-separator"></div>
+                    <div class="price-input-group">
+                      <label>До</label>
+                      <div class="input-wrapper">
+                        <input
+                          type="number"
+                          :value="getRangeFilterValue(spec, 'max')"
+                          @input="updateRangeFilter(spec, 'max', $event)"
+                          placeholder="∞"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <template
+                v-else-if="specOptions[spec] && specOptions[spec].length > 0"
+              >
+                <div class="filter-options">
+                  <button
+                    v-for="option in specOptions[spec]"
+                    :key="option"
+                    class="filter-option"
+                    :class="{ active: dynamicFilters[spec] === option }"
+                    @click="toggleFilterOption(spec, option)"
+                  >
+                    {{ option }}
                   </button>
                 </div>
-              </div>
+              </template>
             </div>
-            <button
-              class="offer-btn"
-              @click="openCommercialOfferModal(product)"
-              v-scroll-reveal="'zoom-in'"
-            >
-              Заказать коммерческое предложение
-            </button>
-          </div>
-          <div
-            v-if="filteredProducts.length === 0"
-            class="no-products-message"
-            v-scroll-reveal="'fade-in-up'"
-          >
-            Нет товаров в данной категории.
           </div>
         </div>
-      </div>
+      </CategoryFilters>
+      <CategoryProducts
+        :products="paginatedProducts"
+        :total-products="totalProducts"
+        :get-sorted-specs="getSortedSpecs"
+        :format-price="formatPrice"
+        @productClick="
+          (product) =>
+            router.push(
+              `/catalog/${categorySlug}/${generateProductSlug(product)}`
+            )
+        "
+        @addToCart="addToCart"
+        @openCommercialOfferModal="openCommercialOfferModal"
+      />
+      <CategoryPagination
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        :visible-pages="visiblePages"
+        @goToPage="goToPage"
+      />
     </div>
-    <div
-      v-if="totalPages > 1"
-      class="pagination"
-      v-scroll-reveal="'fade-in-up'"
-    >
-      <button
-        class="pagination-btn pagination-btn--arrow"
-        :disabled="currentPage === 1"
-        @click="goToPage(1)"
-        aria-label="Первая страница"
-      >
-        «
-      </button>
-      <button
-        class="pagination-btn pagination-btn--arrow"
-        :disabled="currentPage === 1"
-        @click="goToPage(currentPage - 1)"
-        aria-label="Назад"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24">
-          <path
-            d="M15 18l-6-6 6-6"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-          />
-        </svg>
-      </button>
-      <span v-for="page in visiblePages" :key="page">
-        <button
-          v-if="page > 0"
-          class="pagination-btn"
-          :class="{ active: page === currentPage }"
-          @click="goToPage(page)"
-          :disabled="page === currentPage"
-        >
-          {{ page }}
-        </button>
-        <span v-else class="pagination-ellipsis">...</span>
-      </span>
-      <button
-        class="pagination-btn pagination-btn--arrow"
-        :disabled="currentPage === totalPages"
-        @click="goToPage(currentPage + 1)"
-        aria-label="Вперед"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24">
-          <path
-            d="M9 6l6 6-6 6"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-          />
-        </svg>
-      </button>
-      <button
-        class="pagination-btn pagination-btn--arrow"
-        :disabled="currentPage === totalPages"
-        @click="goToPage(totalPages)"
-        aria-label="Последняя страница"
-      >
-        »
-      </button>
-    </div>
+    <CommercialOfferModal
+      v-if="showCommercialOfferModal && selectedProduct"
+      :is-open="showCommercialOfferModal"
+      :product="selectedProduct"
+      @close="closeCommercialOfferModal"
+    />
   </div>
-  <CommercialOfferModal
-    v-if="showCommercialOfferModal && selectedProduct"
-    :is-open="showCommercialOfferModal"
-    :product="selectedProduct"
-    @close="closeCommercialOfferModal"
-  />
 </template>
 
 <script setup lang="ts">
@@ -422,6 +163,11 @@ import CommercialOfferModal from "~/components/CommercialOfferModal.vue";
 import type { Characteristic } from "~/types/product";
 import { useNuxtApp } from "nuxt/app";
 import { useImageOptimization } from "~/composables/useImageOptimization";
+import CategoryBreadcrumbs from "~/components/CategoryBreadcrumbs.vue";
+import CategoryHeader from "~/components/CategoryHeader.vue";
+import CategoryFilters from "~/components/CategoryFilters.vue";
+import CategoryProducts from "~/components/CategoryProducts.vue";
+import CategoryPagination from "~/components/CategoryPagination.vue";
 
 const { $vScrollReveal } = useNuxtApp();
 
@@ -580,50 +326,34 @@ const dynamicRangeFilters = ref<
   Record<string, { min: number | undefined; max: number | undefined }>
 >({});
 
-// Fetch products
-const fetchProducts = async () => {
-  pending.value = true;
+// Удаляю функцию fetchProducts и все связанные с ней watch
+// Оставляю только useFetch для загрузки товаров
+const categorySlug = computed(() => (route.params.category as string) || "");
 
-  try {
-    // Подготавливаем фильтры, исключая пустые значения
-    const nonEmptyFilters = Object.entries(dynamicFilters.value)
-      .filter(([_, value]) => value && value !== "")
-      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
-
-    const { data: fetched, error } = await useFetch<{
-      products: Product[];
-      total: number;
-    }>("/api/products/list", {
-      key: computed(
-        () =>
-          `products-${route.params.category}-${JSON.stringify(
-            nonEmptyFilters
-          )}-${priceRange.value.min}-${priceRange.value.max}`
-      ),
-      server: false,
-      query: {
-        categorySlug: route.params.category,
-        filters:
-          Object.keys(nonEmptyFilters).length > 0
-            ? JSON.stringify(nonEmptyFilters)
-            : undefined,
-        priceMin: priceRange.value.min,
-        priceMax: priceRange.value.max,
-      },
-    });
-
-    if (error.value) {
-      console.error("Error fetching products:", error.value);
-      allProducts.value = [];
-    } else if (fetched.value) {
-      allProducts.value = fetched.value.products;
-    } else {
-      allProducts.value = [];
-    }
-  } finally {
-    pending.value = false;
+const {
+  data: productsData,
+  pending: productsLoading,
+  error: productsError,
+  refresh: refreshProducts,
+} = useFetch<{ products: Product[] }>(
+  () => `/api/products/list?categorySlug=${categorySlug.value}`,
+  {
+    key: computed(() => `products-data-${categorySlug.value}`),
+    watch: [categorySlug],
+    server: false,
+    initialCache: false,
+    transform: (response) => {
+      if (!response) return { products: [] };
+      return response;
+    },
   }
-};
+);
+
+watchEffect(() => {
+  if (productsData.value?.products) {
+    allProducts.value = productsData.value.products;
+  }
+});
 
 // Загружаем товары при инициализации, смене категории или фильтров
 watch(
@@ -634,7 +364,6 @@ watch(
     () => priceRange.value.max,
   ],
   async () => {
-    await fetchProducts();
     // Сбрасываем страницу при изменении фильтров или категории
     currentPage.value = 1;
   },
@@ -643,8 +372,6 @@ watch(
 
 // Фильтры теперь сохраняются в URL через usePagination
 // Страница будет сбрасываться автоматически при изменении фильтров
-
-const categorySlug = computed(() => (route.params.category as string) || "");
 
 const categoryInfo = ref<CategoryInfo | undefined>(undefined);
 const sliderImages = ref<string[]>([]);
@@ -1242,153 +969,6 @@ watch(
   { immediate: true }
 );
 
-// SEO Meta Tags
-useHead({
-  title: computed(
-    () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
-  ),
-  meta: [
-    {
-      name: "description",
-      content: computed(
-        () =>
-          `${
-            categoryInfo.value?.title || "Категория"
-          } котельного оборудования КотлоЭнергоСнаб. ${
-            categoryInfo.value?.description ||
-            "Производство и монтаж котельного оборудования в Барнауле."
-          }`
-      ),
-    },
-    {
-      name: "keywords",
-      content: computed(
-        () =>
-          `КотлоЭнергоСнаб, ${
-            categoryInfo.value?.title || "категория"
-          }, котельное оборудование, котлы, Барнаул, производство`
-      ),
-    },
-    { name: "author", content: "КотлоЭнергоСнаб" },
-    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
-    {
-      property: "og:title",
-      content: computed(
-        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
-      ),
-    },
-    {
-      property: "og:description",
-      content: computed(
-        () =>
-          `${
-            categoryInfo.value?.title || "Категория"
-          } котельного оборудования КотлоЭнергоСнаб. ${
-            categoryInfo.value?.description ||
-            "Производство и монтаж котельного оборудования в Барнауле."
-          }`
-      ),
-    },
-    { property: "og:type", content: "website" },
-    {
-      property: "og:url",
-      content: computed(
-        () =>
-          `https://kes-sib.ru/catalog/${
-            categoryInfo.value?.slug || route.params.category
-          }`
-      ),
-    },
-    { property: "og:image", content: "/images/hero1.jpg" },
-    { name: "twitter:card", content: "summary_large_image" },
-    {
-      name: "twitter:title",
-      content: computed(
-        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
-      ),
-    },
-    {
-      name: "twitter:description",
-      content: computed(
-        () =>
-          `${
-            categoryInfo.value?.title || "Категория"
-          } котельного оборудования КотлоЭнергоСнаб. ${
-            categoryInfo.value?.description ||
-            "Производство и монтаж котельного оборудования в Барнауле."
-          }`
-      ),
-    },
-    { name: "robots", content: "index, follow" },
-  ],
-  link: [
-    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-    {
-      rel: "canonical",
-      href: computed(
-        () =>
-          `https://kes-sib.ru/catalog/${
-            categoryInfo.value?.slug || route.params.category
-          }`
-      ),
-    },
-  ],
-  script: [
-    {
-      type: "application/ld+json",
-      innerHTML: computed(() =>
-        JSON.stringify({
-          "@context": "http://schema.org",
-          "@type": "Organization",
-          name: "КотлоЭнергоСнаб",
-          url: "https://kes-sib.ru/",
-          logo: "https://kes-sib.ru/favicon.ico",
-        })
-      ),
-    },
-  ],
-});
-onMounted(() => {
-  // Сбрасываем все фильтры при загрузке страницы для избежания ошибок
-  resetAllFilters();
-
-  // Программно триггерим scroll событие
-  window.dispatchEvent(new Event("scroll"));
-
-  // Инициализируем фильтры
-  uniqueSpecs.value.forEach((spec) => {
-    dynamicFilters.value[spec] = "";
-    // Инициализируем диапазонные фильтры
-    if (rangeFilters.value[spec]) {
-      dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
-    }
-  });
-
-  // Очищаем URL от параметров фильтров
-  const url = new URL(window.location.href);
-  url.searchParams.delete("priceMin");
-  url.searchParams.delete("priceMax");
-  url.searchParams.delete("filters");
-  url.searchParams.delete("rangeFilters");
-  url.searchParams.delete("page");
-
-  // Обновляем URL без перезагрузки страницы
-  window.history.replaceState({}, "", url.toString());
-});
-
-// Следим за изменениями rangeFilters и инициализируем новые диапазонные фильтры
-watch(
-  rangeFilters,
-  (newRangeFilters) => {
-    Object.keys(newRangeFilters).forEach((spec) => {
-      if (newRangeFilters[spec] && !dynamicRangeFilters.value[spec]) {
-        dynamicRangeFilters.value[spec] = { min: undefined, max: undefined };
-      }
-    });
-  },
-  { immediate: true }
-);
-
 const filtersCollapsed = ref(true);
 const toggleFiltersCollapsed = () => {
   filtersCollapsed.value = !filtersCollapsed.value;
@@ -1537,31 +1117,6 @@ const getSortedSpecs = (product: Product) => {
     .slice(0, 4);
 };
 
-// В секции script
-const {
-  data: productsData,
-  pending: productsLoading,
-  error: productsError,
-  refresh: refreshProducts,
-} = useFetch<{ products: Product[] }>(
-  () => `/api/products/list?categorySlug=${categorySlug.value}`,
-  {
-    key: computed(() => `products-data-${categorySlug.value}`),
-    watch: [categorySlug],
-    transform: (response) => {
-      if (!response) return { products: [] };
-      return response;
-    },
-  }
-);
-
-// Обновляем allProducts при изменении productsData
-watchEffect(() => {
-  if (productsData.value?.products) {
-    allProducts.value = productsData.value.products;
-  }
-});
-
 const handleRefresh = async () => {
   pending.value = true;
   try {
@@ -1571,6 +1126,23 @@ const handleRefresh = async () => {
     pending.value = false;
   }
 };
+
+watch(
+  () => route.params.category,
+  async () => {
+    resetAllFilters();
+    await nextTick();
+    if (typeof refreshProducts === "function") {
+      await refreshProducts();
+    }
+    console.log(
+      "categorySlug:",
+      categorySlug.value,
+      "allProducts:",
+      allProducts.value
+    );
+  }
+);
 </script>
 
 <style scoped>
