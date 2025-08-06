@@ -2,13 +2,10 @@
   <div class="product-main-actions">
     <div class="cart-action-wrap">
       <div class="product-card__price-block">
-        <span class="product-price">{{
-          product.price
-            .toLocaleString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, " ") == 1
-            ? "Цена по запросу"
-            : product.price.toLocaleString() + " ₽"
+        <span v-if="product.price != 1" class="product-price">{{
+          formatPrice(product.price) + " ₽"
         }}</span>
+        <span v-else class="product-price">Цена по запросу</span>
         <span class="product-price-note">Цена с НДС</span>
       </div>
       <button
@@ -85,7 +82,14 @@ const router = useRouter();
 const cartItem = computed(() =>
   cartStore.items.find((item: any) => item.id === props.product?.id)
 );
-
+const formatPrice = (price: number | null | undefined) => {
+  if (!price) return "0";
+  return new Intl.NumberFormat("ru-RU", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 const cartCount = computed(() =>
   cartItem.value ? cartItem.value.quantity : 0
 );

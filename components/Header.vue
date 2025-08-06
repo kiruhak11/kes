@@ -1680,6 +1680,37 @@ onBeforeUnmount(() => {
     font-size: 11px;
     padding: 3px 6px;
   }
+
+  /* Переопределяем размеры для мобильной версии */
+  .header .burger {
+    width: 32px !important;
+    height: 24px !important;
+  }
+  .header .burger span {
+    height: 3px !important;
+    width: 70% !important;
+  }
+  .header .burger span:nth-of-type(2) {
+    width: 70% !important; /* Средняя полоска такая же как остальные */
+  }
+  .header .mobile-search-btn {
+    font-size: 28px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .header .search-icon {
+    font-size: 24px !important;
+  }
+  .header .menu-icon {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+  }
+  .header .menu-icon svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
 }
 
 .mobile-header-actions {
