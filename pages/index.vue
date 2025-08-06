@@ -670,9 +670,17 @@ const formatPhoneNumber = (event: Event) => {
     } else if (value.length <= 6) {
       value = value.slice(0, 3) + " " + value.slice(3);
     } else if (value.length <= 8) {
-      value = value.slice(0, 3) + " " + value.slice(3, 6) + " " + value.slice(6);
+      value =
+        value.slice(0, 3) + " " + value.slice(3, 6) + " " + value.slice(6);
     } else {
-      value = value.slice(0, 3) + " " + value.slice(3, 6) + " " + value.slice(6, 8) + " " + value.slice(8);
+      value =
+        value.slice(0, 3) +
+        " " +
+        value.slice(3, 6) +
+        " " +
+        value.slice(6, 8) +
+        " " +
+        value.slice(8);
     }
   }
 

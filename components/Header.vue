@@ -1181,6 +1181,11 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0;
   overflow-y: auto;
+  width: 100%;
+}
+
+.mobile-menu li {
+  width: 100%;
 }
 
 .mobile-menu-item {
@@ -1215,6 +1220,13 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   color: #666;
   min-width: 24px;
+  max-width: 24px;
+}
+
+.menu-icon svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .cart-badge {
