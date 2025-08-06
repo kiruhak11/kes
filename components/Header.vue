@@ -1233,6 +1233,15 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
+/* Стили для текста в мобильном меню */
+.mobile-menu-item span:not(.menu-icon):not(.cart-badge) {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Анимации */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
