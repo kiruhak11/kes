@@ -37,7 +37,6 @@ const productTabs = [
   { key: "description", label: "Описание товара" },
   { key: "specs", label: "Технические характеристики" },
   { key: "delivery", label: "Комплект поставки" },
-  { key: "scheme", label: "Схема подключения" },
   { key: "additional", label: "Дополнительно потребуется" },
   { key: "certificates", label: "Сертификаты и гарантии" },
 ];

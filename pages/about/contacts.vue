@@ -11,7 +11,14 @@
             <i class="fas fa-phone"></i>
             <div class="contact-text">
               <p>Тел/факс:</p>
-              <a :href="`tel:${contacts.phone[0]}`">{{ contacts.phone[0] }}</a>
+              <div class="phones" v-if="contacts.phone.length > 0">
+                <a
+                  v-for="phone in contacts.phone"
+                  :key="phone"
+                  href="tel:{{ phone }}"
+                  >{{ phone }}</a
+                >
+              </div>
             </div>
           </div>
 
@@ -43,19 +50,6 @@
             <p><strong>ОГРН:</strong> 1092223000726</p>
             <p><strong>ОКПО:</strong> 60750285</p>
             <p><strong>ОКВЭД:</strong> 51.70</p>
-          </div>
-
-          <div class="requisites-group">
-            <h3>Банковские реквизиты</h3>
-            <div class="bank-details">
-              <p><strong>Алтайское отделение № 8644 ПАО Сбербанк</strong></p>
-              <p>
-                г.Барнаул (656038, г Барнаул, проспект Комсомольский, д 106 а)
-              </p>
-              <p>Р/С 40702810502000002131</p>
-              <p>К/С 30101810200000000604</p>
-              <p>БИК 040173604</p>
-            </div>
           </div>
         </div>
       </div>
@@ -365,7 +359,10 @@ definePageMeta({
   flex-direction: column;
   gap: 0.5rem;
 }
-
+.phones {
+  display: flex;
+  flex-direction: column;
+}
 .contact-text a {
   color: #007bff;
   text-decoration: none;

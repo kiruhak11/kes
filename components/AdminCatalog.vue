@@ -222,26 +222,6 @@
                 class="form-control"
               ></textarea>
             </div>
-
-            <div class="form-group">
-              <label>Схема подключения:</label>
-              <input
-                type="file"
-                accept="image/*"
-                @change="(e) => handleConnectionSchemeUpload(e, newProdLocal)"
-                class="form-control"
-              />
-              <div
-                v-if="newProdLocal.connection_scheme"
-                class="image-preview-container"
-              >
-                <img
-                  :src="getImageUrl(newProdLocal.connection_scheme)"
-                  class="img-preview"
-                  alt="Схема подключения"
-                />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -720,26 +700,6 @@
                       rows="3"
                       class="form-control"
                     ></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Схема подключения:</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      @change="(e) => handleConnectionSchemeUpload(e, p)"
-                      class="form-control"
-                    />
-                    <div
-                      v-if="p.connection_scheme"
-                      class="image-preview-container"
-                    >
-                      <img
-                        :src="getImageUrl(p.connection_scheme)"
-                        class="img-preview"
-                        alt="Схема подключения"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -3528,9 +3488,7 @@ const confirmDeleteProduct = () => {
   stroke-width: 6;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition:
-    stroke-dasharray 0.5s ease,
-    stroke-dashoffset 0.5s ease;
+  transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
   stroke-dasharray: 241 9999999;
   stroke-dashoffset: 0;
 }

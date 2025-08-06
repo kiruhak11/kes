@@ -85,12 +85,6 @@
             :delivery-set="product.delivery_set"
           />
 
-          <!-- Схема подключения -->
-          <ProductScheme
-            :active-tab="activeTab"
-            :connection-scheme="product.connection_scheme"
-          />
-
           <!-- Дополнительные требования -->
           <ProductAdditional
             :active-tab="activeTab"
@@ -652,7 +646,6 @@ const productTabs = [
   { key: "description", label: "Описание товара" },
   { key: "specs", label: "Технические характеристики" },
   { key: "delivery", label: "Комплект поставки" },
-  { key: "scheme", label: "Схема подключения" },
   { key: "additional", label: "Дополнительно потребуется" },
   { key: "certificates", label: "Сертификаты и гарантии" },
 ];

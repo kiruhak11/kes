@@ -7,9 +7,14 @@
             <a href="mailto:{{ contacts.email }}" class="header__email">{{
               contacts.email
             }}</a>
-            <a href="tel:{{ contacts.phone[0] }}" class="header__phone">{{
-              contacts.phone[0]
-            }}</a>
+            <div class="header__phones" v-if="contacts.phone.length > 0">
+              <a
+                v-for="phone in contacts.phone"
+                :key="phone"
+                href="tel:{{ phone }}"
+                >{{ phone }}</a
+              >
+            </div>
             <NuxtLink to="/contact" class="header__callback"
               >Заказать звонок</NuxtLink
             >
@@ -830,10 +835,14 @@ onBeforeUnmount(() => {
 }
 
 .header__email,
-.header__phone {
+.header__phones {
   color: #333;
   text-decoration: none;
   font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
   @media (max-width: 1050px) {
     font-size: 12px;
   }
@@ -1170,7 +1179,7 @@ onBeforeUnmount(() => {
 .mobile-menu {
   list-style: none;
   margin: 0;
-  padding: 20px 0;
+  padding: 0;
   overflow-y: auto;
 }
 
@@ -1180,9 +1189,13 @@ onBeforeUnmount(() => {
   padding: 16px 20px;
   color: #333;
   text-decoration: none;
-  font-size: 1rem;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
+  min-height: 56px;
+  box-sizing: border-box;
 }
 
 .mobile-menu-item:hover {
@@ -1191,15 +1204,23 @@ onBeforeUnmount(() => {
 }
 
 .menu-icon {
-  margin-right: 12px;
-  font-size: 1.2rem;
+  margin-right: 16px;
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #666;
 }
 
 .cart-badge {
   margin-left: auto;
   background: #e31e24;
   color: white;
-  font-size: 0.8rem;
+  font-size: 12px;
+  font-weight: 600;
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
@@ -1207,6 +1228,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 0 6px;
+  box-sizing: border-box;
 }
 
 /* Анимации */

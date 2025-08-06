@@ -226,7 +226,7 @@
               </p>
             </div>
             <div class="cta-actions">
-              <a href="tel:+73852500000" class="btn btn-primary btn-large">
+              <button @click="ModalCall" class="btn btn-primary btn-large">
                 <svg
                   width="20"
                   height="20"
@@ -242,8 +242,8 @@
                     stroke-linejoin="round"
                   />
                 </svg>
-                {{ contacts.phone[0] }}
-              </a>
+                Связаться с нами
+              </button>
               <NuxtLink to="/contact" class="btn btn-outline btn-large">
                 Заказать звонок
               </NuxtLink>
@@ -663,8 +663,17 @@ const formatPhoneNumber = (event: Event) => {
   const input = event.target as HTMLInputElement;
   let value = input.value.replace(/\D/g, "");
 
+  // Форматирование номера: 945 494 34 43
   if (value.length > 0) {
-    value = value.match(new RegExp(".{1,3}", "g"))?.join(" ") || value;
+    if (value.length <= 3) {
+      value = value;
+    } else if (value.length <= 6) {
+      value = value.slice(0, 3) + " " + value.slice(3);
+    } else if (value.length <= 8) {
+      value = value.slice(0, 3) + " " + value.slice(3, 6) + " " + value.slice(6);
+    } else {
+      value = value.slice(0, 3) + " " + value.slice(3, 6) + " " + value.slice(6, 8) + " " + value.slice(8);
+    }
   }
 
   phoneNumber.value = value;
@@ -710,7 +719,15 @@ const filteredRegions = computed(() => {
     region.toLowerCase().includes(regionSearch.value.toLowerCase())
   );
 });
-
+const ModalCall = () => {
+  modalStore.openModal(
+    "Свзяаться с нами",
+    `Наши номера для связи: 
+    ${contacts.phone[0]}, 
+    ${contacts.phone[1]}`,
+    "Я позвоню"
+  );
+};
 const heroImages = [
   "/images/hero1.png",
   "/images/hero2.png",

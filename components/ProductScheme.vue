@@ -1,24 +1,4 @@
-<template>
-  <div
-    v-if="activeTab === 'scheme'"
-    class="section-block"
-    v-scroll-reveal="'slide-in-right'"
-  >
-    <h2 class="section-title">Схема подключения</h2>
-    <div v-if="connectionScheme" class="scheme-image-container">
-      <NuxtImg
-        :src="normalizeImagePath(connectionScheme)"
-        alt="Схема подключения"
-        class="scheme-image"
-        format="webp"
-        quality="90"
-        loading="lazy"
-        sizes="(max-width: 768px) 100vw, 800px"
-      />
-    </div>
-    <div v-else class="no-data-message">Схема подключения уточняется.</div>
-  </div>
-</template>
+<template></template>
 
 <script setup lang="ts">
 interface Props {
