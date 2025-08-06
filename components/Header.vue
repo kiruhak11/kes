@@ -1196,6 +1196,7 @@ onBeforeUnmount(() => {
   border-left: 3px solid transparent;
   min-height: 56px;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .mobile-menu-item:hover {

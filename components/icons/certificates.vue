@@ -27,9 +27,26 @@
     />
 
     <!-- Печать -->
-    <circle cx="18" cy="11" r="2" fill="none" stroke="#666" stroke-width="1.5" />
-    <path d="M18 10V12" stroke="#666" stroke-width="1.5" stroke-linecap="round" />
-    <path d="M17 11H19" stroke="#666" stroke-width="1.5" stroke-linecap="round" />
+    <circle
+      cx="18"
+      cy="11"
+      r="2"
+      fill="none"
+      stroke="#666"
+      stroke-width="1.5"
+    />
+    <path
+      d="M18 10V12"
+      stroke="#666"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
+    <path
+      d="M17 11H19"
+      stroke="#666"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
 
     <!-- Текст (имитация) -->
     <path
