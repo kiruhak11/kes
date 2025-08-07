@@ -15,7 +15,7 @@ const sections = [
     content: [
       { text: "Главная", to: "/" },
       { text: "Каталог", to: "/catalog" },
-      { text: "О компании", to: "/about" },
+      { text: "О заводе", to: "/about" },
       { text: "Контакты", to: "/about/contacts" },
     ],
   },
@@ -119,7 +119,7 @@ if (fetchError.value) {
                 <li><NuxtLink to="/about/contacts">Контакты</NuxtLink></li>
                 <li><NuxtLink to="/contact">Оставить заявку</NuxtLink></li>
                 <li><NuxtLink to="/cart">Корзина</NuxtLink></li>
-                <li><NuxtLink to="/about">О компании</NuxtLink></li>
+                <li><NuxtLink to="/about">О заводе</NuxtLink></li>
               </ul>
             </div>
 

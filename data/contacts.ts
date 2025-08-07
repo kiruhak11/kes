@@ -1,7 +1,7 @@
 // data/contacts.ts
 
 /**
- * Интерфейс для контактной информации компании
+ * Интерфейс для контактной информации заводе
  */
 export interface ContactInfo {
   companyName: string;

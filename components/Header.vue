@@ -202,7 +202,7 @@
                       class="mobile-menu-item"
                     >
                       <span class="menu-icon"><IconsCompany /></span>
-                      <span>О компании</span>
+                      <span>О заводе</span>
                     </NuxtLink>
                   </li>
                   <li>
@@ -365,7 +365,7 @@
             <ul class="header__menu">
               <a href="/questionnaire" class="header__link">Опросные листы</a>
               <a href="/certificates" class="header__link">Сертификаты</a>
-              <a href="/about" class="header__link">О компании</a>
+              <a href="/about" class="header__link">О заводе</a>
               <a href="/vacancies" class="header__link">Вакансии</a>
             </ul>
           </nav>

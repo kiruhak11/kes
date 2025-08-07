@@ -73,7 +73,7 @@
               ></iframe>
             </div>
 
-            <!-- Карточка с информацией о компании -->
+            <!-- Карточка с информацией о заводе -->
             <div class="company-info-card">
               <div class="company-header">
                 <div class="company-icon">
@@ -235,7 +235,7 @@ import { contacts } from "~/data/contacts";
 
 // SEO Meta Tags
 useHead({
-  title: "Контакты компании — КотлоЭнергоСнаб",
+  title: "Контакты заводе — КотлоЭнергоСнаб",
   meta: [
     {
       name: "description",
@@ -249,7 +249,7 @@ useHead({
     },
     { name: "author", content: "КотлоЭнергоСнаб" },
     { property: "og:site_name", content: "КотлоЭнергоСнаб" },
-    { property: "og:title", content: "Контакты компании — КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Контакты заводе — КотлоЭнергоСнаб" },
     {
       property: "og:description",
       content:
@@ -259,7 +259,7 @@ useHead({
     { property: "og:url", content: "https://kes-sib.ru/about/contacts" },
     { property: "og:image", content: "/images/hero1.jpg" },
     { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: "Контакты компании — КотлоЭнергоСнаб" },
+    { name: "twitter:title", content: "Контакты заводе — КотлоЭнергоСнаб" },
     {
       name: "twitter:description",
       content:
@@ -430,7 +430,7 @@ definePageMeta({
   border: none;
 }
 
-/* Карточка с информацией о компании */
+/* Карточка с информацией о заводе */
 .company-info-card {
   position: absolute;
   top: 20px;
