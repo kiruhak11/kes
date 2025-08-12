@@ -16,3 +16,8 @@ tmp
 *.log
 .vscode
 .idea
+.cursorrules
+PERFORMANCE_OPTIMIZATION.md
+PRODUCTION_DEPLOY_CHECKLIST.md
+docs/
+scripts/
