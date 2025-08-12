@@ -1354,7 +1354,7 @@ const services = [
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #dc3545;
+  background: #e21e23;
   border-radius: 8px;
   color: white;
   flex-shrink: 0;
@@ -1494,7 +1494,7 @@ const services = [
   font-weight: 500;
   color: white;
   border: none;
-  min-width: 250px;
+  min-width: 20px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;

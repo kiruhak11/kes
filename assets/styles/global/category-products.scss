@@ -124,7 +124,7 @@
   max-width: 100%;
 }
 .product-price {
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #e31e24;
   line-height: 1;
@@ -141,10 +141,10 @@
   white-space: nowrap;
 }
 .currency {
-  font-size: 1.2rem;
+  font-size: 0.95rem;
 }
 .product-price-note {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   color: #888;
   margin-top: 2px;
 }
@@ -291,11 +291,6 @@
     font-size: 1rem;
     padding: 10px;
   }
-}
-
-// Адаптивное уменьшение шрифта для длинных цен
-.product-price {
-  font-size: clamp(1.1rem, 2.5vw, 1.8rem);
 }
 
 // Для очень длинных цен — ещё меньше

@@ -50,6 +50,12 @@
         Уточнить наличие
       </button>
     </div>
+    <CommercialOfferModal
+      v-if="showCommercialOfferModal && selectedProduct"
+      :is-open="showCommercialOfferModal"
+      :product="selectedProduct"
+      @close="closeCommercialOfferModal"
+    />
   </div>
 </template>
 
@@ -145,16 +151,23 @@ const openOfferModal = () => {
     `Пожалуйста, уточните наличие товара у нашего менеджера. \n\n${contacts.phone[0]}`,
     "Я позвоню",
     () => {
-      router.push(`tel:${contacts.phone[0]}`);
+      window.location.href = `tel:${contacts.phone[0]}`;
     }
   );
 };
 
-const openCommercialOfferModal = (product: ProductType) => {
-  // Здесь можно добавить логику для открытия модального окна коммерческого предложения
-  console.log("Open commercial offer modal for:", product);
+const showCommercialOfferModal = ref(false);
+
+const selectedProduct = ref<Product | null>(null);
+const openCommercialOfferModal = (product: Product) => {
+  selectedProduct.value = product;
+  showCommercialOfferModal.value = true;
 };
 
+const closeCommercialOfferModal = () => {
+  showCommercialOfferModal.value = false;
+  selectedProduct.value = null;
+};
 const generateProductSlug = (product: ProductType): string => {
   if (!product || !product.name) return "";
   const name = product.name || "";

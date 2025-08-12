@@ -7,49 +7,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
-const words = ['котельной', 'котла']
-const currentText = ref('')
-const currentWordIndex = ref(0)
-const isDeleting = ref(false)
-const typingSpeed = 100
-const deletingSpeed = 50
-const pauseTime = 2500
-const startDelay = 800
+const words = ["котельной", "котла"];
+const currentText = ref("");
+const currentWordIndex = ref(0);
+const isDeleting = ref(false);
+const typingSpeed = 100;
+const deletingSpeed = 50;
+const pauseTime = 2500;
+const startDelay = 800;
 
-let timeout: number | undefined
+let timeout: number | undefined;
 
 const type = () => {
-  const currentWord = words[currentWordIndex.value]
-  
+  const currentWord = words[currentWordIndex.value];
+
   if (isDeleting.value) {
-    currentText.value = currentWord.substring(0, currentText.value.length - 1)
+    currentText.value = currentWord.substring(0, currentText.value.length - 1);
   } else {
-    currentText.value = currentWord.substring(0, currentText.value.length + 1)
+    currentText.value = currentWord.substring(0, currentText.value.length + 1);
   }
 
-  let typeSpeed = isDeleting.value ? deletingSpeed : typingSpeed
+  let typeSpeed = isDeleting.value ? deletingSpeed : typingSpeed;
 
   if (!isDeleting.value && currentText.value === currentWord) {
-    typeSpeed = pauseTime
-    isDeleting.value = true
-  } else if (isDeleting.value && currentText.value === '') {
-    isDeleting.value = false
-    currentWordIndex.value = (currentWordIndex.value + 1) % words.length
-    typeSpeed = startDelay
+    typeSpeed = pauseTime;
+    isDeleting.value = true;
+  } else if (isDeleting.value && currentText.value === "") {
+    isDeleting.value = false;
+    currentWordIndex.value = (currentWordIndex.value + 1) % words.length;
+    typeSpeed = startDelay;
   }
 
-  timeout = window.setTimeout(type, typeSpeed)
-}
+  timeout = window.setTimeout(type, typeSpeed);
+};
 
 onMounted(() => {
-  type()
-})
+  type();
+});
 
 onBeforeUnmount(() => {
-  if (timeout) clearTimeout(timeout)
-})
+  if (timeout) clearTimeout(timeout);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -62,7 +62,7 @@ onBeforeUnmount(() => {
 }
 
 .dynamic-text {
-  color: #007bff;
+  color: #e31e23;
   font-weight: 600;
 }
 
@@ -75,7 +75,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
-</style> 
+</style>
