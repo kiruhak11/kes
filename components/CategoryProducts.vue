@@ -51,22 +51,20 @@
                 v-if="product.price && product.price !== 1"
                 class="product-card__price-block"
               >
-                <span class="product-price"
-                  >{{
-                    formatPrice(product.price) == 1
-                      ? "Цена по запросу"
-                      : formatPrice(product.price)
-                  }}
+                <span
+                  v-if="formatPrice(product.price) != '1'"
+                  class="product-price"
+                  >{{ formatPrice(product.price) }}
                   <span
                     v-if="formatPrice(product.price) != '1'"
                     class="currency"
                     >₽</span
                   ></span
                 >
+                <span v-else class="product-price-placeholder"
+                  >Цена по запросу</span
+                >
                 <span class="product-price-note">Цена с НДС</span>
-              </div>
-              <div v-else class="product-card__price-block">
-                <span class="product-price-placeholder">Цена по запросу</span>
               </div>
               <button
                 class="buy-btn"
@@ -123,4 +121,31 @@ function getReveal(index: number) {
 </script>
 <style scoped lang="scss">
 @use "~/assets/styles/global/category-products.scss";
+
+// Дополнительные стили для SVG при ховере
+.buy-btn {
+  svg {
+    transition: all 0.2s ease;
+
+    path {
+      transition: stroke 0.2s ease;
+    }
+
+    circle {
+      transition: fill 0.2s ease;
+    }
+  }
+
+  &:hover {
+    svg {
+      path {
+        stroke: #fff;
+      }
+
+      circle {
+        fill: #fff;
+      }
+    }
+  }
+}
 </style>

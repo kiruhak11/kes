@@ -134,7 +134,7 @@
   display: block;
 }
 .product-price-placeholder {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #e31e24;
   line-height: 1;
@@ -151,12 +151,13 @@
 .buy-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 12px;
+  min-width: 110px;
   background: #fff;
   color: #e31e24;
   border: 1px solid #e31e24;
   border-radius: 8px;
-  padding: 12px 22px;
+  padding: 12px 6px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -293,15 +294,13 @@
 }
 
 // Адаптивное уменьшение шрифта для длинных цен
-.product-price,
-.product-price-placeholder {
+.product-price {
   font-size: clamp(1.1rem, 2.5vw, 1.8rem);
 }
 
 // Для очень длинных цен — ещё меньше
 @media (max-width: 400px) {
-  .product-price,
-  .product-price-placeholder {
+  .product-price {
     font-size: 1rem;
   }
 }
