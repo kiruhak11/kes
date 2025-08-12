@@ -60,7 +60,6 @@ export default defineNuxtConfig({
   modules: [
     "@nuxtjs/device",
     "@pinia/nuxt",
-    "pinia-plugin-persistedstate/nuxt",
     "rubillex_frog-modal",
     "nuxt-file-storage",
     "@nuxt/image",
@@ -79,8 +78,8 @@ export default defineNuxtConfig({
   ],
 
   // Pinia конфигурация
-  piniaPluginPersistedstate: {
-    storage: "localStorage",
+  pinia: {
+    autoImports: ['defineStore', 'acceptHMRUpdate'],
   },
 
   // File storage конфигурация
