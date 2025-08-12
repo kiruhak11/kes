@@ -1,4 +1,4 @@
-ARG NODE_VERSION=20.12.0
+ARG NODE_VERSION=20.17.0
 
 FROM node:${NODE_VERSION}-slim as base
 
@@ -19,8 +19,7 @@ FROM base as build
 COPY package*.json ./
 COPY prisma ./prisma
 
-# Устанавливаем зависимости с явным указанием версии npm
-RUN npm install -g npm@latest
+# Устанавливаем зависимости без обновления npm
 RUN npm install --production=false --legacy-peer-deps
 
 # Генерируем Prisma Client до копирования остальных файлов
