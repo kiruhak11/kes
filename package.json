@@ -24,7 +24,7 @@
     "@vueuse/nuxt": "^13.3.0",
     "chart.js": "^4.5.0",
     "csv-parse": "^5.6.0",
-    "nuxt": "^3.13.2",
+    "nuxt": "^3.14.0",
     "pinia-plugin-persistedstate": "^4.3.0",
     "rubillex_frog-modal": "^1.4.4",
     "telegraf": "^4.16.3",
@@ -44,5 +44,8 @@
     "typescript": "^5.8.3",
     "vue-tsc": "latest",
     "vuedraggable": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
