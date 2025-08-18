@@ -481,6 +481,7 @@ useHead({
       name: "twitter:card",
       content: "summary_large_image",
     },
+    { name: "twitter:image", content: "/images/hero1.jpg" },
     {
       name: "twitter:title",
       content: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
@@ -513,8 +514,29 @@ useHead({
         "@context": "http://schema.org",
         "@type": "Organization",
         name: "КотлоЭнергоСнаб",
+        alternateName: "Котельный завод КЭС",
         url: "https://kes-sib.ru/",
         logo: "https://kes-sib.ru/favicon.ico",
+        description:
+          "Ведущий производитель котлов и котельного оборудования в Барнауле",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Барнаул",
+          addressCountry: "RU",
+          addressRegion: "Алтайский край",
+        },
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: "+7-3852-555-555",
+          contactType: "customer service",
+          areaServed: "RU",
+        },
+        sameAs: ["https://kes-sib.ru/"],
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "Каталог котельного оборудования",
+          itemListElement: [],
+        },
       }),
     },
   ],

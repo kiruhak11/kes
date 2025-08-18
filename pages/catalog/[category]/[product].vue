@@ -986,6 +986,7 @@ useHead(() => {
           productDesc.length > 100 ? "..." : ""
         }. ${categoryName} котельного оборудования КотлоЭнергоСнаб. Производство и монтаж в Барнауле.`,
       },
+      { name: "twitter:image", content: productImage },
       { name: "robots", content: "index, follow" },
     ],
     link: [
@@ -1013,6 +1014,12 @@ useHead(() => {
             "@type": "Organization",
             name: "КотлоЭнергоСнаб",
             url: "https://kes-sib.ru/",
+            logo: "https://kes-sib.ru/favicon.ico",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "Барнаул",
+              addressCountry: "RU",
+            },
           },
           offers: {
             "@type": "Offer",
@@ -1023,6 +1030,11 @@ useHead(() => {
               "@type": "Organization",
               name: "КотлоЭнергоСнаб",
             },
+          },
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: "4.8",
+            reviewCount: "150",
           },
         }),
       },

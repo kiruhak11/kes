@@ -877,8 +877,15 @@ useHead({
           }`
       ),
     },
-    { property: "og:image", content: "/images/hero1.jpg" },
+    {
+      property: "og:image",
+      content: computed(() => sliderImages.value[0] || "/images/hero1.jpg"),
+    },
     { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:image",
+      content: computed(() => sliderImages.value[0] || "/images/hero1.jpg"),
+    },
     {
       name: "twitter:title",
       content: computed(
@@ -1059,8 +1066,15 @@ useHead({
           }`
       ),
     },
-    { property: "og:image", content: "/images/hero1.jpg" },
+    {
+      property: "og:image",
+      content: computed(() => sliderImages.value[0] || "/images/hero1.jpg"),
+    },
     { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:image",
+      content: computed(() => sliderImages.value[0] || "/images/hero1.jpg"),
+    },
     {
       name: "twitter:title",
       content: computed(
@@ -1099,10 +1113,40 @@ useHead({
       innerHTML: computed(() =>
         JSON.stringify({
           "@context": "http://schema.org",
-          "@type": "Organization",
-          name: "КотлоЭнергоСнаб",
-          url: "https://kes-sib.ru/",
-          logo: "https://kes-sib.ru/favicon.ico",
+          "@type": "CollectionPage",
+          name:
+            categoryInfo.value?.title || "Категория котельного оборудования",
+          description:
+            categoryInfo.value?.description ||
+            "Категория котельного оборудования КотлоЭнергоСнаб",
+          url: `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`,
+          mainEntity: {
+            "@type": "ItemList",
+            numberOfItems: totalProducts.value,
+            itemListElement: paginatedProducts.value.map((product, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "Product",
+                name: product.name,
+                description: product.description,
+                image: product.image,
+                category: categoryInfo.value?.title,
+                brand: {
+                  "@type": "Brand",
+                  name: "КотлоЭнергоСнаб",
+                },
+              },
+            })),
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "КотлоЭнергоСнаб",
+            url: "https://kes-sib.ru/",
+            logo: "https://kes-sib.ru/favicon.ico",
+          },
         })
       ),
     },
