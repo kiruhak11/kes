@@ -9,6 +9,10 @@
     >
     </UiGoTop>
     <Footer />
+    <!-- SEO Schema.org разметка для всех страниц -->
+    <SEOSchema type="Organization" />
+    <!-- Дополнительные SEO теги -->
+    <AdditionalSEOTags pageType="home" />
   </div>
 </template>
 
@@ -73,10 +77,10 @@ onUnmounted(() => {
   height: 100vh;
   background: linear-gradient(120deg, #fff 0%, #f5f5f5 100%);
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
-    background: url('/images/hero4.png') center/cover no-repeat;
+    background: url("/images/hero4.png") center/cover no-repeat;
     opacity: 0.08;
     filter: blur(2px);
     pointer-events: none;

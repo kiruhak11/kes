@@ -44,7 +44,7 @@ export default defineNuxtConfig({
   // Основные стили с плавными переходами
   css: [
     "@/assets/styles/global/index.scss",
-    "@/assets/styles/smooth-transitions.scss"
+    "@/assets/styles/smooth-transitions.scss",
   ],
 
   // Runtime конфигурация
@@ -79,7 +79,7 @@ export default defineNuxtConfig({
 
   // Pinia конфигурация
   pinia: {
-    autoImports: ['defineStore', 'acceptHMRUpdate'],
+    autoImports: ["defineStore", "acceptHMRUpdate"],
   },
 
   // File storage конфигурация
@@ -91,6 +91,9 @@ export default defineNuxtConfig({
   // Конфигурация приложения с переходами
   app: {
     head: {
+      htmlAttrs: {
+        lang: "ru",
+      },
       link: [
         {
           rel: "preconnect",
@@ -101,11 +104,52 @@ export default defineNuxtConfig({
           href: "https://fonts.gstatic.com",
           crossorigin: "",
         },
+        {
+          rel: "dns-prefetch",
+          href: "https://kes-sib.ru",
+        },
+        {
+          rel: "preconnect",
+          href: "https://kes-sib.ru",
+        },
+      ],
+      meta: [
+        {
+          charset: "utf-8",
+        },
+        {
+          name: "viewport",
+          content: "width=device-width, initial-scale=1",
+        },
+        {
+          name: "format-detection",
+          content: "telephone=no",
+        },
+        {
+          name: "theme-color",
+          content: "#e31e24",
+        },
+        {
+          name: "msapplication-TileColor",
+          content: "#e31e24",
+        },
+        {
+          name: "apple-mobile-web-app-capable",
+          content: "yes",
+        },
+        {
+          name: "apple-mobile-web-app-status-bar-style",
+          content: "default",
+        },
+        {
+          name: "apple-mobile-web-app-title",
+          content: "КотлоЭнергоСнаб",
+        },
       ],
     },
     // Красивые переходы страниц
-    pageTransition: { name: 'page', mode: 'out-in' },
-    layoutTransition: { name: 'layout', mode: 'out-in' },
+    pageTransition: { name: "page", mode: "out-in" },
+    layoutTransition: { name: "layout", mode: "out-in" },
   },
 
   // Стандартные настройки

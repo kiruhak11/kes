@@ -158,21 +158,36 @@ import { contacts } from "~/data/contacts";
 import { useHead } from "nuxt/app";
 
 useHead({
-  title: "О заводе КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
+  title:
+    "О заводе КотлоЭнергоСнаб | Котельный завод КЭС — Производство котлов в Барнауле",
   meta: [
     {
       name: "description",
       content:
-        "О заводе КотлоЭнергоСнаб: производство котлов, котельного оборудования, монтаж, сервис, Барнаул.",
+        "О заводе КотлоЭнергоСнаб: производство водогрейных котлов КВр, КВа, КВз, паровых котлов, модульных котельных МКУ, теплообменников, дымососов, вентиляторов. Монтаж, сервис, проектирование котельного оборудования в Барнауле.",
     },
     {
       name: "keywords",
       content:
-        "КотлоЭнергоСнаб, о заводе, котельный завод, Барнаул, котлы, производство, монтаж, сервис",
+        "о заводе КотлоЭнергоСнаб, котельный завод, Барнаул, Алтайский край, производство котлов, водогрейные котлы, паровые котлы, модульные котельные, теплообменники, дымососы, вентиляторы, КВр, КВа, КВз, КВБр, КВс, КВТС, КВГМ, МКУ, ТКУ, КМТ, монтаж, сервис, проектирование, котельное оборудование",
     },
     {
       name: "author",
       content: "КотлоЭнергоСнаб",
+    },
+    {
+      name: "robots",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "googlebot",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "yandex",
+      content: "index, follow",
     },
     {
       property: "og:site_name",
@@ -180,12 +195,13 @@ useHead({
     },
     {
       property: "og:title",
-      content: "О заводе КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
+      content:
+        "О заводе КотлоЭнергоСнаб | Котельный завод КЭС — Производство котлов в Барнауле",
     },
     {
       property: "og:description",
       content:
-        "О заводе КотлоЭнергоСнаб: производство котлов, котельного оборудования, монтаж, сервис, Барнаул.",
+        "О заводе КотлоЭнергоСнаб: производство водогрейных котлов, паровых котлов, модульных котельных, теплообменников, дымососов, вентиляторов. Монтаж, сервис, проектирование котельного оборудования в Барнауле.",
     },
     {
       property: "og:type",
@@ -197,24 +213,41 @@ useHead({
     },
     {
       property: "og:image",
-      content: "/images/hero1.jpg",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
+    {
+      property: "og:image:width",
+      content: "1200",
+    },
+    {
+      property: "og:image:height",
+      content: "630",
+    },
+    {
+      property: "og:locale",
+      content: "ru_RU",
     },
     {
       name: "twitter:card",
       content: "summary_large_image",
     },
     {
+      name: "twitter:image",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
+    {
       name: "twitter:title",
-      content: "О заводе КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
+      content:
+        "О заводе КотлоЭнергоСнаб | Котельный завод КЭС — Производство котлов в Барнауле",
     },
     {
       name: "twitter:description",
       content:
-        "О заводе КотлоЭнергоСнаб: производство котлов, котельного оборудования, монтаж, сервис, Барнаул.",
+        "О заводе КотлоЭнергоСнаб: производство водогрейных котлов, паровых котлов, модульных котельных, теплообменников, дымососов, вентиляторов. Монтаж, сервис, проектирование котельного оборудования в Барнауле.",
     },
     {
-      name: "robots",
-      content: "index, follow",
+      name: "canonical",
+      content: "https://kes-sib.ru/about/",
     },
   ],
   link: [
@@ -227,16 +260,84 @@ useHead({
       rel: "canonical",
       href: "https://kes-sib.ru/about/",
     },
+    {
+      rel: "alternate",
+      hreflang: "ru",
+      href: "https://kes-sib.ru/about/",
+    },
   ],
   script: [
     {
       type: "application/ld+json",
       innerHTML: JSON.stringify({
-        "@context": "http://schema.org",
+        "@context": "https://schema.org",
         "@type": "Organization",
         name: "КотлоЭнергоСнаб",
+        alternateName: ["Котельный завод КЭС", "КЭС", "КотлоЭнергоСнаб"],
         url: "https://kes-sib.ru/",
-        logo: "https://kes-sib.ru/favicon.ico",
+        logo: "https://kes-sib.ru/logo.png",
+        description:
+          "Котельный завод КотлоЭнергоСнаб - производство котельного оборудования в Барнауле",
+        foundingDate: "2000",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Барнаул",
+          addressCountry: "RU",
+          addressRegion: "Алтайский край",
+          postalCode: "656000",
+        },
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: "+7-3852-555-555",
+          contactType: "customer service",
+          areaServed: "RU",
+          availableLanguage: "Russian",
+        },
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "Каталог котельного оборудования",
+          itemListElement: [
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Product",
+                name: "Водогрейные котлы",
+                description:
+                  "Водогрейные котлы КВр, КВа, КВз, КВБр, КВс, КВТС, КВГМ",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Product",
+                name: "Паровые котлы",
+                description:
+                  "Паровые котлы производительностью от 0,5 до 25 т/ч",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Product",
+                name: "Модульные котельные",
+                description: "Модульные котельные установки КМТ, МКУ, ТКУ",
+              },
+            },
+          ],
+        },
+        areaServed: {
+          "@type": "Country",
+          name: "Россия",
+        },
+        serviceArea: {
+          "@type": "GeoCircle",
+          geoMidpoint: {
+            "@type": "GeoCoordinates",
+            latitude: 53.3548,
+            longitude: 83.7698,
+          },
+          geoRadius: "10000",
+        },
       }),
     },
   ],

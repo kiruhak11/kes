@@ -150,6 +150,211 @@ definePageMeta({
   layout: "default",
 });
 
+// SEO Meta Tags для страницы продукта
+useHead({
+  title: computed(
+    () =>
+      `${product.value?.name || "Продукт"} | ${
+        categoryInfo.value?.title || "Категория"
+      } | КотлоЭнергоСнаб`
+  ),
+  meta: [
+    {
+      name: "description",
+      content: computed(
+        () =>
+          `${product.value?.name || "Продукт"} - ${
+            product.value?.description || "котельное оборудование"
+          } от КотлоЭнергоСнаб. ${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования. Производство, монтаж, сервис в Барнауле.`
+      ),
+    },
+    {
+      name: "keywords",
+      content: computed(
+        () =>
+          `${product.value?.name || "продукт"}, ${
+            categoryInfo.value?.title || "категория"
+          }, котельное оборудование, котлы, котельные, теплообменники, дымососы, вентиляторы, водогрейные котлы, паровые котлы, модульные котельные, КВр, КВа, КВз, МКУ, ТКУ, КМТ, производство, монтаж, Барнаул, Алтайский край, КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      name: "author",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      name: "robots",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "googlebot",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "yandex",
+      content: "index, follow",
+    },
+    {
+      property: "og:site_name",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      property: "og:title",
+      content: computed(
+        () =>
+          `${product.value?.name || "Продукт"} | ${
+            categoryInfo.value?.title || "Категория"
+          } | КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      property: "og:description",
+      content: computed(
+        () =>
+          `${product.value?.name || "Продукт"} - ${
+            product.value?.description || "котельное оборудование"
+          } от КотлоЭнергоСнаб. ${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования.`
+      ),
+    },
+    {
+      property: "og:type",
+      content: "product",
+    },
+    {
+      property: "og:url",
+      content: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${categorySlug}/${
+            product.value?.slug || "product"
+          }`
+      ),
+    },
+    {
+      property: "og:image",
+      content: computed(
+        () => product.value?.image || "https://kes-sib.ru/images/hero1.jpg"
+      ),
+    },
+    {
+      property: "og:image:width",
+      content: "1200",
+    },
+    {
+      property: "og:image:height",
+      content: "630",
+    },
+    {
+      property: "og:locale",
+      content: "ru_RU",
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:image",
+      content: computed(
+        () => product.value?.image || "https://kes-sib.ru/images/hero1.jpg"
+      ),
+    },
+    {
+      name: "twitter:title",
+      content: computed(
+        () =>
+          `${product.value?.name || "Продукт"} | ${
+            categoryInfo.value?.title || "Категория"
+          } | КотлоЭнергоСнаб`
+      ),
+    },
+    {
+      name: "twitter:description",
+      content: computed(
+        () =>
+          `${product.value?.name || "Продукт"} - ${
+            product.value?.description || "котельное оборудование"
+          } от КотлоЭнергоСнаб. ${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования.`
+      ),
+    },
+    {
+      name: "canonical",
+      content: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${categorySlug}/${
+            product.value?.slug || "product"
+          }`
+      ),
+    },
+    {
+      property: "product:price:amount",
+      content: computed(() => product.value?.price?.toString() || "0"),
+    },
+    {
+      property: "product:price:currency",
+      content: "RUB",
+    },
+  ],
+  link: [
+    {
+      rel: "icon",
+      href: "/favicon.ico",
+      type: "image/x-icon",
+    },
+    {
+      rel: "canonical",
+      href: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${categorySlug}/${
+            product.value?.slug || "product"
+          }`
+      ),
+    },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: computed(() =>
+        JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.value?.name || "Продукт",
+          description: product.value?.description || "Котельное оборудование",
+          category: categoryInfo.value?.title || "Категория",
+          brand: {
+            "@type": "Brand",
+            name: "КотлоЭнергоСнаб",
+          },
+          manufacturer: {
+            "@type": "Organization",
+            name: "КотлоЭнергоСнаб",
+            url: "https://kes-sib.ru/",
+          },
+          image: product.value?.image || "https://kes-sib.ru/images/hero1.jpg",
+          url: `https://kes-sib.ru/catalog/${categorySlug}/${
+            product.value?.slug || "product"
+          }`,
+          offers: {
+            "@type": "Offer",
+            price: product.value?.price || 0,
+            priceCurrency: "RUB",
+            availability: "https://schema.org/InStock",
+            seller: {
+              "@type": "Organization",
+              name: "КотлоЭнергоСнаб",
+            },
+          },
+        })
+      ),
+    },
+  ],
+});
+
 interface ProductType {
   id: number;
   name: string;

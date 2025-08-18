@@ -434,23 +434,38 @@ import BackIcon from "~/components/icons/back.vue";
 import NextIcon from "~/components/icons/next.vue";
 import TypeWriter from "~/components/TypeWriter.vue";
 import { contacts } from "~/data/contacts";
-// SEO Meta Tags
+// SEO Meta Tags для главной страницы
 useHead({
-  title: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
+  title:
+    "КотлоЭнергоСнаб — Котельный завод КЭС | Производство котлов в Барнауле",
   meta: [
     {
       name: "description",
       content:
-        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Производство, монтаж, сервис, проектирование, пуско-наладка.",
+        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Водогрейные котлы КВр, КВа, КВз, паровые котлы, модульные котельные МКУ, теплообменники, дымососы, вентиляторы. Производство, монтаж, сервис, проектирование, пуско-наладка котельного оборудования.",
     },
     {
       name: "keywords",
       content:
-        "КотлоЭнергоСнаб, котельный завод, котельное оборудование, котлы, модульные котельные, Барнаул, производство котлов, монтаж, пуско-наладка",
+        "котлы, котельное оборудование, водогрейные котлы, паровые котлы, модульные котельные, теплообменники, дымососы, вентиляторы, котельный завод, Барнаул, Алтайский край, производство котлов, монтаж котельного оборудования, пуско-наладка, КВр, КВа, КВз, КВБр, КВс, КВТС, КВГМ, МКУ, ТКУ, КМТ, котлы Братск, котлы Универсал, котлы Энергия",
     },
     {
       name: "author",
       content: "КотлоЭнергоСнаб",
+    },
+    {
+      name: "robots",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "googlebot",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "yandex",
+      content: "index, follow",
     },
     {
       property: "og:site_name",
@@ -458,12 +473,13 @@ useHead({
     },
     {
       property: "og:title",
-      content: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
+      content:
+        "КотлоЭнергоСнаб — Котельный завод КЭС | Производство котлов в Барнауле",
     },
     {
       property: "og:description",
       content:
-        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Производство, монтаж, сервис.",
+        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Водогрейные котлы, паровые котлы, модульные котельные, теплообменники.",
     },
     {
       property: "og:type",
@@ -475,25 +491,41 @@ useHead({
     },
     {
       property: "og:image",
-      content: "/images/hero1.jpg",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
+    {
+      property: "og:image:width",
+      content: "1200",
+    },
+    {
+      property: "og:image:height",
+      content: "630",
+    },
+    {
+      property: "og:locale",
+      content: "ru_RU",
     },
     {
       name: "twitter:card",
       content: "summary_large_image",
     },
-    { name: "twitter:image", content: "/images/hero1.jpg" },
+    {
+      name: "twitter:image",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
     {
       name: "twitter:title",
-      content: "КотлоЭнергоСнаб — Котельный завод КЭС Барнаул",
+      content:
+        "КотлоЭнергоСнаб — Котельный завод КЭС | Производство котлов в Барнауле",
     },
     {
       name: "twitter:description",
       content:
-        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле.",
+        "КотлоЭнергоСнаб — ведущий производитель котлов и котельного оборудования в Барнауле. Водогрейные котлы, паровые котлы, модульные котельные.",
     },
     {
-      name: "robots",
-      content: "index, follow",
+      name: "canonical",
+      content: "https://kes-sib.ru/",
     },
   ],
   link: [
@@ -506,36 +538,99 @@ useHead({
       rel: "canonical",
       href: "https://kes-sib.ru/",
     },
+    {
+      rel: "alternate",
+      hreflang: "ru",
+      href: "https://kes-sib.ru/",
+    },
   ],
   script: [
     {
       type: "application/ld+json",
       innerHTML: JSON.stringify({
-        "@context": "http://schema.org",
+        "@context": "https://schema.org",
         "@type": "Organization",
         name: "КотлоЭнергоСнаб",
-        alternateName: "Котельный завод КЭС",
+        alternateName: ["Котельный завод КЭС", "КЭС", "КотлоЭнергоСнаб"],
         url: "https://kes-sib.ru/",
-        logo: "https://kes-sib.ru/favicon.ico",
+        logo: "https://kes-sib.ru/logo.png",
         description:
-          "Ведущий производитель котлов и котельного оборудования в Барнауле",
+          "Ведущий производитель котлов и котельного оборудования в Барнауле. Специализация: водогрейные котлы, паровые котлы, модульные котельные, теплообменники, дымососы, вентиляторы.",
+        foundingDate: "2000",
         address: {
           "@type": "PostalAddress",
           addressLocality: "Барнаул",
           addressCountry: "RU",
           addressRegion: "Алтайский край",
+          postalCode: "656000",
         },
         contactPoint: {
           "@type": "ContactPoint",
           telephone: "+7-3852-555-555",
           contactType: "customer service",
           areaServed: "RU",
+          availableLanguage: "Russian",
         },
         sameAs: ["https://kes-sib.ru/"],
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           name: "Каталог котельного оборудования",
-          itemListElement: [],
+          itemListElement: [
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Product",
+                name: "Водогрейные котлы",
+                description:
+                  "Водогрейные котлы КВр, КВа, КВз, КВБр, КВс, КВТС, КВГМ",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Product",
+                name: "Паровые котлы",
+                description:
+                  "Паровые котлы производительностью от 0,5 до 25 т/ч",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Product",
+                name: "Модульные котельные",
+                description: "Модульные котельные установки КМТ, МКУ, ТКУ",
+              },
+            },
+          ],
+        },
+        areaServed: {
+          "@type": "Country",
+          name: "Россия",
+        },
+        serviceArea: {
+          "@type": "GeoCircle",
+          geoMidpoint: {
+            "@type": "GeoCoordinates",
+            latitude: 53.3548,
+            longitude: 83.7698,
+          },
+          geoRadius: "10000",
+        },
+      }),
+    },
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        description: "Официальный сайт котельного завода КотлоЭнергоСнаб",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: "https://kes-sib.ru/catalog?search={search_term_string}",
+          "query-input": "required name=search_term_string",
         },
       }),
     },

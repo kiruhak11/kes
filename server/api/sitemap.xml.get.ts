@@ -5,22 +5,16 @@ const prisma = new PrismaClient();
 export default defineEventHandler(async (event) => {
   try {
     // Получаем все категории
-    const categories = await prisma.category.findMany({
-      where: {
-        is_active: true,
-      },
+    const categories = await prisma.categories.findMany({
       orderBy: {
-        order: "asc",
+        display_order: "asc",
       },
     });
 
-    // Получаем все активные товары
-    const products = await prisma.product.findMany({
-      where: {
-        is_active: true,
-      },
+    // Получаем все товары
+    const products = await prisma.products.findMany({
       include: {
-        category: true,
+        categories: true,
       },
     });
 
@@ -46,19 +40,21 @@ export default defineEventHandler(async (event) => {
     xml += "    <priority>0.9</priority>\n";
     xml += "  </url>\n";
 
+    // Страница "О заводе"
+    xml += "  <url>\n";
+    xml += "    <loc>https://kes-sib.ru/about</loc>\n";
+    xml +=
+      "    <lastmod>" + new Date().toISOString().split("T")[0] + "</lastmod>\n";
+    xml += "    <changefreq>monthly</changefreq>\n";
+    xml += "    <priority>0.8</priority>\n";
+    xml += "  </url>\n";
+
     // Страницы категорий
     for (const category of categories) {
-      const categorySlug =
-        category.slug ||
-        category.name
-          ?.toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "") ||
-        "";
-      if (categorySlug) {
+      if (category.slug) {
         xml += "  <url>\n";
         xml +=
-          "    <loc>https://kes-sib.ru/catalog/" + categorySlug + "</loc>\n";
+          "    <loc>https://kes-sib.ru/catalog/" + category.slug + "</loc>\n";
         xml +=
           "    <lastmod>" +
           new Date().toISOString().split("T")[0] +
@@ -71,13 +67,16 @@ export default defineEventHandler(async (event) => {
 
     // Страницы товаров
     for (const product of products) {
-      if (product.slug && product.category?.slug) {
+      if (product.category_slug) {
         xml += "  <url>\n";
         xml +=
           "    <loc>https://kes-sib.ru/catalog/" +
-          product.category.slug +
+          product.category_slug +
           "/" +
-          product.slug +
+          (product.name
+            ?.toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, "") || `product-${product.id}`) +
           "</loc>\n";
         xml +=
           "    <lastmod>" +
