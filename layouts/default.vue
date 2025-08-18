@@ -9,14 +9,17 @@
     >
     </UiGoTop>
     <Footer />
-    <!-- SEO Schema.org разметка для всех страниц -->
-    <SEOSchema type="Organization" />
-    <!-- Дополнительные SEO теги -->
-    <AdditionalSEOTags pageType="home" />
+    <!-- Временно отключено для проверки стилей -->
+    <!-- <SEOSchema type="Organization" /> -->
+    <!-- <AdditionalSEOTags pageType="home" /> -->
   </div>
 </template>
 
 <script setup lang="ts">
+// Временно отключено для проверки стилей
+// import SEOSchema from '~/components/SEOSchema.vue';
+// import AdditionalSEOTags from '~/components/AdditionalSEOTags.vue';
+
 const goTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
