@@ -26,7 +26,12 @@
             <i class="fas fa-envelope"></i>
             <div class="contact-text">
               <p>E-mail:</p>
-              <a :href="`mailto:${contacts.email}`">{{ contacts.email }}</a>
+              <a
+                v-for="email in contacts.email"
+                :key="email"
+                :href="`mailto:${email}`"
+                >{{ email }}</a
+              >
             </div>
           </div>
 

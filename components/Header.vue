@@ -5,11 +5,11 @@
         <div class="header__top-content">
           <div class="header__contacts">
             <a href="mailto:{{ contacts.email }}" class="header__email">{{
-              contacts.email
+              contacts.email[0]
             }}</a>
             <div class="header__phones" v-if="contacts.phone.length > 0">
               <a
-                v-for="phone in contacts.phone"
+                v-for="phone in contacts.phone.slice(0, 2)"
                 :key="phone"
                 href="tel:{{ phone }}"
                 >{{ phone }}</a

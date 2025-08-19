@@ -145,9 +145,13 @@ if (fetchError.value) {
                   >{{ phone }}</a
                 >
               </div>
-              <a href="mailto:{{ contacts.email }}" class="footer__email">{{
-                contacts.email
-              }}</a>
+              <a
+                v-for="email in contacts.email"
+                :key="email"
+                :href="`mailto:${email}`"
+                class="footer__email"
+                >{{ email }}</a
+              >
               <NuxtLink to="/contact" class="btn footer__callback"
                 >Заказать звонок</NuxtLink
               >

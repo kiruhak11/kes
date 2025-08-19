@@ -5,7 +5,9 @@
     <FrogModal />
     <NuxtPage />
   </NuxtLayout>
-  <a href="https://webmaster.yandex.ru/siteinfo/?site=https://kes-sib.ru"
+  <a
+    class="yandex-counter"
+    href="https://webmaster.yandex.ru/siteinfo/?site=https://kes-sib.ru"
     ><img
       width="88"
       height="31"
@@ -55,6 +57,19 @@ if (process.client) {
 </script>
 
 <style lang="scss">
+.yandex-counter {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 1000;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.2s, opacity 0.2s;
+  &:hover {
+    visibility: visible;
+    opacity: 1;
+  }
+}
 // Переменные CSS перенесены в collection/_colors.scss
 // Базовые стили перенесены в global/_base.scss
 // Grid стили перенесены в отдельный файл

@@ -146,8 +146,14 @@
           >{{ phone }}</a
         >
       </div>
-      <p>
-        E-mail: <a :href="`mailto:${contacts.email}`">{{ contacts.email }}</a>
+      <p class="phones">
+        E-mail:
+        <a
+          v-for="email in contacts.email"
+          :key="email"
+          :href="`mailto:${email}`"
+          >{{ email }}</a
+        >
       </p>
     </div>
   </section>
