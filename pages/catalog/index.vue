@@ -65,39 +65,95 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue";
 
-// SEO Meta Tags
+// SEO Meta Tags для каталога
 useHead({
-  title: "Каталог продукции — КотлоЭнергоСнаб",
+  title:
+    "Каталог котельного оборудования | КотлоЭнергоСнаб — Котлы, котельные, теплообменники",
   meta: [
     {
       name: "description",
       content:
-        "Каталог котельного оборудования КотлоЭнергоСнаб. Котлы, котельные, теплообменники, водоподготовка. Производство и монтаж в Барнауле.",
+        "Каталог котельного оборудования КотлоЭнергоСнаб. Водогрейные котлы КВр, КВа, КВз, паровые котлы, модульные котельные МКУ, теплообменники, дымососы, вентиляторы, водоподготовка. Производство и монтаж в Барнауле.",
     },
     {
       name: "keywords",
       content:
-        "КотлоЭнергоСнаб, каталог, котельное оборудование, котлы, котельные, теплообменники, водоподготовка, Барнаул",
+        "каталог котельного оборудования, котлы, котельные, теплообменники, водоподготовка, водогрейные котлы, паровые котлы, модульные котельные, дымососы, вентиляторы, КВр, КВа, КВз, МКУ, Барнаул, КотлоЭнергоСнаб",
     },
-    { name: "author", content: "КотлоЭнергоСнаб" },
-    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
-    { property: "og:title", content: "Каталог продукции — КотлоЭнергоСнаб" },
+    {
+      name: "author",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      name: "robots",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "googlebot",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "yandex",
+      content: "index, follow",
+    },
+    {
+      property: "og:site_name",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      property: "og:title",
+      content:
+        "Каталог котельного оборудования | КотлоЭнергоСнаб — Котлы, котельные, теплообменники",
+    },
     {
       property: "og:description",
       content:
-        "Каталог котельного оборудования КотлоЭнергоСнаб. Котлы, котельные, теплообменники, водоподготовка. Производство и монтаж в Барнауле.",
+        "Каталог котельного оборудования КотлоЭнергоСнаб. Водогрейные котлы, паровые котлы, модульные котельные, теплообменники, дымососы, вентиляторы.",
     },
-    { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://kes-sib.ru/catalog" },
-    { property: "og:image", content: "/images/hero1.jpg" },
-    { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: "Каталог продукции — КотлоЭнергоСнаб" },
+    {
+      property: "og:type",
+      content: "website",
+    },
+    {
+      property: "og:url",
+      content: "https://kes-sib.ru/catalog",
+    },
+    {
+      property: "og:image",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
+    {
+      property: "og:image:width",
+      content: "1200",
+    },
+    {
+      property: "og:image:height",
+      content: "630",
+    },
+    {
+      property: "og:locale",
+      content: "ru_RU",
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:title",
+      content:
+        "Каталог котельного оборудования | КотлоЭнергоСнаб — Котлы, котельные, теплообменники",
+    },
     {
       name: "twitter:description",
       content:
-        "Каталог котельного оборудования КотлоЭнергоСнаб. Котлы, котельные, теплообменники, водоподготовка. Производство и монтаж в Барнауле.",
+        "Каталог котельного оборудования КотлоЭнергоСнаб. Водогрейные котлы, паровые котлы, модульные котельные, теплообменники.",
     },
-    { name: "robots", content: "index, follow" },
+    {
+      name: "canonical",
+      content: "https://kes-sib.ru/catalog",
+    },
   ],
   link: [
     { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },

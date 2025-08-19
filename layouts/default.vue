@@ -9,10 +9,17 @@
     >
     </UiGoTop>
     <Footer />
+    <!-- Временно отключено для проверки стилей -->
+    <!-- <SEOSchema type="Organization" /> -->
+    <!-- <AdditionalSEOTags pageType="home" /> -->
   </div>
 </template>
 
 <script setup lang="ts">
+// Временно отключено для проверки стилей
+// import SEOSchema from '~/components/SEOSchema.vue';
+// import AdditionalSEOTags from '~/components/AdditionalSEOTags.vue';
+
 const goTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
@@ -73,10 +80,10 @@ onUnmounted(() => {
   height: 100vh;
   background: linear-gradient(120deg, #fff 0%, #f5f5f5 100%);
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
-    background: url('/images/hero4.png') center/cover no-repeat;
+    background: url("/images/hero4.png") center/cover no-repeat;
     opacity: 0.08;
     filter: blur(2px);
     pointer-events: none;

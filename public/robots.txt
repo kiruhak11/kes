@@ -1,16 +1,18 @@
 User-agent: *
 Allow: /
 
-# Запрещаем индексацию админских страниц
+# Запрещаем индексацию служебных страниц
 Disallow: /admin
-Disallow: /admin-update-specs
+Disallow: /api
+Disallow: /_nuxt
+Disallow: /_ipx
+Disallow: /sw.js
+Disallow: /cart
+Disallow: /tmp
 Disallow: /test-files
-
-# Запрещаем индексацию API
-Disallow: /api/
+Disallow: /admin-update-specs
 
 # Разрешаем индексацию основных страниц
-Allow: /
 Allow: /catalog
 Allow: /about
 Allow: /contact
@@ -18,8 +20,36 @@ Allow: /certificates
 Allow: /vacancies
 Allow: /questionnaire
 
-# Sitemap
-Sitemap: https://kes-sib.ru/sitemap.xml
+# Специальные настройки для Яндекса
+User-agent: Yandex
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /_nuxt
+Disallow: /_ipx
+Disallow: /sw.js
+Disallow: /cart
+Disallow: /tmp
+Disallow: /test-files
+Disallow: /admin-update-specs
+Crawl-delay: 1
 
-# Crawl-delay для уважительного отношения к серверу
+# Специальные настройки для Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /_nuxt
+Disallow: /_ipx
+Disallow: /sw.js
+Disallow: /cart
+Disallow: /tmp
+Disallow: /test-files
+Disallow: /admin-update-specs
+Crawl-delay: 0.5
+
+# Указываем на динамический sitemap
+Sitemap: https://kes-sib.ru/api/sitemap.xml
+
+# Настройки для поисковых роботов
 Crawl-delay: 1 

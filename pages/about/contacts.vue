@@ -233,53 +233,128 @@
 <script setup>
 import { contacts } from "~/data/contacts";
 
-// SEO Meta Tags
+// SEO Meta Tags для страницы контактов
 useHead({
-  title: "Контакты заводе — КотлоЭнергоСнаб",
+  title:
+    "Контакты КотлоЭнергоСнаб | Котельный завод КЭС — Адрес, телефон, реквизиты в Барнауле",
   meta: [
     {
       name: "description",
       content:
-        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес, телефон, email, реквизиты. Котельный завод в Барнауле.",
+        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес: Барнаул, Алтайский край. Телефон, email, реквизиты. Котельный завод по производству котлов, котельного оборудования, теплообменников, дымососов, вентиляторов.",
     },
     {
       name: "keywords",
       content:
-        "КотлоЭнергоСнаб, контакты, адрес, телефон, реквизиты, Барнаул, котельный завод",
+        "контакты КотлоЭнергоСнаб, адрес котельного завода, телефон КЭС, реквизиты, Барнаул, Алтайский край, котельный завод, производство котлов, котельное оборудование, теплообменники, дымососы, вентиляторы",
     },
-    { name: "author", content: "КотлоЭнергоСнаб" },
-    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
-    { property: "og:title", content: "Контакты заводе — КотлоЭнергоСнаб" },
+    {
+      name: "author",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      name: "robots",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "googlebot",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "yandex",
+      content: "index, follow",
+    },
+    {
+      property: "og:site_name",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      property: "og:title",
+      content:
+        "Контакты КотлоЭнергоСнаб | Котельный завод КЭС — Адрес, телефон, реквизиты в Барнауле",
+    },
     {
       property: "og:description",
       content:
-        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес, телефон, email, реквизиты. Котельный завод в Барнауле.",
+        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес: Барнаул, Алтайский край. Телефон, email, реквизиты. Котельный завод по производству котельного оборудования.",
     },
-    { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://kes-sib.ru/about/contacts" },
-    { property: "og:image", content: "/images/hero1.jpg" },
-    { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: "Контакты заводе — КотлоЭнергоСнаб" },
+    {
+      property: "og:type",
+      content: "website",
+    },
+    {
+      property: "og:url",
+      content: "https://kes-sib.ru/about/contacts",
+    },
+    {
+      property: "og:image",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
+    {
+      property: "og:image:width",
+      content: "1200",
+    },
+    {
+      property: "og:image:height",
+      content: "630",
+    },
+    {
+      property: "og:locale",
+      content: "ru_RU",
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:image",
+      content: "https://kes-sib.ru/images/hero1.jpg",
+    },
+    {
+      name: "twitter:title",
+      content:
+        "Контакты КотлоЭнергоСнаб | Котельный завод КЭС — Адрес, телефон, реквизиты в Барнауле",
+    },
     {
       name: "twitter:description",
       content:
-        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес, телефон, email, реквизиты. Котельный завод в Барнауле.",
+        "Контактная информация ООО «КотлоЭнергоСнаб». Адрес: Барнаул, Алтайский край. Телефон, email, реквизиты. Котельный завод по производству котельного оборудования.",
     },
-    { name: "robots", content: "index, follow" },
+    {
+      name: "canonical",
+      content: "https://kes-sib.ru/about/contacts",
+    },
   ],
   link: [
-    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-    { rel: "canonical", href: "https://kes-sib.ru/about/contacts" },
+    {
+      rel: "icon",
+      href: "/favicon.ico",
+      type: "image/x-icon",
+    },
+    {
+      rel: "canonical",
+      href: "https://kes-sib.ru/about/contacts",
+    },
+    {
+      rel: "alternate",
+      hreflang: "ru",
+      href: "https://kes-sib.ru/about/contacts",
+    },
   ],
   script: [
     {
       type: "application/ld+json",
       innerHTML: JSON.stringify({
-        "@context": "http://schema.org",
+        "@context": "https://schema.org",
         "@type": "Organization",
         name: "КотлоЭнергоСнаб",
+        alternateName: ["Котельный завод КЭС", "КЭС", "КотлоЭнергоСнаб"],
         url: "https://kes-sib.ru/",
-        logo: "https://kes-sib.ru/favicon.ico",
+        logo: "https://kes-sib.ru/logo.png",
+        description:
+          "Котельный завод КотлоЭнергоСнаб - производство котельного оборудования в Барнауле",
         address: {
           "@type": "PostalAddress",
           streetAddress: "Бриллиантовая, 2е ст1, 1 этаж",
@@ -288,8 +363,28 @@ useHead({
           addressRegion: "Алтайский край",
           addressCountry: "RU",
         },
-        telephone: "+73852500000",
-        email: "info@kes-sib.ru",
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: "+73852500000",
+          email: "info@kes-sib.ru",
+          contactType: "customer service",
+          areaServed: "RU",
+          availableLanguage: "Russian",
+        },
+        sameAs: ["https://kes-sib.ru/"],
+        areaServed: {
+          "@type": "Country",
+          name: "Россия",
+        },
+        serviceArea: {
+          "@type": "GeoCircle",
+          geoMidpoint: {
+            "@type": "GeoCoordinates",
+            latitude: 53.3548,
+            longitude: 83.7698,
+          },
+          geoRadius: "10000",
+        },
       }),
     },
   ],

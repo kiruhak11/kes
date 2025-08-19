@@ -5,6 +5,15 @@
     <FrogModal />
     <NuxtPage />
   </NuxtLayout>
+  <a href="https://webmaster.yandex.ru/siteinfo/?site=https://kes-sib.ru"
+    ><img
+      width="88"
+      height="31"
+      alt=""
+      border="0"
+      border-radius="8"
+      src="https://yandex.ru/cycounter?https://kes-sib.ru&theme=light&lang=ru"
+  /></a>
 </template>
 
 <script setup lang="ts">

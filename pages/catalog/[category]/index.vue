@@ -877,8 +877,15 @@ useHead({
           }`
       ),
     },
-    { property: "og:image", content: "/images/hero1.jpg" },
+    {
+      property: "og:image",
+      content: computed(() => sliderImages.value[0] || "/images/hero1.jpg"),
+    },
     { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:image",
+      content: computed(() => sliderImages.value[0] || "/images/hero1.jpg"),
+    },
     {
       name: "twitter:title",
       content: computed(
@@ -1002,10 +1009,13 @@ const formatPrice = (price: number | null | undefined) => {
   }).format(price);
 };
 
-// SEO Meta Tags
+// SEO Meta Tags для страницы категории
 useHead({
   title: computed(
-    () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+    () =>
+      `${
+        categoryInfo.value?.title || "Категория"
+      } котельного оборудования | КотлоЭнергоСнаб — Производство в Барнауле`
   ),
   meta: [
     {
@@ -1016,7 +1026,7 @@ useHead({
             categoryInfo.value?.title || "Категория"
           } котельного оборудования КотлоЭнергоСнаб. ${
             categoryInfo.value?.description ||
-            "Производство и монтаж котельного оборудования в Барнауле."
+            "Производство, монтаж, сервис котельного оборудования в Барнауле. Водогрейные котлы, паровые котлы, модульные котельные, теплообменники, дымососы, вентиляторы."
           }`
       ),
     },
@@ -1024,17 +1034,40 @@ useHead({
       name: "keywords",
       content: computed(
         () =>
-          `КотлоЭнергоСнаб, ${
+          `${
             categoryInfo.value?.title || "категория"
-          }, котельное оборудование, котлы, Барнаул, производство`
+          }, котельное оборудование, котлы, котельные, теплообменники, дымососы, вентиляторы, водогрейные котлы, паровые котлы, модульные котельные, КВр, КВа, КВз, МКУ, ТКУ, КМТ, производство, монтаж, Барнаул, Алтайский край, КотлоЭнергоСнаб`
       ),
     },
-    { name: "author", content: "КотлоЭнергоСнаб" },
-    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    {
+      name: "author",
+      content: "КотлоЭнергоСнаб",
+    },
+    {
+      name: "robots",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "googlebot",
+      content:
+        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+    },
+    {
+      name: "yandex",
+      content: "index, follow",
+    },
+    {
+      property: "og:site_name",
+      content: "КотлоЭнергоСнаб",
+    },
     {
       property: "og:title",
       content: computed(
-        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования | КотлоЭнергоСнаб — Производство в Барнауле`
       ),
     },
     {
@@ -1045,11 +1078,14 @@ useHead({
             categoryInfo.value?.title || "Категория"
           } котельного оборудования КотлоЭнергоСнаб. ${
             categoryInfo.value?.description ||
-            "Производство и монтаж котельного оборудования в Барнауле."
+            "Производство, монтаж, сервис котельного оборудования в Барнауле."
           }`
       ),
     },
-    { property: "og:type", content: "website" },
+    {
+      property: "og:type",
+      content: "website",
+    },
     {
       property: "og:url",
       content: computed(
@@ -1059,12 +1095,41 @@ useHead({
           }`
       ),
     },
-    { property: "og:image", content: "/images/hero1.jpg" },
-    { name: "twitter:card", content: "summary_large_image" },
+    {
+      property: "og:image",
+      content: computed(
+        () => sliderImages.value[0] || "https://kes-sib.ru/images/hero1.jpg"
+      ),
+    },
+    {
+      property: "og:image:width",
+      content: "1200",
+    },
+    {
+      property: "og:image:height",
+      content: "630",
+    },
+    {
+      property: "og:locale",
+      content: "ru_RU",
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:image",
+      content: computed(
+        () => sliderImages.value[0] || "https://kes-sib.ru/images/hero1.jpg"
+      ),
+    },
     {
       name: "twitter:title",
       content: computed(
-        () => `${categoryInfo.value?.title || "Категория"} — КотлоЭнергоСнаб`
+        () =>
+          `${
+            categoryInfo.value?.title || "Категория"
+          } котельного оборудования | КотлоЭнергоСнаб — Производство в Барнауле`
       ),
     },
     {
@@ -1075,14 +1140,26 @@ useHead({
             categoryInfo.value?.title || "Категория"
           } котельного оборудования КотлоЭнергоСнаб. ${
             categoryInfo.value?.description ||
-            "Производство и монтаж котельного оборудования в Барнауле."
+            "Производство, монтаж, сервис котельного оборудования в Барнауле."
           }`
       ),
     },
-    { name: "robots", content: "index, follow" },
+    {
+      name: "canonical",
+      content: computed(
+        () =>
+          `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`
+      ),
+    },
   ],
   link: [
-    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    {
+      rel: "icon",
+      href: "/favicon.ico",
+      type: "image/x-icon",
+    },
     {
       rel: "canonical",
       href: computed(
@@ -1099,10 +1176,40 @@ useHead({
       innerHTML: computed(() =>
         JSON.stringify({
           "@context": "http://schema.org",
-          "@type": "Organization",
-          name: "КотлоЭнергоСнаб",
-          url: "https://kes-sib.ru/",
-          logo: "https://kes-sib.ru/favicon.ico",
+          "@type": "CollectionPage",
+          name:
+            categoryInfo.value?.title || "Категория котельного оборудования",
+          description:
+            categoryInfo.value?.description ||
+            "Категория котельного оборудования КотлоЭнергоСнаб",
+          url: `https://kes-sib.ru/catalog/${
+            categoryInfo.value?.slug || route.params.category
+          }`,
+          mainEntity: {
+            "@type": "ItemList",
+            numberOfItems: totalProducts.value,
+            itemListElement: paginatedProducts.value.map((product, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "Product",
+                name: product.name,
+                description: product.description,
+                image: product.image,
+                category: categoryInfo.value?.title,
+                brand: {
+                  "@type": "Brand",
+                  name: "КотлоЭнергоСнаб",
+                },
+              },
+            })),
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "КотлоЭнергоСнаб",
+            url: "https://kes-sib.ru/",
+            logo: "https://kes-sib.ru/favicon.ico",
+          },
         })
       ),
     },
