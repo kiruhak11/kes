@@ -48,6 +48,8 @@ export const useCartStore = defineStore(
           quantity: 1,
         });
       }
+      // @ts-ignore
+      ym(103178484, "reachGoal", "ADD_TO_CART");
     }
 
     function removeItem(productId: number): void {
@@ -57,6 +59,8 @@ export const useCartStore = defineStore(
       if (index > -1) {
         items.value.splice(index, 1);
       }
+      // @ts-ignore
+      ym(103178484, "reachGoal", "REMOVE_IN_CART");
     }
 
     function updateQuantity(productId: number, quantity: number): void {
@@ -83,6 +87,7 @@ export const useCartStore = defineStore(
     };
   },
   {
+    // @ts-ignore
     persist: true,
   }
 );

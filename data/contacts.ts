@@ -7,7 +7,7 @@ export interface ContactInfo {
   companyName: string;
   address: string;
   phone: string[];
-  email: string;
+  email: string[];
   workingHours: string;
 }
 
