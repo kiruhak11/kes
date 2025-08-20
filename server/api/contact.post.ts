@@ -1,30 +1,34 @@
 // server/api/contact.post.ts
 import { readBody, createError, defineEventHandler } from "h3";
-import { useRuntimeConfig } from "#imports";
 import prisma from "~/server/utils/prisma";
+
+// Жестко заданные значения для продакшена
+const TELEGRAM_CHAT_ID = "641028028";
+const TELEGRAM_BOT_TOKEN = "7965094541:AAGZdjXe0vOKCuCEdpu7BQ34jNaLEg0B40s";
 
 export default defineEventHandler(async (event) => {
   try {
-    const config = useRuntimeConfig();
-    const { telegramBotToken, telegramChatId } = config.public;
-
     // Детальная диагностика переменных окружения
     console.log("Environment check:", {
-      hasTelegramToken: !!telegramBotToken,
-      hasChatId: !!telegramChatId,
-      tokenLength: telegramBotToken?.length || 0,
-      chatIdLength: telegramChatId?.length || 0,
+      hasTelegramToken: !!TELEGRAM_BOT_TOKEN,
+      hasChatId: !!TELEGRAM_CHAT_ID,
+      tokenLength: TELEGRAM_BOT_TOKEN?.length || 0,
+      chatIdLength: TELEGRAM_CHAT_ID?.length || 0,
       nodeEnv: process.env.NODE_ENV,
       allEnvVars: Object.keys(process.env).filter((key) =>
         key.includes("TELEGRAM")
       ),
+      rawTelegramToken: process.env.TELEGRAM_BOT_TOKEN ? "EXISTS" : "MISSING",
+      rawChatId: process.env.TELEGRAM_CHAT_ID ? "EXISTS" : "MISSING",
     });
 
-    // Validate environment variables
-    if (!telegramBotToken || !telegramChatId) {
+    // Validate Telegram configuration
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
       console.error("Missing Telegram configuration:", {
-        hasTelegramToken: !!telegramBotToken,
-        hasChatId: !!telegramChatId,
+        hasTelegramToken: !!TELEGRAM_BOT_TOKEN,
+        hasChatId: !!TELEGRAM_CHAT_ID,
+        telegramBotToken: TELEGRAM_BOT_TOKEN ? "SET" : "NOT_SET",
+        telegramChatId: TELEGRAM_CHAT_ID ? "SET" : "NOT_SET",
       });
       throw createError({
         statusCode: 500,
@@ -65,17 +69,17 @@ export default defineEventHandler(async (event) => {
     }
 
     // формируем запрос к Telegram
-    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     const params = {
-      chat_id: telegramChatId,
+      chat_id: TELEGRAM_CHAT_ID,
       text: body.text,
       parse_mode: "HTML",
     };
 
     try {
       console.log("Sending to Telegram:", {
-        url: url.replace(telegramBotToken, "[REDACTED]"),
-        chatId: telegramChatId,
+        url: url.replace(TELEGRAM_BOT_TOKEN, "[REDACTED]"),
+        chatId: TELEGRAM_CHAT_ID,
         textLength: body.text.length,
       });
 
@@ -93,7 +97,7 @@ export default defineEventHandler(async (event) => {
     } catch (err: any) {
       console.error("Telegram API error:", {
         error: err,
-        url: url.replace(telegramBotToken, "[REDACTED]"),
+        url: url.replace(TELEGRAM_BOT_TOKEN, "[REDACTED]"),
         params: { ...params, text: "[REDACTED]" },
         statusCode: err.statusCode,
         statusMessage: err.statusMessage,
