@@ -111,6 +111,7 @@ export default defineNuxtConfig({
           innerHTML: `<div><img src="https://mc.yandex.ru/watch/103178484" style="position:absolute; left:-9999px;" alt="" /></div>`,
         },
       ],
+      // @ts-ignore
       __dangerouslyDisableSanitizersByTagID: {
         "yandex-metrika": ["innerHTML"],
         "yandex-metrika-noscript": ["innerHTML"],
