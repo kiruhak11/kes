@@ -9,13 +9,15 @@ export default defineEventHandler(async (event) => {
     const { telegramBotToken, telegramChatId } = config.public;
 
     // Детальная диагностика переменных окружения
-    console.log('Environment check:', {
+    console.log("Environment check:", {
       hasTelegramToken: !!telegramBotToken,
       hasChatId: !!telegramChatId,
       tokenLength: telegramBotToken?.length || 0,
       chatIdLength: telegramChatId?.length || 0,
       nodeEnv: process.env.NODE_ENV,
-      allEnvVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM'))
+      allEnvVars: Object.keys(process.env).filter((key) =>
+        key.includes("TELEGRAM")
+      ),
     });
 
     // Validate environment variables
@@ -56,9 +58,9 @@ export default defineEventHandler(async (event) => {
       };
       await prisma.requests.create({ data: requestData });
       dbSuccess = true;
-      console.log('Request saved to database successfully');
+      console.log("Request saved to database successfully");
     } catch (dbError: any) {
-      console.error('Database error:', dbError);
+      console.error("Database error:", dbError);
       // Продолжаем выполнение даже если БД недоступна
     }
 
@@ -71,22 +73,22 @@ export default defineEventHandler(async (event) => {
     };
 
     try {
-      console.log('Sending to Telegram:', {
-        url: url.replace(telegramBotToken, '[REDACTED]'),
+      console.log("Sending to Telegram:", {
+        url: url.replace(telegramBotToken, "[REDACTED]"),
         chatId: telegramChatId,
-        textLength: body.text.length
+        textLength: body.text.length,
       });
 
       const result = await $fetch(url, {
         method: "POST",
         body: params,
       });
-      
-      return { 
-        ok: true, 
+
+      return {
+        ok: true,
         result,
         savedToDb: dbSuccess,
-        telegramSent: true
+        telegramSent: true,
       };
     } catch (err: any) {
       console.error("Telegram API error:", {
@@ -95,20 +97,21 @@ export default defineEventHandler(async (event) => {
         params: { ...params, text: "[REDACTED]" },
         statusCode: err.statusCode,
         statusMessage: err.statusMessage,
-        message: err.message
+        message: err.message,
       });
-      
+
       // Если заявка сохранена в БД, возвращаем частичный успех
       if (dbSuccess) {
         return {
           ok: true,
-          message: 'Request saved to database, but Telegram notification failed',
+          message:
+            "Request saved to database, but Telegram notification failed",
           savedToDb: true,
           telegramSent: false,
-          telegramError: err.message
+          telegramError: err.message,
         };
       }
-      
+
       throw createError({
         statusCode: err.statusCode || 502,
         statusMessage: `Telegram API Error: ${err.message}`,
@@ -116,12 +119,12 @@ export default defineEventHandler(async (event) => {
     }
   } catch (e: any) {
     console.error("POST /api/contact error:", e);
-    
+
     // Если это ошибка валидации, возвращаем 400
     if (e.statusCode === 400) {
       throw e;
     }
-    
+
     // Для остальных ошибок возвращаем 500
     throw createError({
       statusCode: e.statusCode || 500,
