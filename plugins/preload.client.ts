@@ -72,8 +72,8 @@ export default defineNuxtPlugin(() => {
   // Предзагрузка API данных
   const preloadAPIData = (route: string) => {
     const apiRoutes = {
-      "/catalog": ["/api/categories", "/api/products/featured"],
-      "/": ["/api/categories", "/api/products/popular"],
+      "/catalog": ["/api/categories"],
+      "/": ["/api/categories"],
     };
 
     const apis = apiRoutes[route as keyof typeof apiRoutes];

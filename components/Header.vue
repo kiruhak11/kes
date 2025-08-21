@@ -53,20 +53,13 @@
                       <div class="product-details">
                         <div class="product-main">
                           <span class="product-name">{{ product.name }}</span>
-                          <span class="product-price"
-                            >{{
-                              product.price
-                                .toLocaleString()
-                                .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <= 1000
+                          <span class="product-price">
+                            {{
+                              product.price <= 1000
                                 ? "Цена по запросу"
-                                : product.price.toLocaleString() + " ₽"
+                                : formatPrice(product.price) + " ₽"
                             }}
-                            <span
-                              v-if="product.price.toLocaleString() != 1"
-                              class="currency"
-                              >₽</span
-                            ></span
-                          >
+                          </span>
                         </div>
                         <div class="product-specs" v-if="product.specs">
                           <span
@@ -123,7 +116,7 @@
                 <div class="cart-icon-wrapper">
                   <span class="cart-icon"><IconsCart /></span>
                   <client-only>
-                    <span class="cart-count">{{ cartCount }}</span>
+                    <span class="cart-count">{{ cartStore.totalItems }}</span>
                   </client-only>
                 </div>
               </NuxtLink>
@@ -146,6 +139,35 @@
               />
             </NuxtLink>
           </div>
+
+          <!-- Анимированные лозунги -->
+          <div class="header__slogans" v-if="!$device.isMobile">
+            <TypeWriter
+              :phrases="[
+                'Закажите котельную или котлы под ключ со скидкой! Ваше тепло — наша гарантия.',
+                'Экономить на цене, а не на качестве! Профессиональные котлы и котельные теперь доступнее.',
+              ]"
+              :typing-speed="50"
+              :deleting-speed="30"
+              :pause-time="3000"
+              :start-delay="500"
+            />
+          </div>
+
+          <!-- Мобильные лозунги -->
+          <div class="mobile-slogans" v-if="$device.isMobile">
+            <TypeWriter
+              :phrases="[
+                'Закажите котельную со скидкой!',
+                'Экономьте на цене, не на качестве!',
+              ]"
+              :typing-speed="50"
+              :deleting-speed="40"
+              :pause-time="2500"
+              :start-delay="500"
+            />
+          </div>
+
           <div v-if="$device.isMobile" class="mobile-header-actions">
             <button class="mobile-search-btn" @click="showMobileSearch = true">
               <IconsSearch />
@@ -226,6 +248,18 @@
                     </NuxtLink>
                   </li>
                   <li>
+                    <button
+                      class="mobile-menu-item mobile-discount-btn"
+                      @click="
+                        showDiscountModal = true;
+                        showMobileMenu = false;
+                      "
+                    >
+                      <span class="menu-icon">🎁</span>
+                      <span>Получить скидку</span>
+                    </button>
+                  </li>
+                  <li>
                     <NuxtLink
                       to="/questionnaire"
                       @click="showMobileMenu = false"
@@ -303,20 +337,13 @@
                         <div class="product-details">
                           <div class="product-main">
                             <span class="product-name">{{ product.name }}</span>
-                            <span class="product-price"
-                              >{{
-                                product.price
-                                  .toLocaleString()
-                                  .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <= 1000
+                            <span class="product-price">
+                              {{
+                                product.price <= 1000
                                   ? "Цена по запросу"
-                                  : product.price.toLocaleString() + " ₽"
+                                  : formatPrice(product.price) + " ₽"
                               }}
-                              <span
-                                v-if="product.price.toLocaleString() != 1"
-                                class="currency"
-                                >₽</span
-                              ></span
-                            >
+                            </span>
                           </div>
                           <div class="product-specs" v-if="product.specs">
                             <span
@@ -372,11 +399,218 @@
         </div>
       </div>
     </div>
+
+    <!-- Модальное окно "Получить скидку" -->
+    <Transition name="modal-fade">
+      <div
+        v-if="showDiscountModal"
+        class="discount-modal-overlay"
+        @click="showDiscountModal = false"
+      >
+        <div class="discount-modal-content" @click.stop>
+          <div class="discount-modal-header">
+            <h2 class="discount-modal-title">Получить скидку</h2>
+            <button
+              class="discount-modal-close"
+              @click="showDiscountModal = false"
+            >
+              ×
+            </button>
+          </div>
+          <div class="discount-modal-body">
+            <div class="discount-info">
+              <div class="promotional-slogans">
+                <div class="slogan-item">
+                  <p class="slogan-text">
+                    Закажите котельную или котлы под ключ со скидкой! Ваше тепло
+                    — наша гарантия.
+                  </p>
+                </div>
+                <div class="slogan-item">
+                  <p class="slogan-text">
+                    Экономить на цене, а не на качестве! Профессиональные котлы
+                    и котельные теперь доступнее.
+                  </p>
+                </div>
+              </div>
+              <p class="discount-description">
+                Свяжитесь с нами любым удобным способом, и мы предложим вам
+                специальные условия и скидки на нашу продукцию!
+              </p>
+            </div>
+
+            <div class="contacts-section">
+              <h3 class="contacts-title">Наши контакты</h3>
+
+              <div class="contact-item">
+                <div class="contact-info">
+                  <div class="contact-label">Телефоны:</div>
+                  <div class="contact-values">
+                    <a
+                      v-for="phone in contacts.phone"
+                      :key="phone"
+                      :href="`tel:${phone}`"
+                      class="contact-link"
+                    >
+                      {{ phone }}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-info">
+                  <div class="contact-label">Email:</div>
+                  <div class="contact-values">
+                    <a
+                      v-for="email in contacts.email"
+                      :key="email"
+                      :href="`mailto:${email}`"
+                      class="contact-link"
+                    >
+                      {{ email }}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-info">
+                  <div class="contact-label">Адрес:</div>
+                  <div class="contact-value">{{ contacts.address }}</div>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-info">
+                  <div class="contact-label">Режим работы:</div>
+                  <div class="contact-value">{{ contacts.workingHours }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="discount-cta">
+              <p class="cta-text">
+                Не упустите возможность получить выгодное предложение!
+              </p>
+            </div>
+          </div>
+
+          <div class="discount-modal-footer">
+            <button
+              class="discount-modal-btn primary"
+              @click="showDiscountModal = false"
+            >
+              Закрыть
+            </button>
+            <a :href="`/contact`" class="discount-modal-btn secondary">
+              Заказать звонок
+            </a>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Плавающий блок скидки -->
+    <div class="floating-discount" @click="showDiscountModal = true">
+      <div class="floating-discount-content">
+        <div class="gift-icon">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            class="gift-svg"
+          >
+            <!-- Подарочная коробка -->
+            <rect
+              x="3"
+              y="11"
+              width="18"
+              height="10"
+              rx="1"
+              stroke="white"
+              stroke-width="1.5"
+              fill="rgba(255,255,255,0.1)"
+            />
+            <!-- Крышка -->
+            <rect
+              x="4"
+              y="9"
+              width="16"
+              height="3"
+              rx="0.5"
+              stroke="white"
+              stroke-width="1.5"
+              fill="white"
+            />
+            <!-- Лента вертикальная -->
+            <rect
+              x="11"
+              y="9"
+              width="2"
+              height="12"
+              fill="rgba(255,255,255,0.8)"
+            />
+            <!-- Лента горизонтальная -->
+            <rect
+              x="4"
+              y="14"
+              width="16"
+              height="2"
+              fill="rgba(255,255,255,0.8)"
+            />
+            <!-- Бантик -->
+            <path
+              d="M8 6 C8 4, 10 4, 10 6 C10 4, 12 4, 12 6 C12 4, 14 4, 14 6 C14 4, 16 4, 16 6 C16 8, 14 8, 14 6 C14 8, 12 8, 12 6 C12 8, 10 8, 10 6 C10 8, 8 8, 8 6 Z"
+              fill="white"
+              stroke="none"
+              class="bow-animation"
+            />
+            <!-- Блестки для украшения -->
+            <circle
+              cx="7"
+              cy="17"
+              r="0.5"
+              fill="rgba(255,255,255,0.8)"
+              class="sparkle sparkle-1"
+            />
+            <circle
+              cx="17"
+              cy="13"
+              r="0.5"
+              fill="rgba(255,255,255,0.8)"
+              class="sparkle sparkle-2"
+            />
+            <circle
+              cx="6"
+              cy="20"
+              r="0.5"
+              fill="rgba(255,255,255,0.8)"
+              class="sparkle sparkle-3"
+            />
+            <circle
+              cx="18"
+              cy="19"
+              r="0.3"
+              fill="rgba(255,255,255,0.6)"
+              class="sparkle sparkle-4"
+            />
+          </svg>
+        </div>
+        <div class="discount-text">
+          <span class="discount-title">Скидка</span>
+          <span class="discount-subtitle">до 15%</span>
+        </div>
+      </div>
+      <div class="floating-discount-pulse"></div>
+    </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
 import { useCartStore } from "~/stores/cart";
 import { contacts } from "~/data/contacts";
 import type { Ref } from "vue";
@@ -418,9 +652,9 @@ const transliterate = (text: string): string => {
     ч: "ch",
     ш: "sh",
     щ: "sch",
-    ъ: "",
+    ъ: "-",
     ы: "y",
-    ь: "",
+    ь: "-",
     э: "e",
     ю: "yu",
     я: "ya",
@@ -451,9 +685,9 @@ const transliterate = (text: string): string => {
     Ч: "Ch",
     Ш: "Sh",
     Щ: "Sch",
-    Ъ: "",
+    Ъ: "-",
     Ы: "Y",
-    Ь: "",
+    Ь: "-",
     Э: "E",
     Ю: "Yu",
     Я: "Ya",
@@ -463,7 +697,6 @@ const transliterate = (text: string): string => {
     .map((char) => mapping[char] || char)
     .join("");
 };
-
 const generateProductSlug = (product: { name?: string | null }): string => {
   if (!product || !product.name) return "";
   return transliterate(product.name)
@@ -534,13 +767,14 @@ const showSearchResults = ref(false);
 const cartCount: Ref<number> = ref(0);
 const isHydrated: Ref<boolean> = ref(false);
 const showMobileSearch = ref(false);
+const showDiscountModal = ref(false);
 
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
 
 // Получаем список товаров из API
-const { data: fetchedProducts, error: fetchError } = await useFetch<{
+const { data: fetchedProducts, error: fetchError } = useFetch<{
   products: ApiProduct[];
 }>("/api/products", {
   transform: (response) => {
@@ -551,7 +785,14 @@ const { data: fetchedProducts, error: fetchError } = await useFetch<{
     return response;
   },
 });
-
+const formatPrice = (price: number | null | undefined) => {
+  if (!price) return "0";
+  return new Intl.NumberFormat("ru-RU", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 // Инициализируем список товаров
 const products = ref<Product[]>([]);
 
@@ -721,26 +962,51 @@ const selectBoiler = (boiler: Boiler) => {
 
 // Обработчик ввода в поле поиска
 const handleSearchInput = () => {
-  showSearchResults.value = true;
+  // Добавляем небольшую задержку для корректной работы с быстрым вводом
+  nextTick(() => {
+    if (searchQuery.value.trim().length > 0) {
+      showSearchResults.value = true;
+    }
+  });
 };
+
+// Сохраняем ссылку на функцию обработчика
+let searchClickHandler: ((e: MouseEvent) => void) | null = null;
 
 // Закрываем результаты поиска при клике вне
 function closeSearchOnOutsideClick(e: MouseEvent) {
   const target = e.target as HTMLElement;
-  if (!target.closest(".search-container")) {
+  // Проверяем, что клик не по элементам поиска
+  if (
+    !target.closest(".search-container") &&
+    !target.closest(".mobile-search-modal") &&
+    !target.closest(".search-results-mobile")
+  ) {
     showSearchResults.value = false;
   }
 }
 
 onMounted(() => {
-  document.addEventListener("click", closeSearchOnOutsideClick);
+  // Создаем функцию обработчика
+  searchClickHandler = closeSearchOnOutsideClick;
+
+  // Добавляем обработчики с некоторой задержкой для корректной инициализации
+  nextTick(() => {
+    if (searchClickHandler) {
+      document.addEventListener("click", searchClickHandler, { passive: true });
+    }
+  });
+
   loadBoilers(); // Загружаем котлы при монтировании компонента
   isHydrated.value = true;
-  cartCount.value = cartStore.totalItems;
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener("click", closeSearchOnOutsideClick);
+  // Удаляем слушатель при размонтировании
+  if (searchClickHandler) {
+    document.removeEventListener("click", searchClickHandler);
+    searchClickHandler = null;
+  }
 });
 </script>
 
@@ -999,6 +1265,24 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 15px;
+
+  @media (max-width: 1200px) {
+    gap: 12px;
+  }
+
+  @media (max-width: 1000px) {
+    gap: 10px;
+  }
+
+  @media (max-width: 875px) {
+    gap: 8px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0;
+  }
 }
 
 .header__logo img {
@@ -1402,7 +1686,7 @@ onBeforeUnmount(() => {
   }
 
   .product-price {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: #e31e24;
     white-space: nowrap;
@@ -1713,6 +1997,728 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Стили для анимированных лозунгов */
+.header__slogans {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  margin: 0 20px;
+  padding: 0 15px;
+
+  @media (max-width: 1200px) {
+    margin: 0 15px;
+  }
+
+  @media (max-width: 1000px) {
+    margin: 0 10px;
+  }
+
+  @media (max-width: 875px) {
+    margin: 0 5px;
+    padding: 0 10px;
+  }
+}
+
+.header__slogans .typewriter {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+
+  @media (max-width: 1200px) {
+    font-size: 12px;
+  }
+
+  @media (max-width: 1000px) {
+    font-size: 10px;
+  }
+
+  @media (max-width: 875px) {
+    font-size: 8px;
+  }
+}
+
+.header__slogans .dynamic-text {
+  color: #e31e24;
+  font-weight: 700;
+}
+
+.header__slogans .cursor {
+  color: #e31e24;
+  font-weight: 600;
+}
+
+/* Стили для мобильных лозунгов */
+.mobile-slogans {
+  padding: 8px 16px;
+  text-align: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.mobile-slogans .typewriter {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.3;
+}
+
+.mobile-slogans .dynamic-text {
+  color: #e31e24;
+  font-weight: 700;
+}
+
+.mobile-slogans .cursor {
+  color: #e31e24;
+  font-weight: 600;
+}
+
+/* Стили для кнопки "Получить скидку" */
+.header__discount-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e31e24;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+
+  @media (max-width: 1050px) {
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+
+  @media (max-width: 1000px) {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  @media (max-width: 875px) {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(227, 30, 36, 0.4);
+    background: #c41e24;
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(227, 30, 36, 0.3);
+  }
+}
+
+/* Стили для мобильной кнопки скидки */
+.mobile-discount-btn {
+  background: linear-gradient(135deg, #e31e24 0%, #c41e24 100%) !important;
+  color: white !important;
+  border-left-color: #e31e24 !important;
+  border-radius: 8px;
+  margin: 0 12px;
+  box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
+
+  &:hover {
+    background: linear-gradient(135deg, #c41e24 0%, #a41e24 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(227, 30, 36, 0.3);
+    transform: translateX(4px);
+  }
+
+  .menu-icon {
+    color: white !important;
+    font-size: 18px;
+  }
+}
+
+.discount-btn-text {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.discount-btn-icon {
+  font-size: 16px;
+  animation: bounce 2s infinite;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Стили для модального окна */
+.discount-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.discount-modal-content {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.discount-modal-header {
+  background: linear-gradient(135deg, #e31e24 0%, #c41e24 100%);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff6b6b, #e31e24, #c41e24);
+  }
+}
+
+.discount-modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+  }
+}
+
+.discount-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+}
+
+.discount-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: 60vh;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+}
+
+.discount-info {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.promotional-slogans {
+  margin-bottom: 20px;
+}
+
+.slogan-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  border: 2px solid #e31e24;
+  box-shadow: 0 4px 12px rgba(227, 30, 36, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(227, 30, 36, 0.15);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.slogan-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.slogan-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
+}
+
+.discount-description {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+}
+
+.contacts-section {
+  margin-bottom: 24px;
+}
+
+.contacts-title {
+  font-size: 1.3rem;
+  color: #333;
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+  }
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #e31e24;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f0f2f5;
+    transform: translateX(4px);
+  }
+}
+
+.contact-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.contact-info {
+  flex: 1;
+}
+
+.contact-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+
+.contact-values {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-value {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.contact-link {
+  color: #e31e24;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #c41e24;
+    text-decoration: underline;
+  }
+}
+
+.discount-cta {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 2px dashed #e31e24;
+}
+
+.cta-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.discount-modal-footer {
+  padding: 20px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    padding: 20px;
+  }
+}
+
+.discount-modal-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 120px;
+
+  &.primary {
+    background: #e31e24;
+    color: white;
+
+    &:hover {
+      background: #c41e24;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.secondary {
+    background: white;
+    color: #e31e24;
+    border: 2px solid #e31e24;
+
+    &:hover {
+      background: #e31e24;
+      color: white;
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 14px 24px;
+  }
+}
+
+/* Анимации для модального окна */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .discount-modal-content,
+.modal-fade-leave-to .discount-modal-content {
+  transform: scale(0.9) translateY(-20px);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Стили для плавающего блока скидки */
+.floating-discount {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #e31e24 0%, #c41e24 100%);
+  border-radius: 20px;
+  cursor: pointer;
+  z-index: 1500;
+  box-shadow: 0 8px 25px rgba(227, 30, 36, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  animation: floatIn 0.8s ease-out, breathe 3s ease-in-out infinite 2s;
+
+  @media (max-width: 768px) {
+    width: 70px;
+    height: 70px;
+    bottom: 20px;
+    left: 20px;
+    border-radius: 16px;
+  }
+
+  &:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 35px rgba(227, 30, 36, 0.5);
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(0.98);
+  }
+}
+
+.floating-discount-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.gift-icon {
+  margin-bottom: 2px;
+  animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+
+  @media (max-width: 768px) {
+    .gift-svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.gift-svg {
+  width: 28px;
+  height: 28px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  }
+}
+
+.discount-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  text-align: center;
+}
+
+.discount-title {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  @media (max-width: 768px) {
+    font-size: 9px;
+  }
+}
+
+.discount-subtitle {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 1px;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
+}
+
+.floating-discount-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background: rgba(227, 30, 36, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+  z-index: 1;
+
+  @media (max-width: 768px) {
+    border-radius: 16px;
+  }
+}
+
+/* Анимации для плавающего блока */
+@keyframes floatIn {
+  0% {
+    opacity: 0;
+    transform: translateY(100px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Анимации для SVG элементов */
+.bow-animation {
+  animation: bowFloat 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.sparkle {
+  animation: sparkleShine 2s ease-in-out infinite;
+}
+
+.sparkle-1 {
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  animation-delay: 0.5s;
+}
+
+.sparkle-3 {
+  animation-delay: 1s;
+}
+
+.sparkle-4 {
+  animation-delay: 1.5s;
+}
+
+@keyframes bowFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-1px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-0.5px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-1px) rotate(-2deg);
+  }
+}
+
+@keyframes sparkleShine {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
 .mobile-header-actions {
   display: flex;
   align-items: center;
@@ -1870,7 +2876,7 @@ onBeforeUnmount(() => {
 }
 
 .search-result-item .product-price {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
   color: #e31e24;
   white-space: nowrap;

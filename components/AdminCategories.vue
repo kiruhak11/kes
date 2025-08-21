@@ -508,9 +508,9 @@ const transliterate = (text: string): string => {
     ч: "ch",
     ш: "sh",
     щ: "sch",
-    ъ: "",
+    ъ: "-",
     ы: "y",
-    ь: "",
+    ь: "-",
     э: "e",
     ю: "yu",
     я: "ya",
@@ -541,9 +541,9 @@ const transliterate = (text: string): string => {
     Ч: "Ch",
     Ш: "Sh",
     Щ: "Sch",
-    Ъ: "",
+    Ъ: "-",
     Ы: "Y",
-    Ь: "",
+    Ь: "-",
     Э: "E",
     Ю: "Yu",
     Я: "Ya",
@@ -769,9 +769,7 @@ async function saveOrder() {
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .category-card:hover {
   transform: translateY(-2px);

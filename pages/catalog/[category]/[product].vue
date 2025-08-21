@@ -50,6 +50,8 @@
               :description="product.description"
               :display-specs="displaySpecs"
               :is-mobile="true"
+              @scroll-to-description="scrollToDescription"
+              @switch-to-specs="switchToSpecs"
             />
 
             <ProductActions :product="product" :category-slug="categorySlug" />
@@ -151,181 +153,157 @@ definePageMeta({
 });
 
 // SEO Meta Tags для страницы продукта
-useHead({
-  title: computed(
-    () =>
-      `${product.value?.name || "Продукт"} | ${
-        categoryInfo.value?.title || "Категория"
-      } | КотлоЭнергоСнаб`
-  ),
-  meta: [
-    {
-      name: "description",
-      content: computed(
-        () =>
-          `${product.value?.name || "Продукт"} - ${
-            product.value?.description || "котельное оборудование"
-          } от КотлоЭнергоСнаб. ${
-            categoryInfo.value?.title || "Категория"
-          } котельного оборудования. Производство, монтаж, сервис в Барнауле.`
-      ),
-    },
-    {
-      name: "keywords",
-      content: computed(
-        () =>
-          `${product.value?.name || "продукт"}, ${
-            categoryInfo.value?.title || "категория"
-          }, котельное оборудование, котлы, котельные, теплообменники, дымососы, вентиляторы, водогрейные котлы, паровые котлы, модульные котельные, КВр, КВа, КВз, МКУ, ТКУ, КМТ, производство, монтаж, Барнаул, Алтайский край, КотлоЭнергоСнаб`
-      ),
-    },
-    {
-      name: "author",
-      content: "КотлоЭнергоСнаб",
-    },
-    {
-      name: "robots",
-      content:
-        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
-    },
-    {
-      name: "googlebot",
-      content:
-        "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
-    },
-    {
-      name: "yandex",
-      content: "index, follow",
-    },
-    {
-      property: "og:site_name",
-      content: "КотлоЭнергоСнаб",
-    },
-    {
-      property: "og:title",
-      content: computed(
-        () =>
-          `${product.value?.name || "Продукт"} | ${
-            categoryInfo.value?.title || "Категория"
-          } | КотлоЭнергоСнаб`
-      ),
-    },
-    {
-      property: "og:description",
-      content: computed(
-        () =>
-          `${product.value?.name || "Продукт"} - ${
-            product.value?.description || "котельное оборудование"
-          } от КотлоЭнергоСнаб. ${
-            categoryInfo.value?.title || "Категория"
-          } котельного оборудования.`
-      ),
-    },
-    {
-      property: "og:type",
-      content: "product",
-    },
-    {
-      property: "og:url",
-      content: computed(
-        () =>
-          `https://kes-sib.ru/catalog/${categorySlug}/${
-            product.value?.slug || "product"
-          }`
-      ),
-    },
-    {
-      property: "og:image",
-      content: computed(
-        () => product.value?.image || "https://kes-sib.ru/images/hero1.jpg"
-      ),
-    },
-    {
-      property: "og:image:width",
-      content: "1200",
-    },
-    {
-      property: "og:image:height",
-      content: "630",
-    },
-    {
-      property: "og:locale",
-      content: "ru_RU",
-    },
-    {
-      name: "twitter:card",
-      content: "summary_large_image",
-    },
-    {
-      name: "twitter:image",
-      content: computed(
-        () => product.value?.image || "https://kes-sib.ru/images/hero1.jpg"
-      ),
-    },
-    {
-      name: "twitter:title",
-      content: computed(
-        () =>
-          `${product.value?.name || "Продукт"} | ${
-            categoryInfo.value?.title || "Категория"
-          } | КотлоЭнергоСнаб`
-      ),
-    },
-    {
-      name: "twitter:description",
-      content: computed(
-        () =>
-          `${product.value?.name || "Продукт"} - ${
-            product.value?.description || "котельное оборудование"
-          } от КотлоЭнергоСнаб. ${
-            categoryInfo.value?.title || "Категория"
-          } котельного оборудования.`
-      ),
-    },
-    {
-      name: "canonical",
-      content: computed(
-        () =>
-          `https://kes-sib.ru/catalog/${categorySlug}/${
-            product.value?.slug || "product"
-          }`
-      ),
-    },
-    {
-      property: "product:price:amount",
-      content: computed(() => product.value?.price?.toString() || "0"),
-    },
-    {
-      property: "product:price:currency",
-      content: "RUB",
-    },
-  ],
-  link: [
-    {
-      rel: "icon",
-      href: "/favicon.ico",
-      type: "image/x-icon",
-    },
-    {
-      rel: "canonical",
-      href: computed(
-        () =>
-          `https://kes-sib.ru/catalog/${categorySlug}/${
-            product.value?.slug || "product"
-          }`
-      ),
-    },
-  ],
-  script: [
-    {
-      type: "application/ld+json",
-      innerHTML: computed(() =>
-        JSON.stringify({
+// Используем watchEffect для безопасного управления useHead
+let headCleanup: (() => void) | null = null;
+
+const setupHead = () => {
+  if (!product.value || !categoryInfo.value) return;
+
+  // Очищаем предыдущий head
+  if (headCleanup) {
+    headCleanup();
+  }
+
+  const head = useHead({
+    title: `${product.value.name || "Продукт"} | ${
+      categoryInfo.value.title || "Категория"
+    } | КотлоЭнергоСнаб`,
+    meta: [
+      {
+        name: "description",
+        content: `${product.value.name || "Продукт"} - ${
+          product.value.description || "котельное оборудование"
+        } от КотлоЭнергоСнаб. ${
+          categoryInfo.value.title || "Категория"
+        } котельного оборудования. Производство, монтаж, сервис в Барнауле.`,
+      },
+      {
+        name: "keywords",
+        content: `${product.value.name || "продукт"}, ${
+          categoryInfo.value.title || "категория"
+        }, котельное оборудование, котлы, котельные, теплообменники, дымососы, вентиляторы, водогрейные котлы, паровые котлы, модульные котельные, КВр, КВа, КВз, МКУ, ТКУ, КМТ, производство, монтаж, Барнаул, Алтайский край, КотлоЭнергоСнаб`,
+      },
+      {
+        name: "author",
+        content: "КотлоЭнергоСнаб",
+      },
+      {
+        name: "robots",
+        content:
+          "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+      },
+      {
+        name: "googlebot",
+        content:
+          "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+      },
+      {
+        name: "yandex",
+        content: "index, follow",
+      },
+      {
+        property: "og:site_name",
+        content: "КотлоЭнергоСнаб",
+      },
+      {
+        property: "og:title",
+        content: `${product.value.name || "Продукт"} | ${
+          categoryInfo.value.title || "Категория"
+        } | КотлоЭнергоСнаб`,
+      },
+      {
+        property: "og:description",
+        content: `${product.value.name || "Продукт"} - ${
+          product.value.description || "котельное оборудование"
+        } от КотлоЭнергоСнаб. ${
+          categoryInfo.value.title || "Категория"
+        } котельного оборудования.`,
+      },
+      {
+        property: "og:type",
+        content: "product",
+      },
+      {
+        property: "og:url",
+        content: `https://kes-sib.ru/catalog/${categorySlug}/${
+          product.value.slug || "product"
+        }`,
+      },
+      {
+        property: "og:image",
+        content: product.value.image || "https://kes-sib.ru/images/hero1.jpg",
+      },
+      {
+        property: "og:image:width",
+        content: "1200",
+      },
+      {
+        property: "og:image:height",
+        content: "630",
+      },
+      {
+        property: "og:locale",
+        content: "ru_RU",
+      },
+      {
+        name: "twitter:card",
+        content: "summary_large_image",
+      },
+      {
+        name: "twitter:image",
+        content: product.value.image || "https://kes-sib.ru/images/hero1.jpg",
+      },
+      {
+        name: "twitter:title",
+        content: `${product.value.name || "Продукт"} | ${
+          categoryInfo.value.title || "Категория"
+        } | КотлоЭнергоСнаб`,
+      },
+      {
+        name: "twitter:description",
+        content: `${product.value.name || "Продукт"} - ${
+          product.value.description || "котельное оборудование"
+        } от КотлоЭнергоСнаб. ${
+          categoryInfo.value.title || "Категория"
+        } котельного оборудования.`,
+      },
+      {
+        name: "canonical",
+        content: `https://kes-sib.ru/catalog/${categorySlug}/${
+          product.value.slug || "product"
+        }`,
+      },
+      {
+        property: "product:price:amount",
+        content: product.value.price?.toString() || "0",
+      },
+      {
+        property: "product:price:currency",
+        content: "RUB",
+      },
+    ],
+    link: [
+      {
+        rel: "icon",
+        href: "/favicon.ico",
+        type: "image/x-icon",
+      },
+      {
+        rel: "canonical",
+        href: `https://kes-sib.ru/catalog/${categorySlug}/${
+          product.value.slug || "product"
+        }`,
+      },
+    ],
+    script: [
+      {
+        type: "application/ld+json",
+        innerHTML: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Product",
-          name: product.value?.name || "Продукт",
-          description: product.value?.description || "Котельное оборудование",
-          category: categoryInfo.value?.title || "Категория",
+          name: product.value.name || "Продукт",
+          description: product.value.description || "Котельное оборудование",
+          category: categoryInfo.value.title || "Категория",
           brand: {
             "@type": "Brand",
             name: "КотлоЭнергоСнаб",
@@ -335,13 +313,13 @@ useHead({
             name: "КотлоЭнергоСнаб",
             url: "https://kes-sib.ru/",
           },
-          image: product.value?.image || "https://kes-sib.ru/images/hero1.jpg",
+          image: product.value.image || "https://kes-sib.ru/images/hero1.jpg",
           url: `https://kes-sib.ru/catalog/${categorySlug}/${
-            product.value?.slug || "product"
+            product.value.slug || "product"
           }`,
           offers: {
             "@type": "Offer",
-            price: product.value?.price || 0,
+            price: product.value.price || 0,
             priceCurrency: "RUB",
             availability: "https://schema.org/InStock",
             seller: {
@@ -349,10 +327,30 @@ useHead({
               name: "КотлоЭнергоСнаб",
             },
           },
-        })
-      ),
-    },
-  ],
+        }),
+      },
+    ],
+  });
+
+  // Сохраняем функцию очистки, если она доступна
+  if (head && typeof head.dispose === "function") {
+    headCleanup = head.dispose;
+  }
+};
+
+// Настраиваем отслеживание изменений данных только на клиенте
+onMounted(() => {
+  watchEffect(() => {
+    setupHead();
+  });
+});
+
+// Очищаем при размонтировании
+onUnmounted(() => {
+  if (headCleanup) {
+    headCleanup();
+    headCleanup = null;
+  }
 });
 
 interface ProductType {
@@ -409,9 +407,9 @@ const transliterate = (text: string | undefined): string => {
     ч: "ch",
     ш: "sh",
     щ: "sch",
-    ъ: "",
+    ъ: "-",
     ы: "y",
-    ь: "",
+    ь: "-",
     э: "e",
     ю: "yu",
     я: "ya",
@@ -442,9 +440,9 @@ const transliterate = (text: string | undefined): string => {
     Ч: "Ch",
     Ш: "Sh",
     Щ: "Sch",
-    Ъ: "",
+    Ъ: "-",
     Ы: "Y",
-    Ь: "",
+    Ь: "-",
     Э: "E",
     Ю: "Yu",
     Я: "Ya",
@@ -679,6 +677,35 @@ onMounted(() => {
   isHydrated.value = true;
 });
 
+// Функции для навигации по разделам товара
+const scrollToDescription = () => {
+  // Переключаемся на вкладку описания и скроллим к ней
+  activeTab.value = "description";
+  nextTick(() => {
+    const tabsElement = document.querySelector(".product-tabs");
+    if (tabsElement) {
+      tabsElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  });
+};
+
+const switchToSpecs = () => {
+  // Переключаемся на вкладку технических характеристик и скроллим к ней
+  activeTab.value = "specs";
+  nextTick(() => {
+    const tabsElement = document.querySelector(".product-tabs");
+    if (tabsElement) {
+      tabsElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  });
+};
+
 // Computed property for product name to prevent hydration mismatch
 const productName = computed(() => {
   if (isLoadingProducts.value || isLoadingCategory.value) {
@@ -696,23 +723,30 @@ const productName = computed(() => {
 const isMobile = ref(false);
 const isClient = ref(false);
 
+// Сохраняем ссылку на функцию обработчика
+let resizeHandler: (() => void) | null = null;
+
 onMounted(() => {
   isClient.value = true;
 
   // Проверяем ширину экрана при монтировании
   isMobile.value = window.innerWidth <= 768;
 
-  // Слушаем изменение размера окна
-  window.addEventListener("resize", () => {
+  // Создаем функцию обработчика
+  resizeHandler = () => {
     isMobile.value = window.innerWidth <= 768;
-  });
+  };
+
+  // Слушаем изменение размера окна
+  window.addEventListener("resize", resizeHandler);
 });
 
 onUnmounted(() => {
   // Удаляем слушатель при размонтировании
-  window.removeEventListener("resize", () => {
-    isMobile.value = window.innerWidth <= 768;
-  });
+  if (resizeHandler) {
+    window.removeEventListener("resize", resizeHandler);
+    resizeHandler = null;
+  }
 });
 
 const openOfferModal = () => {

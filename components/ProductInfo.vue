@@ -9,10 +9,12 @@
     </h1>
     <div class="product-main-row">
       <div class="product-main-description">
-        <div
-          class="product-short-description extended-description-content"
-          v-html="parseExtendedDescription(description)"
-        ></div>
+        <div class="product-short-description extended-description-content">
+          {{ description }}
+          <a href="#" class="details-link" @click.prevent="scrollToDescription">
+            Подробнее...
+          </a>
+        </div>
       </div>
       <div class="product-main-specs">
         <div
@@ -27,6 +29,15 @@
           <span class="spec-dots"></span>
           <span class="spec-value">{{ spec.value }}</span>
         </div>
+
+        <!-- Кнопка перехода к техническим характеристикам -->
+        <button
+          v-if="displaySpecs.length > 0"
+          @click="switchToSpecs"
+          class="specs-button"
+        >
+          Подробнее о характеристиках...
+        </button>
       </div>
     </div>
   </div>
@@ -43,6 +54,30 @@ interface Props {
 }
 
 defineProps<Props>();
+
+const emit = defineEmits<{
+  "scroll-to-description": [];
+  "switch-to-specs": [];
+}>();
+
+// Функция для скролла к описанию
+const scrollToDescription = () => {
+  emit("scroll-to-description");
+};
+
+// Функция для переключения на вкладку характеристик
+const switchToSpecs = () => {
+  emit("switch-to-specs");
+};
+
+// Обработчик кликов в описании (для обратной совместимости)
+const handleDescriptionClick = (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (target.classList.contains("details-link")) {
+    event.preventDefault();
+    scrollToDescription();
+  }
+};
 
 const capitalize = (s: string) => {
   if (typeof s !== "string") return "";
@@ -187,6 +222,26 @@ function parseExtendedDescription(description: string | null): string {
   color: #444;
   line-height: 1.6;
   text-align: left;
+
+  .details-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 300;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid transparent;
+
+    &:hover {
+      color: var(--accent-dark);
+      border-bottom-color: var(--accent);
+      text-decoration: none;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 }
 
 .product-main-specs {
@@ -238,9 +293,55 @@ function parseExtendedDescription(description: string | null): string {
   visibility: visible !important;
 }
 
+// Кнопка технических характеристик
+.specs-button {
+  width: 100%;
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 300;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(227, 30, 36, 0.2);
+
+  &:hover {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(227, 30, 36, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(227, 30, 36, 0.2);
+  }
+}
+
 /* Стили для форматированного описания */
 :deep(.extended-description-content) {
   line-height: 1.6;
+
+  // Стили для кликабельной ссылки "Подробнее..."
+  .details-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid transparent;
+
+    &:hover {
+      color: var(--accent-dark);
+      border-bottom-color: var(--accent);
+      text-decoration: none;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 
   ul,
   ol {
@@ -329,6 +430,19 @@ function parseExtendedDescription(description: string | null): string {
   .product-main-specs {
     max-width: 100%;
     min-width: 0;
+  }
+
+  .product-main-description {
+    .details-link {
+      display: block;
+      margin: 0.5rem 0 0 0;
+      font-size: 0.9rem;
+    }
+  }
+
+  .specs-button {
+    font-size: 0.85rem;
+    padding: 0.65rem 0.85rem;
   }
 }
 </style>

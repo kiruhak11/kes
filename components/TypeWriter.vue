@@ -1,6 +1,5 @@
 <template>
   <span class="typewriter">
-    <span class="static-text">Подберите необходимую мощность</span>
     <span class="dynamic-text">{{ currentText }}</span>
     <span class="cursor">|</span>
   </span>
@@ -9,14 +8,25 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
-const words = ["котельной", "котла"];
+// Получаем фразы как пропсы
+const props = defineProps<{
+  phrases?: string[];
+  staticText?: string;
+  typingSpeed?: number;
+  deletingSpeed?: number;
+  pauseTime?: number;
+  startDelay?: number;
+}>();
+
+// Используем переданные фразы или дефолтные
+const words = props.phrases || ["котельной", "котла"];
 const currentText = ref("");
 const currentWordIndex = ref(0);
 const isDeleting = ref(false);
-const typingSpeed = 100;
-const deletingSpeed = 50;
-const pauseTime = 2500;
-const startDelay = 800;
+const typingSpeed = props.typingSpeed || 100;
+const deletingSpeed = props.deletingSpeed || 50;
+const pauseTime = props.pauseTime || 2500;
+const startDelay = props.startDelay || 800;
 
 let timeout: number | undefined;
 

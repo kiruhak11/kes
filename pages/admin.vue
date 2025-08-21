@@ -940,8 +940,30 @@ function toggleNewProdFuelDropdown() {
 function login() {
   if (password.value === config.public.adminPassword) {
     authorized.value = true;
+    // Сохраняем авторизацию только при успешном входе
+    saveAuth();
   } else {
     loginError.value = "Неправильный пароль";
+    // Очищаем любую предыдущую авторизацию при неправильном пароле
+    clearSavedAuth();
+  }
+}
+
+// Добавляем функции для работы с сохраненной авторизацией
+function saveAuth() {
+  if (process.client) {
+    const authData = {
+      authorized: true,
+      timestamp: Date.now(),
+      passwordHash: btoa(password.value), // Простое кодирование для проверки
+    };
+    localStorage.setItem("adminAuth", JSON.stringify(authData));
+  }
+}
+
+function clearSavedAuth() {
+  if (process.client) {
+    localStorage.removeItem("adminAuth");
   }
 }
 
@@ -1167,18 +1189,28 @@ function checkSavedAuth() {
     if (savedAuth) {
       try {
         const authData = JSON.parse(savedAuth);
-        if (authData.authorized && authData.timestamp) {
+        if (
+          authData.authorized &&
+          authData.timestamp &&
+          authData.passwordHash
+        ) {
           // Проверяем, не истек ли срок действия (7 дней)
           const now = Date.now();
           const authTime = authData.timestamp;
           const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
 
-          if (now - authTime < sevenDays) {
-            // Авторизация еще действительна
+          // Проверяем правильность сохраненного пароля
+          const expectedPasswordHash = btoa(config.public.adminPassword);
+
+          if (
+            now - authTime < sevenDays &&
+            authData.passwordHash === expectedPasswordHash
+          ) {
+            // Авторизация еще действительна и пароль правильный
             authorized.value = true;
             return;
           } else {
-            // Авторизация истекла, удаляем из localStorage
+            // Авторизация истекла или пароль изменился, удаляем из localStorage
             localStorage.removeItem("adminAuth");
           }
         }

@@ -319,6 +319,7 @@
     <section class="calculator" v-scroll-reveal="'fade-in-up'">
       <div class="container">
         <h2 class="section-title">
+          Подберите необходимую мощность
           <TypeWriter />
           для вашего объекта
         </h2>

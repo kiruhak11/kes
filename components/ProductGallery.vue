@@ -11,7 +11,21 @@
         class="gallery-nav prev"
         @click="prevImage"
       >
-        <i class="fas fa-chevron-left"></i>
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M15 19L10 12L15 5"
+            stroke="#333"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
       </button>
       <img
         :src="imageList[currentImageIndex]"
@@ -24,7 +38,21 @@
         class="gallery-nav next"
         @click="nextImage"
       >
-        <i class="fas fa-chevron-right"></i>
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 19L15 12L10 5"
+            stroke="#333"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
       </button>
     </div>
 
@@ -159,7 +187,7 @@ const prevImage = () => {
       display: flex;
       gap: 0.75rem;
       overflow-x: auto;
-      padding: 0.25rem 0;
+      padding: 0.25rem 0.1rem;
       scrollbar-width: thin;
       scrollbar-color: #ccc transparent;
 

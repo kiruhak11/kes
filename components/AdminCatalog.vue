@@ -2131,18 +2131,29 @@ const checkSavedAuth = () => {
     if (savedAuth) {
       try {
         const authData = JSON.parse(savedAuth);
-        if (authData.authorized && authData.timestamp) {
+        if (
+          authData.authorized &&
+          authData.timestamp &&
+          authData.passwordHash
+        ) {
           // Проверяем, не истек ли срок действия (7 дней)
           const now = Date.now();
           const authTime = authData.timestamp;
           const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
 
-          if (now - authTime < sevenDays) {
-            // Авторизация еще действительна
+          // Получаем правильный хеш пароля из конфигурации
+          const config = useRuntimeConfig();
+          const expectedPasswordHash = btoa(config.public.adminPassword);
+
+          if (
+            now - authTime < sevenDays &&
+            authData.passwordHash === expectedPasswordHash
+          ) {
+            // Авторизация еще действительна и пароль правильный
             emit("login");
             return;
           } else {
-            // Авторизация истекла, удаляем из localStorage
+            // Авторизация истекла или пароль изменился, удаляем из localStorage
             localStorage.removeItem("adminAuth");
           }
         }
@@ -2157,9 +2168,11 @@ const checkSavedAuth = () => {
 // Функция для сохранения авторизации
 const saveAuth = () => {
   if (process.client && rememberMe.value) {
+    const config = useRuntimeConfig();
     const authData = {
       authorized: true,
       timestamp: Date.now(),
+      passwordHash: btoa(config.public.adminPassword), // Сохраняем хеш правильного пароля
     };
     localStorage.setItem("adminAuth", JSON.stringify(authData));
   }

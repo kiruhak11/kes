@@ -1,143 +1,141 @@
 <template>
-  <client-only>
+  <div class="cart-page">
     <section class="container">
       <h1 v-scroll-reveal="'fade-in-up'">Корзина</h1>
 
-      <div
-        v-if="cartStore.items.length === 0"
-        class="empty-cart"
-        v-scroll-reveal="'fade-in-up'"
-      >
-        <p>Ваша корзина пуста</p>
-        <NuxtLink to="/catalog" class="btn btn-primary"
-          >Перейти в каталог</NuxtLink
+      <client-only>
+        <div
+          v-if="cartStore.items.length === 0"
+          class="empty-cart"
+          v-scroll-reveal="'fade-in-up'"
         >
-      </div>
-
-      <div v-else class="cart-content">
-        <div class="cart-items" v-scroll-reveal="'fade-in-up'">
-          <div
-            v-for="(item, index) in cartStore.items"
-            :key="item.id"
-            class="cart-item"
-            v-scroll-reveal="
-              index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'
-            "
+          <p>Ваша корзина пуста</p>
+          <NuxtLink to="/catalog" class="btn btn-primary"
+            >Перейти в каталог</NuxtLink
           >
-            <img :src="item.image" :alt="item.name" class="cart-item-image" />
-            <div class="cart-item-details">
-              <h3>{{ item.name }}</h3>
-              <p class="cart-item-price">
-                {{
-                  item.price *
-                    item.quantity
-                      .toLocaleString()
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <=
-                  1000
-                    ? "Цена по запросу"
-                    : item.price * item.quantity + " ₽"
-                }}
-              </p>
-              <div class="cart-item-quantity">
-                <button
-                  @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
-                  class="quantity-btn"
-                >
-                  -
-                </button>
-                <span>{{ item.quantity }}</span>
-                <button
-                  @click="cartStore.updateQuantity(item.id, item.quantity + 1)"
-                  class="quantity-btn"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            <button @click="cartStore.removeItem(item.id)" class="remove-btn">
-              ×
-            </button>
-          </div>
         </div>
 
-        <div class="cart-summary" v-scroll-reveal="'fade-in-up'">
-          <h2 v-scroll-reveal="'fade-in-up'">Оформление заказа</h2>
-          <div class="summary-row" v-scroll-reveal="'slide-in-left'">
-            <span>Товары ({{ cartStore.totalItems }}):</span>
-            <span>{{
-              cartStore.totalPrice
-                .toLocaleString()
-                .replace(/\B(?=(\d{3})+(?!\d))/g, " ") <= 1000
-                ? "Цена по запросу"
-                : cartStore.totalPrice.toLocaleString() + " ₽"
-            }}</span>
-          </div>
-          <form
-            @submit.prevent="submitOrder"
-            class="order-form"
-            v-scroll-reveal="'fade-in-up'"
-          >
-            <div class="form-group" v-scroll-reveal="'slide-in-left'">
-              <label for="name">Имя *</label>
-              <input
-                id="name"
-                v-model="orderForm.name"
-                type="text"
-                required
-                placeholder="Ваше имя"
-              />
-            </div>
-            <div class="form-group" v-scroll-reveal="'slide-in-right'">
-              <label for="phone">Телефон *</label>
-              <input
-                id="phone"
-                v-model="orderForm.phone"
-                type="tel"
-                required
-                placeholder="Ваш телефон"
-              />
-            </div>
-            <div class="form-group" v-scroll-reveal="'slide-in-left'">
-              <label for="email">E-mail</label>
-              <input
-                id="email"
-                v-model="orderForm.email"
-                type="email"
-                placeholder="Ваш e-mail"
-              />
-            </div>
-            <div class="form-group" v-scroll-reveal="'slide-in-right'">
-              <label for="address">Адрес доставки *</label>
-              <textarea
-                id="address"
-                v-model="orderForm.address"
-                required
-                rows="3"
-                placeholder="Укажите адрес доставки"
-              ></textarea>
-            </div>
-            <div class="form-group" v-scroll-reveal="'slide-in-left'">
-              <label for="comment">Комментарий к заказу</label>
-              <textarea
-                id="comment"
-                v-model="orderForm.comment"
-                rows="3"
-                placeholder="Дополнительная информация"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              class="btn btn-primary"
-              :disabled="isSubmitting"
-              v-scroll-reveal="'zoom-in'"
+        <div v-else class="cart-content">
+          <div class="cart-items" v-scroll-reveal="'fade-in-up'">
+            <div
+              v-for="(item, index) in cartStore.items"
+              :key="item.id"
+              class="cart-item"
+              v-scroll-reveal="
+                index % 2 === 0 ? 'slide-in-left' : 'slide-in-right'
+              "
             >
-              {{ isSubmitting ? "Отправка..." : "Оформить заказ" }}
-            </button>
-          </form>
+              <img :src="item.image" :alt="item.name" class="cart-item-image" />
+              <div class="cart-item-details">
+                <h3>{{ item.name }}</h3>
+                <p class="cart-item-price">
+                  {{ formatPrice(item.price * item.quantity) }}
+                </p>
+                <div class="cart-item-quantity">
+                  <button
+                    @click="
+                      cartStore.updateQuantity(item.id, item.quantity - 1)
+                    "
+                    class="quantity-btn"
+                  >
+                    -
+                  </button>
+                  <span>{{ item.quantity }}</span>
+                  <button
+                    @click="
+                      cartStore.updateQuantity(item.id, item.quantity + 1)
+                    "
+                    class="quantity-btn"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <button @click="cartStore.removeItem(item.id)" class="remove-btn">
+                ×
+              </button>
+            </div>
+          </div>
+
+          <div class="cart-summary" v-scroll-reveal="'fade-in-up'">
+            <h2 v-scroll-reveal="'fade-in-up'">Оформление заказа</h2>
+            <div class="summary-row" v-scroll-reveal="'slide-in-left'">
+              <span>Товары ({{ cartStore.totalItems }}):</span>
+              <span>{{ formatPrice(cartStore.totalPrice) }}</span>
+            </div>
+            <form
+              @submit.prevent="submitOrder"
+              class="order-form"
+              v-scroll-reveal="'fade-in-up'"
+            >
+              <div class="form-group" v-scroll-reveal="'slide-in-left'">
+                <label for="name">Имя *</label>
+                <input
+                  id="name"
+                  v-model="orderForm.name"
+                  type="text"
+                  required
+                  placeholder="Ваше имя"
+                />
+              </div>
+              <div class="form-group" v-scroll-reveal="'slide-in-right'">
+                <label for="phone">Телефон *</label>
+                <input
+                  id="phone"
+                  v-model="orderForm.phone"
+                  type="tel"
+                  required
+                  placeholder="Ваш телефон"
+                />
+              </div>
+              <div class="form-group" v-scroll-reveal="'slide-in-left'">
+                <label for="email">E-mail</label>
+                <input
+                  id="email"
+                  v-model="orderForm.email"
+                  type="email"
+                  placeholder="Ваш e-mail"
+                />
+              </div>
+              <div class="form-group" v-scroll-reveal="'slide-in-right'">
+                <label for="address">Адрес доставки *</label>
+                <textarea
+                  id="address"
+                  v-model="orderForm.address"
+                  required
+                  rows="3"
+                  placeholder="Укажите адрес доставки"
+                ></textarea>
+              </div>
+              <div class="form-group" v-scroll-reveal="'slide-in-left'">
+                <label for="comment">Комментарий к заказу</label>
+                <textarea
+                  id="comment"
+                  v-model="orderForm.comment"
+                  rows="3"
+                  placeholder="Дополнительная информация"
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                :disabled="isSubmitting"
+                v-scroll-reveal="'zoom-in'"
+              >
+                {{ isSubmitting ? "Отправка..." : "Оформить заказ" }}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
+
+        <template #fallback>
+          <div class="loading-cart">
+            <p>Загрузка корзины...</p>
+          </div>
+        </template>
+      </client-only>
     </section>
-  </client-only>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -157,6 +155,18 @@ const orderForm = ref({
   address: "",
   comment: "",
 });
+
+// Функция форматирования цены
+const formatPrice = (price: number | null | undefined): string => {
+  if (!price || price <= 1000) return "Цена по запросу";
+  return (
+    new Intl.NumberFormat("ru-RU", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price) + " ₽"
+  );
+};
 
 useHead({
   title: "Корзина — КотлоЭнергоСнаб",
@@ -271,10 +281,20 @@ ${orderItems
 .btn {
   color: white;
 }
+.cart-page {
+  min-height: 100vh;
+}
+
 .container {
   padding: 2rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.loading-cart {
+  text-align: center;
+  padding: 3rem 0;
+  color: var(--text);
 }
 
 h1 {

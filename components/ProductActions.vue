@@ -213,9 +213,9 @@ const transliterate = (text: string | undefined): string => {
     ч: "ch",
     ш: "sh",
     щ: "sch",
-    ъ: "",
+    ъ: "-",
     ы: "y",
-    ь: "",
+    ь: "-",
     э: "e",
     ю: "yu",
     я: "ya",
@@ -246,9 +246,9 @@ const transliterate = (text: string | undefined): string => {
     Ч: "Ch",
     Ш: "Sh",
     Щ: "Sch",
-    Ъ: "",
+    Ъ: "-",
     Ы: "Y",
-    Ь: "",
+    Ь: "-",
     Э: "E",
     Ю: "Yu",
     Я: "Ya",
@@ -287,7 +287,7 @@ const transliterate = (text: string | undefined): string => {
 }
 
 .product-price {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #e31e24;
   line-height: 1;

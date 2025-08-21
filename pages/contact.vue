@@ -2,23 +2,57 @@
   <section class="contact-section">
     <div class="container">
       <h1 v-scroll-reveal="'fade-in-up'">Оставить заявку</h1>
-      
+
       <!-- Показываем выбранную услугу, если она передана -->
-      <div v-if="selectedService" class="selected-service" v-scroll-reveal="'fade-in-up'">
+      <div
+        v-if="selectedService"
+        class="selected-service"
+        v-scroll-reveal="'fade-in-up'"
+      >
         <div class="service-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
-          <span>Выбранная услуга: <strong>{{ selectedService }}</strong></span>
+          <span
+            >Выбранная услуга: <strong>{{ selectedService }}</strong></span
+          >
           <button @click="selectedService = ''" class="close-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6L6 18M6 6L18 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </div>
       </div>
-      
-      <form @submit.prevent="submitForm" novalidate v-scroll-reveal="'fade-in-up'">
+
+      <form
+        @submit.prevent="submitForm"
+        novalidate
+        v-scroll-reveal="'fade-in-up'"
+      >
         <div class="form-group" v-scroll-reveal="'slide-in-left'">
           <label for="name">Имя</label>
           <input
@@ -58,7 +92,13 @@
             placeholder="Ваш вопрос или комментарий"
           ></textarea>
         </div>
-        <button type="submit" class="btn btn-primary" v-scroll-reveal="'zoom-in'">Отправить</button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          v-scroll-reveal="'zoom-in'"
+        >
+          Отправить
+        </button>
       </form>
     </div>
   </section>
@@ -68,7 +108,7 @@
 import { ref, onMounted } from "vue";
 import { useModalStore } from "~/stores/modal";
 import { useRoute } from "vue-router";
-import { useHead } from 'nuxt/app';
+import { useHead } from "nuxt/app";
 
 const name = ref("");
 const phone = ref("");
@@ -82,52 +122,69 @@ const modalStore = useModalStore();
 // Получаем параметр service из URL при загрузке страницы
 onMounted(() => {
   const serviceParam = route.query.service;
-  if (serviceParam && typeof serviceParam === 'string') {
+  if (serviceParam && typeof serviceParam === "string") {
     selectedService.value = decodeURIComponent(serviceParam);
   }
 });
 
 useHead({
-  title: 'Контакты — КотлоЭнергоСнаб',
+  title: "Контакты — КотлоЭнергоСнаб",
   meta: [
-    { name: 'description', content: 'Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.' },
-    { name: 'keywords', content: 'КотлоЭнергоСнаб, контакты, заявка, Барнаул, котлы, оборудование' },
-    { name: 'author', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:site_name', content: 'КотлоЭнергоСнаб' },
-    { property: 'og:title', content: 'Контакты — КотлоЭнергоСнаб' },
-    { property: 'og:description', content: 'Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://kes-sib.ru/contact' },
-    { property: 'og:image', content: '/images/hero1.jpg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Контакты — КотлоЭнергоСнаб' },
-    { name: 'twitter:description', content: 'Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.' },
-    { name: 'robots', content: 'index, follow' }
+    {
+      name: "description",
+      content:
+        "Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.",
+    },
+    {
+      name: "keywords",
+      content:
+        "КотлоЭнергоСнаб, контакты, заявка, Барнаул, котлы, оборудование",
+    },
+    { name: "author", content: "КотлоЭнергоСнаб" },
+    { property: "og:site_name", content: "КотлоЭнергоСнаб" },
+    { property: "og:title", content: "Контакты — КотлоЭнергоСнаб" },
+    {
+      property: "og:description",
+      content:
+        "Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://kes-sib.ru/contact" },
+    { property: "og:image", content: "/images/hero1.jpg" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Контакты — КотлоЭнергоСнаб" },
+    {
+      name: "twitter:description",
+      content:
+        "Контакты КотлоЭнергоСнаб. Оставить заявку на котлы и котельное оборудование в Барнауле.",
+    },
+    { name: "robots", content: "index, follow" },
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico', type: 'image/x-icon' },
-    { rel: 'canonical', href: 'https://kes-sib.ru/contact' }
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "canonical", href: "https://kes-sib.ru/contact" },
   ],
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: JSON.stringify({
         "@context": "http://schema.org",
         "@type": "Organization",
-        "name": "КотлоЭнергоСнаб",
-        "url": "https://kes-sib.ru/",
-        "logo": "https://kes-sib.ru/favicon.ico"
-      })
-    }
-  ]
+        name: "КотлоЭнергоСнаб",
+        url: "https://kes-sib.ru/",
+        logo: "https://kes-sib.ru/favicon.ico",
+      }),
+    },
+  ],
 });
 
 async function submitForm() {
   // Валидация: обязательно хотя бы телефон или email
-  const phoneDigits = phone.value.replace(/\D/g, '');
-  const emailValid = email.value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+  const phoneDigits = phone.value.replace(/\D/g, "");
+  const emailValid =
+    email.value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
   if ((!phoneDigits || phoneDigits.length < 10) && !emailValid) {
-    modalStore.showError('Пожалуйста, укажите корректный телефон или email.');
+    modalStore.showError("Пожалуйста, укажите корректный телефон или email.");
     return;
   }
   const payload = {
@@ -135,7 +192,7 @@ async function submitForm() {
 - Имя: ${name.value}
 - Телефон: ${phone.value}
 - E-mail: ${email.value}
-${selectedService.value ? `- Услуга: ${selectedService.value}` : ''}
+${selectedService.value ? `- Услуга: ${selectedService.value}` : ""}
 - Сообщение: ${message.value}`,
   };
 
@@ -172,7 +229,6 @@ ${selectedService.value ? `- Услуга: ${selectedService.value}` : ''}
   width: 20px;
   height: 20px;
   border-radius: 50%;
-
 }
 .contact-section {
   padding: 2rem 1rem;
@@ -201,7 +257,7 @@ ${selectedService.value ? `- Услуга: ${selectedService.value}` : ''}
 
   .selected-service {
     margin-bottom: 2rem;
-    
+
     .service-badge {
       display: flex;
       align-items: center;
@@ -212,11 +268,11 @@ ${selectedService.value ? `- Услуга: ${selectedService.value}` : ''}
       border-radius: 8px;
       font-size: 0.95rem;
       box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
-      
+
       svg {
         flex-shrink: 0;
       }
-      
+
       strong {
         font-weight: 600;
       }
@@ -282,7 +338,7 @@ ${selectedService.value ? `- Услуга: ${selectedService.value}` : ''}
     font-weight: 600;
     font-size: 0.95rem;
     margin-top: 0.5rem;
-
+    color: var(--bg);
     @media (min-width: 768px) {
       font-size: 1rem;
       margin-top: 1rem;
