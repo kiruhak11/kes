@@ -826,6 +826,11 @@ async function calculate() {
       method: "POST",
       body: payload,
     });
+
+    // Отправляем уведомление в Telegram с номером телефона
+    const { notifyOnContact } = useTelegramNotify();
+    notifyOnContact(phoneNumber.value);
+
     modalStore.showSuccess("Обращение успешно отправлено!");
     phoneNumber.value = "";
     regionSearch.value = "";
@@ -908,6 +913,8 @@ onMounted(() => {
 
   // Factory slider interval
   resumeAutoSlide();
+
+  // Уведомления отправляются только при заполнении форм с номером телефона
 });
 
 onBeforeUnmount(() => {

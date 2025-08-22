@@ -154,24 +154,24 @@
             />
           </div>
 
-          <!-- Мобильные лозунги -->
-          <div class="mobile-slogans" v-if="$device.isMobile">
-            <TypeWriter
-              :phrases="[
-                'Закажите котельную со скидкой!',
-                'Экономьте на цене, не на качестве!',
-              ]"
-              :typing-speed="50"
-              :deleting-speed="40"
-              :pause-time="2500"
-              :start-delay="500"
-            />
-          </div>
-
           <div v-if="$device.isMobile" class="mobile-header-actions">
             <button class="mobile-search-btn" @click="showMobileSearch = true">
               <IconsSearch />
             </button>
+
+            <div class="mobile-slogans">
+              <TypeWriter
+                :phrases="[
+                  'Закажите котельную со скидкой!',
+                  'Экономьте на цене, не на качестве!',
+                ]"
+                :typing-speed="50"
+                :deleting-speed="40"
+                :pause-time="2500"
+                :start-delay="500"
+              />
+            </div>
+
             <button
               class="burger-btn"
               :class="{ 'is-active': showMobileMenu }"
@@ -2052,11 +2052,11 @@ onBeforeUnmount(() => {
 
 /* Стили для мобильных лозунгов */
 .mobile-slogans {
-  padding: 8px 16px;
+  flex: 1;
   text-align: center;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 8px;
+  border-radius: 8px;
+  max-width: 220px;
 }
 
 .mobile-slogans .typewriter {
@@ -2722,7 +2722,8 @@ onBeforeUnmount(() => {
 .mobile-header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .mobile-search-btn,

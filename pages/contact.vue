@@ -202,6 +202,12 @@ ${selectedService.value ? `- Услуга: ${selectedService.value}` : ""}
       body: payload,
     });
 
+    // Отправляем уведомление в Telegram с номером телефона
+    if (phone.value) {
+      const { notifyOnContact } = useTelegramNotify();
+      notifyOnContact(phone.value);
+    }
+
     modalStore.showSuccess(`Сообщение "${message.value}" успешно отправлено!`);
     name.value = "";
     phone.value = "";
