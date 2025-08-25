@@ -251,7 +251,7 @@
                     <button
                       class="mobile-menu-item mobile-discount-btn"
                       @click="
-                        showDiscountModal = true;
+                        isShowDiscountModal = true;
                         showMobileMenu = false;
                       "
                     >
@@ -403,16 +403,16 @@
     <!-- Модальное окно "Получить скидку" -->
     <Transition name="modal-fade">
       <div
-        v-if="showDiscountModal"
+        v-if="isShowDiscountModal"
         class="discount-modal-overlay"
-        @click="showDiscountModal = false"
+        @click="isShowDiscountModal = false"
       >
         <div class="discount-modal-content" @click.stop>
           <div class="discount-modal-header">
             <h2 class="discount-modal-title">Получить скидку</h2>
             <button
               class="discount-modal-close"
-              @click="showDiscountModal = false"
+              @click="isShowDiscountModal = false"
             >
               ×
             </button>
@@ -499,7 +499,7 @@
           <div class="discount-modal-footer">
             <button
               class="discount-modal-btn primary"
-              @click="showDiscountModal = false"
+              @click="isShowDiscountModal = false"
             >
               Закрыть
             </button>
@@ -512,7 +512,7 @@
     </Transition>
 
     <!-- Плавающий блок скидки -->
-    <div class="floating-discount" @click="showDiscountModal = true">
+    <div class="floating-discount" @click="showDiscountModal()">
       <div class="floating-discount-content">
         <div class="gift-icon">
           <svg
@@ -767,12 +767,16 @@ const showSearchResults = ref(false);
 const cartCount: Ref<number> = ref(0);
 const isHydrated: Ref<boolean> = ref(false);
 const showMobileSearch = ref(false);
-const showDiscountModal = ref(false);
+const isShowDiscountModal = ref(false);
 
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
 
+const showDiscountModal = () => {
+  isShowDiscountModal.value = true;
+  ym(103178484, "reachGoal", "CLICK_MODALE_SALE");
+};
 // Получаем список товаров из API
 const { data: fetchedProducts, error: fetchError } = useFetch<{
   products: ApiProduct[];
