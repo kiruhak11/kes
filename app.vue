@@ -5,6 +5,11 @@
     <FrogModal />
     <NuxtPage />
   </NuxtLayout>
+  <!-- Kiruhak Analytics -->
+  <script src="https://kiruhak11.ru/analytics.js">
+    window.KIRUHAK_SITE_ID = "cmes7jrof0004rm01mpzuvdwn";
+  </script>
+  <!-- End Kiruhak Analytics -->
   <a
     class="yandex-counter"
     href="https://webmaster.yandex.ru/siteinfo/?site=https://kes-sib.ru"
