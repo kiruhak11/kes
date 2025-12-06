@@ -18,6 +18,7 @@ FROM base as build
 # Копируем файлы package.json и package-lock.json
 COPY package*.json ./
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 
 # Устанавливаем зависимости с принудительным разрешением конфликтов
 RUN npm install --production=false --legacy-peer-deps --force
