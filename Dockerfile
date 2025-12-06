@@ -24,6 +24,8 @@ COPY prisma.config.ts ./
 RUN npm install --production=false --legacy-peer-deps --force
 
 # Генерируем Prisma Client до копирования остальных файлов
+# Временная DATABASE_URL для генерации (реальная строка подключения не нужна для генерации)
+ENV DATABASE_URL="mysql://user:password@localhost:3306/database"
 RUN npx prisma generate
 
 # Копируем все остальные файлы проекта
