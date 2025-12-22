@@ -1728,13 +1728,30 @@ async function handleRestoreFileSelect(event: Event) {
     });
 
     console.log('Response received:', response.status, response.statusText);
+    
+    // Читаем ответ как текст сначала для отладки
+    const responseText = await response.text();
+    console.log('Response text (first 500 chars):', responseText.substring(0, 500));
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error response:', errorData);
-      throw new Error(errorData.message || "Ошибка при восстановлении базы данных");
+      try {
+        const errorData = JSON.parse(responseText);
+        console.error('Error response:', errorData);
+        throw new Error(errorData.message || "Ошибка при восстановлении базы данных");
+      } catch (e) {
+        console.error('Failed to parse error response:', e);
+        throw new Error(`Ошибка сервера (${response.status}): ${responseText.substring(0, 200)}`);
+      }
     }
 
-    const result = await response.json();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+      console.log('Restore result:', result);
+    } catch (e) {
+      console.error('Failed to parse success response:', e);
+      throw new Error('Сервер вернул невалидный JSON');
+    }
     console.log('Restore result:', result);
 
     // Показываем успешное сообщение
