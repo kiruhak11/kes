@@ -1671,54 +1671,71 @@ const restoreFileInput = ref<HTMLInputElement | null>(null);
 
 // Функция для открытия диалога выбора файла
 function triggerRestoreFileInput() {
+  console.log('triggerRestoreFileInput called', restoreFileInput.value);
   if (restoreFileInput.value) {
     restoreFileInput.value.click();
+  } else {
+    console.error('restoreFileInput.value is null');
   }
 }
 
 // Функция для обработки выбранного файла
 async function handleRestoreFileSelect(event: Event) {
+  console.log('handleRestoreFileSelect called', event);
   const input = event.target as HTMLInputElement;
-  if (!input.files || !input.files[0]) return;
+  if (!input.files || !input.files[0]) {
+    console.log('No files selected');
+    return;
+  }
 
   const file = input.files[0];
+  console.log('File selected:', file.name, file.size);
 
   // Проверяем расширение файла
   if (!file.name.endsWith(".sql")) {
+    console.log('Wrong file extension:', file.name);
     modalStore.showError("Пожалуйста, выберите .sql файл");
     input.value = "";
     return;
   }
 
+  console.log('File extension OK, showing confirm dialog');
   // Подтверждение от пользователя
   const confirmed = confirm(
     "ВНИМАНИЕ! Восстановление базы данных удалит все текущие данные и заменит их данными из бекапа. Продолжить?"
   );
 
+  console.log('Confirmation result:', confirmed);
   if (!confirmed) {
     input.value = "";
     return;
   }
 
   try {
+    console.log('Starting restore process...');
     isRestoreInProgress.value = true;
 
     // Создаем FormData для отправки файла
     const formData = new FormData();
     formData.append("backup", file);
+    console.log('FormData created');
 
     // Отправляем файл на сервер
+    console.log('Sending request to /api/admin/restore-db');
     const response = await fetch("/api/admin/restore-db", {
       method: "POST",
       body: formData,
     });
 
+    console.log('Response received:', response.status, response.statusText);
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Error response:', errorData);
       throw new Error(errorData.message || "Ошибка при восстановлении базы данных");
     }
 
     const result = await response.json();
+    console.log('Restore result:', result);
 
     // Показываем успешное сообщение
     let message = result.message;

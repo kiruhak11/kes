@@ -49,21 +49,26 @@ export default defineEventHandler(async (event) => {
     }
 
     // Разбиваем SQL на отдельные команды
-    // Убираем комментарии и пустые строки
-    const sqlStatements = sqlContent
-      .split("\n")
-      .filter((line) => {
-        const trimmed = line.trim();
-        return (
-          trimmed.length > 0 &&
-          !trimmed.startsWith("--") &&
-          !trimmed.startsWith("/*")
-        );
-      })
+    // Убираем только строки с комментариями (не трогая данные внутри INSERT)
+    const lines = sqlContent.split("\n");
+    const filteredLines: string[] = [];
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      // Пропускаем только строки, которые НАЧИНАЮТСЯ с комментария
+      // и не являются частью данных
+      if (trimmed.startsWith("--") || trimmed.startsWith("/*") || trimmed.length === 0) {
+        continue;
+      }
+      filteredLines.push(line);
+    }
+    
+    // Объединяем обратно и разбиваем только по ";\n" чтобы не разрывать данные
+    const sqlStatements = filteredLines
       .join("\n")
-      .split(";")
+      .split(";\n")
       .map((stmt) => stmt.trim())
-      .filter((stmt) => stmt.length > 0);
+      .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
 
     if (sqlStatements.length === 0) {
       throw createError({
