@@ -1731,11 +1731,10 @@ async function handleRestoreFileSelect(event: Event) {
 
     modalStore.showSuccess(message);
 
-    // Обновляем данные в админ-панели
-    await loadData();
-    if (adminTab.value === "stats") {
-      await fetchStats();
-    }
+    // Перезагружаем страницу для обновления данных
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000); // Даем пользователю время увидеть сообщение об успехе
   } catch (error: any) {
     console.error("Ошибка при восстановлении базы данных:", error);
     modalStore.showError(
