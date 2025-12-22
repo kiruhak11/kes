@@ -20,6 +20,11 @@ export default defineEventHandler(async (event) => {
     let sqlContent =
       "-- Backup created at " + new Date().toISOString() + "\n\n";
 
+    // Устанавливаем кодировку
+    sqlContent += "-- Устанавливаем кодировку UTF-8\n";
+    sqlContent += "SET NAMES utf8mb4;\n";
+    sqlContent += "SET CHARACTER SET utf8mb4;\n\n";
+
     // Указываем базу данных
     sqlContent += "-- Используем базу данных\n";
     sqlContent += "USE `kes-site`;\n\n";
