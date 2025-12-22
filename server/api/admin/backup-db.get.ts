@@ -20,6 +20,10 @@ export default defineEventHandler(async (event) => {
     let sqlContent =
       "-- Backup created at " + new Date().toISOString() + "\n\n";
 
+    // Указываем базу данных
+    sqlContent += "-- Используем базу данных\n";
+    sqlContent += "USE `kes-site`;\n\n";
+
     // Очистка таблиц
     sqlContent += "-- Очистка существующих данных\n";
     sqlContent += "SET FOREIGN_KEY_CHECKS=0;\n";

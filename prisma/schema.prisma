@@ -10,7 +10,7 @@ datasource db {
 model categories {
   id          String   @id @default(uuid())
   name        String
-  description String?
+  description String?  @db.Text
   slug        String   @unique
   display_order Int    @default(1)
   products    products[] @relation("CategoryProducts")
