@@ -80,9 +80,9 @@ export default defineEventHandler(async (event) => {
           product.category_id
             ? `'${escapeSqlString(product.category_id)}'`
             : "NULL",
-          `'${escapeSqlString(JSON.stringify(product.specs || []))}'`,
+          `'${escapeSqlJson(product.specs || [])}'`,
           product.additional_images
-            ? `'${escapeSqlString(JSON.stringify(product.additional_images))}'`
+            ? `'${escapeSqlJson(product.additional_images)}'`
             : "NULL",
           product.delivery_set
             ? `'${escapeSqlString(product.delivery_set)}'`
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
             ? `'${escapeSqlString(product.additional_requirements)}'`
             : "NULL",
           product.required_products
-            ? `'${escapeSqlString(JSON.stringify(product.required_products))}'`
+            ? `'${escapeSqlJson(product.required_products)}'`
             : "NULL",
         ].join(", ");
 
@@ -209,4 +209,13 @@ function escapeSqlString(str: string | null): string {
     }
     return char;
   });
+}
+
+// Функция для экранирования JSON в SQL
+// JSON.stringify уже экранирует всё нужное, нам нужно только экранировать одинарные кавычки и слэши для SQL
+function escapeSqlJson(obj: any): string {
+  if (!obj) return "NULL";
+  const jsonStr = JSON.stringify(obj);
+  // Экранируем только одинарные кавычки и обратные слэши для SQL
+  return jsonStr.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
