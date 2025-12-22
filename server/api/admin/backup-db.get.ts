@@ -49,15 +49,16 @@ export default defineEventHandler(async (event) => {
     )) {
       for (const category of categories) {
         const values = [
-          category.id,
+          `'${escapeSqlString(category.id)}'`,
           `'${escapeSqlString(category.name)}'`,
           category.description
             ? `'${escapeSqlString(category.description)}'`
             : "NULL",
           `'${escapeSqlString(category.slug)}'`,
+          category.display_order || 1,
         ].join(", ");
 
-        sqlContent += `INSERT INTO categories (id, name, description, slug) VALUES (${values});\n`;
+        sqlContent += `INSERT INTO categories (id, name, description, slug, display_order) VALUES (${values});\n`;
       }
     }
     sqlContent += "\n";
@@ -109,9 +110,11 @@ export default defineEventHandler(async (event) => {
       () => prisma.visits.count()
     )) {
       for (const visit of visits) {
+        // Форматируем дату в MySQL DATE формат (YYYY-MM-DD)
+        const dateStr = visit.date.toISOString().split('T')[0];
         const values = [
           visit.id,
-          `'${visit.date.toISOString()}'`,
+          `'${dateStr}'`,
           visit.count,
         ].join(", ");
 

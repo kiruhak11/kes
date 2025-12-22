@@ -28,8 +28,26 @@
       </button>
     </div>
 
-    <!-- Добавляем кнопку бэкапа -->
+    <!-- Добавляем кнопки бэкапа и восстановления -->
     <div v-if="authorized" class="admin-actions">
+      <input
+        type="file"
+        ref="restoreFileInput"
+        accept=".sql"
+        style="display: none"
+        @change="handleRestoreFileSelect"
+      />
+      <button
+        class="restore-btn"
+        @click="triggerRestoreFileInput"
+        :disabled="isRestoreInProgress"
+      >
+        {{
+          isRestoreInProgress
+            ? "Восстановление..."
+            : "Восстановить из бекапа"
+        }}
+      </button>
       <button
         class="backup-btn"
         @click="downloadBackup"
@@ -1648,6 +1666,86 @@ const emit = defineEmits<Emits>();
 
 // Добавляем состояние для отслеживания процесса бэкапа
 const isBackupInProgress = ref(false);
+const isRestoreInProgress = ref(false);
+const restoreFileInput = ref<HTMLInputElement | null>(null);
+
+// Функция для открытия диалога выбора файла
+function triggerRestoreFileInput() {
+  if (restoreFileInput.value) {
+    restoreFileInput.value.click();
+  }
+}
+
+// Функция для обработки выбранного файла
+async function handleRestoreFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || !input.files[0]) return;
+
+  const file = input.files[0];
+
+  // Проверяем расширение файла
+  if (!file.name.endsWith(".sql")) {
+    modalStore.showError("Пожалуйста, выберите .sql файл");
+    input.value = "";
+    return;
+  }
+
+  // Подтверждение от пользователя
+  const confirmed = confirm(
+    "ВНИМАНИЕ! Восстановление базы данных удалит все текущие данные и заменит их данными из бекапа. Продолжить?"
+  );
+
+  if (!confirmed) {
+    input.value = "";
+    return;
+  }
+
+  try {
+    isRestoreInProgress.value = true;
+
+    // Создаем FormData для отправки файла
+    const formData = new FormData();
+    formData.append("backup", file);
+
+    // Отправляем файл на сервер
+    const response = await fetch("/api/admin/restore-db", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Ошибка при восстановлении базы данных");
+    }
+
+    const result = await response.json();
+
+    // Показываем успешное сообщение
+    let message = result.message;
+    if (result.details) {
+      message += `\nВыполнено команд: ${result.details.executedCount} из ${result.details.totalStatements}`;
+      if (result.details.errorCount > 0) {
+        message += `\nОшибок: ${result.details.errorCount}`;
+      }
+    }
+
+    modalStore.showSuccess(message);
+
+    // Обновляем данные в админ-панели
+    await loadData();
+    if (adminTab.value === "stats") {
+      await fetchStats();
+    }
+  } catch (error: any) {
+    console.error("Ошибка при восстановлении базы данных:", error);
+    modalStore.showError(
+      `Ошибка при восстановлении: ${error.message || "Неизвестная ошибка"}`
+    );
+  } finally {
+    isRestoreInProgress.value = false;
+    input.value = "";
+  }
+}
 
 // Функция для скачивания бэкапа
 async function downloadBackup() {
@@ -2758,8 +2856,46 @@ async function downloadBackup() {
 .admin-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
   margin-bottom: 24px;
   padding: 0 16px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.restore-btn {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+
+  &:hover {
+    background: linear-gradient(135deg, #0056b3, #007bff);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .backup-btn {
@@ -2773,6 +2909,7 @@ async function downloadBackup() {
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
 
