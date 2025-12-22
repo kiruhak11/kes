@@ -150,7 +150,7 @@ export default defineEventHandler(async (event) => {
             : "NULL",
           `'${escapeSqlString(request.status)}'`,
           request.raw_text ? `'${escapeSqlString(request.raw_text)}'` : "NULL",
-          `'${request.created_at.toISOString()}'`,
+          `'${toMySQLDateTime(request.created_at)}'`,
         ].join(", ");
 
         sqlContent += `INSERT INTO requests (id, type, phone, region, type_building, fuel_type, power_type, status, raw_text, created_at) VALUES (${values});\n`;
@@ -222,4 +222,9 @@ function escapeSqlJson(obj: any): string {
   const jsonStr = JSON.stringify(obj);
   // Экранируем только одинарные кавычки и обратные слэши для SQL
   return jsonStr.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+// Функция для конвертации Date в MySQL DATETIME формат
+function toMySQLDateTime(date: Date): string {
+  return date.toISOString().slice(0, 19).replace('T', ' ');
 }
