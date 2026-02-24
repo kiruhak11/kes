@@ -12,8 +12,24 @@
   </div>
 </template>
 <script setup lang="ts">
+let scrollTicking = false;
+
+const updateGoTopState = () => {
+  isActive.value = window.scrollY >= 400;
+};
+
+const scrollListener = () => {
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    updateGoTopState();
+    scrollTicking = false;
+  });
+};
+
 onMounted(() => {
-  window.addEventListener("scroll", scrollListener);
+  updateGoTopState();
+  window.addEventListener("scroll", scrollListener, { passive: true });
 });
 
 const goTop = () => {
@@ -21,14 +37,6 @@ const goTop = () => {
 };
 
 const isActive = ref<boolean>(false);
-
-const scrollListener = () => {
-  if (window.scrollY >= 400) {
-    isActive.value = true;
-    return;
-  }
-  isActive.value = false;
-};
 
 onUnmounted(() => {
   window.removeEventListener("scroll", scrollListener);
@@ -55,7 +63,9 @@ onUnmounted(() => {
   opacity: 0;
   cursor: pointer;
   visibility: hidden;
-  transition: all 0.3s cubic-bezier(0.27, 0.09, 0.42, 1.53);
+  transition: opacity 0.3s cubic-bezier(0.27, 0.09, 0.42, 1.53),
+    visibility 0.3s cubic-bezier(0.27, 0.09, 0.42, 1.53),
+    transform 0.3s cubic-bezier(0.27, 0.09, 0.42, 1.53);
 
   &_active {
     opacity: 1;

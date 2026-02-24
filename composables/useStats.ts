@@ -10,9 +10,9 @@ export const useStats = () => {
     loading.value = true
     error.value = null
     try {
-      const { data } = await useFetch('/api/visits')
-      if (data.value) {
-        visits.value = data.value
+      const { data } = await useFetch<{ visits: { date: string; count: number }[] }>('/api/visits')
+      if (data.value?.visits) {
+        visits.value = data.value.visits
       }
     } catch (e) {
       error.value = 'Failed to fetch visits'
@@ -26,9 +26,9 @@ export const useStats = () => {
     loading.value = true
     error.value = null
     try {
-      const { data } = await useFetch('/api/requests')
-      if (data.value) {
-        requests.value = data.value
+      const { data } = await useFetch<{ requests: any[] }>('/api/requests')
+      if (data.value?.requests) {
+        requests.value = data.value.requests
       }
     } catch (e) {
       error.value = 'Failed to fetch requests'

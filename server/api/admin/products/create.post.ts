@@ -1,8 +1,10 @@
 import { createError, eventHandler, readBody } from 'h3'
 import prisma from '~/server/utils/prisma'
+import { requireAdmin } from '~/server/utils/adminAuth'
 
 export default eventHandler(async (event) => {
   try {
+    requireAdmin(event)
     const body = await readBody(event)
     if (!body || typeof body !== 'object') {
       throw createError({

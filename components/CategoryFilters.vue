@@ -108,5 +108,5 @@ function toggleFiltersCollapsed() {
 }
 </script>
 <style scoped lang="scss">
-@import "~/assets/styles/global/category-filters.scss";
+@use "~/assets/styles/global/category-filters.scss" as *;
 </style>

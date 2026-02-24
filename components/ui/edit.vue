@@ -23,7 +23,8 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: box-shadow 0.3s ease, transform 0.3s ease,
+    background-color 0.3s ease;
 }
 .editBtn::before {
   content: "";
@@ -33,7 +34,7 @@
   position: absolute;
   z-index: 1;
   transform: scale(0);
-  transition: all 0.3s;
+  transition: transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
   border-radius: 50%;
   filter: blur(10px);
 }
@@ -48,7 +49,7 @@
   height: 17px;
   fill: white;
   z-index: 3;
-  transition: all 0.2s;
+  transition: transform 0.2s ease, fill 0.2s ease, opacity 0.2s ease;
   transform-origin: bottom;
 }
 .editBtn:hover svg {

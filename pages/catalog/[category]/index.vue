@@ -123,12 +123,7 @@
         :total-products="totalProducts"
         :get-sorted-specs="getSortedSpecs"
         :format-price="formatPrice"
-        @productClick="
-          (product) =>
-            router.push(
-              `/catalog/${categorySlug}/${generateProductSlug(product)}`
-            )
-        "
+        @productClick="handleProductClick"
         @addToCart="addToCart"
         @openCommercialOfferModal="openCommercialOfferModal"
       />
@@ -160,7 +155,7 @@ import {
 import { useCartStore } from "~/stores/cart";
 import { useRoute, useRouter } from "vue-router";
 import CommercialOfferModal from "~/components/CommercialOfferModal.vue";
-import type { Characteristic } from "~/types/product";
+import type { Characteristic, Product as CatalogProduct } from "~/types/product";
 import { useNuxtApp } from "nuxt/app";
 import { useImageOptimization } from "~/composables/useImageOptimization";
 import CategoryBreadcrumbs from "~/components/CategoryBreadcrumbs.vue";
@@ -174,7 +169,7 @@ const { $vScrollReveal } = useNuxtApp();
 // SEO Meta Tags будет добавлен после объявления переменных
 
 const showCommercialOfferModal = ref(false);
-const selectedProduct = ref<Product | null>(null);
+const selectedProduct = ref<ModalProduct | null>(null);
 
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
@@ -182,7 +177,12 @@ const handleImageError = (event: Event) => {
 };
 
 const openCommercialOfferModal = (product: Product) => {
-  selectedProduct.value = product;
+  selectedProduct.value = {
+    ...product,
+    description: product.description ?? null,
+    category: product.category ?? undefined,
+    category_id: product.category_id ?? null,
+  };
   showCommercialOfferModal.value = true;
 };
 
@@ -280,20 +280,25 @@ const generateProductSlug = (product: { name?: string | null }): string => {
     .replace(/^-+|-+$/g, "");
 };
 
-interface Product {
+type Product = CatalogProduct & {
+  specs?: Characteristic[];
+  additional_images?: string[];
+};
+
+interface ModalProduct {
   id: number;
-  name: string | null;
+  name: string;
   description: string | null;
-  extendedDescription?: string | null;
-  price: number | null;
-  image: string | null;
+  extendedDescription?: string;
+  price: number;
+  image: string;
   category_id: string | null;
   category_name?: string;
   category_slug?: string;
   category?: string;
   slug?: string;
   specs?: Characteristic[];
-  additional_images?: string[] | null;
+  additional_images?: string[];
   images?: string[];
 }
 
@@ -341,7 +346,7 @@ const {
     key: computed(() => `products-data-${categorySlug.value}`),
     watch: [categorySlug],
     server: false,
-    initialCache: false,
+    default: () => ({ products: [] }),
     transform: (response) => {
       if (!response) return { products: [] };
       return response;
@@ -527,6 +532,14 @@ const visiblePages = computed(() => {
 
 // Обновляем totalProducts на основе отфильтрованных товаров
 const totalProducts = computed(() => filteredProducts.value.length);
+
+const fetchProducts = async () => {
+  await refreshProducts();
+};
+
+const handleProductClick = (product: Product) => {
+  router.push(`/catalog/${categorySlug.value}/${generateProductSlug(product)}`);
+};
 
 const productsInCategory = computed<Product[]>(() => {
   return allProducts.value.filter((product) => {
@@ -1188,7 +1201,7 @@ useHead({
           mainEntity: {
             "@type": "ItemList",
             numberOfItems: totalProducts.value,
-            itemListElement: paginatedProducts.value.map((product, index) => ({
+            itemListElement: paginatedProducts.value.map((product: Product, index: number) => ({
               "@type": "ListItem",
               position: index + 1,
               item: {
@@ -1289,7 +1302,7 @@ watch(
   background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .filters-header:hover {
@@ -1384,7 +1397,8 @@ watch(
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .clear-all-btn:hover {
@@ -1405,7 +1419,7 @@ watch(
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
 }
 
@@ -1463,7 +1477,8 @@ watch(
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
   user-select: none;
 }
@@ -1527,7 +1542,8 @@ watch(
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 0.95rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease,
+    background-color 0.2s ease;
   background: #fff;
   font-weight: 500;
   color: #1a1a1a;
@@ -1810,7 +1826,7 @@ watch(
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
   border-radius: 0 0 12px 12px;
@@ -2206,7 +2222,7 @@ watch(
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .retry-button:hover {

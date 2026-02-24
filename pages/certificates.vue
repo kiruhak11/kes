@@ -288,7 +288,8 @@ useHead({
   border-radius: 8px;
   font-weight: 500;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   text-decoration: none;
   margin-top: auto;
   border: none;

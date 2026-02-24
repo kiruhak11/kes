@@ -1,9 +1,11 @@
 import { readFile, access } from 'fs/promises'
 import { join } from 'path'
 import { defineEventHandler, getRouterParam, createError } from 'h3'
+import { requireAdmin } from '~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event)
     const fileName = getRouterParam(event, 'fileName')
     
     if (!fileName) {

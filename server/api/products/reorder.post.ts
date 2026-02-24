@@ -1,5 +1,6 @@
 import { defineEventHandler, createError, readBody } from "h3";
 import prisma from "~/server/utils/prisma";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 interface ReorderPayload {
   productId: number;
@@ -8,6 +9,16 @@ interface ReorderPayload {
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
+
+    if (process.env.ALLOW_PRODUCT_ID_REORDER !== "true") {
+      throw createError({
+        statusCode: 409,
+        statusMessage:
+          "Unsafe product reorder is disabled. Set ALLOW_PRODUCT_ID_REORDER=true to enable temporarily.",
+      });
+    }
+
     const { productId, targetId } = await readBody<ReorderPayload>(event);
 
     // Получаем оба товара

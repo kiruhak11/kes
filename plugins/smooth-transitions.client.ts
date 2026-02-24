@@ -5,22 +5,28 @@ export default defineNuxtPlugin(() => {
     // Инициализация плавных переходов
     const initSmoothTransitions = () => {
       // Плавная загрузка всех изображений
-      const images = document.querySelectorAll('img');
+      const images = document.querySelectorAll('img:not([data-smooth-init="1"])');
       images.forEach((img) => {
+        img.setAttribute("data-smooth-init", "1");
         smoothImageLoad(img as HTMLImageElement);
       });
 
       // Плавное появление контента
-      const contentElements = document.querySelectorAll('.fade-in-content');
+      const contentElements = document.querySelectorAll(
+        '.fade-in-content:not([data-smooth-init="1"])'
+      );
       contentElements.forEach((el, index) => {
+        el.setAttribute("data-smooth-init", "1");
         smoothContentReveal(el as HTMLElement, index * 100);
       });
 
       // Добавляем индикатор загрузки страницы
-      const progressBar = document.createElement('div');
-      progressBar.className = 'page-progress-bar';
-      progressBar.innerHTML = '<div class="progress-fill"></div>';
-      document.body.appendChild(progressBar);
+      if (!document.querySelector(".page-progress-bar")) {
+        const progressBar = document.createElement('div');
+        progressBar.className = 'page-progress-bar';
+        progressBar.innerHTML = '<div class="progress-fill"></div>';
+        document.body.appendChild(progressBar);
+      }
     };
 
     // Обработчик навигации
@@ -59,7 +65,5 @@ export default defineNuxtPlugin(() => {
     } else {
       initSmoothTransitions();
     }
-
-    console.log('✨ Плавные переходы активированы!');
   }
 });

@@ -1393,7 +1393,8 @@ useHead(() => {
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease, background-color 0.2s ease,
+        box-shadow 0.2s ease;
       z-index: 10;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -1450,7 +1451,8 @@ useHead(() => {
         border-radius: 8px;
         overflow: hidden;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform 0.2s ease, border-color 0.2s ease,
+          box-shadow 0.2s ease, background-color 0.2s ease;
         background: #f8f9fa;
 
         &:hover {
@@ -1703,7 +1705,7 @@ useHead(() => {
   cursor: pointer;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
-  transition: all 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 .offer-btn:hover {
   background: linear-gradient(45deg, #ff4d4d, #e31e24);
@@ -1985,7 +1987,7 @@ useHead(() => {
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   cursor: pointer;
   border: 1px solid #f0f0f0;
   position: relative;
@@ -2027,7 +2029,7 @@ useHead(() => {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   transform: scale(0.8);
 }
 
@@ -2112,7 +2114,7 @@ useHead(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
 }
 
@@ -2671,7 +2673,7 @@ useHead(() => {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
-  transition: all 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   margin-top: auto;
 }
 .cert-gallery-btn:hover {
@@ -2913,7 +2915,7 @@ useHead(() => {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 
     &:hover {
       background: var(--primary-hover);
@@ -3139,7 +3141,7 @@ useHead(() => {
   &__arrow {
     opacity: 0;
     transform: translateX(-20px);
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 
     svg {
       width: 24px;

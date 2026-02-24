@@ -27,10 +27,10 @@ fileStorage: {
 
 ### 3. Новый composable
 
-Создан `composables/useFileStorage.ts` для работы с файлами:
+Создан `composables/useKesFileStorage.ts` для работы с файлами:
 
 ```typescript
-const { uploadFiles, uploadSingleFile, deleteFile, getFiles } = useFileStorage()
+const { uploadFiles, uploadSingleFile, deleteFile, getFiles } = useKesFileStorage()
 ```
 
 ### 4. Обновленные функции загрузки

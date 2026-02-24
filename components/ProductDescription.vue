@@ -7,7 +7,7 @@
     <h2 class="section-title">Описание товара</h2>
     <div
       class="extended-description-content"
-      v-html="parseExtendedDescription(extendedDescription)"
+      v-html="parseExtendedDescription(extendedDescription ?? null)"
     ></div>
   </div>
 </template>

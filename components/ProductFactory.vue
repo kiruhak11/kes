@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 
 interface Certificate {
   id: number;
@@ -148,6 +148,9 @@ const emit = defineEmits<{
 
 const activeFactoryTab = ref("certificates");
 const galleryActiveIndex = ref(0);
+let trackInitTimer: number | undefined;
+let trackEl: HTMLElement | null = null;
+let scrollHandler: (() => void) | null = null;
 
 const factoryTabs = [
   { key: "certificates", label: "Сертификаты" },
@@ -209,24 +212,35 @@ function normalizeImagePath(path: string | undefined): string {
 }
 
 onMounted(() => {
-  setTimeout(() => {
-    const track = document.querySelector(".cert-gallery-track");
-    if (track) {
-      track.addEventListener("scroll", () => {
-        const cards = Array.from(track.children) as HTMLElement[];
-        let minDiff = Infinity;
-        let activeIdx = 0;
-        cards.forEach((card, idx) => {
-          const diff = Math.abs((track.scrollLeft || 0) - card.offsetLeft);
-          if (diff < minDiff) {
-            minDiff = diff;
-            activeIdx = idx;
-          }
-        });
-        galleryActiveIndex.value = activeIdx;
+  trackInitTimer = window.setTimeout(() => {
+    trackEl = document.querySelector(".cert-gallery-track") as HTMLElement | null;
+    if (!trackEl) return;
+
+    scrollHandler = () => {
+      const cards = Array.from(trackEl!.children) as HTMLElement[];
+      let minDiff = Infinity;
+      let activeIdx = 0;
+      cards.forEach((card, idx) => {
+        const diff = Math.abs(trackEl!.scrollLeft - card.offsetLeft);
+        if (diff < minDiff) {
+          minDiff = diff;
+          activeIdx = idx;
+        }
       });
-    }
+      galleryActiveIndex.value = activeIdx;
+    };
+
+    trackEl.addEventListener("scroll", scrollHandler, { passive: true });
   }, 500);
+});
+
+onUnmounted(() => {
+  if (trackInitTimer) {
+    clearTimeout(trackInitTimer);
+  }
+  if (trackEl && scrollHandler) {
+    trackEl.removeEventListener("scroll", scrollHandler);
+  }
 });
 </script>
 
@@ -455,7 +469,7 @@ onMounted(() => {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
-  transition: all 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   margin-top: auto;
 }
 

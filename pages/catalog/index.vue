@@ -220,6 +220,15 @@ const { data: categories } = await useFetch<{ categories: Category[] }>(
 
 const { optimizeImageSize } = useImageOptimization();
 
+const clearCategoryIntervals = () => {
+  categories.value?.categories.forEach((category: Category) => {
+    if (category.intervalId) {
+      clearInterval(category.intervalId);
+      category.intervalId = null;
+    }
+  });
+};
+
 // Используем IntersectionObserver для автоматической смены изображений
 const startImageRotation = () => {
   const observer = new IntersectionObserver(
@@ -258,21 +267,28 @@ const startImageRotation = () => {
 
 let imageObserver: IntersectionObserver;
 
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    clearCategoryIntervals();
+    return;
+  }
+  if (imageObserver) {
+    imageObserver.disconnect();
+  }
+  imageObserver = startImageRotation();
+};
+
 onMounted(() => {
   imageObserver = startImageRotation();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 });
 
 onBeforeUnmount(() => {
   if (imageObserver) {
     imageObserver.disconnect();
   }
-  // Очищаем все интервалы
-  categories.value?.categories.forEach((category: Category) => {
-    if (category.intervalId) {
-      clearInterval(category.intervalId);
-      category.intervalId = null;
-    }
-  });
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  clearCategoryIntervals();
 });
 
 // Пагинация
@@ -321,7 +337,7 @@ function goToPage(page: number) {
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: visible;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   position: relative;
   margin-top: 75px;
   text-decoration: none;
@@ -389,7 +405,8 @@ function goToPage(page: number) {
   color: white;
   text-decoration: none;
   border-radius: 6px;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 /* Анимации для смены изображений */

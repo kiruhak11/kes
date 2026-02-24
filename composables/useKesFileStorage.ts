@@ -4,7 +4,7 @@ export interface UseFileStorageOptions {
   clearOldFiles?: boolean;
 }
 
-export function useFileStorage(options: UseFileStorageOptions = {}) {
+export function useKesFileStorage(options: UseFileStorageOptions = {}) {
   const files = ref<File[]>([]);
 
   const handleFileInput = (event: Event) => {

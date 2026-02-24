@@ -342,7 +342,7 @@ function normalizeImagePath(path: string | undefined): string {
   &__arrow {
     opacity: 0;
     transform: translateX(-20px);
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 
     svg {
       width: 24px;

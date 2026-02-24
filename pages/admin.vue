@@ -169,7 +169,7 @@ import AdminFilters from "~/components/AdminFilters.vue";
 import { ref, onMounted, watch, h, computed } from "vue";
 import { useStats } from "~/composables/useStats";
 import { useModalStore } from "~/stores/modal";
-import { useFileStorage } from "~/composables/useFileStorage";
+import { useKesFileStorage } from "~/composables/useKesFileStorage";
 import {
   convertSpecsToCharacteristics,
   convertCharacteristicsToSpecs,
@@ -271,6 +271,7 @@ interface Spec {
   show_in_filters?: boolean;
   showKeySuggestions?: boolean;
   showValueSuggestions?: boolean;
+  [key: string]: string | number | boolean | undefined;
 }
 
 type AdminCategory = Category;
@@ -301,7 +302,6 @@ interface Stats {
   };
 }
 
-const config = useRuntimeConfig();
 const password = ref("");
 const loginError = ref<string | null>(null);
 const authorized = ref(false);
@@ -773,10 +773,9 @@ function toggle(id: number) {
 }
 
 // Обновляем функцию updateWithSpecs
-async function updateWithSpecs(p: Product) {
+async function updateWithSpecs(p: Product & { keepOpen?: boolean }) {
   try {
-    // Сохраняем флаг keepOpen
-    const keepOpen = (p as any).keepOpen;
+    const keepOpen = p.keepOpen;
 
     // Находим категорию
     const category = categories.value.find((c) => c.name === p.category);
@@ -914,7 +913,7 @@ async function deleteProduct(id: number) {
 }
 
 // Импортируем новый composable для работы с файлами
-const { uploadSingleFile, uploadFiles } = useFileStorage();
+const { uploadSingleFile, uploadFiles } = useKesFileStorage();
 
 async function handleImageUpload(
   event: Event,
@@ -954,44 +953,30 @@ function toggleNewProdFuelDropdown() {
   showNewProdFuelDropdown.value = !showNewProdFuelDropdown.value;
 }
 
-// Возвращаем оригинальную функцию входа
-function login() {
-  if (password.value === config.public.adminPassword) {
-    authorized.value = true;
-    // Сохраняем авторизацию только при успешном входе
-    saveAuth();
-  } else {
-    loginError.value = "Неправильный пароль";
-    // Очищаем любую предыдущую авторизацию при неправильном пароле
-    clearSavedAuth();
-  }
-}
-
-// Добавляем функции для работы с сохраненной авторизацией
-function saveAuth() {
-  if (process.client) {
-    const authData = {
-      authorized: true,
-      timestamp: Date.now(),
-      passwordHash: btoa(password.value), // Простое кодирование для проверки
-    };
-    localStorage.setItem("adminAuth", JSON.stringify(authData));
-  }
-}
-
-function clearSavedAuth() {
-  if (process.client) {
-    localStorage.removeItem("adminAuth");
-  }
-}
-
-function logout() {
-  authorized.value = false;
-  password.value = "";
+async function login() {
   loginError.value = null;
-  // Очищаем сохраненную авторизацию из localStorage
-  if (process.client) {
-    localStorage.removeItem("adminAuth");
+  try {
+    await $fetch("/api/admin/login", {
+      method: "POST",
+      body: { password: password.value },
+    });
+    authorized.value = true;
+    password.value = "";
+  } catch (error: any) {
+    authorized.value = false;
+    loginError.value = "Неправильный пароль";
+  }
+}
+
+async function logout() {
+  try {
+    await $fetch("/api/admin/logout", { method: "POST" });
+  } catch (error) {
+    console.error("Failed to logout admin session:", error);
+  } finally {
+    authorized.value = false;
+    password.value = "";
+    loginError.value = null;
   }
 }
 
@@ -1192,51 +1177,19 @@ watch(adminTab, (tab) => {
 
 // Обновляем onMounted
 onMounted(() => {
-  // Проверяем сохраненную авторизацию
-  checkSavedAuth();
+  checkSessionAuth();
 
   if (adminTab.value === "stats" && authorized.value) {
     fetchStats();
   }
 });
 
-// Функция для проверки сохраненной авторизации
-function checkSavedAuth() {
-  if (process.client) {
-    const savedAuth = localStorage.getItem("adminAuth");
-    if (savedAuth) {
-      try {
-        const authData = JSON.parse(savedAuth);
-        if (
-          authData.authorized &&
-          authData.timestamp &&
-          authData.passwordHash
-        ) {
-          // Проверяем, не истек ли срок действия (7 дней)
-          const now = Date.now();
-          const authTime = authData.timestamp;
-          const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
-
-          // Проверяем правильность сохраненного пароля
-          const expectedPasswordHash = btoa(config.public.adminPassword);
-
-          if (
-            now - authTime < sevenDays &&
-            authData.passwordHash === expectedPasswordHash
-          ) {
-            // Авторизация еще действительна и пароль правильный
-            authorized.value = true;
-            return;
-          } else {
-            // Авторизация истекла или пароль изменился, удаляем из localStorage
-            localStorage.removeItem("adminAuth");
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing saved auth data:", error);
-        localStorage.removeItem("adminAuth");
-      }
-    }
+async function checkSessionAuth() {
+  try {
+    const response = await $fetch<{ authorized: boolean }>("/api/admin/me");
+    authorized.value = !!response.authorized;
+  } catch {
+    authorized.value = false;
   }
 }
 
@@ -1384,7 +1337,8 @@ async function saveCategory() {
       throw new Error(errorData.statusMessage || "Failed to update category");
     }
 
-    const updatedCategory = await response.json();
+    const updatedCategoryResponse = await response.json();
+    const updatedCategory = updatedCategoryResponse.category || updatedCategoryResponse;
 
     // Обновляем категорию в списке
     const index = categories.value.findIndex(
@@ -1403,7 +1357,7 @@ async function saveCategory() {
     modalStore.showSuccess("Категория успешно обновлена");
   } catch (error: any) {
     console.error("Error updating category:", error);
-    modalStore.showSuccess(
+    modalStore.showError(
       `Ошибка при обновлении категории: ${
         error.message || "Неизвестная ошибка"
       }`
@@ -1522,13 +1476,15 @@ async function deleteRequest(id: number) {
 }
 
 // Обновляем функцию updateSpecsList
+function updateSpecsList(productId: Record<number, Spec[]>): void;
+function updateSpecsList(productId: number, specs?: Spec[]): void;
 function updateSpecsList(
-  productId: number | Record<number, any[]>,
-  specs?: any[]
+  productId: number | Record<number, Spec[]>,
+  specs?: Spec[]
 ) {
   // Если первый аргумент - объект, значит это массовое обновление
   if (typeof productId === "object") {
-    specsList.value = productId;
+    specsList.value = productId as Record<number, Spec[]>;
 
     // Обновляем specs в products
     Object.entries(productId).forEach(([id, specs]) => {
@@ -1546,7 +1502,7 @@ function updateSpecsList(
   // Обычное обновление одного продукта
   specsList.value = {
     ...specsList.value,
-    [productId]: specs?.map((spec, index) => ({
+    [productId]: (specs || []).map((spec, index) => ({
       ...spec,
       id: index + 1, // Пересчитываем ID для сохранения последовательности
     })),
@@ -1929,7 +1885,8 @@ async function downloadBackup() {
       padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       font-weight: 600;
-      transition: all 0.2s ease;
+      transition: background-color 0.2s ease, border-color 0.2s ease,
+        color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
       cursor: pointer;
       border: none;
       font-size: 0.95rem;
@@ -2233,7 +2190,7 @@ async function downloadBackup() {
 // Анимации
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .slide-enter-from,
@@ -2306,7 +2263,8 @@ async function downloadBackup() {
   text-overflow: ellipsis;
   position: relative;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
 
   &:hover {
     border-color: var(--primary);
@@ -2906,7 +2864,7 @@ async function downloadBackup() {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2939,7 +2897,7 @@ async function downloadBackup() {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;

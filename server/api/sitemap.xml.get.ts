@@ -121,7 +121,5 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       statusMessage: "Internal Server Error",
     });
-  } finally {
-    await prisma.$disconnect();
   }
 });

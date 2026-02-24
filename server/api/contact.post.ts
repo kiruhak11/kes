@@ -2,25 +2,10 @@
 import { readBody, createError, defineEventHandler } from "h3";
 import prisma from "~/server/utils/prisma";
 
-// Жестко заданные значения для продакшена
-const TELEGRAM_CHAT_ID = "641028028";
-const TELEGRAM_BOT_TOKEN = "7965094541:AAGZdjXe0vOKCuCEdpu7BQ34jNaLEg0B40s";
-
 export default defineEventHandler(async (event) => {
   try {
-    // Детальная диагностика переменных окружения
-    console.log("Environment check:", {
-      hasTelegramToken: !!TELEGRAM_BOT_TOKEN,
-      hasChatId: !!TELEGRAM_CHAT_ID,
-      tokenLength: TELEGRAM_BOT_TOKEN?.length || 0,
-      chatIdLength: TELEGRAM_CHAT_ID?.length || 0,
-      nodeEnv: process.env.NODE_ENV,
-      allEnvVars: Object.keys(process.env).filter((key) =>
-        key.includes("TELEGRAM")
-      ),
-      rawTelegramToken: process.env.TELEGRAM_BOT_TOKEN ? "EXISTS" : "MISSING",
-      rawChatId: process.env.TELEGRAM_CHAT_ID ? "EXISTS" : "MISSING",
-    });
+    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
     // Validate Telegram configuration
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {

@@ -1,5 +1,6 @@
 import { defineEventHandler, createError, readBody } from "h3";
 import prisma from "~/server/utils/prisma";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 interface Characteristic {
   id: number;
@@ -11,6 +12,7 @@ interface Characteristic {
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
     const productId = event.context.params?.id;
     if (!productId) {
       throw createError({

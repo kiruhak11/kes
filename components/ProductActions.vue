@@ -68,11 +68,27 @@ import { useRouter } from "vue-router";
 interface ProductType {
   id: number;
   name: string;
+  description?: string | null;
   price: number;
   image: string;
+  category_id?: string | null;
   category: string;
   category_slug: string;
   slug: string;
+  specs?: Record<string, unknown> | Array<{ key: string; value: string }>;
+}
+
+interface CommercialProduct {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  image: string;
+  category_id: string | null;
+  category?: string;
+  category_slug?: string;
+  slug?: string;
+  specs?: Record<string, unknown> | Array<{ key: string; value: string }>;
 }
 
 interface Props {
@@ -158,9 +174,13 @@ const openOfferModal = () => {
 
 const showCommercialOfferModal = ref(false);
 
-const selectedProduct = ref<Product | null>(null);
-const openCommercialOfferModal = (product: Product) => {
-  selectedProduct.value = product;
+const selectedProduct = ref<CommercialProduct | null>(null);
+const openCommercialOfferModal = (product: ProductType) => {
+  selectedProduct.value = {
+    ...product,
+    description: product.description ?? null,
+    category_id: product.category_id ?? null,
+  };
   showCommercialOfferModal.value = true;
 };
 
@@ -381,7 +401,7 @@ const transliterate = (text: string | undefined): string => {
   cursor: pointer;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.1);
-  transition: all 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   text-decoration: none;
   display: inline-block;
 }

@@ -1,21 +1,24 @@
 import { unlink } from "fs/promises";
-import { join } from "path";
+import { basename, join } from "path";
 import { defineEventHandler, getQuery, createError } from "h3";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 export default defineEventHandler(async (event) => {
   try {
-    const query = getQuery(event);
-    const fileName = query.path as string;
+    requireAdmin(event);
 
-    if (!fileName) {
+    const query = getQuery(event);
+    const filePathRaw = query.path as string;
+
+    if (!filePathRaw) {
       throw createError({
         statusCode: 400,
         message: "File path is required",
       });
     }
 
-    // Проверяем, что путь безопасный (только имя файла)
-    if (fileName.includes("/") || fileName.includes("\\")) {
+    const fileName = basename(filePathRaw);
+    if (!fileName || fileName.includes("..")) {
       throw createError({
         statusCode: 400,
         message: "Invalid file path",

@@ -1,8 +1,10 @@
 import { defineEventHandler, readMultipartFormData, createError } from "h3";
 import prisma from "~/server/utils/prisma";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
     // Увеличиваем таймаут для события
     if (event.node.res) {
       event.node.res.setTimeout(600000); // 10 минут
@@ -84,7 +86,26 @@ export default defineEventHandler(async (event) => {
     let errorCount = 0;
     const errors: string[] = [];
 
+    const allowedPrefixes = [
+      "SET ",
+      "USE ",
+      "DELETE FROM ",
+      "INSERT INTO ",
+      "ALTER TABLE ",
+    ];
+
     for (const statement of sqlStatements) {
+      const normalized = statement.toUpperCase().replace(/\s+/g, " ").trim();
+      const isAllowed = allowedPrefixes.some((prefix) =>
+        normalized.startsWith(prefix)
+      );
+      if (!isAllowed) {
+        throw createError({
+          statusCode: 400,
+          message: `Недопустимая SQL команда в бэкапе: ${statement.slice(0, 40)}`,
+        });
+      }
+
       try {
         // Выполняем команду через Prisma
         await prisma.$executeRawUnsafe(statement);
@@ -130,4 +151,3 @@ export default defineEventHandler(async (event) => {
     });
   }
 });
-

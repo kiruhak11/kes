@@ -1,10 +1,14 @@
 import { defineEventHandler, readMultipartFormData, createError } from "h3";
 import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { mkdir } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
+
     const files = await readMultipartFormData(event);
     if (!files || files.length === 0) {
       throw createError({
@@ -20,6 +24,12 @@ export default defineEventHandler(async (event) => {
         message: "File must be an image",
       });
     }
+    if (file.data.length > 10 * 1024 * 1024) {
+      throw createError({
+        statusCode: 413,
+        message: "Image too large. Max size is 10MB",
+      });
+    }
 
     // Создаем директорию для загрузок, если её нет
     const uploadDir = join(process.cwd(), "public", "uploads");
@@ -30,10 +40,16 @@ export default defineEventHandler(async (event) => {
     }
 
     // Генерируем уникальное имя файла
-    const timestamp = Date.now();
-    const originalName = file.filename || "image";
-    const extension = originalName.split(".").pop() || "jpg";
-    const fileName = `${timestamp}-${originalName}`;
+    const safeOriginalName = basename(file.filename || "image");
+    const extension = safeOriginalName.split(".").pop()?.toLowerCase() || "jpg";
+    const allowedExt = new Set(["png", "jpg", "jpeg", "webp", "gif", "svg"]);
+    if (!allowedExt.has(extension)) {
+      throw createError({
+        statusCode: 400,
+        message: "Unsupported image extension",
+      });
+    }
+    const fileName = `${Date.now()}-${randomUUID()}.${extension}`;
     const filePath = join(uploadDir, fileName);
 
     // Сохраняем файл

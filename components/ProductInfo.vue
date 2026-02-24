@@ -229,7 +229,8 @@ function parseExtendedDescription(description: string | null): string {
     font-weight: 300;
     font-size: 1.05rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease,
+      transform 0.3s ease;
     border-bottom: 1px solid transparent;
 
     &:hover {
@@ -303,7 +304,8 @@ function parseExtendedDescription(description: string | null): string {
   font-size: 0.9rem;
   font-weight: 300;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 4px rgba(227, 30, 36, 0.2);
 
   &:hover {
@@ -329,7 +331,8 @@ function parseExtendedDescription(description: string | null): string {
     text-decoration: none;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease,
+      transform 0.3s ease;
     border-bottom: 1px solid transparent;
 
     &:hover {

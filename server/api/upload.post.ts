@@ -1,9 +1,13 @@
 import { writeFile } from 'fs/promises'
-import { join } from 'path'
+import { join, basename } from 'path'
 import { randomUUID } from 'crypto'
+import { mkdir } from 'fs/promises'
+import { requireAdmin } from '~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event)
+
     const formData = await readMultipartFormData(event)
     if (!formData) {
       throw new Error('No form data received')
@@ -15,11 +19,21 @@ export default defineEventHandler(async (event) => {
     }
 
     // Создаем уникальное имя файла
-    const ext = file.filename.split('.').pop()
+    const safeOriginalName = basename(file.filename)
+    const ext = safeOriginalName.split('.').pop()?.toLowerCase() || ''
+    const allowedExt = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'])
+    if (!allowedExt.has(ext)) {
+      throw createError({
+        statusCode: 400,
+        message: 'Unsupported file extension'
+      })
+    }
+
     const filename = `${randomUUID()}.${ext}`
     
     // Путь для сохранения файла
     const uploadDir = join(process.cwd(), 'public', 'uploads')
+    await mkdir(uploadDir, { recursive: true })
     const filepath = join(uploadDir, filename)
 
     // Сохраняем файл

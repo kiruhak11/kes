@@ -1,5 +1,6 @@
 import { defineEventHandler, createError, readBody } from 'h3'
 import prisma from '~/server/utils/prisma'
+import { requireAdmin } from '~/server/utils/adminAuth'
 
 interface ProductSpecs {
   power?: string
@@ -20,6 +21,7 @@ interface Product {
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event)
     const body = await readBody(event)
     // Валидация
     if (!body || typeof body !== 'object') {

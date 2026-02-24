@@ -58,7 +58,9 @@ export const usePositiveUX = () => {
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         z-index: 10000;
         transform: translateX(400px);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         max-width: 350px;
         font-size: 0.9rem;
         line-height: 1.4;

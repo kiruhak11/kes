@@ -888,6 +888,21 @@ const nextSlide = () => {
     (currentFactorySlide.value + 1) % factoryImages.length;
 };
 
+const startHeroSlide = () => {
+  if (!intervalId) {
+    intervalId = window.setInterval(() => {
+      currentHero.value = (currentHero.value + 1) % heroImages.length;
+    }, 5000);
+  }
+};
+
+const stopHeroSlide = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = undefined;
+  }
+};
+
 // Pause auto-sliding when user interacts with controls
 const pauseAutoSlide = () => {
   if (factoryIntervalId) {
@@ -905,21 +920,28 @@ const resumeAutoSlide = () => {
   }
 };
 
-onMounted(() => {
-  // Hero slider interval
-  intervalId = window.setInterval(() => {
-    currentHero.value = (currentHero.value + 1) % heroImages.length;
-  }, 5000);
-
-  // Factory slider interval
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    stopHeroSlide();
+    pauseAutoSlide();
+    return;
+  }
+  startHeroSlide();
   resumeAutoSlide();
+};
+
+onMounted(() => {
+  startHeroSlide();
+  resumeAutoSlide();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   // Уведомления отправляются только при заполнении форм с номером телефона
 });
 
 onBeforeUnmount(() => {
-  if (intervalId) clearInterval(intervalId);
-  if (factoryIntervalId) clearInterval(factoryIntervalId);
+  stopHeroSlide();
+  pauseAutoSlide();
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
 });
 
 function handleImageError(e: Event | string) {
@@ -1187,7 +1209,8 @@ const services = [
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease,
+    box-shadow 0.3s ease, color 0.3s ease;
   backdrop-filter: blur(4px);
   color: white;
 
@@ -1219,7 +1242,8 @@ const services = [
   border: 2px solid white;
   background: transparent;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease,
+    border-color 0.3s ease;
   padding: 0;
 
   &:hover {
@@ -1242,7 +1266,9 @@ const services = [
   border-radius: 16px;
   padding: 32px 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(220, 53, 69, 0.1);
@@ -1292,7 +1318,7 @@ const services = [
   object-fit: cover;
   border-radius: 12px;
   margin-bottom: 24px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -1342,7 +1368,8 @@ const services = [
   align-items: center;
   justify-content: center;
   color: #dc3545;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    transform 0.3s ease, opacity 0.3s ease;
   opacity: 0.7;
 }
 
@@ -1428,7 +1455,8 @@ const services = [
   gap: 8px;
   text-decoration: none;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   border: 2px solid transparent;
 }
 
@@ -1465,7 +1493,8 @@ const services = [
   padding: 16px;
   background: #f8f9fa;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .feature-item:hover {

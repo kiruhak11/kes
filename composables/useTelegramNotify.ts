@@ -9,7 +9,9 @@ export const useTelegramNotify = () => {
       // Получаем IP адрес (если доступно)
       let ip = "Не определен";
       try {
-        const ipResponse = await $fetch("https://api.ipify.org?format=json");
+        const ipResponse = await $fetch<{ ip: string }>(
+          "https://api.ipify.org?format=json"
+        );
         ip = ipResponse.ip;
       } catch (e) {
         console.log("Не удалось получить IP");
@@ -24,7 +26,9 @@ export const useTelegramNotify = () => {
       };
 
       // Отправляем уведомление
-      const response = await $fetch("/api/telegram-notify", {
+      const response = await $fetch<{ success: boolean; error?: string }>(
+        "/api/telegram-notify",
+        {
         method: "POST",
         body: notificationData,
       });

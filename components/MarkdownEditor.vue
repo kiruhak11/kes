@@ -250,7 +250,8 @@ function parseInlineMarkdown(text: string): string {
     cursor: pointer;
     font-size: 14px;
     line-height: 1;
-    transition: all 0.2s;
+    transition: background-color 0.2s ease, border-color 0.2s ease,
+      color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 
     &:hover {
       background: #f0f0f0;

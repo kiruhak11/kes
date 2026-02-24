@@ -14,7 +14,7 @@
   background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .filters-header:hover {
   background: linear-gradient(135deg, #f5f6f7 0%, #fafbfc 100%);
@@ -96,7 +96,8 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease;
 }
 .clear-all-btn:hover {
   background: #f8f9fa;
@@ -115,7 +116,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
 }
 .reset-all-btn:hover {
@@ -165,7 +166,8 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
   user-select: none;
 }
@@ -219,7 +221,8 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 0.95rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease,
+    background-color 0.2s ease;
   background: #fff;
   font-weight: 500;
   color: #1a1a1a;

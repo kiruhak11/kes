@@ -739,7 +739,8 @@ async function saveOrder() {
   padding: 0.75rem 1.5rem;
   font-size: 0.95rem;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .category-actions .btn:disabled {
@@ -827,7 +828,8 @@ async function saveOrder() {
   border-radius: 4px;
   padding: 4px 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, transform 0.2s ease;
 }
 
 .move-btn:hover:not(:disabled) {

@@ -154,7 +154,8 @@ const prevImage = () => {
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease, background-color 0.2s ease,
+        box-shadow 0.2s ease;
       z-index: 10;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -211,7 +212,8 @@ const prevImage = () => {
         border-radius: 8px;
         overflow: hidden;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform 0.2s ease, border-color 0.2s ease,
+          box-shadow 0.2s ease, background-color 0.2s ease;
         background: #f8f9fa;
 
         &:hover {

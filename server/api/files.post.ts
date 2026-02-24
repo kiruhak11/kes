@@ -1,7 +1,9 @@
-import { ServerFile } from "nuxt-file-storage";
+import type { ServerFile } from "nuxt-file-storage";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
     const { files } = await readBody<{ files: ServerFile[] }>(event)
 
     if (!files || !Array.isArray(files) || files.length === 0) {

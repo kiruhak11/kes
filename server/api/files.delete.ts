@@ -1,7 +1,9 @@
 import { getQuery, createError } from 'h3'
+import { requireAdmin } from '~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event)
     const query = getQuery(event)
     const fileName = query.fileName as string
 

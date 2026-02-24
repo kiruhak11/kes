@@ -220,7 +220,7 @@ watch(isOpen, (newValue) => {
 // Анимации
 .modal-enter-active,
 .modal-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .modal-enter-from {

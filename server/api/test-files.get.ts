@@ -1,8 +1,10 @@
 import { readdir } from 'fs/promises'
 import { join } from 'path'
+import { requireAdmin } from '~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event)
     const uploadDir = join(process.cwd(), 'public', 'uploads')
     
     // Получаем список файлов в папке uploads

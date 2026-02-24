@@ -214,7 +214,8 @@ button {
   border: none;
   background: none;
   font: inherit;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 img {
@@ -237,7 +238,8 @@ img {
   border-radius: 4px;
   font-weight: 500;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   border: none;
   cursor: pointer;
   text-decoration: none;

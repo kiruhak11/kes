@@ -125,7 +125,7 @@ function getReveal(index: number) {
 // Дополнительные стили для SVG при ховере
 .buy-btn {
   svg {
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
 
     path {
       transition: stroke 0.2s ease;

@@ -49,10 +49,11 @@ export default defineNuxtConfig({
 
   // Runtime конфигурация
   runtimeConfig: {
+    adminPassword: process.env.ADMIN_PASSWORD,
+    adminSessionSecret: process.env.ADMIN_SESSION_SECRET,
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
+    telegramChatId: process.env.TELEGRAM_CHAT_ID,
     public: {
-      telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
-      telegramChatId: process.env.TELEGRAM_CHAT_ID,
-      adminPassword: process.env.ADMIN_PASSWORD || "admin",
     },
   },
 

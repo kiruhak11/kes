@@ -7,7 +7,7 @@ interface MemoryOptions {
 export const useMemoryOptimization = (options: MemoryOptions = {}) => {
   const {
     maxCacheSize = 50 * 1024 * 1024, // 50MB
-    cleanupInterval = 300000, // 5 минут
+    cleanupInterval: cleanupIntervalMs = 300000, // 5 минут
     enableGC = true,
   } = options;
 
@@ -179,7 +179,7 @@ export const useMemoryOptimization = (options: MemoryOptions = {}) => {
       const memoryInterval = setInterval(checkMemoryUsage, 30000); // Каждые 30 сек
       
       // Запускаем очистку по расписанию
-      const cleanupInterval = setInterval(triggerCleanup, cleanupInterval);
+      const cleanupTimer = setInterval(triggerCleanup, cleanupIntervalMs);
       
       // Оптимизируем изображения при скролле
       const scrollHandler = throttle(optimizeImageMemory, 100);
@@ -191,7 +191,7 @@ export const useMemoryOptimization = (options: MemoryOptions = {}) => {
       // Очистка при размонтировании
       onUnmounted(() => {
         clearInterval(memoryInterval);
-        clearInterval(cleanupInterval);
+        clearInterval(cleanupTimer);
         window.removeEventListener('scroll', scrollHandler);
       });
     }

@@ -178,7 +178,7 @@ export const useAPIOptimization = (options: APIOptimizationOptions = {}) => {
 
     try {
       const batchParams = batch.map(item => item.params);
-      const results = await optimizedFetch(`${endpoint}/batch`, {
+      const results = await optimizedFetch<any[]>(`${endpoint}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requests: batchParams }),

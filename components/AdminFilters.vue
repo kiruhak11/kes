@@ -472,7 +472,8 @@ onMounted(() => {
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .filter-spec-item:hover {
@@ -538,7 +539,8 @@ onMounted(() => {
   border-radius: 4px;
   background: var(--bg);
   position: relative;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .filter-checkbox input:checked + .filter-checkbox-custom {
@@ -606,7 +608,8 @@ onMounted(() => {
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   text-decoration: none;
   display: inline-flex;
   align-items: center;

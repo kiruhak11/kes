@@ -1,5 +1,6 @@
 import { defineEventHandler, createError, readBody } from "h3";
 import prisma from "~/server/utils/prisma";
+import { requireAdmin } from "~/server/utils/adminAuth";
 
 interface OrderUpdate {
   id: string;
@@ -8,6 +9,7 @@ interface OrderUpdate {
 
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
     const body = await readBody(event);
     const { updates } = body as { updates: OrderUpdate[] };
 

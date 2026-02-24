@@ -95,8 +95,8 @@ export const usePerformanceMonitor = () => {
     
     if (navigation) {
       metrics.value.ttfb = navigation.responseStart - navigation.requestStart;
-      metrics.value.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.navigationStart;
-      metrics.value.loadComplete = navigation.loadEventEnd - navigation.navigationStart;
+      metrics.value.domContentLoaded = navigation.domContentLoadedEventEnd;
+      metrics.value.loadComplete = navigation.loadEventEnd;
       
       console.log(`🌐 TTFB: ${metrics.value.ttfb.toFixed(2)}ms`);
       console.log(`📄 DOM Ready: ${metrics.value.domContentLoaded.toFixed(2)}ms`);

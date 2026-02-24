@@ -976,7 +976,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from "vue";
-import { useFileStorage } from "@/composables/useFileStorage";
+import { useKesFileStorage } from "@/composables/useKesFileStorage";
 import MarkdownEditor from "./MarkdownEditor.vue";
 
 interface Spec {
@@ -1553,10 +1553,6 @@ const onShowInFiltersChange = (
 // Methods
 const login = () => {
   emit("login");
-  // Сохраняем авторизацию, если включен чекбокс "Запомнить меня"
-  if (rememberMe.value) {
-    saveAuth();
-  }
 };
 const addProduct = () => {
   emit("addProduct");
@@ -2116,79 +2112,10 @@ const onEditDrop = (event: DragEvent, productId: number, dropIndex: number) => {
   draggedEditProductId.value = null;
 };
 
-// Переменная для "Запомнить меня"
 const rememberMe = ref(false);
-
-// Проверяем сохраненную авторизацию при загрузке компонента
-onMounted(() => {
-  checkSavedAuth();
-});
-
-// Функция для проверки сохраненной авторизации
-const checkSavedAuth = () => {
-  if (process.client) {
-    const savedAuth = localStorage.getItem("adminAuth");
-    if (savedAuth) {
-      try {
-        const authData = JSON.parse(savedAuth);
-        if (
-          authData.authorized &&
-          authData.timestamp &&
-          authData.passwordHash
-        ) {
-          // Проверяем, не истек ли срок действия (7 дней)
-          const now = Date.now();
-          const authTime = authData.timestamp;
-          const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
-
-          // Получаем правильный хеш пароля из конфигурации
-          const config = useRuntimeConfig();
-          const expectedPasswordHash = btoa(config.public.adminPassword);
-
-          if (
-            now - authTime < sevenDays &&
-            authData.passwordHash === expectedPasswordHash
-          ) {
-            // Авторизация еще действительна и пароль правильный
-            emit("login");
-            return;
-          } else {
-            // Авторизация истекла или пароль изменился, удаляем из localStorage
-            localStorage.removeItem("adminAuth");
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing saved auth data:", error);
-        localStorage.removeItem("adminAuth");
-      }
-    }
-  }
-};
-
-// Функция для сохранения авторизации
-const saveAuth = () => {
-  if (process.client && rememberMe.value) {
-    const config = useRuntimeConfig();
-    const authData = {
-      authorized: true,
-      timestamp: Date.now(),
-      passwordHash: btoa(config.public.adminPassword), // Сохраняем хеш правильного пароля
-    };
-    localStorage.setItem("adminAuth", JSON.stringify(authData));
-  }
-};
-
-// Функция для удаления сохраненной авторизации
-const clearSavedAuth = () => {
-  if (process.client) {
-    localStorage.removeItem("adminAuth");
-  }
-};
 
 const logout = () => {
   emit("logout");
-  // Очищаем сохраненную авторизацию при выходе
-  clearSavedAuth();
 };
 
 // Добавляю метод для удаления основного изображения
@@ -2228,7 +2155,7 @@ const handleGalleryUpload = async (event: Event) => {
   input.value = "";
 };
 
-const { uploadFiles } = useFileStorage();
+const { uploadFiles } = useKesFileStorage();
 
 const getImageUrl = (path: string) => {
   if (!path || typeof path !== "string") return "";
@@ -2243,14 +2170,14 @@ const {
   files: mainImageFiles,
   handleFileInput: handleMainImageInput,
   uploadFiles: uploadMainImageFiles,
-} = useFileStorage({ clearOldFiles: true });
+} = useKesFileStorage({ clearOldFiles: true });
 
 // Для галереи
 const {
   files: galleryFiles,
   handleFileInput: handleGalleryInput,
   uploadFiles: uploadGalleryFiles,
-} = useFileStorage({ clearOldFiles: true });
+} = useKesFileStorage({ clearOldFiles: true });
 
 // Функция для загрузки основного изображения
 const uploadMainImage = async () => {
@@ -2579,7 +2506,8 @@ const confirmDeleteProduct = () => {
         font-size: 0.95rem;
         background: var(--bg);
         color: var(--text);
-        transition: all 0.2s ease;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease,
+          background-color 0.2s ease, color 0.2s ease;
 
         &:focus {
           outline: none;
@@ -2702,7 +2630,7 @@ const confirmDeleteProduct = () => {
           border: none;
           color: white;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: transform 0.2s ease, background-color 0.2s ease;
           z-index: 10;
 
           &:hover {
@@ -2813,7 +2741,7 @@ const confirmDeleteProduct = () => {
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     cursor: grab;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 
     &.dragging {
       opacity: 0.5;
@@ -2944,7 +2872,8 @@ const confirmDeleteProduct = () => {
           font-size: 0.95rem;
           background: var(--bg);
           color: var(--text);
-          transition: all 0.2s ease;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease,
+            background-color 0.2s ease, color 0.2s ease;
 
           &:focus {
             outline: none;
@@ -3055,7 +2984,7 @@ const confirmDeleteProduct = () => {
             border: none;
             color: white;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, background-color 0.2s ease;
             z-index: 10;
 
             &:hover {
@@ -3158,7 +3087,8 @@ const confirmDeleteProduct = () => {
           padding: 0.75rem 1.5rem;
           border-radius: 0.5rem;
           font-weight: 600;
-          transition: all 0.2s ease;
+          transition: background-color 0.2s ease, transform 0.2s ease,
+            box-shadow 0.2s ease;
           cursor: pointer;
           border: none;
           font-size: 0.95rem;
@@ -3218,7 +3148,7 @@ const confirmDeleteProduct = () => {
 // Анимации
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .slide-enter-from,
@@ -3291,7 +3221,8 @@ const confirmDeleteProduct = () => {
   text-overflow: ellipsis;
   position: relative;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
 
   &:hover {
     border-color: var(--primary);
@@ -3537,7 +3468,8 @@ const confirmDeleteProduct = () => {
   font-size: 0.95rem;
   background: var(--bg);
   color: var(--text);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
 
   &:focus {
     outline: none;
@@ -3651,7 +3583,7 @@ const confirmDeleteProduct = () => {
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   margin-bottom: 0.5rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     border-color: var(--primary);
@@ -3704,7 +3636,8 @@ const confirmDeleteProduct = () => {
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 0.25rem;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease,
+      transform 0.2s ease;
     flex-shrink: 0;
 
     &:hover {
@@ -3782,7 +3715,8 @@ const confirmDeleteProduct = () => {
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease,
+      transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
     border: none;
     font-size: 0.95rem;

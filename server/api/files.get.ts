@@ -1,5 +1,8 @@
+import { requireAdmin } from "~/server/utils/adminAuth";
+
 export default defineEventHandler(async (event) => {
   try {
+    requireAdmin(event);
     // Получаем все файлы из корневой папки uploads
     const files = await getFilesLocally('/')
 

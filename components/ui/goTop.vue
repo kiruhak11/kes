@@ -26,13 +26,19 @@ import { ref, onMounted, onUnmounted } from "vue";
 
 const showButton = ref(false);
 const isMobile = ref(false);
+let scrollTicking = false;
 
 const checkDevice = () => {
   isMobile.value = window.innerWidth <= 768;
 };
 
 const handleScroll = () => {
-  showButton.value = window.scrollY > 300;
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    showButton.value = window.scrollY > 300;
+    scrollTicking = false;
+  });
 };
 
 const scrollToTop = () => {
@@ -44,7 +50,8 @@ const scrollToTop = () => {
 
 onMounted(() => {
   checkDevice();
-  window.addEventListener("scroll", handleScroll);
+  handleScroll();
+  window.addEventListener("scroll", handleScroll, { passive: true });
   window.addEventListener("resize", checkDevice);
 });
 
@@ -73,7 +80,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(227, 30, 36, 0.2);
   z-index: 1000;
   opacity: 0.9;
@@ -148,7 +159,7 @@ onUnmounted(() => {
       background: var(--primary);
       opacity: 0;
       transform: scale(1);
-      transition: all 0.4s ease-out;
+      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
     }
 
     &:active::after {

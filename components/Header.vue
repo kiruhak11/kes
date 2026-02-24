@@ -1149,7 +1149,8 @@ onBeforeUnmount(() => {
   font-size: 14px;
   padding: 8px 12px;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   @media (max-width: 1050px) {
     font-size: 12px;
   }
@@ -1186,7 +1187,8 @@ onBeforeUnmount(() => {
   color: #333;
   padding: 8px 16px;
   border-radius: 4px;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, background-color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   position: relative;
   overflow: hidden;
   min-width: 85px;
@@ -1197,7 +1199,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -1223,7 +1225,7 @@ onBeforeUnmount(() => {
   left: 50%;
   top: 50%;
   transform: translate(150%, -50%);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   min-width: 100%;
   height: 100%;
   opacity: 0;
@@ -1382,7 +1384,10 @@ onBeforeUnmount(() => {
   background-color: rgba(51, 51, 51, 0.85);
   border-radius: 6px;
   box-shadow: 0 1.5px 6px rgba(227, 30, 36, 0.08);
-  transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
 }
 .burger-line:nth-child(1) {
@@ -1456,7 +1461,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .close-btn:hover {
@@ -1485,7 +1490,8 @@ onBeforeUnmount(() => {
   font-size: 16px;
   font-weight: 500;
   line-height: 1.5;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-left-color 0.2s ease,
+    color 0.2s ease, transform 0.2s ease;
   border-left: 3px solid transparent;
   min-height: 56px;
   box-sizing: border-box;
@@ -1545,7 +1551,7 @@ onBeforeUnmount(() => {
 /* Анимации */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .slide-fade-enter-from,
@@ -1764,7 +1770,8 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 2px;
   background-color: #333;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease,
+    background-color 0.3s ease;
   transform-origin: left;
 }
 
@@ -1785,7 +1792,8 @@ onBeforeUnmount(() => {
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   font-size: 13px;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease,
+    background-color 0.3s ease;
   background: white;
   height: 28px;
 }
@@ -1830,7 +1838,8 @@ onBeforeUnmount(() => {
   padding: 8px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, transform 0.2s ease;
 
   &:hover {
     background: #f8f8f8;
@@ -2093,7 +2102,8 @@ onBeforeUnmount(() => {
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease,
+    box-shadow 0.3s ease, color 0.3s ease;
   box-shadow: 0 2px 8px rgba(227, 30, 36, 0.2);
   position: relative;
   overflow: hidden;
@@ -2267,7 +2277,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
@@ -2304,7 +2314,8 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   border: 2px solid #e31e24;
   box-shadow: 0 4px 12px rgba(227, 30, 36, 0.1);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease,
+    background 0.3s ease;
 
   &:hover {
     transform: translateY(-2px);
@@ -2371,7 +2382,7 @@ onBeforeUnmount(() => {
   background: #f8f9fa;
   border-radius: 12px;
   border-left: 4px solid #e31e24;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 
   &:hover {
     background: #f0f2f5;
@@ -2459,7 +2470,8 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   min-width: 120px;
 
   &.primary {
@@ -2492,7 +2504,7 @@ onBeforeUnmount(() => {
 /* Анимации для модального окна */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .modal-fade-enter-from,
@@ -2528,7 +2540,9 @@ onBeforeUnmount(() => {
   cursor: pointer;
   z-index: 1500;
   box-shadow: 0 8px 25px rgba(227, 30, 36, 0.4);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   animation: floatIn 0.8s ease-out, breathe 3s ease-in-out infinite 2s;
 
@@ -2577,7 +2591,7 @@ onBeforeUnmount(() => {
 .gift-svg {
   width: 28px;
   height: 28px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease;
 
   &:hover {
     transform: scale(1.1);
